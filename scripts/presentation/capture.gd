@@ -8,7 +8,7 @@ signal ready_to_shoot
 var scenario: String = ""
 var out_path: String = ""
 var frames_left: int = -1
-var settle_frames: int = 12
+var settle_frames: int = 60
 
 
 static func request() -> Dictionary:
@@ -30,7 +30,9 @@ static func request() -> Dictionary:
 func configure(request_args: Dictionary) -> void:
 	scenario = str(request_args.get("scenario", ""))
 	out_path = str(request_args.get("out", "docs/verification/" + scenario + ".png"))
-	settle_frames = int(request_args.get("frames", 12))
+	settle_frames = int(request_args.get("frames", 60))
+	# Captures run in an off-screen window; never take focus from the desk.
+	DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_NO_FOCUS, true)
 
 
 ## Start counting once the scene has finished arranging the shot.
@@ -51,5 +53,11 @@ func _process(_delta: float) -> void:
 		path = ProjectSettings.globalize_path("res://" + path)
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var error: int = image.save_png(path)
-	print("CAPTURE ", scenario, " -> ", path, " (", image.get_width(), "x", image.get_height(), ") ", "ok" if error == OK else "failed")
+	print("CAPTURE ", scenario, " -> ", path, " (", image.get_width(), "x", image.get_height(), ") ", "ok" if error == OK else "failed", " fps=", Engine.get_frames_per_second())
+	print("PERF process=%.1fms physics=%.1fms draws=%d objects=%d primitives=%d" % [
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0,
+		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+		Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME),
+		Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)])
 	get_tree().quit(0 if error == OK else 1)

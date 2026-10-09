@@ -22,7 +22,7 @@ func _ready() -> void:
 	environment.sky = sky
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	environment.ambient_light_energy = 0.75
-	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	environment.tonemap_mode = Environment.TONE_MAPPER_ACES
 	environment.tonemap_exposure = 1.0
 	environment.ssao_enabled = true
 	environment.ssao_radius = 1.2
@@ -33,7 +33,7 @@ func _ready() -> void:
 	environment.glow_hdr_threshold = 1.1
 	environment.fog_enabled = true
 	environment.fog_light_color = Color("aebfcc")
-	environment.fog_density = 0.0035
+	environment.fog_density = 0.0016
 	environment.fog_aerial_perspective = 0.4
 	environment.volumetric_fog_enabled = false
 	environment.volumetric_fog_density = 0.04
@@ -73,7 +73,7 @@ func set_hour(hour: float) -> void:
 	var daylight: float = clampf(elevation * 1.6, 0.0, 1.0)
 	var night: bool = hour < 5.5 or hour > 20.5
 	sun.rotation = Vector3(-deg_to_rad(8.0 + elevation * 62.0), deg_to_rad(-60.0 + day_t * 140.0), 0.0)
-	sun.light_energy = 1.3 * daylight
+	sun.light_energy = 1.05 * daylight
 	sun.visible = daylight > 0.01
 	var dusk: float = 1.0 - absf(elevation * 2.0 - 0.6)
 	sun.light_color = Color("fff1d8").lerp(Color("ffb46b"), clampf(dusk * 0.6, 0.0, 0.7) if elevation < 0.45 else 0.0)
@@ -85,5 +85,5 @@ func set_hour(hour: float) -> void:
 	sky_material.sky_top_color = night_top.lerp(day_top, t)
 	sky_material.sky_horizon_color = Color("1b2238").lerp(Color("bcd2e0"), t).lerp(Color("e3a46a"), clampf(dusk, 0.0, 1.0) * 0.5 * t)
 	sky_material.ground_horizon_color = sky_material.sky_horizon_color.darkened(0.25)
-	environment.ambient_light_energy = lerpf(0.25, 0.8, t)
+	environment.ambient_light_energy = lerpf(0.2, 0.45, t)
 	environment.fog_light_color = Color("2b3348").lerp(Color("aebfcc"), t)

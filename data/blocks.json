@@ -3,7 +3,7 @@
 	"resources": ["wood", "stone", "thatch", "berries", "ore"],
 	"divine_only": ["soil"],
 	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree"],
-	"shapes": ["cube", "cross", "panel", "slab"],
+	"shapes": ["cube", "cross", "panel", "slab", "post"],
 	"atlas_size": [8, 5],
 	"blocks": [
 		{"id": 0, "name": "air", "resource": "", "yield": 0, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [0, 0], "shape": "cube", "breakable": false, "placeable": false},
@@ -21,7 +21,7 @@
 		{"id": 12, "name": "cut_stone", "resource": "stone", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [5, 1], "shape": "cube", "breakable": true, "placeable": true},
 		{"id": 13, "name": "cobble", "resource": "stone", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [6, 1], "shape": "cube", "breakable": true, "placeable": true},
 		{"id": 14, "name": "glass", "resource": "stone", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [7, 1], "shape": "cube", "breakable": true, "placeable": true},
-		{"id": 15, "name": "fence", "resource": "wood", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": false, "atlas": [0, 2], "shape": "cross", "breakable": true, "placeable": true},
+		{"id": 15, "name": "fence", "resource": "wood", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": false, "atlas": [0, 2], "shape": "post", "breakable": true, "placeable": true},
 		{"id": 16, "name": "bed", "resource": "wood", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": false, "atlas": [2, 2], "atlas_top": [1, 2], "atlas_bottom": [3, 1], "shape": "slab", "component": "bed", "breakable": true, "placeable": true},
 		{"id": 17, "name": "door", "resource": "wood", "yield": 1, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [3, 2], "shape": "panel", "component": "door", "orientable": true, "breakable": true, "placeable": true},
 		{"id": 18, "name": "storage_chest", "resource": "wood", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [4, 2], "atlas_top": [5, 2], "atlas_bottom": [3, 1], "shape": "cube", "component": "chest", "breakable": true, "placeable": true},

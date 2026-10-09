@@ -50,7 +50,9 @@
 		"size": [160, 48, 160], "chunk": 16, "sea_level": 6, "water_level": 9,
 		"tree_spacing": 5.5, "bush_spacing": 7.0, "grass_spacing": 6.0, "rock_spacing": 14.0,
 		"tree_centre_clear": 7, "berry_regrow_days": 2.0, "bush_max_berries": 4, "grass_regrow_per_day": 2,
-		"sacred_tree": [80, 80], "ridge_ruin": [80, 140], "ridge_hamlet": [96, 136]
+		"sacred_tree": [50, 50], "ridge_ruin": [128, 128], "ridge_hamlet": [112, 134],
+		"base_height": 12, "ridge_start": 104.0, "ridge_full": 122.0, "ridge_height": 11.0, "rim_width": 14.0, "rim_height": 28.0,
+		"river_offset": 48.0, "river_half_width": 2.4, "meadow_radius": 11, "forest_threshold": 0.05
 	},
 	"settlements": {
 		"start_radius": 22, "radius_per_structure": 1.0, "max_radius": 40, "pile_capacity": 60, "chest_capacity": 40,
@@ -78,5 +80,5 @@
 		"first_raid_day": 12, "raid_every_days": 4, "raid_base_chance": 0.35, "raid_wealth_weight": 0.004
 	},
 	"decay": {"unattended_days": 20, "block_loss_chance": 0.15, "abandoned_days": 10},
-	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 5.6, "gravity": 16.0}
+	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 6.4, "gravity": 16.0}
 }
