@@ -58,7 +58,22 @@ func bond_with(other: int) -> String:
 
 
 func note_site(id: int, kind: String, cell: Vector3i, amount: int, tick: int) -> void:
-	sites[id] = {"kind": kind, "cell": cell, "amount": amount, "seen_tick": tick}
+	var known: Dictionary = sites.get(id, {})
+	if known.is_empty():
+		sites[id] = {"kind": kind, "cell": cell, "amount": amount, "seen_tick": tick}
+	else:
+		known.cell = cell
+		known.amount = amount
+		known.seen_tick = tick
+
+
+## Whether any site of a kind with something left is believed (no sorting).
+func has_site(kind: String) -> bool:
+	for id in sites:
+		var belief: Dictionary = sites[id]
+		if belief.kind == kind and int(belief.amount) >= 1:
+			return true
+	return false
 
 
 func forget_site(id: int) -> void:

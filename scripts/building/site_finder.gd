@@ -25,13 +25,19 @@ static func _spiral(radius: int) -> Array:
 static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary) -> Dictionary:
 	var center: Vector3i = settlement.center
 	var radius: int = mini(Balance.integer("construction.site_search_radius"), int(settlement.radius))
-	var candidates: Array = []
-	var built: Dictionary = {}
+	# Columns other buildings or sites already hold, and ground heights, are
+	# gathered once: per-candidate scans made this the slowest thing in the sim.
+	var blocked: Dictionary = {}
 	for entry in sim.structures.built():
-		built.merge(entry.cells)
+		for cell in entry.cells:
+			blocked[Vector2i(cell.x, cell.z)] = true
+	for cell in sim.construction.reserved:
+		blocked[Vector2i(cell.x, cell.z)] = true
+	var context: Dictionary = {"blocked": blocked, "tops": {}, "footprints": {}}
+	var candidates: Array = []
 	for offset in _spiral(radius):
 		for rotation in range(4):
-			var scored: Dictionary = _score(sim, template, Vector2i(center.x, center.z) + offset, rotation, settlement, built)
+			var scored: Dictionary = _score(sim, template, Vector2i(center.x, center.z) + offset, rotation, settlement, context)
 			if not scored.is_empty():
 				candidates.append(scored)
 	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -50,44 +56,67 @@ static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary) 
 	return {}
 
 
-static func _score(sim: RefCounted, template: RefCounted, corner: Vector2i, rotation: int, settlement: Dictionary, built: Dictionary) -> Dictionary:
-	var size: Vector3i = template.rotated_size(rotation)
+static func _top(world: RefCounted, context: Dictionary, x: int, z: int) -> int:
+	var key := Vector2i(x, z)
+	if not context.tops.has(key):
+		context.tops[key] = _ground(world, x, z)
+	return context.tops[key]
+
+
+## Whether a footprint of `size` at `corner` is buildable, shared by the
+## rotations with the same footprint: {} when it is not, else
+## {origin, tops, low, high}.
+static func _footprint(sim: RefCounted, corner: Vector2i, size: Vector3i, settlement: Dictionary, context: Dictionary) -> Dictionary:
+	var key := Vector4i(corner.x, corner.y, size.x, size.z)
+	if context.footprints.has(key):
+		return context.footprints[key]
+	var result: Dictionary = {}
+	context.footprints[key] = result
 	var world: RefCounted = sim.voxels
+	var spacing: int = Balance.integer("construction.site_spacing")
+	var tree: Vector3i = sim.features.sacred_tree
 	var low: int = 999
 	var high: int = -1
 	var tops: Dictionary = {}
-	var spacing: int = Balance.integer("construction.site_spacing")
-	var tree: Vector3i = sim.features.sacred_tree
 	for z in range(corner.y, corner.y + size.z):
 		for x in range(corner.x, corner.x + size.x):
 			if x < 2 or z < 2 or x >= world.size.x - 2 or z >= world.size.z - 2:
-				return {}
+				return result
 			if Vector2(x - settlement.center.x, z - settlement.center.z).length() > float(settlement.radius):
-				return {}
+				return result
 			if Vector2(x - tree.x, z - tree.z).length() < 6.0:
-				return {}
-			var top: int = _ground(world, x, z)
+				return result
+			var top: int = _top(world, context, x, z)
 			if top < 0:
-				return {}
+				return result
 			tops[Vector2i(x, z)] = top
 			low = mini(low, top)
 			high = maxi(high, top)
 	if high - low > Balance.integer("construction.max_height_variation"):
-		return {}
+		return result
 	var origin := Vector3i(corner.x, high + 1, corner.y)
 	if origin.y + size.y >= world.size.y - 1:
-		return {}
+		return result
 	for z in range(corner.y - spacing, corner.y + size.z + spacing):
 		for x in range(corner.x - spacing, corner.x + size.x + spacing):
-			var inner: bool = x >= corner.x and x < corner.x + size.x and z >= corner.y and z < corner.y + size.z
-			for y in range(origin.y - 1, origin.y + (size.y if inner else 2)):
-				var cell := Vector3i(x, y, z)
-				if sim.construction.is_reserved(cell) or built.has(cell):
-					return {}
-				if inner and y >= origin.y:
-					var block: int = world.get_block(cell)
-					if block != 0 and block != Registry.id("tall_grass"):
-						return {}
+			if context.blocked.has(Vector2i(x, z)):
+				return result
+	var grass: int = Registry.id("tall_grass")
+	for column in tops:
+		for y in range(origin.y, origin.y + size.y):
+			var block: int = world.get_xyz(column.x, y, column.y)
+			if block != 0 and block != grass:
+				return result
+	result.merge({"origin": origin, "tops": tops, "low": low, "high": high})
+	return result
+
+
+static func _score(sim: RefCounted, template: RefCounted, corner: Vector2i, rotation: int, settlement: Dictionary, context: Dictionary) -> Dictionary:
+	var size: Vector3i = template.rotated_size(rotation)
+	var footprint: Dictionary = _footprint(sim, corner, size, settlement, context)
+	if footprint.is_empty():
+		return {}
+	var origin: Vector3i = footprint.origin
 	# The door must open onto the outside, onto ground a person can walk on.
 	var door: Vector3i = template.rotate_local(template.entrance, rotation)
 	var outside: Vector3i = Vector3i(-1, -1, -1)
@@ -98,11 +127,11 @@ static func _score(sim: RefCounted, template: RefCounted, corner: Vector2i, rota
 			break
 	if outside.x < 0:
 		return {}
-	var facing: float = Vector2(outside.x - settlement.center.x, outside.z - settlement.center.z).length() \
-		- Vector2(origin.x + door.x - settlement.center.x, origin.z + door.z - settlement.center.z).length()
+	var out_distance: float = Vector2(outside.x - settlement.center.x, outside.z - settlement.center.z).length()
+	var door_distance: float = Vector2(origin.x + door.x - settlement.center.x, origin.z + door.z - settlement.center.z).length()
 	var distance: float = Vector2(corner.x - settlement.center.x, corner.y - settlement.center.z).length()
-	var score: float = float(high - low) * 3.0 + distance * 0.25 + facing * 2.0
-	return {"origin": origin, "rotation": rotation, "score": score, "outside": outside, "tops": tops}
+	var score: float = float(footprint.high - footprint.low) * 3.0 + distance * 0.25 + (out_distance - door_distance) * 2.0
+	return {"origin": origin, "rotation": rotation, "score": score, "outside": outside, "tops": footprint.tops}
 
 
 ## The surface height of a column if it is buildable ground, or -1.

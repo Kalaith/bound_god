@@ -12,6 +12,8 @@ var boards: Dictionary = {}
 var samples: Dictionary = {}
 ## structure id -> {template_id, settlement_id, layout: Array of [cell, block, meta], built_tick}
 var layouts: Dictionary = {}
+## "settlement:template" -> tick until which a failed site search is not retried
+var no_site_until: Dictionary = {}
 
 
 func board(id: int) -> Dictionary:
@@ -137,10 +139,11 @@ func missing_blocks(sim: RefCounted, id: int) -> Array:
 
 
 func to_dict() -> Dictionary:
-	return {"layouts": layouts.duplicate(true), "samples": samples.duplicate(true)}
+	return {"layouts": layouts.duplicate(true), "samples": samples.duplicate(true), "no_site_until": no_site_until.duplicate()}
 
 
 func from_dict(data: Dictionary) -> void:
 	layouts = data.layouts
 	samples = data.samples
+	no_site_until = data.no_site_until
 	boards.clear()

@@ -33,6 +33,7 @@ static func new_day(sim: RefCounted) -> void:
 
 
 static func new_hour(sim: RefCounted) -> void:
+	Lifecycle.hourly(sim)
 	if sim.faith != null:
 		sim.faith.hourly(sim)
 

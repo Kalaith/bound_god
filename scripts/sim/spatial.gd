@@ -28,7 +28,8 @@ func remove(layer: String, id: int, cell: Vector3i) -> void:
 		buckets[key].erase(id)
 
 
-## Ids whose bucket overlaps the square of `radius` around `cell`, ascending.
+## Ids whose bucket overlaps the square of `radius` around `cell`, bucket by
+## bucket in a fixed order (buckets fill in id order, so this is deterministic).
 func near(layer: String, cell: Vector3i, radius: float) -> Array:
 	var buckets: Dictionary = layers.get(layer, {})
 	var result: Array = []
@@ -37,5 +38,4 @@ func near(layer: String, cell: Vector3i, radius: float) -> Array:
 		for bx in range((cell.x - reach) >> 4, ((cell.x + reach) >> 4) + 1):
 			var list: Array = buckets.get(Vector2i(bx, bz), [])
 			result.append_array(list)
-	result.sort()
 	return result

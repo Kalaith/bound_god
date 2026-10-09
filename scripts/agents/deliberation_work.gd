@@ -88,12 +88,12 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	for index in range(JobBoard.RESOURCES.size()):
 		var resource: String = JobBoard.RESOURCES[index]
 		var demand: float = float(board.gather_demand.get(resource, 0.0))
-		if demand < 0.05 or H.known_sites(sim, agent, JobBoard.SITE_KIND[resource]).is_empty():
+		if demand < 0.05 or not agent.beliefs.has_site(JobBoard.SITE_KIND[resource]):
 			continue
 		push.call(Goals.make(Kind.GATHER, index), float(culture.gather) * aptitude(agent, Skill.GATHERING) * demand, "reason_gather")
 	var unknown: int = 0
 	for resource in board.gather_demand:
-		if float(board.gather_demand[resource]) > 0.3 and H.known_sites(sim, agent, JobBoard.SITE_KIND[resource]).is_empty():
+		if float(board.gather_demand[resource]) > 0.3 and not agent.beliefs.has_site(JobBoard.SITE_KIND[resource]):
 			unknown += 1
 	if unknown > 0 or agent.personality.curiosity > 0.3:
 		push.call(Goals.make(Kind.SCOUT), float(culture.scout) * 0.45 * (1.0 + agent.personality.curiosity) * (1.0 + unknown * 0.3), "reason_scout")
@@ -134,7 +134,7 @@ static func means_believed(sim: RefCounted, agent: RefCounted, template: RefCoun
 	for resource in template.bill:
 		if agent.beliefs.believes_stock(resource):
 			continue
-		if agent.beliefs.known_sites(JobBoard.SITE_KIND.get(resource, ""), agent.cell).is_empty():
+		if not agent.beliefs.has_site(JobBoard.SITE_KIND.get(resource, "")):
 			return false
 	return true
 
@@ -159,6 +159,8 @@ static func _found_home(sim: RefCounted, agent: RefCounted, out: Array, base: fl
 		return
 	var design: RefCounted = known_design(sim, agent, "dwelling")
 	if design == null or not means_believed(sim, agent, design):
+		return
+	if int(sim.settlement_life.no_site_until.get("%d:%s" % [agent.settlement_id, design.id], -1)) > sim.calendar.tick:
 		return
 	var utility: float = Balance.number("construction.found_home_base") * base / 0.42
 	utility *= 0.7 + (100.0 - agent.need(Need.SHELTER)) / 100.0

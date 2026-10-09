@@ -59,7 +59,7 @@ static func _gather(sim: RefCounted, agent: RefCounted, index: int) -> Array:
 	var result: Array = []
 	var sites: Array = H.known_sites(sim, agent, JobBoard.SITE_KIND[resource])
 	for i in range(sites.size()):
-		result.append(H.option(GATHER_IDS[i], 1.0 - i * 0.1, [
+		result.append(H.option(GATHER_IDS[i], 1.0 - i * 0.1, H.free_hands(agent, resource) + [
 			Plans.go_to(Plans.target(T.SITE, sites[i])),
 			Plans.step(Op.HARVEST, {"site": sites[i]}),
 			_store(agent),
@@ -81,7 +81,7 @@ static func _haul(sim: RefCounted, agent: RefCounted) -> Array:
 	if not agent.carrying.is_empty():
 		result.append(H.option("store_carried", 1.2, [_store(agent), Plans.step(Op.DEPOSIT)]))
 	for i in range(mini(items.size(), 2)):
-		result.append(H.option("haul_item" if i == 0 else "haul_other", 1.0 - i * 0.1, [
+		result.append(H.option("haul_item" if i == 0 else "haul_other", 1.0 - i * 0.1, H.free_hands(agent, sim.items[items[i]].resource) + [
 			Plans.go_cell(sim.items[items[i]].cell),
 			Plans.step(Op.PICK_UP, {"item": items[i]}),
 			_store(agent),
@@ -108,14 +108,14 @@ static func _build(sim: RefCounted, agent: RefCounted, site_id: int) -> Array:
 	for resource in resources:
 		if agent.beliefs.believes_stock(resource):
 			var amount: int = mini(int(missing[resource]), int(Balance.number("agents.carry_capacity")))
-			result.append(H.option("fetch_from_stores", 1.0, [_store(agent),
+			result.append(H.option("fetch_from_stores", 1.0, H.free_hands(agent, resource) + [_store(agent),
 				Plans.step(Op.TAKE_STOCK, {"resource": resource, "amount": amount}), to_site, deliver, place]))
 			break
 	var board: Dictionary = sim.settlement_life.board(agent.settlement_id)
 	for item_id in board.get("items", []):
 		var item: Dictionary = sim.items.get(item_id, {})
 		if not item.is_empty() and missing.has(item.resource):
-			result.append(H.option("fetch_loose", 0.8, [Plans.go_cell(item.cell), Plans.step(Op.PICK_UP, {"item": item_id}), to_site, deliver, place]))
+			result.append(H.option("fetch_loose", 0.8, H.free_hands(agent, item.resource) + [Plans.go_cell(item.cell), Plans.step(Op.PICK_UP, {"item": item_id}), to_site, deliver, place]))
 			break
 	return result
 
@@ -131,6 +131,6 @@ static func _repair(sim: RefCounted, agent: RefCounted, structure_id: int) -> Ar
 	if agent.carried(resource) >= 1.0:
 		result.append(H.option("repair_carried", 1.1, [go, mend]))
 	if agent.beliefs.believes_stock(resource):
-		result.append(H.option("repair_from_stores", 1.0, [_store(agent),
+		result.append(H.option("repair_from_stores", 1.0, H.free_hands(agent, resource) + [_store(agent),
 			Plans.step(Op.TAKE_STOCK, {"resource": resource, "amount": mini(missing.size(), 6)}), go, mend]))
 	return result

@@ -7,6 +7,9 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 
 const Need = Personality.Need
 
+static var _leaves: int = -1
+static var _sacred_leaves: int = -1
+
 
 ## How covered a cell is: 1 under a real roof (or inside a sheltering
 ## structure), 0.5 under foliage, 0 in the open.
@@ -14,11 +17,14 @@ static func cover(sim: RefCounted, agent: RefCounted) -> float:
 	if agent.inside >= 0:
 		return 1.0
 	var cell: Vector3i = agent.cell + Vector3i.UP
-	if sim.voxels.is_roofed(cell, 6) or sim.is_kindled(agent.cell):
+	if sim.voxels.is_roofed(cell, 6) or (not sim.kindled.is_empty() and sim.is_kindled(agent.cell)):
 		return 1.0
+	if _leaves < 0:
+		_leaves = Registry.id("leaves")
+		_sacred_leaves = Registry.id("sacred_leaves")
 	for dy in range(1, 9):
-		var block: int = sim.voxels.get_block(cell + Vector3i(0, dy, 0))
-		if block == Registry.id("leaves") or block == Registry.id("sacred_leaves"):
+		var block: int = sim.voxels.get_xyz(cell.x, cell.y + dy, cell.z)
+		if block == _leaves or block == _sacred_leaves:
 			return 0.5
 	return 0.0
 
@@ -87,3 +93,8 @@ static func update(sim: RefCounted, agent: RefCounted) -> void:
 	Mind.tick(agent, 1)
 	if (sim.calendar.tick + agent.id) % 10 == 0:
 		agent.mood = compute_mood(agent)
+	# Lasting misery accumulates; better days slowly wear it away.
+	if agent.mood < Balance.number("mood.departure_threshold"):
+		agent.low_mood_ticks += 1
+	elif agent.low_mood_ticks > 0 and sim.calendar.tick % 4 == 0:
+		agent.low_mood_ticks -= 1

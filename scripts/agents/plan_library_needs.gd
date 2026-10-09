@@ -23,7 +23,7 @@ static func eat(sim: RefCounted, agent: RefCounted) -> Array:
 	if agent.carried("berries") >= 1.0:
 		plans.append(H.option("eat_carried", 1.3, [Plans.step(Op.EAT)]))
 	if agent.settlement_id >= 0 and agent.beliefs.believes_stock("berries", 1):
-		plans.append(H.option("raw_stores", 0.7, [
+		plans.append(H.option("raw_stores", 0.7, H.free_hands(agent, "berries") + [
 			Plans.go_to(_store(agent)),
 			Plans.step(Op.TAKE_STOCK, {"resource": "berries", "amount": 1}),
 			Plans.step(Op.EAT),

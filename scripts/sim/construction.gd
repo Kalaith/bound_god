@@ -122,13 +122,16 @@ func stand_cell(sim: RefCounted, id: int, target: Vector3i, from: Vector3i) -> V
 					continue
 				if _will_fill(site, cell) or _will_fill(site, cell + Vector3i.UP):
 					continue
+				# Not on top of the building itself: its walls and roof are no floor to reach.
+				if int(reserved.get(cell + Vector3i.DOWN, -1)) == id:
+					continue
 				var score: float = Vector3(cell).distance_to(Vector3(from)) * 0.2 + Vector3(cell).distance_to(Vector3(target))
 				options.append([score, sim.voxels.index_of(cell), cell])
 	options.sort_custom(func(a: Array, b: Array) -> bool:
 		if a[0] != b[0]:
 			return a[0] < b[0]
 		return a[1] < b[1])
-	for i in range(mini(options.size(), 6)):
+	for i in range(mini(options.size(), 8)):
 		var cell: Vector3i = options[i][2]
 		if cell == from or not sim.nav.find_path(from, cell).is_empty():
 			return cell

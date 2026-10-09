@@ -21,17 +21,20 @@ static func _distance(a: Vector3i, b: Vector3i) -> float:
 
 static func _sites(sim: RefCounted, agent: RefCounted, radius: float) -> void:
 	var now: int = sim.calendar.tick
+	var all: Dictionary = sim.sites.sites
 	for id in sim.spatial.near("sites", agent.cell, radius):
-		var site: Dictionary = sim.sites.get_site(id)
-		if site.is_empty() or site.cells.is_empty():
+		if not all.has(id):
 			continue
-		if _distance(site.cells[0], agent.cell) <= radius:
+		var site: Dictionary = all[id]
+		if not site.cells.is_empty() and _distance(site.cells[0], agent.cell) <= radius:
 			agent.beliefs.note_site(id, site.kind, site.cells[0], int(site.amount), now)
 	# Remembered sites in view that are gone are forgotten: they were used up.
-	for id in agent.beliefs.sites.keys():
-		var belief: Dictionary = agent.beliefs.sites[id]
-		if _distance(belief.cell, agent.cell) <= radius and sim.sites.get_site(id).is_empty():
-			agent.beliefs.forget_site(id)
+	var gone: Array = []
+	for id in agent.beliefs.sites:
+		if not all.has(id) and _distance(agent.beliefs.sites[id].cell, agent.cell) <= radius:
+			gone.append(id)
+	for id in gone:
+		agent.beliefs.forget_site(id)
 
 
 static func _people(sim: RefCounted, agent: RefCounted, radius: float) -> void:
@@ -59,8 +62,12 @@ static func _structures(sim: RefCounted, agent: RefCounted, radius: float) -> vo
 	var now: int = sim.calendar.tick
 	for entry in sim.structures.built():
 		if _distance(entry.anchor, agent.cell) <= radius:
-			agent.beliefs.structures[entry.id] = {"functions": entry.functions.duplicate(), "cell": entry.anchor,
-				"template_id": entry.template_id, "seen_tick": now}
+			var known: Dictionary = agent.beliefs.structures.get(entry.id, {})
+			if known.is_empty() or known.functions != entry.functions or known.template_id != entry.template_id:
+				agent.beliefs.structures[entry.id] = {"functions": entry.functions.duplicate(), "cell": entry.anchor,
+					"template_id": entry.template_id, "seen_tick": now}
+			else:
+				known.seen_tick = now
 			if not entry.template_id.is_empty() and not agent.beliefs.known_templates.has(entry.template_id) \
 					and sim.god.offered.has(entry.template_id):
 				agent.beliefs.known_templates.append(entry.template_id)
@@ -68,6 +75,19 @@ static func _structures(sim: RefCounted, agent: RefCounted, radius: float) -> vo
 		var belief: Dictionary = agent.beliefs.structures[id]
 		if _distance(belief.cell, agent.cell) <= radius and not sim.structures.entries.has(id):
 			agent.beliefs.structures.erase(id)
+
+
+## Settlements seen with their own eyes are remembered as places.
+static func _places(sim: RefCounted, agent: RefCounted, radius: float) -> void:
+	for id in sim.settlements.ids():
+		var settlement: Dictionary = sim.settlements.entries[id]
+		if _distance(settlement.center, agent.cell) <= radius + 6.0:
+			var key: String = "settlement:%d" % id
+			var known: Dictionary = agent.beliefs.places.get(key, {})
+			if known.is_empty():
+				agent.beliefs.places[key] = {"kind": "settlement", "id": id, "cell": settlement.center, "state": "seen", "seen_tick": sim.calendar.tick}
+			else:
+				known.seen_tick = sim.calendar.tick
 
 
 static func _threats(sim: RefCounted, agent: RefCounted, radius: float) -> bool:
@@ -109,6 +129,7 @@ static func perceive(sim: RefCounted, agent: RefCounted) -> bool:
 	_structures(sim, agent, radius)
 	if sim.settlements.at_store(sim, agent):
 		agent.beliefs.stock = sim.settlements.stock_of(agent.settlement_id).duplicate()
+	_places(sim, agent, radius)
 	var alarmed: bool = _threats(sim, agent, radius)
 	if sim.faith != null and sim.faith.perceive(sim, agent, radius):
 		alarmed = true

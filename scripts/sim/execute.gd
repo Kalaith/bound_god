@@ -16,7 +16,7 @@ const Fail = Plans.Fail
 const NONE := Vector3i(-1, -1, -1)
 const WORK_OPS: Array[int] = [Op.TAKE_STOCK, Op.DEPOSIT, Op.DELIVER, Op.PLACE_BLOCK, Op.MARK_SITE, Op.HARVEST,
 	Op.FORAGE, Op.PICK_UP, Op.REPAIR_BLOCK]
-const SOCIAL_OPS: Array[int] = [Op.TALK, Op.SEND, Op.GIVE, Op.WAIT_FOR_HELP, Op.JOIN, Op.LEAVE]
+const SOCIAL_OPS: Array[int] = [Op.TALK, Op.SEND, Op.GIVE, Op.WAIT_FOR_HELP, Op.JOIN, Op.LEAVE, Op.TREAT]
 const FAITH_OPS: Array[int] = [Op.PRAY, Op.TEND]
 
 

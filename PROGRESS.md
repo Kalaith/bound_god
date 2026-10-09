@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M7 — Social layer (M6 complete).
+M8 — Faith (M7 complete).
 
 ## Done
 
@@ -26,9 +26,11 @@ M7 — Social layer (M6 complete).
 
 - M6 Settlement and work: job boards (sites with readiness and missing materials, repairs from remembered layouts, gather demand per resource from reserves plus site needs, loose items, threats), work candidates with culture weights instead of player priorities (aptitude, company, pursuing divisor), Gather / Haul / Build / Repair / Scout plans, `FoundHome` and `ProposeProject` (known design with the function, materials believed in stock or known in the world, at most two open sites), `site_finder` (spiral from the centre, four rotations, flatness ≤ 1, spacing, door onto walkable ground with a path to the stores, cobble foundations, tall grass cleared), construction sites (reserved cells, bottom-up order, stand cells the builder can actually walk to), completion (structure gets its template id, founder and partner move in, `home_built`, chronicle with the cause), abandonment after 5 idle days, daily culture drift and settlement growth, migrants by attractiveness (spare beds, food, safety), `offer_template` and `transfer` commands, library Offer button, ghost blocks, store piles and loose items, stores panel (Interact), settlement panel (K). Checks: the cottage moment (2 travellers build 2 offered cottages by day 9, seed 11) and no site without believed means.
 
+- M7 Social layer: Final Landing's social candidates (chat partner score, court, comfort, reconcile, help) and plans; Talk (approach within 2, hold for `chat_ticks`), Send, Give, Wait for help, Treat; conversation resolution (directional compatibility, small talk with friction, gossip, sightings, designs and places passed on, insult and fights, flirt and proposal, reconcile, comfort) with bond changes in the chronicle; help requests and replies, gossip and proposal receivers; hourly mental breaks by temperament (lash out, binge, sulk, wander); births to housed couples; daily ambition progress; low-mood accumulation into Migrate (to a believed settlement) or leaving the valley; settlements seen are remembered as places. Performance pass: site finder 290 ms → a few ms (cached heights, blocked columns, shared footprints, failed searches remembered for a day), local structure re-probing, perception without per-tick allocations: 2.4 ms/tick with 13 people. Checks: bonds form in 20 days and reach the chronicle, a hungry person with empty stores is fed by a friend, breaks override, clashing natures sour talk. Capture: `m7_bonds_day20_1080.png`.
+
 ## Next
 
-- M7: talk topics, compatibility, gossip, knowledge and template sharing, courtship, help requests, comfort, reconcile, births, breaks, departure / Migrate.
+- M8: faith state, Pray, shrines (support, Favour, condition, radius), renown, prayer feed, Whisper, Bless Growth, Kindle, Mend, Veil of Fog, god identity, Faith tab.
 
 ## Decisions
 
@@ -44,11 +46,13 @@ M7 — Social layer (M6 complete).
 - Player-facing text is split into `data/text.json` (UI, blocks, templates) and `data/text_agents.json` (goals, plans, fail reasons, activities, log, chronicle); labels share one namespace and duplicates fail validation.
 - Thought texts and trait names stay in their own catalogs (`society.json`, `people.json`) beside their definitions; UI chrome lives in `data/text_ui.json`.
 - Offered designs reach the residents of the shrine's settlement (in M8: those who know the god); seeing a finished building whose design was offered also teaches it.
-- People keep what they carry through meals, sleep and talk, and set it down only when other work takes their hands; Haul includes putting a carried load in the stores. Final Landing drops loads on every change of goal, which wasted most loads on the valley's long walks.
+- People keep what they carry through every change of mind; a plan that needs free hands first puts the load in the stores (`PlanHelpers.free_hands`), and Haul includes storing a carried load. Final Landing drops loads on every change of goal, which wasted most loads on the valley's long walks. Using the stores updates the user's belief about them.
 - Navigation steps are at most one block up or down so every move can be walked back; harvesting never takes a block someone stands on, and anyone whose floor vanishes settles onto the nearest standable cell.
 - World generation adds 154 berry bushes (rings near the tree and the hamlet), daily regrowth (none in winter), four stone outcrops near the tree and quarry faces on the ridge, because two travellers otherwise starved or could not find stone.
 - Walking pace is Final Landing's 1 cell per tick; ground sleep restores 170/day; recreation decays 22/day.
 - Check scenarios are untyped functions: a runtime error then returns null and fails, where `-> String` returned "" and passed silently.
+- Builders never stand on the building they are raising; stand cells must be reachable by path.
+- Runtime errors inside the simulation do not fail `sim_checks` (only errors in a check function do), so every check run is also grepped for `SCRIPT ERROR`.
 - `tools/scratch/` holds local diagnostic probes and is git-ignored.
 - Valley layout: sacred tree at (50,50), ridge ruin at (128,128) (~110 blocks), hamlet at (112,134). The river runs beside the tree-ridge axis so nobody must cross water.
 

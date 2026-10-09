@@ -42,8 +42,13 @@ static func _mark_site(sim: RefCounted, agent: RefCounted, step: Dictionary, ste
 		var settlement: Dictionary = sim.settlements.get_settlement(agent.settlement_id)
 		if design == null or settlement.is_empty():
 			return Fail.NO_SITE
+		var memo: String = "%d:%s" % [agent.settlement_id, design.id]
+		if int(sim.settlement_life.no_site_until.get(memo, -1)) > sim.calendar.tick:
+			return Fail.NO_SITE
 		var choice: Dictionary = SiteFinder.find(sim, design, settlement)
 		if choice.is_empty():
+			# Nowhere fits today; the settlement will not search again until tomorrow.
+			sim.settlement_life.no_site_until[memo] = sim.calendar.tick + sim.calendar.ticks_per_day
 			return Fail.NO_SITE
 		agent.activity = "building"
 		sim.effects.action("mark_site", agent.id, {"template_id": design.id, "origin": choice.origin, "rotation": choice.rotation,

@@ -5,6 +5,7 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
+const Beliefs = preload("res://scripts/agents/beliefs.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Social = preload("res://scripts/sim/social.gd")
 const EffectsBuild = preload("res://scripts/sim/effects_build.gd")
@@ -31,6 +32,14 @@ static func apply(sim: RefCounted) -> void:
 				_pick_up(sim, agent, action)
 			"claim_bed":
 				_claim_bed(sim, agent, int(action.structure))
+			"gift":
+				_gift(sim, agent, action)
+			"treat":
+				_treat(sim, agent, action)
+			"join":
+				_join(sim, agent, int(action.settlement))
+			"leave":
+				_leave(sim, agent)
 			_:
 				EffectsBuild.apply(sim, agent, action)
 	for entry in effects.interactions:
@@ -51,6 +60,8 @@ static func _take_stock(sim: RefCounted, agent: RefCounted, action: Dictionary) 
 	if taken > 0:
 		agent.carrying = {"resource": resource, "amount": agent.carried(resource) + taken}
 	agent.step_result = {"took": taken}
+	# Whoever uses the stores sees what is left in them.
+	agent.beliefs.stock = sim.settlements.stock_of(int(action.settlement)).duplicate()
 
 
 static func _deposit(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
@@ -70,6 +81,7 @@ static func _deposit(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 	else:
 		agent.carrying = {}
 	agent.step_result = {"stored": stored if stored > 0 else (1 if agent.carrying.is_empty() else 0)}
+	agent.beliefs.stock = sim.settlements.stock_of(int(action.settlement)).duplicate()
 	sim.note_delivery(agent, resource, stored)
 
 
@@ -149,3 +161,55 @@ static func _claim_bed(sim: RefCounted, agent: RefCounted, id: int) -> void:
 	if int(entry.capacity.get("beds", 0)) - entry.residents.size() <= 0:
 		return
 	sim.set_home(agent, id)
+
+
+static func _gift(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
+	var receiver: RefCounted = sim.agents[int(action.to)]
+	if not receiver.is_present():
+		sim.drop_item(agent.cell, action.resource, float(action.amount))
+		return
+	if not receiver.carrying.is_empty():
+		sim.drop_item(receiver.cell, receiver.carrying.resource, float(receiver.carrying.amount))
+	receiver.carrying = {"resource": action.resource, "amount": float(action.amount)}
+	Beliefs.change_opinion(receiver.beliefs.relation(agent.id), 6.0)
+	Mind.add(agent, "helped_friend", sim.calendar.ticks_per_day, receiver.id)
+
+
+static func _treat(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
+	var patient: RefCounted = sim.agents[int(action.to)]
+	if not patient.is_present():
+		return
+	patient.health.treated = bool(patient.health.ill)
+	patient.health.hp = minf(float(patient.health.hp) + 8.0, 100.0)
+	Mind.add(patient, "cared_for", sim.calendar.ticks_per_day, agent.id)
+	Beliefs.change_opinion(patient.beliefs.relation(agent.id), 5.0)
+
+
+## Moving in: a new settlement, its stock believed, its designs half known.
+static func _join(sim: RefCounted, agent: RefCounted, settlement_id: int) -> void:
+	var settlement: Dictionary = sim.settlements.get_settlement(settlement_id)
+	if settlement.is_empty() or agent.settlement_id == settlement_id:
+		return
+	var from: String = sim.settlements.get_settlement(agent.settlement_id).get("name", "")
+	sim.set_home(agent, -1)
+	sim.settlements.join(agent, settlement_id)
+	agent.beliefs.stock = settlement.stock.duplicate()
+	for id in agent.beliefs.known_templates:
+		if not settlement.known_templates.has(id):
+			settlement.known_templates.append(id)
+	agent.low_mood_ticks = 0
+	Mind.add(agent, "arrived", sim.calendar.ticks_per_day)
+	sim.chronicle_event("migrated", settlement_id, {"name": agent.full_name(), "from": from}, "cause_unhappy", [agent.id])
+
+
+static func _leave(sim: RefCounted, agent: RefCounted) -> void:
+	agent.life = "departed"
+	agent.life_day = sim.calendar.day()
+	agent.intention = {}
+	agent.path.clear()
+	sim.set_home(agent, -1)
+	if sim.settlements.entries.has(agent.settlement_id):
+		sim.settlements.entries[agent.settlement_id].residents.erase(agent.id)
+	if agent.partner >= 0 and sim.agents[agent.partner].partner == agent.id:
+		sim.agents[agent.partner].partner = -1
+	sim.chronicle_event("departed", agent.settlement_id, {"name": agent.full_name()}, "cause_unhappy", [agent.id])

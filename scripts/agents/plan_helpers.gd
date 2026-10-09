@@ -74,5 +74,15 @@ static func wander_cell(sim: RefCounted, agent: RefCounted) -> Vector3i:
 	return agent.cell if cell.x < 0 else cell
 
 
+## Steps that put a carried load in the stores first, when a plan needs
+## hands free for `resource` (or for anything, with ""). Empty when not needed.
+static func free_hands(agent: RefCounted, resource: String = "") -> Array:
+	if agent.carrying.is_empty() or agent.settlement_id < 0:
+		return []
+	if not resource.is_empty() and agent.carrying.resource == resource:
+		return []
+	return [Plans.go_to(Plans.target(Plans.T.STORE, agent.settlement_id)), Plans.step(Plans.Op.DEPOSIT)]
+
+
 static func option(id: String, preference: float, steps: Array) -> Dictionary:
 	return Plans.option(id, preference, steps)
