@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M3 — Templates (next milestone; M2 command verification complete).
+M4 — Sim core + survival agents (M3 complete).
 
 ## Done
 
@@ -18,9 +18,11 @@ M3 — Templates (next milestone; M2 command verification complete).
 
 - M3 data slice: bounded room probes, component-driven function rules, edit-driven structures and cause records, trimmed capture, strict import validation, staged library writes and backup recovery. Three new scenarios cover two-bed recognition/roof loss, untrusted fields, and file round-trip/recovery.
 
+- M3 Templates: design tool (two-corner box marked with Break, zone/size/bounds check tinting the outline), design library screen (private list, isometric preview, functions/capacity/bill, save, import/export through `FileDialog`). Shelter floor no longer counts the tops of beds. Captures: `m3_design_box_1080.png`, `m3_library_1080.png` (hand-placed hut: dwelling + shelter, 2 beds, 9 sleepers, worst edit command 9 ms).
+
 ## Next
 
-- M3: design tool, capture, room_probe, function_rules, structures registry, library screen, import/export.
+- M4: sim core, nav grid, agents with survival plans, sim driver.
 
 ## Decisions
 

@@ -4,6 +4,9 @@ extends RefCounted
 ## the Capture node to save the frame. Never used in normal play.
 const Capture = preload("res://scripts/presentation/capture.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const Template = preload("res://scripts/building/template.gd")
+const TextForCapture = preload("res://scripts/core/text.gd")
+const Data = preload("res://scripts/core/data.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -16,6 +19,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 	var sim: RefCounted = main.sim
 	sim.calendar.tick = sim.calendar.ticks_per_day * 10 / 24
 	match scenario:
+		"design_library", "design_box", "design_invalid":
+			_design_test(main, shot, scenario)
+			return
 		"valley_overview":
 			camera_rig.overlook = true
 			camera_rig._overlook_distance = 120.0
@@ -41,6 +47,44 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 			camera_rig.yaw = deg_to_rad(180.0)
 			camera_rig.pitch = -0.12
 	shot.shoot_after()
+
+
+static func _design_test(main: Node3D, shot: Node, scenario: String) -> void:
+	var sim: RefCounted = main.sim
+	var origin: Vector3i = sim.features.sacred_tree + Vector3i(-7, 0, 5)
+	var design: RefCounted = Template.from_starter(Data.starter("miner_hut"))
+	# Prepare a level patch, then place the cottage through player commands.
+	for z in range(-2, 8):
+		for x in range(-2, 8):
+			for y in range(-1, 8):
+				sim.set_block(origin + Vector3i(x, y, z), Registry.id("dirt") if y == -1 else 0, 0, "capture_setup")
+	sim.god.add_stock("wood", 200)
+	sim.god.add_stock("stone", 200)
+	sim.god.add_stock("thatch", 200)
+	var worst: int = 0
+	var placed: int = 0
+	for block in design.placement(0):
+		var start: int = Time.get_ticks_usec()
+		var result: Dictionary = sim.apply_command({"type": "edit_block", "cell": origin + block[0], "id": block[1], "meta": block[2]})
+		worst = maxi(worst, Time.get_ticks_usec() - start)
+		if result.ok:
+			placed += 1
+	main.world_view.remesh_now()
+	main.avatar.global_position = Vector3(origin) + Vector3(2, 0.1, -3)
+	main.camera_rig.yaw = PI
+	main.camera_rig.pitch = -0.2
+	main.library_screen.library.root = "user://verification_capture_m3"
+	main.design_tool.begin()
+	main.design_tool.mark(origin)
+	if scenario == "design_box":
+		main.design_tool.set_process(false)
+		main.design_tool.show_box(origin, origin + design.size - Vector3i.ONE)
+	else:
+		main.design_tool.mark(origin + design.size - Vector3i.ONE)
+		if scenario == "design_invalid":
+			main.library_screen._notice.text = TextForCapture.label("template_blocks")
+	print("DESIGN placed=%d functions=%s capacity=%s worst_command_ms=%.2f" % [placed, design.functions, design.capacity, worst / 1000.0])
+	shot.shoot_after(60)
 
 
 ## Walk over a one-block step into a two-block wall, then jump at it.

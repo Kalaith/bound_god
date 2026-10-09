@@ -22,6 +22,8 @@ func check_cottage_capture_and_roof_loss() -> String:
 	var home: Dictionary = structures.at(origin + Vector3i(2, 0, 2))
 	if home.is_empty() or not home.functions.has("dwelling") or home.capacity.beds != 2:
 		return "A hand-built cottage was not recognised with two beds"
+	if home.capacity.get("sleepers") != 9:
+		return "Shelter floor counted furniture tops: %s" % str(home.capacity)
 	var result: Array = Capture.capture(world, origin - Vector3i(1, 0, 1), origin + Vector3i(5, 4, 5), "Cottage")
 	if result[0] == null or result[0].size != cottage.size or result[0].capacity.get("beds") != 2:
 		return "Capture did not trim and recognise the cottage: " + str(result[1])

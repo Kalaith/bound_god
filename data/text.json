@@ -90,6 +90,24 @@
     "capacity_beds": "beds",
     "capacity_stock": "storage units",
     "capacity_workers": "workers",
-    "capacity_sleepers": "sleepers"
+    "capacity_sleepers": "sleepers",
+    "design_library": "The design library",
+    "design_private": "Your private designs. Saving a design preserves knowledge; it does not ask anyone to build.",
+    "design_name": "Name this design",
+    "design_capture": "Capture in world",
+    "design_save": "Save design",
+    "design_import": "Import",
+    "design_export": "Export",
+    "design_close": "Close",
+    "design_filter": "*.json ; Building designs",
+    "design_empty_library": "No designs yet. Capture a building in the world, or import a shared design.",
+    "design_details": "{functions}  |  {capacity}\nSize: {size}\nMaterials: {bill}",
+    "design_saved": "The design is safe in your private library.",
+    "design_imported": "The shared design is now in your private library.",
+    "design_exported": "The design was exported.",
+    "design_corner_first": "Mark the first corner with Break. Place resets; Esc cancels.",
+    "design_corner_second": "Mark the opposite corner with Break. Place resets; Esc cancels.",
+    "design_default_name": "New design",
+    "design_hint": "B / D-pad left: design library"
   }
 }

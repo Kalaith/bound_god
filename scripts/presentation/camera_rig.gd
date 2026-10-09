@@ -14,6 +14,7 @@ var overlook_radius: float = 30.0
 var look_sensitivity: float = 0.5
 var invert_look: bool = false
 var mouse_look: bool = true
+var input_enabled: bool = true
 var arm := SpringArm3D.new()
 var camera := Camera3D.new()
 var _blend: float = 0.0
@@ -71,6 +72,8 @@ func _process(delta: float) -> void:
 	if target == null:
 		return
 	var stick := Input.get_vector("look_left", "look_right", "look_up", "look_down")
+	if not input_enabled:
+		stick = Vector2.ZERO
 	var speed: float = (1.2 + look_sensitivity * 2.4) * delta
 	var vertical: float = -1.0 if invert_look else 1.0
 	if overlook:

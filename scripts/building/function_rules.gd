@@ -32,7 +32,9 @@ static func evaluate(world: RefCounted, cells: Dictionary) -> Dictionary:
 		var floor_count: int = 0
 		if rule.has("min_roofed_floor"):
 			for cell in cells:
-				if RoomProbe.permeable(world, cell) and world.is_solid(cell + Vector3i.DOWN) and world.is_roofed(cell, int(rule.roof_reach)):
+				# Furniture is permeable to the probe, so the cell above a bed is not floor.
+				var below: Vector3i = cell + Vector3i.DOWN
+				if RoomProbe.permeable(world, cell) and world.is_solid(below) and not RoomProbe.permeable(world, below) and world.is_roofed(cell, int(rule.roof_reach)):
 					floor_count += 1
 			valid = valid and floor_count >= int(rule.min_roofed_floor)
 		if rule.has("sky_or_tree_within"):

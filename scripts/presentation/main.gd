@@ -13,6 +13,8 @@ const Overlays = preload("res://scripts/presentation/overlays.gd")
 const Hud = preload("res://scripts/presentation/ui/hud.gd")
 const Text = preload("res://scripts/core/text.gd")
 const CaptureScenes = preload("res://scripts/presentation/capture_scenes.gd")
+const DesignTool = preload("res://scripts/presentation/design_tool.gd")
+const LibraryScreen = preload("res://scripts/presentation/ui/template_library_screen.gd")
 
 var rig: Node3D
 var sim: RefCounted
@@ -22,6 +24,8 @@ var camera_rig: Node3D
 var builder: Node3D
 var overlays: Node3D
 var hud: Control
+var design_tool: Node3D
+var library_screen: Control
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
 var _loading: Label
@@ -69,6 +73,18 @@ func _start() -> void:
 	hud = Hud.new()
 	ui_layer.add_child(hud)
 	builder.message.connect(hud.flash)
+	design_tool = DesignTool.new()
+	design_tool.sim = sim
+	design_tool.builder = builder
+	add_child(design_tool)
+	design_tool.message.connect(hud.flash)
+	design_tool.captured.connect(_open_library)
+	library_screen = LibraryScreen.new()
+	ui_layer.add_child(library_screen)
+	library_screen.closed.connect(_close_library)
+	library_screen.capture_requested.connect(func() -> void:
+		_close_library()
+		design_tool.begin())
 	_sync_zone()
 	_loading.hide()
 	if capture_request.is_empty():
@@ -109,11 +125,24 @@ func _hud_state() -> Dictionary:
 		"selected": builder.selected,
 		"shrine": "",
 		"prayers": [],
+		"hint": design_tool.hint() if design_tool.active else Text.label("design_hint"),
+		"hotbar_visible": not design_tool.active and not library_screen.visible,
 		"crosshair": Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not capture_request.is_empty(),
 	}
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if library_screen != null and library_screen.visible:
+		return
+	if event.is_action_pressed("design_tool"):
+		design_tool.finish()
+		_open_library()
+		get_viewport().set_input_as_handled()
+		return
+	if design_tool != null and design_tool.active and event.is_action_pressed("toggle_settings"):
+		design_tool.finish()
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("toggle_settings"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
@@ -124,3 +153,21 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("toggle_fullscreen"):
 		var full: bool = DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+
+func _open_library(design: RefCounted = null) -> void:
+	builder.enabled = false
+	avatar.input_enabled = false
+	camera_rig.set_process_unhandled_input(false)
+	camera_rig.input_enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	library_screen.open(design)
+
+
+func _close_library() -> void:
+	library_screen.hide()
+	builder.enabled = true
+	avatar.input_enabled = true
+	camera_rig.set_process_unhandled_input(true)
+	camera_rig.input_enabled = true
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
