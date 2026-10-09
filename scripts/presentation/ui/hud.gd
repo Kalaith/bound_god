@@ -1,0 +1,195 @@
+extends Control
+## The small HUD: time and speed, the shrine the god stands at with its
+## Favour and the god's renown, the divine stock, the crosshair, the block
+## hotbar, a message line and the last three prayers. Main pushes a plain
+## state dictionary each frame; the HUD never reads the simulation itself.
+const Style = preload("res://scripts/presentation/ui/style.gd")
+const Registry = preload("res://scripts/world/block_registry.gd")
+const Text = preload("res://scripts/core/text.gd")
+
+var _clock: Label
+var _shrine: Label
+var _stock: Label
+var _message: Label
+var _hint: Label
+var _prayers: VBoxContainer
+var _slots: Array = []
+var _slot_labels: Array = []
+var _slot_counts: Array = []
+var _hotbar: HBoxContainer
+var _selected_name: Label
+var _message_time: float = 0.0
+var _atlas: Texture2D
+var _crosshair: Control
+var _prayer_keys: Array = []
+
+
+func _ready() -> void:
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_atlas = load("res://assets/blocks_atlas.png")
+	var top_left := Style.panel(0.72)
+	top_left.position = Vector2(20, 18)
+	add_child(top_left)
+	var left_box := VBoxContainer.new()
+	left_box.add_theme_constant_override("separation", 4)
+	top_left.add_child(left_box)
+	_clock = Style.label("", 24)
+	left_box.add_child(_clock)
+	_stock = Style.label("", 18, Style.MUTED)
+	left_box.add_child(_stock)
+	var top_center := Style.panel(0.72)
+	top_center.name = "ShrinePanel"
+	add_child(top_center)
+	_shrine = Style.label("", 22, Style.FAITH)
+	_shrine.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	top_center.add_child(_shrine)
+	_prayers = VBoxContainer.new()
+	_prayers.add_theme_constant_override("separation", 6)
+	add_child(_prayers)
+	_crosshair = Control.new()
+	_crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_crosshair.draw.connect(_draw_crosshair)
+	add_child(_crosshair)
+	_hotbar = HBoxContainer.new()
+	_hotbar.add_theme_constant_override("separation", 6)
+	add_child(_hotbar)
+	for slot in range(9):
+		var box := PanelContainer.new()
+		box.custom_minimum_size = Vector2(76, 82)
+		box.add_theme_stylebox_override("panel", Style.panel_box(0.7, 8, 6))
+		var column := VBoxContainer.new()
+		column.alignment = BoxContainer.ALIGNMENT_CENTER
+		column.add_theme_constant_override("separation", 0)
+		box.add_child(column)
+		var key := Style.label(str(slot + 1), 13, Style.MUTED)
+		column.add_child(key)
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(36, 36)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		column.add_child(icon)
+		var count := Style.label("", 15)
+		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		column.add_child(count)
+		_hotbar.add_child(box)
+		_slots.append(box)
+		_slot_labels.append(icon)
+		_slot_counts.append(count)
+	_selected_name = Style.label("", 20, Style.GOLD)
+	_selected_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_selected_name)
+	_message = Style.label("", 21)
+	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(_message)
+	_hint = Style.label("", 16, Style.MUTED)
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	add_child(_hint)
+	resized.connect(_layout)
+	_layout()
+
+
+func _layout() -> void:
+	var view: Vector2 = size
+	_crosshair.position = view * 0.5 - Vector2(12, 12)
+	_crosshair.size = Vector2(24, 24)
+	_hotbar.position = Vector2((view.x - 9 * 82) * 0.5, view.y - 104)
+	_selected_name.position = Vector2(view.x * 0.5 - 300, view.y - 140)
+	_selected_name.size = Vector2(600, 30)
+	_message.position = Vector2(view.x * 0.5 - 500, view.y - 182)
+	_message.size = Vector2(1000, 32)
+	_hint.position = Vector2(view.x - 820, view.y - 40)
+	_hint.size = Vector2(800, 24)
+	var shrine_panel: Control = get_node("ShrinePanel")
+	shrine_panel.position = Vector2(view.x * 0.5 - shrine_panel.size.x * 0.5, 18)
+	_prayers.position = Vector2(view.x - 520, 18)
+	_prayers.size = Vector2(500, 0)
+
+
+func _draw_crosshair() -> void:
+	var center := Vector2(12, 12)
+	var color := Color(1, 1, 1, 0.85)
+	_crosshair.draw_line(center - Vector2(9, 0), center - Vector2(3, 0), color, 2.0)
+	_crosshair.draw_line(center + Vector2(3, 0), center + Vector2(9, 0), color, 2.0)
+	_crosshair.draw_line(center - Vector2(0, 9), center - Vector2(0, 3), color, 2.0)
+	_crosshair.draw_line(center + Vector2(0, 3), center + Vector2(0, 9), color, 2.0)
+
+
+func flash(text: String, bad: bool = false) -> void:
+	_message.text = text
+	_message.add_theme_color_override("font_color", Style.WARN if bad else Style.WHITE)
+	_message_time = 2.6
+
+
+func _process(delta: float) -> void:
+	if _message_time > 0.0:
+		_message_time -= delta
+		_message.modulate.a = clampf(_message_time / 0.6, 0.0, 1.0)
+
+
+func _icon(block: int) -> Texture2D:
+	var region := AtlasTexture.new()
+	region.atlas = _atlas
+	var tile: Vector2i = Registry.tiles[block][0]
+	region.region = Rect2(tile.x * 16, tile.y * 16, 16, 16)
+	return region
+
+
+## state: clock, stock (resource -> int), hotbar (Array[int]), selected,
+## shrine (String), prayers (Array[String]), hint (String), crosshair (bool)
+func refresh(state: Dictionary) -> void:
+	_clock.text = state.get("clock", "")
+	var stock: Dictionary = state.get("stock", {})
+	var parts: Array = []
+	for resource in ["wood", "stone", "thatch", "berries", "ore", "soil"]:
+		if int(stock.get(resource, 0)) > 0:
+			parts.append("%s %d" % [Text.label("resource_" + resource), int(stock[resource])])
+	_stock.text = Text.label("hud_stock") + "  " + ("   ".join(parts) if not parts.is_empty() else Text.label("hud_stock_empty"))
+	_shrine.text = state.get("shrine", "")
+	get_node("ShrinePanel").visible = not _shrine.text.is_empty()
+	_crosshair.visible = state.get("crosshair", true)
+	_hint.text = state.get("hint", "")
+	var hotbar: Array = state.get("hotbar", [])
+	var selected: int = int(state.get("selected", 0))
+	var page: int = selected / 9
+	for slot in range(9):
+		var index: int = page * 9 + slot
+		var box: PanelContainer = _slots[slot]
+		if index >= hotbar.size():
+			box.visible = false
+			continue
+		box.visible = true
+		var block: int = hotbar[index]
+		var icon: TextureRect = _slot_labels[slot]
+		if icon.get_meta("block", -1) != block:
+			icon.texture = _icon(block)
+			icon.set_meta("block", block)
+		var resource: String = Registry.resource(block)
+		_slot_counts[slot].text = str(int(stock.get(resource, 0)))
+		var style: StyleBoxFlat = Style.panel_box(0.7, 8, 6)
+		if index == selected:
+			style.border_color = Style.GOLD
+			style.set_border_width_all(3)
+		box.add_theme_stylebox_override("panel", style)
+	if selected < hotbar.size():
+		var block: int = hotbar[selected]
+		_selected_name.text = "%s  ·  %s" % [Text.label("block_" + Registry.block_name(block)), Text.label("resource_" + Registry.resource(block))]
+	_set_prayers(state.get("prayers", []))
+	_hotbar.visible = state.get("hotbar_visible", true)
+	_selected_name.visible = _hotbar.visible
+
+
+func _set_prayers(lines: Array) -> void:
+	if lines == _prayer_keys:
+		return
+	_prayer_keys = lines.duplicate()
+	for child in _prayers.get_children():
+		child.queue_free()
+	for line in lines:
+		var card := Style.panel(0.72)
+		var text := Style.wrapped(str(line), 17, Style.FAITH)
+		text.custom_minimum_size.x = 460
+		card.add_child(text)
+		_prayers.add_child(card)

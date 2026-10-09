@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M2 — Hands-on building.
+M2 — Hands-on building (implemented and verified by capture; next step is an M2 sim_checks scenario for edit commands, then M3).
 
 ## Done
 
@@ -12,9 +12,13 @@ M2 — Hands-on building.
 
 - M1 Voxel valley: flat-array `voxel_world`, seeded `world_gen` (valley rim, ridge, river beside the long axis, trees, bushes, grass, boulders, ore, sacred tree, ruined ridge altar, ridge hamlet of two huts and a lean-to), padded-copy `chunk_mesher` with AO (0.9 s single thread, 0.28 s on the thread pool for the full valley), chunk views + concave collision on layer 2, avatar with step-up/jump, spring-arm camera with overlook, sun by hour. Full valley at 1080p: 60 fps (vsync), GPU 5.7 ms. Scripted walk test: climbs a 1-block step, stopped by a 2-block wall.
 
+- M2 Hands-on building: core `Sim` (calendar, god state, resource sites, logged commands), `voxel_ray` DDA, build controller (break/place/hold-repeat, door orientation, hotbar 1-9 + wheel, red preview with reason), divine stock, presence boundary (lattice wall + ground ring), HUD (clock, stock, hotbar, messages). Captures: `build_test` places 6 blocks, re-mesh 9-11 ms; `zone_edge` avatar stops at 15.6 of radius 16; `walk_test` still passes.
+
 ## Next
 
-M2: voxel_ray, build controller, divine stock, presence zone boundary, hotbar.
+- Add a sim_checks scenario for edit commands (stock, zone, unbreakable, bush harvest).
+- M3: design tool, capture, room_probe, function_rules, structures registry, library screen, import/export.
+- Text: edit `data/text.json` through a compact formatter (several labels per line) so it stays under 800 lines.
 
 ## Decisions
 
