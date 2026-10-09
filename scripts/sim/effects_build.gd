@@ -148,7 +148,9 @@ static func _repair(sim: RefCounted, agent: RefCounted, action: Dictionary) -> v
 	var cell: Vector3i = action.cell
 	var block: int = int(action.block)
 	var resource: String = Registry.resource(block)
-	if sim.voxels.get_block(cell) != 0 or agent.carried(resource) < 1.0 or sim.is_occupied(cell):
+	var current: int = sim.voxels.get_block(cell)
+	var clear: bool = current == 0 or (bool(action.get("rubble", false)) and (current == Registry.id("cobble") or current == Registry.id("tall_grass")))
+	if not clear or agent.carried(resource) < 1.0 or sim.is_occupied(cell):
 		agent.step_result = {"repaired": 0}
 		return
 	sim.set_block(cell, block, int(action.meta), "npc:%d" % agent.id)

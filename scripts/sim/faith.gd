@@ -290,6 +290,23 @@ func record_prayer(sim: RefCounted, agent: RefCounted, shrine_id: int, intent: D
 	agent.stats.prayers += 1
 
 
+## A shrine's remembered blocks that are missing now, the altar first.
+func missing_blocks(sim: RefCounted, id: int) -> Array:
+	var shrine: Dictionary = shrines.get(id, {})
+	var altar: int = Registry.id("altar")
+	var rubble: int = Registry.id("cobble")
+	var result: Array = []
+	for entry in shrine.get("layout", []):
+		var current: int = sim.voxels.get_block(entry[0])
+		if entry[1] == 0 or current == entry[1] or (current != 0 and current != rubble):
+			continue
+		if entry[1] == altar:
+			result.push_front(entry)
+		else:
+			result.append(entry)
+	return result
+
+
 # --- Contract used by other systems -------------------------------------------
 
 func perceive(sim: RefCounted, agent: RefCounted, radius: float) -> bool:

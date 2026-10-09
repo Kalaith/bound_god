@@ -8,6 +8,7 @@ const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Beliefs = preload("res://scripts/agents/beliefs.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
+const FaithState = preload("res://scripts/agents/faith_state.gd")
 
 const Topic = Plans.Topic
 const Need = Personality.Need
@@ -47,6 +48,8 @@ static func resolve(sim: RefCounted, entry: Dictionary) -> void:
 		Topic.STORY:
 			if sim.faith != null:
 				sim.faith.tell_story(sim, a, b)
+				if sim.requests != null:
+					sim.requests.on_story(sim, a, b)
 	_note_bonds(sim, a, b, before_a, before_b)
 
 
@@ -103,6 +106,9 @@ static func _small_talk(sim: RefCounted, a: RefCounted, b: RefCounted) -> void:
 		Mind.add(b, "good_chat", day, a.id)
 	_gossip(sim, a, b)
 	_knowledge(sim, a, b)
+	# Believers bring the god into conversation.
+	if sim.faith != null and FaithState.stage(a.faith) >= 3 and FaithState.stage(b.faith) < FaithState.stage(a.faith) and sim.rng.randf() < 0.25:
+		sim.faith.tell_story(sim, a, b)
 
 
 static func _gossip(sim: RefCounted, a: RefCounted, b: RefCounted) -> void:

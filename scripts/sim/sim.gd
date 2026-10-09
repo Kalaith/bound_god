@@ -28,6 +28,7 @@ const Director = preload("res://scripts/sim/director.gd")
 const CommandsWorld = preload("res://scripts/sim/commands_world.gd")
 const Template = preload("res://scripts/building/template.gd")
 const Faith = preload("res://scripts/sim/faith.gd")
+const Requests = preload("res://scripts/sim/requests.gd")
 
 var world_seed: int = 1
 var rng := RandomNumberGenerator.new()
@@ -113,6 +114,7 @@ func setup(seed: int, options: Dictionary) -> void:
 	Population.found(self, options)
 	faith = Faith.new()
 	faith.setup(self)
+	requests = Requests.new()
 	_refresh_site_buckets()
 	settlement_life.refresh_jobs(self)
 

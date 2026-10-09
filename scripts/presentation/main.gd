@@ -23,6 +23,7 @@ const ConstructionView = preload("res://scripts/presentation/construction_view.g
 const StoresPanel = preload("res://scripts/presentation/ui/stores_panel.gd")
 const SettlementPanel = preload("res://scripts/presentation/ui/settlement_panel.gd")
 const FaithController = preload("res://scripts/presentation/faith_controller.gd")
+const RequestsPanel = preload("res://scripts/presentation/ui/requests_panel.gd")
 
 var rig: Node3D
 var sim: RefCounted
@@ -42,6 +43,7 @@ var construction_view: Node3D
 var stores_panel: Control
 var settlement_panel: Control
 var faith: Node
+var requests_panel: Control
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
 var _loading: Label
@@ -134,10 +136,18 @@ func _start() -> void:
 	people.hud = hud
 	people.main = self
 	add_child(people)
+	requests_panel = RequestsPanel.new()
+	requests_panel.sim = sim
+	ui_layer.add_child(requests_panel)
+	requests_panel.closed.connect(func() -> void:
+		requests_panel.hide()
+		builder.enabled = true
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
 	faith = FaithController.new()
 	faith.sim = sim
 	faith.main = self
 	add_child(faith)
+	requests_panel.command.connect(faith.send)
 	_sync_zone()
 	_loading.hide()
 	if capture_request.is_empty():
@@ -195,7 +205,7 @@ func _hud_state() -> Dictionary:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if library_screen != null and (library_screen.visible or stores_panel.visible or faith.menu.visible):
+	if library_screen != null and (library_screen.visible or stores_panel.visible or faith.menu.visible or requests_panel.visible):
 		return
 	if event.is_action_pressed("design_tool"):
 		design_tool.finish()
@@ -237,7 +247,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Modal screens take the world's input; the inspector does not.
 func accepts_world_input() -> bool:
-	return library_screen != null and not library_screen.visible and not stores_panel.visible and not faith.menu.visible
+	return library_screen != null and not library_screen.visible and not stores_panel.visible and not faith.menu.visible and not requests_panel.visible
 
 
 func _offer(design: RefCounted) -> void:
@@ -272,7 +282,9 @@ func open_stores_for(id: int) -> void:
 
 
 func open_requests() -> void:
-	hud.flash(Text.label("requests_none_yet"), true)
+	builder.enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	requests_panel.open()
 
 
 func rest(days: float) -> void:

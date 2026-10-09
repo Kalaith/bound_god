@@ -205,6 +205,18 @@
 		"hud_shrine": "{shrine} · Favour {favour} · Renown {renown}",
 		"hud_dormant": "Dormant at {shrine}",
 		"hud_prayer": "{name} prays for {intent}",
-		"requests_none_yet": "Requests are not yet heard here."
+		"request_unknown": "No such request.",
+		"request_target": "That cannot be asked there.",
+		"request_posted": "The request is spoken to the faithful.",
+		"requests_title": "Ask of the faithful",
+		"requests_hint": "A request goes to this shrine's believers. Each decides for themselves; success costs {boon} Favour as a blessing.",
+		"request_offer_carry": "Carry my name to {place}",
+		"request_offer_raise": "Raise a shrine at {place}",
+		"request_offer_restore": "Restore {shrine}",
+		"request_offer_bring": "Bring 10 {resource}",
+		"requests_history": "Asked before",
+		"request_state_open": "waiting",
+		"request_state_done": "answered",
+		"request_state_failed": "unanswered"
 	}
 }

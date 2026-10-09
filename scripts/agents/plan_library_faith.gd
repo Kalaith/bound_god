@@ -7,6 +7,7 @@ const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 const DeliberationFaith = preload("res://scripts/agents/deliberation_faith.gd")
+const PlansQuest = preload("res://scripts/agents/plan_library_quest.gd")
 
 const Kind = Goals.Kind
 const Op = Plans.Op
@@ -26,6 +27,8 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 		Kind.TEND_SHRINE:
 			var shrine: int = int(goal.target)
 			return [H.option("tend_shrine", 1.0, [Plans.go_to(Plans.target(T.SHRINE, shrine)), Plans.step(Op.TEND, {"shrine": shrine, "ticks": 60})])]
+		Kind.RESTORE_SHRINE, Kind.PREACH:
+			return PlansQuest.plans(sim, agent, goal, {})
 	if sim.requests != null:
 		return sim.requests.plans(sim, agent, goal)
 	return []

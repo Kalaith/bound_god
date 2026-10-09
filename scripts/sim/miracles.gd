@@ -26,6 +26,8 @@ static func apply_command(sim: RefCounted, command: Dictionary) -> Dictionary:
 		"avatar_moved":
 			sim.god.avatar_cell = command.cell
 			return {"ok": true, "reason": ""}
+		"post_request":
+			return sim.requests.post(sim, command) if sim.requests != null else {"ok": false, "reason": "command_unknown"}
 	return {"ok": false, "reason": "command_unknown"}
 
 

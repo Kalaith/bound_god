@@ -114,6 +114,8 @@ static func _place(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ti
 
 
 static func _repair(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:
+	if step.has("shrine") or step.has("altar_at"):
+		return _restore(sim, agent, step, step_ticks)
 	var structure: int = int(step.structure)
 	if agent.step_result.get("pending", false):
 		return Plans.RUNNING
@@ -136,6 +138,36 @@ static func _repair(sim: RefCounted, agent: RefCounted, step: Dictionary, step_t
 	agent.activity = "building"
 	agent.step_result["pending"] = true
 	sim.effects.action("repair_block", agent.id, {"cell": usable[0], "block": usable[1], "meta": usable[2], "structure": structure})
+	return Plans.RUNNING
+
+
+## Put a shrine's old blocks back (the altar first), or set up a new altar.
+static func _restore(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:
+	if agent.step_result.get("pending", false):
+		return Plans.RUNNING
+	if agent.step_result.has("repaired") and int(agent.step_result.repaired) == 0:
+		return Plans.DONE
+	agent.step_result = {}
+	if agent.carried("stone") < 1.0:
+		return Plans.DONE
+	var entry: Array = []
+	if step.has("altar_at"):
+		if sim.voxels.get_block(step.altar_at) == Registry.id("altar"):
+			return Plans.DONE
+		entry = [step.altar_at, Registry.id("altar"), 0]
+	else:
+		var missing: Array = sim.faith.missing_blocks(sim, int(step.shrine))
+		if missing.is_empty():
+			return Plans.DONE
+		entry = missing[0]
+	if not _within_reach(agent, entry[0]):
+		var stand: Vector3i = sim.nav.nearest_walkable(entry[0] + Vector3i(1, 0, 0), 3)
+		var moving: int = _approach(sim, agent, stand)
+		if moving != Plans.DONE:
+			return moving if step_ticks < 600 else Fail.TIMED_OUT
+	agent.activity = "building"
+	agent.step_result["pending"] = true
+	sim.effects.action("repair_block", agent.id, {"cell": entry[0], "block": entry[1], "meta": entry[2], "structure": -1, "rubble": true})
 	return Plans.RUNNING
 
 

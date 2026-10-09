@@ -59,5 +59,51 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 			var condition: float = float(sim.faith.shrines[shrine_id].condition)
 			if condition < 80.0:
 				out.append(_candidate(Kind.TEND_SHRINE, 0.3 * devotion * (1.0 - condition / 100.0) * 2.0, "reason_shrine_worn", shrine_id, condition))
+	if stage >= 3:
+		_preach(sim, agent, out, devotion)
+		_restore(sim, agent, out, devotion, stage)
 	if sim.requests != null:
 		sim.requests.candidates(sim, agent, out)
+
+
+## Tell someone who does not yet believe: friends, neighbours, strangers met.
+static func _preach(sim: RefCounted, agent: RefCounted, out: Array, devotion: float) -> void:
+	var listener: int = -1
+	var best: float = INF
+	var my_stage: int = FaithState.stage(agent.faith)
+	for other_id in sim.spatial.near("agents", agent.cell, 30.0):
+		var other: RefCounted = sim.agents[other_id]
+		if other_id == agent.id or not other.available_to_talk() or FaithState.stage(other.faith) >= mini(my_stage, 3):
+			continue
+		var relation: Dictionary = agent.beliefs.relations.get(other_id, {})
+		if sim.calendar.tick - int(relation.get("last_chat_tick", -9999)) < sim.calendar.ticks_per_day / 2:
+			continue
+		var d: float = Vector2(other.cell.x - agent.cell.x, other.cell.z - agent.cell.z).length()
+		if d < 30.0 and d < best:
+			listener = other_id
+			best = d
+	if listener < 0:
+		return
+	var utility: float = 0.2 * devotion * (1.0 + agent.personality.sociability)
+	if agent.quest_id >= 0 and sim.requests.get_request(agent.quest_id).get("kind", "") == "carry_name":
+		utility += 0.3
+	if agent.has_trait("curious") or agent.ambition.get("id", "") == "map_the_wilds":
+		utility += 0.1
+	out.append(_candidate(Kind.PREACH, utility, "reason_unbelievers", listener))
+
+
+## Believers who know of a fallen shrine near home want it standing again.
+static func _restore(sim: RefCounted, agent: RefCounted, out: Array, devotion: float, stage: int) -> void:
+	var keys: Array = agent.beliefs.places.keys()
+	keys.sort()
+	for key in keys:
+		var place: Dictionary = agent.beliefs.places[key]
+		if place.kind != "shrine" or not sim.faith.shrines.has(int(place.id)) or sim.faith.shrines[int(place.id)].state != "fallen":
+			continue
+		if Vector2(place.cell.x - agent.cell.x, place.cell.z - agent.cell.z).length() > 45.0:
+			continue
+		var utility: float = (0.6 if stage >= 4 else 0.35) * devotion
+		if agent.ambition.get("id", "") == "raise_shrine":
+			utility += 0.3
+		out.append(_candidate(Kind.RESTORE_SHRINE, utility, "reason_fallen_shrine", int(place.id)))
+		return

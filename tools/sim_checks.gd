@@ -15,6 +15,7 @@ const MODULES: Array[String] = [
 	"res://tools/checks/checks_work.gd",
 	"res://tools/checks/checks_social.gd",
 	"res://tools/checks/checks_faith.gd",
+	"res://tools/checks/checks_expansion.gd",
 ]
 
 

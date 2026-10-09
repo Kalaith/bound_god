@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M9 — Expansion (M8 complete).
+M10 — Threats and change (M9 complete).
 
 ## Done
 
@@ -30,9 +30,11 @@ M9 — Expansion (M8 complete).
 
 - M8 Faith: shrines (the sacred tree, the fallen ridge altar, any altar placed later) with support from three days of prayers, radius 16 + 6√support, Favour from prayers (halved below condition 30), condition decay and tending, active / dormant / fallen states, expulsion to the strongest active shrine or dormancy, waking when a shrine becomes active again, a five-day grace for the tree and 30 starting Favour; faith in people (first sight of the avatar, fear for the cautious, witnessed miracles weighted by relevance, answered prayers, unheard desperate prayers, drift toward friends, neglect, harm to homes by the god's hand with fear worship); Pray with intents, TendShrine; miracles (Whisper as an inbox message that raises a goal kind for a day and is logged, Bless Growth, Kindle, Veil of Fog, Mend) with identity discount and penalty; HUD shrine line and prayer feed, shrine menu (shrines and transfer, miracles with costs, designs, stores, rest), Whisper menu in the inspector, miracle flash, avatar position reported to the sim (not logged for replay). Checks: prayers raise Favour, Bless Growth before a hungry believer raises devotion and the harvest aspect, a whisper reaches the decision log and an urged adoption, an unsupported shrine goes dormant and expels the god. Capture: `m8_shrine_menu_1080.png`.
 
+- M9 Expansion: divine requests (carry the name to a place, bring materials, restore a shrine, raise one) posted at the active shrine and broadcast to its believers, each of whom weighs devotion, bravery, curiosity, needs, danger and the boon; Quest goals and plans (travel and tell stories to three people there, gather and deliver, quarry or fetch stone and put a shrine's old blocks back altar first, set up an altar); Preach (stories to those who believe less, a bonus on a carry-the-name quest); believers bring the god into small talk; RestoreShrine for believers who know a fallen shrine near home; boons paid from Favour; requests fail at their deadline; requests panel in the shrine menu. Tuning: stories give a stranger 8 + 12 × trust devotion and story gain is 40; neglect wears only on Curious and above. Checks: the name reaches the ridge (6 ridge folk know the god), the altar is restored by the ridge folk and wakes on day 6, and the god transfers there; a story makes a stranger aware; a whisper never forces a goal below commitment. Capture: `m9_ridge_transfer_1080.png`.
+
 ## Next
 
-- M9: requests, quests, Preach / Story, RestoreShrine, transfer, expulsion, dormancy end to end.
+- M10: wolves, raider band and director, desecration, structure decay, abandonment and overgrowth.
 
 ## Decisions
 
@@ -57,6 +59,7 @@ M9 — Expansion (M8 complete).
 - Runtime errors inside the simulation do not fail `sim_checks` (only errors in a check function do), so every check run is also grepped for `SCRIPT ERROR`.
 - Offered designs reach residents of the shrine's settlement who know the god (seeing the avatar is enough).
 - A lash-out break spends itself on one fight, then the break is sulking: repeated insults otherwise killed both people.
+- RestoreShrine is open to Believers (utility 0.35 × devotion) as well as the Devout (0.6 ×): with only the Devout the ridge altar was never restored by its own people.
 - `tools/scratch/` holds local diagnostic probes and is git-ignored.
 - Valley layout: sacred tree at (50,50), ridge ruin at (128,128) (~110 blocks), hamlet at (112,134). The river runs beside the tree-ridge axis so nobody must cross water.
 

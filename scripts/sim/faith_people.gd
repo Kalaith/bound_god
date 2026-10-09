@@ -149,7 +149,8 @@ static func daily(sim: RefCounted) -> void:
 		var change: float = 0.0
 		if count > 0:
 			change += (total / count - float(agent.faith.devotion)) * drift
-		if now - int(agent.faith.last_prayer_tick) > day:
+		# Neglect wears at belief, not at a name merely heard.
+		if now - int(agent.faith.last_prayer_tick) > day and FaithState.stage(agent.faith) >= 2:
 			change -= Balance.number("faith.decay_per_day")
 		changes[agent.id] = change
 	for id in changes:
@@ -178,7 +179,7 @@ static func tell_story(sim: RefCounted, teller: RefCounted, listener: RefCounted
 	if not listener.faith.knows:
 		_learn(sim, listener, "cause_story|" + teller.given_name)
 		Mind.add(listener, "heard_of_god", sim.calendar.ticks_per_day)
-		gain(listener, 5.0 * trust)
+		gain(listener, 8.0 + 12.0 * trust)
 	else:
 		var difference: float = float(teller.faith.devotion) - float(listener.faith.devotion)
 		if difference > 0.0:
