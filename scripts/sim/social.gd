@@ -78,7 +78,10 @@ static func _bond_event(sim: RefCounted, before: String, after: String, a: RefCo
 			kind = "" if before == "enemy" else "became_rivals"
 		"enemy":
 			kind = "became_enemies"
-	if not kind.is_empty():
+	# A bond is written down when it changes, not each time it is re-crossed.
+	var relation: Dictionary = a.beliefs.relation(b.id)
+	if not kind.is_empty() and relation.get("noted", "") != kind:
+		relation["noted"] = kind
 		sim.chronicle_event(kind, a.settlement_id, {"a": a.given_name, "b": b.given_name}, "", [a.id, b.id])
 
 

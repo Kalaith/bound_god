@@ -10,6 +10,7 @@ const Data = preload("res://scripts/core/data.gd")
 const CapturePeople = preload("res://scripts/presentation/capture_people.gd")
 const CaptureSettlement = preload("res://scripts/presentation/capture_settlement.gd")
 const CaptureFaith = preload("res://scripts/presentation/capture_faith.gd")
+const CaptureTime = preload("res://scripts/presentation/capture_time.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -20,7 +21,11 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 	var camera_rig: Node3D = main.camera_rig
 	var avatar: Node3D = main.avatar
 	var sim: RefCounted = main.sim
-	sim.calendar.tick = sim.calendar.ticks_per_day * 10 / 24
+	if not request.has("load"):
+		sim.calendar.tick = sim.calendar.ticks_per_day * 10 / 24
+	if scenario.begins_with("time_"):
+		CaptureTime.arrange(main, shot, scenario)
+		return
 	if scenario.begins_with("faith_"):
 		CaptureFaith.arrange(main, shot, scenario)
 		return

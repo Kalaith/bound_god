@@ -33,6 +33,8 @@ const Threats = preload("res://scripts/sim/threats.gd")
 const Raids = preload("res://scripts/sim/raids.gd")
 
 var world_seed: int = 1
+## How this world was made (world kind, size); saved so a load regenerates it.
+var options: Dictionary = {}
 var rng := RandomNumberGenerator.new()
 var calendar: RefCounted
 var voxels: RefCounted
@@ -74,14 +76,17 @@ var _sites_version: int = -1
 var _events_seen: int = 0
 
 
-static func create(seed: int, options: Dictionary = {}) -> RefCounted:
+static func create(seed: int, setup_options: Dictionary = {}) -> RefCounted:
 	var sim = load("res://scripts/sim/sim.gd").new()
-	sim.setup(seed, options)
+	sim.setup(seed, setup_options)
 	return sim
 
 
-func setup(seed: int, options: Dictionary) -> void:
+func setup(seed: int, setup_options: Dictionary) -> void:
+	var restoring: bool = setup_options.get("restoring", false)
 	Registry.build()
+	options = setup_options.duplicate(true)
+	options.erase("restoring")
 	world_seed = maxi(seed, 1)
 	rng.seed = world_seed
 	calendar = Calendar.new()
@@ -90,21 +95,22 @@ func setup(seed: int, options: Dictionary) -> void:
 	god = GodState.new()
 	sites = ResourceSites.new()
 	var size: Vector3i
-	if options.has("size"):
-		size = options.size
+	if setup_options.has("size"):
+		size = setup_options.size
 	else:
 		var raw: Array = Balance.list("world.size")
 		size = Vector3i(int(raw[0]), int(raw[1]), int(raw[2]))
 	voxels = VoxelWorld.new(size)
 	var gen := WorldGen.new(voxels, rng)
-	var result: Dictionary = gen.flat(int(options.get("ground", 4))) if options.get("world", "valley") == "flat" else gen.valley()
+	var result: Dictionary = gen.flat(int(setup_options.get("ground", 4))) if setup_options.get("world", "valley") == "flat" else gen.valley()
 	features = result.features
 	sites.load_generated(result.sites)
 	structures = Structures.new()
 	structures.initialize(voxels)
 	nav = NavGrid.new(voxels)
 	nav.path_cap = Balance.integer("agents.paths_per_tick")
-	nav.build()
+	if not restoring:
+		nav.build()
 	spatial = Spatial.new()
 	effects = Effects.new()
 	settlements = Settlements.new()
@@ -114,17 +120,29 @@ func setup(seed: int, options: Dictionary) -> void:
 	director = Director.new()
 	_events_seen = structures.events.size()
 	god.grace_until_tick = calendar.tick + calendar.ticks_for_days(Balance.number("shrines.grace_days"))
-	Population.found(self, options)
 	faith = Faith.new()
-	faith.setup(self)
 	requests = Requests.new()
 	threats = Threats.new()
 	raids = Raids.new()
 	director.raid_hooks = raids
-	if options.get("threats", options.get("world", "valley") == "valley"):
+	if restoring:
+		return
+	Population.found(self, setup_options)
+	faith.setup(self)
+	if setup_options.get("threats", setup_options.get("world", "valley") == "valley"):
 		threats.setup_wolves(self)
 	_refresh_site_buckets()
 	settlement_life.refresh_jobs(self)
+
+
+## Caches and counters that follow from restored state.
+func after_restore() -> void:
+	_events_seen = structures.events.size()
+	_sites_version = -1
+	_templates.clear()
+	director.raid_hooks = raids
+	_refresh_site_buckets()
+	_refresh_agent_buckets()
 
 
 func apply_command(command: Dictionary) -> Dictionary:

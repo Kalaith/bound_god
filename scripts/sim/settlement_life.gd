@@ -199,11 +199,12 @@ func missing_blocks(sim: RefCounted, id: int) -> Array:
 
 
 func to_dict() -> Dictionary:
-	return {"layouts": layouts.duplicate(true), "samples": samples.duplicate(true), "no_site_until": no_site_until.duplicate()}
+	return {"layouts": layouts.duplicate(true), "samples": samples.duplicate(true), "no_site_until": no_site_until.duplicate(),
+		"boards": boards.duplicate(true)}
 
 
 func from_dict(data: Dictionary) -> void:
 	layouts = data.layouts
 	samples = data.samples
 	no_site_until = data.no_site_until
-	boards.clear()
+	boards = data.boards

@@ -172,6 +172,5 @@ func from_dict(data: Dictionary) -> void:
 	next_id = int(data.next_id)
 	reserved.clear()
 	for id in sites:
-		sites[id].erase("access")
 		for entry in sites[id].order:
 			reserved[entry[0]] = id

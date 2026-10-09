@@ -131,6 +131,7 @@ func on_block(sim: RefCounted, cell: Vector3i, old: int, block: int, source: Str
 			shrine.state = "dormant"
 			shrine.condition = 60.0
 			shrine.below_days = 0
+			shrine["restored_tick"] = sim.calendar.tick
 			sim.chronicle_event("shrine_restored", int(shrine.settlement_id), {"shrine": shrine.name}, _cause(source), _people(sim, source))
 		return
 	if block == altar and old != altar:

@@ -66,7 +66,8 @@ func build() -> void:
 				if clear[blocks[index]] == 1 and clear[blocks[index + stride_y]] == 1 and floor[blocks[index - stride_y]] == 1:
 					stand[index] = 1
 					count += 1
-	astar.reserve_space(count)
+	if count > astar.get_point_capacity():
+		astar.reserve_space(count)
 	for index in range(stand.size()):
 		if stand[index] == 1:
 			var cell: Vector3i = world.cell_of(index)

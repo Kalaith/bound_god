@@ -24,6 +24,8 @@ static func request() -> Dictionary:
 			result["frames"] = int(argument.trim_prefix("--frames="))
 		elif argument.begins_with("--seed="):
 			result["seed"] = int(argument.trim_prefix("--seed="))
+		elif argument.begins_with("--load="):
+			result["load"] = argument.trim_prefix("--load=")
 	return result if result.has("scenario") else {}
 
 

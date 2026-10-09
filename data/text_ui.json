@@ -217,6 +217,18 @@
 		"requests_history": "Asked before",
 		"request_state_open": "waiting",
 		"request_state_done": "answered",
-		"request_state_failed": "unanswered"
+		"request_state_failed": "unanswered",
+		"rest_title": "The god rests at the shrine for {days} days…",
+		"rest_while": "While you rested…",
+		"rest_quiet": "The valley went about its days; nothing the chronicle would keep.",
+		"rest_continue": "Return",
+		"chronicle_title": "The chronicle",
+		"chronicle_everywhere": "Everywhere",
+		"chronicle_empty": "Nothing has been written yet.",
+		"save_done": "The world is saved.",
+		"save_autosaved": "The world is saved for the new day.",
+		"save_load_failed": "The saved world could not be loaded: {error}",
+		"save_damaged": "the save is damaged",
+		"save_version": "the save is from another version"
 	}
 }

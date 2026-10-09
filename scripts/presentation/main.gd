@@ -5,6 +5,7 @@ const EnvironmentRig = preload("res://scripts/presentation/environment_rig.gd")
 const Capture = preload("res://scripts/presentation/capture.gd")
 const Session = preload("res://scripts/presentation/session.gd")
 const Sim = preload("res://scripts/sim/sim.gd")
+const SaveStore = preload("res://scripts/core/save_store.gd")
 const WorldView = preload("res://scripts/presentation/world_view.gd")
 const Avatar = preload("res://scripts/presentation/avatar.gd")
 const CameraRig = preload("res://scripts/presentation/camera_rig.gd")
@@ -25,6 +26,9 @@ const SettlementPanel = preload("res://scripts/presentation/ui/settlement_panel.
 const FaithController = preload("res://scripts/presentation/faith_controller.gd")
 const RequestsPanel = preload("res://scripts/presentation/ui/requests_panel.gd")
 const ThreatViews = preload("res://scripts/presentation/threat_views.gd")
+const WorldIO = preload("res://scripts/presentation/world_io.gd")
+const RestOverlay = preload("res://scripts/presentation/ui/rest_overlay.gd")
+const ChronicleScreen = preload("res://scripts/presentation/ui/chronicle_screen.gd")
 
 var rig: Node3D
 var sim: RefCounted
@@ -45,6 +49,9 @@ var stores_panel: Control
 var settlement_panel: Control
 var faith: Node
 var requests_panel: Control
+var world_io: Node
+var rest_overlay: Control
+var chronicle_screen: Control
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
 var _loading: Label
@@ -61,13 +68,22 @@ func _ready() -> void:
 	_loading.position = Vector2(80, 80)
 	ui_layer.add_child(_loading)
 	capture_request = Capture.request()
+	if capture_request.has("load"):
+		Session.mode = "load"
+		Session.slot = capture_request.load
 	await get_tree().process_frame
 	_start()
 
 
 func _start() -> void:
 	var started: int = Time.get_ticks_msec()
-	sim = Sim.create(Session.seed)
+	if Session.mode == "load":
+		sim = WorldIO.load_slot(Session.slot)
+		if sim == null:
+			_loading.text = Text.format("save_load_failed", {"error": SaveStore.last_error})
+			return
+	else:
+		sim = Sim.create(Session.seed)
 	var generated: int = Time.get_ticks_msec()
 	driver = SimDriver.new()
 	driver.sim = sim
@@ -82,6 +98,10 @@ func _start() -> void:
 	add_child(avatar)
 	var tree: Vector3i = sim.features.sacred_tree
 	avatar.global_position = Vector3(tree.x + 0.5, tree.y + 0.2, tree.z + 4.5)
+	if Session.mode == "load" and sim.god.active_shrine_id != 1:
+		var shrine: Dictionary = sim.faith.current(sim)
+		if not shrine.is_empty():
+			avatar.global_position = Vector3(sim.faith.shrine_access(sim, int(shrine.id), shrine.cell)) + Vector3(0.5, 0.2, 0.5)
 	camera_rig = CameraRig.new()
 	camera_rig.target = avatar
 	add_child(camera_rig)
@@ -153,6 +173,27 @@ func _start() -> void:
 	faith.main = self
 	add_child(faith)
 	requests_panel.command.connect(faith.send)
+	world_io = WorldIO.new()
+	world_io.sim = sim
+	world_io.hud = hud
+	world_io.slot = Session.slot
+	add_child(world_io)
+	rest_overlay = RestOverlay.new()
+	rest_overlay.sim = sim
+	rest_overlay.driver = driver
+	ui_layer.add_child(rest_overlay)
+	rest_overlay.finished.connect(func() -> void:
+		builder.enabled = true
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+	chronicle_screen = ChronicleScreen.new()
+	chronicle_screen.sim = sim
+	ui_layer.add_child(chronicle_screen)
+	chronicle_screen.closed.connect(func() -> void:
+		chronicle_screen.hide()
+		builder.enabled = true
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+	if sim.god.dormant:
+		avatar.set_dormant(true)
 	_sync_zone()
 	_loading.hide()
 	if capture_request.is_empty():
@@ -210,7 +251,7 @@ func _hud_state() -> Dictionary:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if library_screen != null and (library_screen.visible or stores_panel.visible or faith.menu.visible or requests_panel.visible):
+	if library_screen != null and _modal_open():
 		return
 	if event.is_action_pressed("design_tool"):
 		design_tool.finish()
@@ -230,6 +271,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("interact"):
 		if not faith.try_open_menu():
 			_open_stores()
+	elif event.is_action_pressed("quick_save"):
+		world_io.save()
+	elif event.is_action_pressed("toggle_chronicle"):
+		builder.enabled = false
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		chronicle_screen.open()
 	elif event.is_action_pressed("toggle_settlement"):
 		if settlement_panel.visible:
 			settlement_panel.hide()
@@ -250,9 +297,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 
+## Screens that take the world's input while open.
+func _modal_open() -> bool:
+	for screen in [library_screen, stores_panel, faith.menu, requests_panel, rest_overlay, chronicle_screen]:
+		if screen.visible:
+			return true
+	return false
+
+
 ## Modal screens take the world's input; the inspector does not.
 func accepts_world_input() -> bool:
-	return library_screen != null and not library_screen.visible and not stores_panel.visible and not faith.menu.visible and not requests_panel.visible
+	return library_screen != null and not _modal_open()
 
 
 func _offer(design: RefCounted) -> void:
@@ -293,7 +348,10 @@ func open_requests() -> void:
 
 
 func rest(days: float) -> void:
-	driver.rest(days)
+	world_io.save("save_autosaved")
+	builder.enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	rest_overlay.begin(days)
 
 
 func _close_stores() -> void:

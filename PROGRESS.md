@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M11 — Time and history (M10 complete).
+M12 — Vertical slice polish (M11 complete).
 
 ## Done
 
@@ -34,9 +34,11 @@ M11 — Time and history (M10 complete).
 
 - M10 Threats and change: wolves (dens far from settlements, wander, chase what they see, strike when adjacent, flee when two people are close or when hurt), the raider band (approach the stores, loot, break the altar of a settlement with a shrine, retreat; turn back when as many people fight them, or when a Veil of Fog hides the place), the raid director (from day 12, every 4 days, wealth over defenders, a warning the day before so believers pray about it), Defend goal and attack step, threats driven off, raid outcome in the chronicle with the band, defenders and raiders; decay of buildings nobody lives in or mends for 20 days; abandoned settlements overgrow; chronicle causes keep label keys and are worded on display. Checks: a sighted wolf interrupts and warns others, a wealthy hamlet is raided and its altar falls with the raid named, an empty building decays. Capture: `m10_raid_1080.png`.
 
+- M11 Time and history: `sim_state` saves (regenerate from the seed, edited chunks compressed, everything else plain data; the navigation graph is rebuilt at every save in the running world too, so both continue identically), `world_io` (autosave each dawn and before resting, quick save, load at start, staged files with backups), rest overlay with "While you rested…" from the chronicle, chronicle screen with a place filter (J), `--load=<slot>` for captures. Fixed: "Raise a Shrine" ambitions are met by an altar raised or restored since joining, not by the tree; a bond is chronicled once per change. Checks: a saved world continues identically through a day, a damaged save falls back to its backup, a season of rest takes 10 s headless. Verified in the game: a save from one launch loads in another with the same state hash. Captures: `m11_while_you_rested_1080.png`, `m11_loaded_1080.png`.
+
 ## Next
 
-- M11: rest overlay, chronicle screen, "While you rested…" summary, save/load, autosave; performance for resting a season in under a minute.
+- M12: title flow, settings, audio pass, tuning, export; the GDD §14 moment from a new world in under an hour.
 
 ## Decisions
 

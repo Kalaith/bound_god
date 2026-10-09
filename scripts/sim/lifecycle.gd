@@ -117,7 +117,12 @@ static func _ambitions(sim: RefCounted) -> void:
 			"map_the_wilds":
 				value = float(agent.beliefs.places.size())
 			"raise_shrine":
-				value = 1.0 if sim.faith != null and sim.faith.settlement_has_shrine(sim, agent.settlement_id) else 0.0
+				# An altar standing where they live, raised or restored since they came.
+				if sim.faith != null:
+					for shrine_id in sim.settlements.get_settlement(agent.settlement_id).get("shrine_ids", []):
+						var shrine: Dictionary = sim.faith.get_shrine(shrine_id)
+						if shrine.get("kind", "") == "altar" and shrine.state != "fallen" and int(shrine.get("restored_tick", shrine.created_tick)) >= (agent.joined_day - 1) * sim.calendar.ticks_per_day:
+							value = 1.0
 			"build_home":
 				value = 1.0 if agent.home >= 0 and Mind.has(agent, "home_built") else float(agent.ambition.progress) * target
 			"lead_village":
