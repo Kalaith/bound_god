@@ -33,13 +33,13 @@ Read before working:
 - Godot executable: `C:\Program Files\Godot\Godot_v4.2.2-stable_mono_win64_console.exe` (see `Run.ps1`).
 - Prefer built-in engine features (ArrayMesh, AStar3D, FastNoiseLite, RandomNumberGenerator, WorkerThreadPool). No plugins or GDExtensions without approval.
 - Target resolution **1920×1080** (`canvas_items` stretch, `expand` aspect). Author UI at 1080p; it must stay readable at 1280×720.
-- **No file over 800 lines**, including scripts, scenes, data and docs. Aim for ≤ 600 lines in scripts and split by responsibility before a file reaches the limit.
+- **No file over 800 lines**, including scripts, scenes, data and docs. Aim for ≤ 600 lines in scripts and split by responsibility before a file reaches the limit. Never meet the limit by removing whitespace, minifying, packing multiple entries onto one line, or otherwise making a file less readable. Keep readable formatting and split oversized files into cohesive files instead; this applies to JSON catalogs and text as well as code.
 - The simulation (`scripts/agents`, `scripts/sim`, `scripts/world`, `scripts/building`) is `RefCounted` data and logic. It never touches the scene tree, physics, `Time`, `OS` or the global `randi()`/`randf()`. All randomness comes from `sim.rng`. Comparators tie-break on stable ids (`sort_custom` is not stable).
 - Agents never mutate the world directly; they push into `Effects`, applied once at the end of the tick.
 - Presentation (`scripts/presentation`) reads sim state and sends commands; it never changes sim state any other way.
 - Static typing everywhere. Load dependencies with `const X = preload("res://...")`. Tabs, LF, UTF-8 (`.editorconfig`).
 - Balance numbers live in `data/balance.json`; catalogs (`blocks`, `people`, `society`, `templates`, `miracles`) live in `data/` with stable ids and `schema_version`, validated at startup. Missing or mistyped data fails fast; no silent defaults in code.
-- All player-facing text lives in `data/text.json`.
+- All player-facing text lives in JSON text catalogs under `data/`, currently `data/text.json`. Split text catalogs by responsibility (for example, UI text) when needed to stay within the file-size limit, updating the loader and validation accordingly. Do not compact formatting to avoid a split.
 - Use JSON only for hand-edited data and shareable templates. Simulation saves use `var_to_bytes` on plain dictionaries and arrays.
 - Store saves and the template library under `user://` with schema validation, staged writes and backup recovery. Imported templates are untrusted: validate size, palette and shape, and recompute function and bill.
 - World collision is layer 2; the avatar is layer 1.

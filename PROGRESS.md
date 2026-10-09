@@ -19,7 +19,6 @@ M3 — Templates (next milestone; M2 command verification complete).
 ## Next
 
 - M3: design tool, capture, room_probe, function_rules, structures registry, library screen, import/export.
-- Text: edit `data/text.json` through a compact formatter (several labels per line) so it stays under 800 lines.
 
 ## Decisions
 
