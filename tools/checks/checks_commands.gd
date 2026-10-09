@@ -12,7 +12,7 @@ func _edit(sim: RefCounted, cell: Vector3i, name: String = "air", meta: int = 0)
 	return sim.apply_command({"type": "edit_block", "cell": cell, "id": Registry.id(name), "meta": meta})
 
 
-func check_edit_stock_and_immediate_dirty_chunks() -> String:
+func check_edit_stock_and_immediate_dirty_chunks():
 	var sim: RefCounted = _sim()
 	var cell := Vector3i(24, 5, 24)
 	sim.set_block(cell, Registry.id("log"))
@@ -36,7 +36,7 @@ func check_edit_stock_and_immediate_dirty_chunks() -> String:
 	return ""
 
 
-func check_edit_rejections_leave_state_unchanged() -> String:
+func check_edit_rejections_leave_state_unchanged():
 	var sim: RefCounted = _sim()
 	var tree := Vector3i(24, 5, 24)
 	sim.set_block(tree, Registry.id("sacred_tree"))
@@ -64,7 +64,7 @@ func check_edit_rejections_leave_state_unchanged() -> String:
 	return ""
 
 
-func check_edit_bush_harvest_keeps_site_and_clears_berries() -> String:
+func check_edit_bush_harvest_keeps_site_and_clears_berries():
 	var sim: RefCounted = _sim()
 	var cell := Vector3i(24, 5, 24)
 	sim.set_block(cell, Registry.id("berry_bush"), 6)
@@ -87,7 +87,7 @@ func check_edit_bush_harvest_keeps_site_and_clears_berries() -> String:
 	return ""
 
 
-func check_edit_command_log_replays_at_recorded_ticks() -> String:
+func check_edit_command_log_replays_at_recorded_ticks():
 	var original: RefCounted = _sim()
 	var cell := Vector3i(24, 4, 24)
 	if not _edit(original, cell).ok:

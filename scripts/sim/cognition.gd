@@ -8,6 +8,7 @@ const Plans = preload("res://scripts/agents/plans.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Deliberation = preload("res://scripts/agents/deliberation.gd")
 const PlanLibrary = preload("res://scripts/agents/plan_library.gd")
+const JobBoard = preload("res://scripts/sim/job_board.gd")
 
 const Kind = Goals.Kind
 
@@ -28,11 +29,16 @@ static func should_switch(current_goal: Dictionary, current_utility: float, best
 	return best.utility > maxf(current_utility, 0.01) * switch_threshold(current_goal, best.goal)
 
 
-## Carried materials are set down for a hauler; food is kept for eating and helping.
+## Carried materials stay with a person through meals, sleep and talk, and
+## go to whatever work needs them; they are set down for a hauler only when
+## other work takes their hands. (Final Landing drops on any change of goal;
+## the valley's longer walks made that waste most loads.)
 static func _drop_load(sim: RefCounted, agent: RefCounted, next: Dictionary) -> void:
-	if agent.carrying.is_empty():
+	if agent.carrying.is_empty() or Goals.work_type(next).is_empty():
 		return
-	var keeps: bool = int(next.kind) in [Kind.EAT, Kind.HELP] and agent.carrying.resource == "berries"
+	var kind: int = int(next.kind)
+	var resource: String = agent.carrying.resource
+	var keeps: bool = kind in [Kind.BUILD, Kind.REPAIR, Kind.HAUL] 		or (kind == Kind.GATHER and JobBoard.RESOURCES[int(next.target)] == resource)
 	if not keeps:
 		sim.effects.action("drop", agent.id, {"cell": agent.cell, "resource": agent.carrying.resource, "amount": agent.carrying.amount})
 		agent.carrying = {}

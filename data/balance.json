@@ -7,14 +7,14 @@
 		"frame_budget_ms": 4.0, "rest_budget_ms": 14.0
 	},
 	"needs": {
-		"decay_per_day": {"food": 95.0, "rest": 80.0, "shelter": 0.0, "social": 40.0, "recreation": 30.0, "safety": 0.0},
+		"decay_per_day": {"food": 95.0, "rest": 80.0, "shelter": 0.0, "social": 40.0, "recreation": 22.0, "safety": 0.0},
 		"shelter_loss_per_night_hour": 6.0, "shelter_winter_factor": 2.0, "shelter_gain_per_day": 140.0,
 		"raw_food_restore": 38.0, "forage_restore": 30.0,
-		"bed_rest_per_day": 220.0, "ground_rest_per_day": 140.0, "recreation_gain_per_day": 180.0,
+		"bed_rest_per_day": 220.0, "ground_rest_per_day": 170.0, "recreation_gain_per_day": 180.0,
 		"safety_recovery_per_day": 60.0, "safety_loss_on_threat": 35.0, "urgent_threshold": 25.0
 	},
 	"agents": {
-		"cells_per_tick": 0.75, "sight_radius": 12.0, "night_sight_factor": 0.6,
+		"cells_per_tick": 1.0, "sight_radius": 12.0, "night_sight_factor": 0.6,
 		"perception_interval": 3, "deliberation_interval": 10, "commitment_bonus": 0.25,
 		"max_plan_attempts": 4, "goal_backoff_ticks": 120, "carry_capacity": 12.0,
 		"belief_forget_days": 20.0, "help_wait_ticks": 90, "child_growth_days": 120, "adult_age_years": 18.0,
@@ -49,7 +49,7 @@
 	"world": {
 		"size": [160, 48, 160], "chunk": 16, "sea_level": 6, "water_level": 9,
 		"tree_spacing": 5.5, "bush_spacing": 7.0, "grass_spacing": 6.0, "rock_spacing": 14.0,
-		"tree_centre_clear": 7, "berry_regrow_days": 2.0, "bush_max_berries": 4, "grass_regrow_per_day": 2,
+		"tree_centre_clear": 7, "berry_regrow_days": 1.0, "bush_max_berries": 4, "grass_regrow_per_day": 2,
 		"sacred_tree": [50, 50], "ridge_ruin": [128, 128], "ridge_hamlet": [112, 134],
 		"base_height": 12, "ridge_start": 104.0, "ridge_full": 122.0, "ridge_height": 11.0, "rim_width": 14.0, "rim_height": 28.0,
 		"river_offset": 48.0, "river_half_width": 2.4, "meadow_radius": 11, "forest_threshold": 0.05

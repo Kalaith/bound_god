@@ -1,6 +1,7 @@
 extends Control
 signal closed
 signal capture_requested
+signal offer_requested(design: RefCounted)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Library = preload("res://scripts/building/template_library.gd")
@@ -17,6 +18,9 @@ var _notice: Label
 var _preview: Control
 var _save: Button
 var _export: Button
+var _offer: Button
+## Ids already offered at a shrine, pushed in by main when the screen opens.
+var offered: Dictionary = {}
 var _dialog: FileDialog
 
 
@@ -66,6 +70,9 @@ func _ready() -> void:
 	_save = _button(actions, "design_save", _save_draft)
 	_button(actions, "design_import", _import_dialog)
 	_export = _button(actions, "design_export", _export_dialog)
+	_offer = _button(actions, "design_offer", func() -> void:
+		if selected != null and not draft:
+			offer_requested.emit(selected))
 	_button(actions, "design_close", func() -> void: closed.emit())
 	_dialog = FileDialog.new()
 	_dialog.access = FileDialog.ACCESS_FILESYSTEM
@@ -125,6 +132,8 @@ func _select(index: int) -> void:
 func _refresh() -> void:
 	_save.disabled = not draft
 	_export.disabled = selected == null or draft
+	_offer.disabled = selected == null or draft or offered.has(selected.id)
+	_offer.text = Text.label("design_offered" if selected != null and offered.has(selected.id) else "design_offer")
 	_name.editable = draft
 	_name.text = selected.name if selected != null else ""
 	_preview.show_design(selected)

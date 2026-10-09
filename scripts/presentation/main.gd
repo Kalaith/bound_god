@@ -19,6 +19,9 @@ const SimDriver = preload("res://scripts/presentation/sim_driver.gd")
 const AgentViews = preload("res://scripts/presentation/agent_views.gd")
 const Inspector = preload("res://scripts/presentation/ui/inspector.gd")
 const PeopleController = preload("res://scripts/presentation/people_controller.gd")
+const ConstructionView = preload("res://scripts/presentation/construction_view.gd")
+const StoresPanel = preload("res://scripts/presentation/ui/stores_panel.gd")
+const SettlementPanel = preload("res://scripts/presentation/ui/settlement_panel.gd")
 
 var rig: Node3D
 var sim: RefCounted
@@ -34,6 +37,9 @@ var driver: Node
 var agent_views: Node3D
 var inspector: Control
 var people: Node
+var construction_view: Node3D
+var stores_panel: Control
+var settlement_panel: Control
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
 var _loading: Label
@@ -103,6 +109,21 @@ func _start() -> void:
 	inspector = Inspector.new()
 	inspector.sim = sim
 	ui_layer.add_child(inspector)
+	construction_view = ConstructionView.new()
+	construction_view.sim = sim
+	add_child(construction_view)
+	stores_panel = StoresPanel.new()
+	stores_panel.sim = sim
+	ui_layer.add_child(stores_panel)
+	stores_panel.closed.connect(_close_stores)
+	stores_panel.transfer.connect(func(id: int, resource: String, amount: int) -> void:
+		var result: Dictionary = sim.apply_command({"type": "transfer", "settlement": id, "resource": resource, "amount": amount})
+		hud.flash(Text.label(result.reason), not result.ok))
+	settlement_panel = SettlementPanel.new()
+	settlement_panel.sim = sim
+	ui_layer.add_child(settlement_panel)
+	settlement_panel.closed.connect(func() -> void: settlement_panel.hide())
+	library_screen.offer_requested.connect(_offer)
 	people = PeopleController.new()
 	people.sim = sim
 	people.views = agent_views
@@ -168,7 +189,7 @@ func _hud_state() -> Dictionary:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if library_screen != null and library_screen.visible:
+	if library_screen != null and (library_screen.visible or stores_panel.visible):
 		return
 	if event.is_action_pressed("design_tool"):
 		design_tool.finish()
@@ -185,6 +206,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		driver.set_speed(driver.speed_index + 1)
 	elif event.is_action_pressed("speed_down"):
 		driver.set_speed(driver.speed_index - 1)
+	elif event.is_action_pressed("interact"):
+		_open_stores()
+	elif event.is_action_pressed("toggle_settlement"):
+		if settlement_panel.visible:
+			settlement_panel.hide()
+		else:
+			settlement_panel.open(sim.settlements.at_cell(Vector3i(sim.zone_center())))
 	elif event.is_action_pressed("toggle_settings") and inspector.visible:
 		people.close()
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -202,7 +230,35 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Modal screens take the world's input; the inspector does not.
 func accepts_world_input() -> bool:
-	return library_screen != null and not library_screen.visible
+	return library_screen != null and not library_screen.visible and not stores_panel.visible
+
+
+func _offer(design: RefCounted) -> void:
+	var result: Dictionary = sim.apply_command({"type": "offer_template", "template": design.to_dict()})
+	library_screen._notice.text = Text.label(result.reason)
+	library_screen.offered = sim.god.offered
+	library_screen._refresh()
+
+
+## Interact beside a settlement's pile or chest opens its stores.
+func _open_stores() -> void:
+	var here := Vector3i(avatar.global_position.floor())
+	for id in sim.settlements.ids():
+		var near: bool = Vector3(sim.settlements.entries[id].pile).distance_to(Vector3(here)) <= 4.5
+		for chest in sim.settlements.chest_cells(sim, id):
+			near = near or Vector3(chest).distance_to(Vector3(here)) <= 4.5
+		if near:
+			builder.enabled = false
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+			stores_panel.open(id)
+			return
+	hud.flash(Text.label("stores_none_near"), true)
+
+
+func _close_stores() -> void:
+	stores_panel.hide()
+	builder.enabled = true
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func restore_overlook_center() -> void:
@@ -215,6 +271,7 @@ func _open_library(design: RefCounted = null) -> void:
 	camera_rig.set_process_unhandled_input(false)
 	camera_rig.input_enabled = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	library_screen.offered = sim.god.offered
 	library_screen.open(design)
 
 

@@ -4,14 +4,14 @@ const Data = preload("res://scripts/core/data.gd")
 const Validation = preload("res://scripts/core/validation.gd")
 
 
-func check_shipped_data_is_valid() -> String:
+func check_shipped_data_is_valid():
 	var errors: Array[String] = Validation.run()
 	return "" if errors.is_empty() else "; ".join(errors)
 
 
 ## Every script under res://scripts loads, so a parse error in presentation
 ## code fails here rather than only when the game is run.
-func check_all_scripts_parse() -> String:
+func check_all_scripts_parse():
 	var broken: Array[String] = []
 	var folders: Array[String] = ["res://scripts"]
 	while not folders.is_empty():
@@ -26,7 +26,7 @@ func check_all_scripts_parse() -> String:
 	return "" if broken.is_empty() else "scripts failed to parse: " + ", ".join(broken)
 
 
-func check_broken_data_is_reported() -> String:
+func check_broken_data_is_reported():
 	var blocks: Dictionary = Data.file("blocks").duplicate(true)
 	blocks.blocks[3].erase("solid")
 	blocks.blocks[4]["component"] = "spaceship"

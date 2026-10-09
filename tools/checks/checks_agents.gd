@@ -22,7 +22,7 @@ func _candidate(kind: int, utility: float) -> Dictionary:
 	return {"goal": Goals.make(kind), "utility": utility, "reason": "", "value": NAN}
 
 
-func check_people_only_know_what_they_have_perceived() -> String:
+func check_people_only_know_what_they_have_perceived():
 	var sim: RefCounted = Sim.create(7)
 	sim.run_ticks(6)
 	var sight: float = 12.0 + 6.0
@@ -38,7 +38,7 @@ func check_people_only_know_what_they_have_perceived() -> String:
 	return ""
 
 
-func check_committed_goals_resist_small_temptations_but_yield_to_breaks() -> String:
+func check_committed_goals_resist_small_temptations_but_yield_to_breaks():
 	var build: Dictionary = Goals.make(Kind.BUILD, 1)
 	var eat: Dictionary = Goals.make(Kind.EAT)
 	if Cognition.should_switch(build, 0.5, _candidate(Kind.RELAX, 0.55)):
@@ -54,7 +54,7 @@ func check_committed_goals_resist_small_temptations_but_yield_to_breaks() -> Str
 	return ""
 
 
-func check_a_failed_plan_corrects_beliefs_and_tries_another_way() -> String:
+func check_a_failed_plan_corrects_beliefs_and_tries_another_way():
 	var sim: RefCounted = _flat()
 	var agent: RefCounted = sim.agents[0]
 	var friend: RefCounted = sim.agents[1]
@@ -83,7 +83,7 @@ func check_a_failed_plan_corrects_beliefs_and_tries_another_way() -> String:
 	return ""
 
 
-func check_exhausted_goals_back_off_and_frustrate() -> String:
+func check_exhausted_goals_back_off_and_frustrate():
 	var sim: RefCounted = _flat()
 	var agent: RefCounted = sim.agents[0]
 	sim.settlements.entries[agent.settlement_id].stock = {}
@@ -99,7 +99,7 @@ func check_exhausted_goals_back_off_and_frustrate() -> String:
 	return ""
 
 
-func check_travellers_live_through_five_days() -> String:
+func check_travellers_live_through_five_days():
 	var sim: RefCounted = Sim.create(11)
 	var seen: Dictionary = {}
 	var started: int = Time.get_ticks_msec()
@@ -130,7 +130,7 @@ func check_travellers_live_through_five_days() -> String:
 	return ""
 
 
-func check_the_same_seed_plays_out_identically() -> String:
+func check_the_same_seed_plays_out_identically():
 	var a: RefCounted = Sim.create(21)
 	var b: RefCounted = Sim.create(21)
 	var ticks: int = a.calendar.ticks_per_day * 2
@@ -141,7 +141,7 @@ func check_the_same_seed_plays_out_identically() -> String:
 	return ""
 
 
-func check_every_label_resolves() -> String:
+func check_every_label_resolves():
 	var missing: Array = []
 	for name in Goals.NAMES:
 		if not Text.has("goal_" + name):

@@ -84,7 +84,7 @@ func build() -> void:
 			if nx < 0 or nz < 0 or nx >= size.x or nz >= size.z:
 				continue
 			var base: int = nx + nz * size.x
-			for dy in [0, 1, -1, -2]:
+			for dy in [0, 1, -1]:
 				var ny: int = y + dy
 				if ny < 1 or ny >= size.y - 1:
 					continue
@@ -115,7 +115,7 @@ func _connect_column(x: int, z: int, y_low: int, y_high: int) -> void:
 		if not astar.has_point(id):
 			continue
 		for direction in HORIZONTAL:
-			for dy in [0, 1, -1, -2]:
+			for dy in [0, 1, -1]:
 				var other := Vector3i(x + direction.x, y + dy, z + direction.y)
 				if not world.in_bounds(other):
 					continue
@@ -128,6 +128,8 @@ func _connect_column(x: int, z: int, y_low: int, y_high: int) -> void:
 
 
 ## Headroom for climbing and dropping; diagonals need both sides open.
+## Steps are at most one block up or down, so every move can be walked back:
+## nobody drops into a pit they cannot climb out of.
 func _can_step(from: Vector3i, to: Vector3i) -> bool:
 	var top: int = maxi(from.y, to.y)
 	if to.y > from.y and not is_clear(from + Vector3i(0, 2, 0)):

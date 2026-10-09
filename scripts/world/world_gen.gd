@@ -248,7 +248,7 @@ func _ground_ok(x: int, z: int) -> bool:
 	if x < 3 or z < 3 or x >= world.size.x - 3 or z >= world.size.z - 3 or reserved.has(Vector2i(x, z)):
 		return false
 	var top: int = _top(x, z)
-	return world.get_xyz(x, top, z) == _id("grass") and world.get_xyz(x, top + 1, z) == 0 and top < 27
+	return world.get_xyz(x, top, z) == _id("grass") and world.get_xyz(x, top + 1, z) == 0 and top < 28
 
 
 func _vegetation() -> void:
@@ -282,10 +282,21 @@ func _vegetation() -> void:
 				break
 		if not placed:
 			continue
-	_scatter(float(_b.bush_spacing) * 2.2, 0.35, _bush_ok, _bush)
+	# Bushes in the hamlet's hollows: the miners have always picked here.
+	var hamlet := Vector2(float(_b.ridge_hamlet[0]), float(_b.ridge_hamlet[1]))
+	for index in range(10):
+		var at: Vector2 = hamlet + Vector2.from_angle(index * TAU / 10.0 + rng.randf() * 0.4) * (13.0 + rng.randf() * 6.0)
+		for attempt in range(6):
+			var x: int = int(at.x) + attempt % 3 - 1
+			var z: int = int(at.y) + attempt / 3
+			if _bush_ok(x, z):
+				_bush(x, z)
+				break
+	_scatter(float(_b.bush_spacing) * 1.3, 0.55, _bush_ok, _bush)
 	_scatter(float(_b.grass_spacing), 0.55, _ground_ok, _grass_patch)
 	_scatter(float(_b.rock_spacing), 0.6, _ground_ok, _boulder)
 	_ore_outcrops()
+	_quarries()
 
 
 func _bush_ok(x: int, z: int) -> bool:
@@ -295,7 +306,7 @@ func _bush_ok(x: int, z: int) -> bool:
 	if reserved.has(Vector2i(x, z)) and Vector2(x - tree.x, z - tree.y).length() < 10.0:
 		return false
 	var top: int = _top(x, z)
-	return world.get_xyz(x, top, z) == _id("grass") and world.get_xyz(x, top + 1, z) == 0 and top < 27
+	return world.get_xyz(x, top, z) == _id("grass") and world.get_xyz(x, top + 1, z) == 0 and top < 28
 
 
 func _scatter(spacing: float, chance: float, accept: Callable, place: Callable) -> void:
@@ -397,3 +408,56 @@ func _ore_outcrops() -> void:
 		reserved[Vector2i(x, z)] = true
 		_site("ore", cells, cells.size())
 		placed += 1
+
+
+## Bare stone faces that people can quarry, block by block: a few outcrops
+## within reach of the sacred tree, the rest wherever the ridge shows stone.
+func _quarries() -> void:
+	var tree := Vector2(float(_b.sacred_tree[0]), float(_b.sacred_tree[1]))
+	for index in range(4):
+		var at: Vector2 = tree + Vector2.from_angle(index * TAU / 4.0 + 0.6 + rng.randf() * 0.5) * (16.0 + rng.randf() * 10.0)
+		_outcrop(int(at.x), int(at.y))
+	var placed: int = 0
+	for attempt in range(400):
+		if placed >= 14:
+			return
+		var x: int = rng.randi_range(8, world.size.x - 9)
+		var z: int = rng.randi_range(8, world.size.z - 9)
+		if reserved.has(Vector2i(x, z)):
+			continue
+		var top: int = _top(x, z)
+		if world.get_xyz(x, top, z) != _id("stone"):
+			continue
+		var cells: Array = []
+		for dz in range(-1, 2):
+			for dx in range(-1, 2):
+				var cell := Vector3i(x + dx, _top(x + dx, z + dz), z + dz)
+				if world.get_block(cell) == _id("stone") and world.get_block(cell + Vector3i.UP) == 0:
+					cells.append(cell)
+		if cells.size() >= 5:
+			for cell in cells:
+				reserved[Vector2i(cell.x, cell.z)] = true
+			_site("rock", cells, cells.size())
+			placed += 1
+
+
+## A low knuckle of stone pushed up through the meadow.
+func _outcrop(x: int, z: int) -> void:
+	var cells: Array = []
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			var cx: int = x + dx
+			var cz: int = z + dz
+			if not _ground_ok(cx, cz):
+				continue
+			var top: int = _top(cx, cz)
+			var cell := Vector3i(cx, top + 1, cz)
+			world.fill(cell, _id("stone"))
+			cells.append(cell)
+			if absi(dx) + absi(dz) <= 1:
+				world.fill(cell + Vector3i.UP, _id("stone"))
+				cells.append(cell + Vector3i.UP)
+	for cell in cells:
+		reserved[Vector2i(cell.x, cell.z)] = true
+	if cells.size() >= 4:
+		_site("rock", cells, cells.size())

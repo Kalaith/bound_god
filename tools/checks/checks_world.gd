@@ -15,7 +15,7 @@ func _valley(seed: int) -> Array:
 	return [world, result]
 
 
-func check_same_seed_same_valley() -> String:
+func check_same_seed_same_valley():
 	var a: Array = _valley(11)
 	var b: Array = _valley(11)
 	var c: Array = _valley(12)
@@ -28,7 +28,7 @@ func check_same_seed_same_valley() -> String:
 	return ""
 
 
-func check_valley_has_its_features() -> String:
+func check_valley_has_its_features():
 	var result: Dictionary = _valley(5)[1]
 	var kinds: Dictionary = {}
 	for site in result.sites:
@@ -47,7 +47,7 @@ func check_valley_has_its_features() -> String:
 	return ""
 
 
-func check_meshing_culls_hidden_faces() -> String:
+func check_meshing_culls_hidden_faces():
 	var world = VoxelWorld.new(Vector3i(16, 16, 16))
 	for x in range(3):
 		for y in range(3):

@@ -8,8 +8,21 @@ static func center(cell: Vector3i) -> Vector3:
 	return Vector3(cell.x + 0.5, cell.y, cell.z + 0.5)
 
 
+## Whoever loses the floor under them, or finds a block where they stand,
+## settles onto the nearest place a person can stand.
+static func settle(sim: RefCounted, agent: RefCounted) -> void:
+	if sim.nav.is_walkable(agent.cell):
+		return
+	var cell: Vector3i = sim.nav.nearest_walkable(agent.cell, 4)
+	if cell.x >= 0:
+		agent.cell = cell
+		agent.path.clear()
+		agent.position = center(cell)
+
+
 static func advance(sim: RefCounted, agent: RefCounted) -> void:
 	agent.previous_position = agent.position
+	settle(sim, agent)
 	if agent.path.is_empty():
 		agent.move_budget = 0.0
 		agent.position = center(agent.cell)

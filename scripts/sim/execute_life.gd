@@ -5,7 +5,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
-const Deliberation = preload("res://scripts/agents/deliberation.gd")
+const Schedule = preload("res://scripts/agents/schedule.gd")
 const ExecuteDefence = preload("res://scripts/sim/execute_defence.gd")
 
 const Op = Plans.Op
@@ -58,7 +58,7 @@ static func _sleep(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ti
 	agent.change_need(Need.REST, sim.calendar.per_tick(rate))
 	var rested: bool = agent.need(Need.REST) >= 99.0
 	var too_long: bool = step_ticks > sim.calendar.ticks_per_day * 6 / 10
-	if (rested and not Deliberation.is_sleep_time(sim, agent)) or too_long or (rested and step_ticks > 200):
+	if (rested and not Schedule.is_sleep_time(sim, agent)) or too_long or (rested and step_ticks > 200):
 		Mind.add(agent, "slept_bed" if in_bed else "slept_ground", sim.calendar.ticks_per_day)
 		agent.inside = -1
 		return Plans.DONE

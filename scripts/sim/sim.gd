@@ -22,6 +22,11 @@ const Daily = preload("res://scripts/sim/daily.gd")
 const Places = preload("res://scripts/sim/places.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Data = preload("res://scripts/core/data.gd")
+const Construction = preload("res://scripts/sim/construction.gd")
+const SettlementLife = preload("res://scripts/sim/settlement_life.gd")
+const Director = preload("res://scripts/sim/director.gd")
+const CommandsWorld = preload("res://scripts/sim/commands_world.gd")
+const Template = preload("res://scripts/building/template.gd")
 
 var world_seed: int = 1
 var rng := RandomNumberGenerator.new()
@@ -58,6 +63,8 @@ var construction: RefCounted = null
 var kindled: Array = []
 ## Veils of fog (miracle): Array of {cell, radius, until}.
 var veils: Array = []
+## Template id -> Template, built on demand from offered copies or starters.
+var _templates: Dictionary = {}
 var _sites_version: int = -1
 var _events_seen: int = 0
 
@@ -97,10 +104,14 @@ func setup(seed: int, options: Dictionary) -> void:
 	effects = Effects.new()
 	settlements = Settlements.new()
 	chronicle = Chronicle.new()
+	construction = Construction.new()
+	settlement_life = SettlementLife.new()
+	director = Director.new()
 	_events_seen = structures.events.size()
 	god.grace_until_tick = calendar.tick + calendar.ticks_for_days(Balance.number("shrines.grace_days"))
 	Population.found(self, options)
 	_refresh_site_buckets()
+	settlement_life.refresh_jobs(self)
 
 
 func apply_command(command: Dictionary) -> Dictionary:
@@ -306,6 +317,28 @@ func state_hash() -> int:
 	var state: Array = [calendar.tick, rng.state, people, settlements.to_dict(), sites.to_dict(), items,
 		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state()]
 	return hash(var_to_bytes(state))
+
+
+## Commands beyond block edits (offers, transfers, and later faith).
+func apply_extended_command(command: Dictionary) -> Dictionary:
+	return CommandsWorld.apply(self, command)
+
+
+## A design by id: offered copies first, then the starters; null if unknown.
+func template(id: String) -> RefCounted:
+	if _templates.has(id):
+		return _templates[id]
+	var result: RefCounted = null
+	if god.offered.has(id):
+		result = Template.from_dict(god.offered[id])[0]
+	elif not Data.starter(id).is_empty():
+		result = Template.from_starter(Data.starter(id))
+	_templates[id] = result
+	return result
+
+
+func forget_template_cache(id: String) -> void:
+	_templates.erase(id)
 
 
 ## A design's display name: offered copies first, then the starters.

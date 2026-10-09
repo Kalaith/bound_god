@@ -108,6 +108,8 @@
     "design_corner_first": "Mark the first corner with Break. Place resets; Esc cancels.",
     "design_corner_second": "Mark the opposite corner with Break. Place resets; Esc cancels.",
     "design_default_name": "New design",
-    "design_hint": "B / D-pad left: design library"
+    "design_hint": "B / D-pad left: design library",
+    "design_offer": "Offer at the shrine",
+    "design_offered": "Offered"
   }
 }

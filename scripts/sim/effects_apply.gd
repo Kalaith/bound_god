@@ -99,7 +99,17 @@ static func _harvest(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 	if not agent.carrying.is_empty() and agent.carrying.resource != resource:
 		agent.step_result = {"got": 0}
 		return
-	var cell: Vector3i = site.cells.back() if site.kind == "tree" else site.cells[0]
+	# Trees are felled and boulders broken from the top down, and nobody's
+	# floor is taken from under them.
+	var cell: Vector3i = Vector3i(-1, -1, -1)
+	for candidate in site.cells:
+		if Registry.solid[sim.voxels.get_block(candidate)] == 1 and sim.occupied.has(candidate + Vector3i.UP):
+			continue
+		if cell.x < 0 or (site.kind in ["tree", "rock"] and candidate.y > cell.y):
+			cell = candidate
+	if cell.x < 0:
+		agent.step_result = {"got": 0}
+		return
 	var block: int = sim.voxels.get_block(cell)
 	var gained: int = Registry.yields[block]
 	var leaves: Array = site.get("leaves", [])

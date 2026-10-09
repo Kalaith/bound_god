@@ -8,7 +8,7 @@ const Structures = preload("res://scripts/world/structures.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 
 
-func check_cottage_capture_and_roof_loss() -> String:
+func check_cottage_capture_and_roof_loss():
 	var cottage: RefCounted = Template.from_starter(Data.starter("miner_hut"))
 	var world := World.new(Vector3i(20, 12, 20))
 	var origin := Vector3i(4, 1, 4)
@@ -38,7 +38,7 @@ func check_cottage_capture_and_roof_loss() -> String:
 	return ""
 
 
-func check_template_roundtrip_and_untrusted_fields() -> String:
+func check_template_roundtrip_and_untrusted_fields():
 	var cottage: RefCounted = Template.from_starter(Data.starter("miner_hut"))
 	var raw: Dictionary = cottage.to_dict()
 	raw.functions = ["shrine"]
@@ -63,7 +63,7 @@ func check_template_roundtrip_and_untrusted_fields() -> String:
 	return ""
 
 
-func check_template_files_and_backup_recovery() -> String:
+func check_template_files_and_backup_recovery():
 	var library := Library.new()
 	library.root = "user://verification_m3"
 	var design: RefCounted = Template.from_starter(Data.starter("miner_hut"))

@@ -41,9 +41,27 @@ static func site_access(sim: RefCounted, id: int) -> Vector3i:
 	var cached: Vector3i = site.get("access", NONE)
 	if cached.x >= 0 and sim.nav.is_walkable(cached):
 		return cached
-	var cell: Vector3i = sim.nav.nearest_walkable(site.cells[0], 2)
-	site["access"] = cell
-	return cell
+	# Never stand on the site itself: harvesting would take the floor away.
+	var cells: Dictionary = {}
+	for cell in site.cells:
+		cells[cell] = true
+	var best: Vector3i = NONE
+	var best_distance: float = INF
+	for target in site.cells:
+		for dz in range(-2, 3):
+			for dx in range(-2, 3):
+				for dy in range(-2, 3):
+					var cell: Vector3i = target + Vector3i(dx, dy, dz)
+					if cells.has(cell + Vector3i.DOWN) or not sim.nav.is_walkable(cell):
+						continue
+					var d: float = Vector3(cell).distance_to(Vector3(target))
+					if d < best_distance or (d == best_distance and sim.voxels.index_of(cell) < sim.voxels.index_of(best)):
+						best = cell
+						best_distance = d
+		if best.x >= 0:
+			break
+	site["access"] = best
+	return best
 
 
 static func structure_id_at(sim: RefCounted, cell: Vector3i) -> int:

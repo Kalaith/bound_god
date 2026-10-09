@@ -5,6 +5,7 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
+const Schedule = preload("res://scripts/agents/schedule.gd")
 const DeliberationSocial = preload("res://scripts/agents/deliberation_social.gd")
 const DeliberationWork = preload("res://scripts/agents/deliberation_work.gd")
 const DeliberationFaith = preload("res://scripts/agents/deliberation_faith.gd")
@@ -22,15 +23,11 @@ static func candidate(kind: int, utility: float, reason: String, value: float = 
 
 
 static func is_work_hours(sim: RefCounted, agent: RefCounted) -> bool:
-	var owl: float = 2.0 if agent.personality.night_owl else 0.0
-	var hour: float = sim.calendar.hour()
-	return hour >= Balance.number("time.work_start_hour") + owl and hour < Balance.number("time.work_end_hour") + owl
+	return Schedule.is_work_hours(sim, agent)
 
 
 static func is_sleep_time(sim: RefCounted, agent: RefCounted) -> bool:
-	var owl: float = 3.0 if agent.personality.night_owl else 0.0
-	var hour: float = fposmod(sim.calendar.hour() - owl, 24.0)
-	return hour >= Balance.number("time.sleep_hour") or hour < Balance.number("time.dawn_hour")
+	return Schedule.is_sleep_time(sim, agent)
 
 
 static func _survival(sim: RefCounted, agent: RefCounted, out: Array) -> void:

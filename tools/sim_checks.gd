@@ -3,6 +3,8 @@ extends SceneTree
 ## Run: Godot --headless --path . --script res://tools/sim_checks.gd [-- --only=<text>]
 ## Every `check_*` method of the modules below returns "" on success or a
 ## failure message. Prints PASS/FAIL per scenario and exits non-zero on failure.
+## Checks are untyped on purpose: a runtime error then returns null, which
+## fails, where a typed `-> String` would silently return "" and pass.
 
 const MODULES: Array[String] = [
 	"res://tools/checks/checks_data.gd",
@@ -10,6 +12,7 @@ const MODULES: Array[String] = [
 	"res://tools/checks/checks_commands.gd",
 	"res://tools/checks/checks_templates.gd",
 	"res://tools/checks/checks_agents.gd",
+	"res://tools/checks/checks_work.gd",
 ]
 
 
@@ -22,7 +25,13 @@ func _init() -> void:
 	var count: int = 0
 	var started: int = Time.get_ticks_msec()
 	for path in MODULES:
-		var module: RefCounted = load(path).new()
+		var script: Variant = load(path)
+		if not script is GDScript or not (script as GDScript).can_instantiate():
+			failures += 1
+			count += 1
+			print("FAIL  %s could not be loaded" % path)
+			continue
+		var module: RefCounted = script.new()
 		for method in module.get_method_list():
 			var name: String = method.name
 			if not name.begins_with("check_") or (not only.is_empty() and not name.contains(only)):
