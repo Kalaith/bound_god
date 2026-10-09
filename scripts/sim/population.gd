@@ -14,15 +14,14 @@ static func found(sim: RefCounted, options: Dictionary) -> void:
 	var hollow: int = sim.settlements.create(Text.label("place_tree_hollow"), tree, pile, sim.calendar.tick)
 	# The travellers' packs: a few days of berries.
 	sim.settlements.entries[hollow].stock = {"berries": 10}
+	if options.get("people", true):
+		var count: int = int(options.get("travellers", Balance.integer("population.travellers")))
+		for i in range(count):
+			var agent: RefCounted = Generation.adult(sim.rng, sim.agents.size())
+			var cell: Vector3i = sim.nav.nearest_walkable(tree + Vector3i(3 + i, 0, 4), 6)
+			arrive(sim, agent, cell, hollow, "arrival_traveller")
 	if sim.features.has("hamlet"):
 		_found_hamlet(sim, options)
-	if not options.get("people", true):
-		return
-	var count: int = int(options.get("travellers", Balance.integer("population.travellers")))
-	for i in range(count):
-		var agent: RefCounted = Generation.adult(sim.rng, sim.agents.size())
-		var cell: Vector3i = sim.nav.nearest_walkable(tree + Vector3i(3 + i, 0, 4), 6)
-		arrive(sim, agent, cell, hollow, "arrival_traveller")
 
 
 static func _found_hamlet(sim: RefCounted, options: Dictionary) -> void:

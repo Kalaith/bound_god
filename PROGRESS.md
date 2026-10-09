@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M5 — Legibility (M4 complete).
+M6 — Settlement and work (M5 complete).
 
 ## Done
 
@@ -22,9 +22,11 @@ M5 — Legibility (M4 complete).
 
 - M4 Sim core + survival agents: `nav_grid` (AStar3D over standable cells, local reconnect on edits, 0.9 s full build), spatial buckets, Final Landing BDI port (agent, beliefs, goals, plans, mind, personality, generation, deliberation, cognition with commitment, plan library with last-resort plans, execute with failure learning and backoff, perception, inbox, deferred Effects), body with Shelter replacing Warmth (roof = full cover, foliage = half), settlements with a pile and chests, lifecycle deaths, chronicle, daily hooks (stock broadcast, forgetting, opinion decay, berry regrowth), `sim_driver` (frame budget, busy flag, rest). Two travellers at Tree Hollow and five miners at Ridge Hamlet. Checks: situated beliefs, `should_switch` table, failed forage corrects beliefs and replans, exhausted goals back off, travellers live 5 days (eat, sleep, cover at night; 0.6 ms/tick with 7 people), same seed same hash after 2 days, label coverage.
 
+- M5 Legibility: procedural agent views (capsule and head tinted by archetype and hue, child scale, mood ring, carried cube, ASCII activity glyphs, walk bob and work sway, faded indoors, lying down asleep), screen-space picking with the inspect key (crosshair or free mouse), the inspector (Mind: goal, drive, plan steps with markers, already tried, carrying, reasoning log with setbacks in warning colour, beliefs vs reality; Needs; Bonds with links; Life; Faith), selection ring, path and relation lines, Follow (overlook centre tracks the person, clamped to the zone), speed keys P / . / , with the speed and "the world is busy" in the clock line. Captures: `m5_inspector_mind_1080.png`, `m5_inspector_needs_1080.png`, `m5_inspector_mind_720.png`.
+
 ## Next
 
-- M5: agent views, picking, inspector, decision log text, selection overlay, speed controls.
+- M6: job board, gather/haul/build/repair, construction sites, site_finder, FoundHome, ProposeProject, culture weights, migrants, offering templates.
 
 ## Decisions
 
@@ -38,6 +40,7 @@ M5 — Legibility (M4 complete).
 - Plans only use structures the person believes in (`beliefs.structures`, filled by perception); a vanished one fails on arrival and is remembered as failed.
 - Agents change the shared world only through `Effects` actions (take/deposit stock, forage, harvest, claim a bed, place blocks); the step reads the result from `agent.step_result` on a later tick, so conflicts resolve deterministically in id order.
 - Player-facing text is split into `data/text.json` (UI, blocks, templates) and `data/text_agents.json` (goals, plans, fail reasons, activities, log, chronicle); labels share one namespace and duplicates fail validation.
+- Thought texts and trait names stay in their own catalogs (`society.json`, `people.json`) beside their definitions; UI chrome lives in `data/text_ui.json`.
 - `tools/scratch/` holds local diagnostic probes and is git-ignored.
 - Valley layout: sacred tree at (50,50), ridge ruin at (128,128) (~110 blocks), hamlet at (112,134). The river runs beside the tree-ridge axis so nobody must cross water.
 

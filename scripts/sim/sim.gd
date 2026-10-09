@@ -21,6 +21,7 @@ const AgentTick = preload("res://scripts/sim/agent_tick.gd")
 const Daily = preload("res://scripts/sim/daily.gd")
 const Places = preload("res://scripts/sim/places.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
+const Data = preload("res://scripts/core/data.gd")
 
 var world_seed: int = 1
 var rng := RandomNumberGenerator.new()
@@ -305,6 +306,13 @@ func state_hash() -> int:
 	var state: Array = [calendar.tick, rng.state, people, settlements.to_dict(), sites.to_dict(), items,
 		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state()]
 	return hash(var_to_bytes(state))
+
+
+## A design's display name: offered copies first, then the starters.
+func template_name(id: String) -> String:
+	if god.offered.has(id):
+		return str(god.offered[id].get("name", id))
+	return str(Data.starter(id).get("name", id))
 
 
 func present_count() -> int:

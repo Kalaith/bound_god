@@ -16,6 +16,9 @@ const CaptureScenes = preload("res://scripts/presentation/capture_scenes.gd")
 const DesignTool = preload("res://scripts/presentation/design_tool.gd")
 const LibraryScreen = preload("res://scripts/presentation/ui/template_library_screen.gd")
 const SimDriver = preload("res://scripts/presentation/sim_driver.gd")
+const AgentViews = preload("res://scripts/presentation/agent_views.gd")
+const Inspector = preload("res://scripts/presentation/ui/inspector.gd")
+const PeopleController = preload("res://scripts/presentation/people_controller.gd")
 
 var rig: Node3D
 var sim: RefCounted
@@ -28,6 +31,9 @@ var hud: Control
 var design_tool: Node3D
 var library_screen: Control
 var driver: Node
+var agent_views: Node3D
+var inspector: Control
+var people: Node
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
 var _loading: Label
@@ -90,6 +96,21 @@ func _start() -> void:
 	library_screen.capture_requested.connect(func() -> void:
 		_close_library()
 		design_tool.begin())
+	agent_views = AgentViews.new()
+	agent_views.sim = sim
+	agent_views.driver = driver
+	add_child(agent_views)
+	inspector = Inspector.new()
+	inspector.sim = sim
+	ui_layer.add_child(inspector)
+	people = PeopleController.new()
+	people.sim = sim
+	people.views = agent_views
+	people.inspector = inspector
+	people.camera_rig = camera_rig
+	people.hud = hud
+	people.main = self
+	add_child(people)
 	_sync_zone()
 	_loading.hide()
 	if capture_request.is_empty():
@@ -104,7 +125,8 @@ func _sync_zone() -> void:
 	var radius: float = sim.zone_radius()
 	avatar.zone_center = center
 	avatar.zone_radius = radius
-	camera_rig.overlook_center = center
+	if inspector == null or not inspector.following:
+		camera_rig.overlook_center = center
 	var key: String = "%s/%.2f" % [center, radius]
 	if key != _zone_key:
 		_zone_key = key
@@ -122,10 +144,18 @@ func _process(_delta: float) -> void:
 	hud.refresh(_hud_state())
 
 
-func _hud_state() -> Dictionary:
+func _clock_text() -> String:
 	var calendar: RefCounted = sim.calendar
+	var text: String = Text.format("hud_day", {"day": calendar.day(), "season": Text.label("season_" + calendar.season_name()), "clock": calendar.clock_text()})
+	text += "  " + Text.label("hud_speed_%d" % driver.speed_index)
+	if driver.busy:
+		text += "  " + Text.label("hud_busy")
+	return text
+
+
+func _hud_state() -> Dictionary:
 	return {
-		"clock": Text.format("hud_day", {"day": calendar.day(), "season": Text.label("season_" + calendar.season_name()), "clock": calendar.clock_text()}),
+		"clock": _clock_text(),
 		"stock": sim.god.divine_stock,
 		"hotbar": builder.hotbar,
 		"selected": builder.selected,
@@ -149,7 +179,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		design_tool.finish()
 		get_viewport().set_input_as_handled()
 		return
-	if event.is_action_pressed("toggle_settings"):
+	if event.is_action_pressed("speed_pause"):
+		driver.set_speed(0 if driver.speed_index != 0 else 1)
+	elif event.is_action_pressed("speed_up"):
+		driver.set_speed(driver.speed_index + 1)
+	elif event.is_action_pressed("speed_down"):
+		driver.set_speed(driver.speed_index - 1)
+	elif event.is_action_pressed("toggle_settings") and inspector.visible:
+		people.close()
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif event.is_action_pressed("toggle_settings"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
 	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -159,6 +198,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("toggle_fullscreen"):
 		var full: bool = DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+
+## Modal screens take the world's input; the inspector does not.
+func accepts_world_input() -> bool:
+	return library_screen != null and not library_screen.visible
+
+
+func restore_overlook_center() -> void:
+	camera_rig.overlook_center = sim.zone_center()
 
 
 func _open_library(design: RefCounted = null) -> void:

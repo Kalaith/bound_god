@@ -7,6 +7,7 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const Template = preload("res://scripts/building/template.gd")
 const TextForCapture = preload("res://scripts/core/text.gd")
 const Data = preload("res://scripts/core/data.gd")
+const CapturePeople = preload("res://scripts/presentation/capture_people.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -18,6 +19,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 	var avatar: Node3D = main.avatar
 	var sim: RefCounted = main.sim
 	sim.calendar.tick = sim.calendar.ticks_per_day * 10 / 24
+	if scenario.begins_with("people_"):
+		CapturePeople.arrange(main, shot, scenario)
+		return
 	match scenario:
 		"design_library", "design_box", "design_invalid":
 			_design_test(main, shot, scenario)
