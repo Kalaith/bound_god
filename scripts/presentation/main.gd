@@ -22,6 +22,7 @@ const PeopleController = preload("res://scripts/presentation/people_controller.g
 const ConstructionView = preload("res://scripts/presentation/construction_view.gd")
 const StoresPanel = preload("res://scripts/presentation/ui/stores_panel.gd")
 const SettlementPanel = preload("res://scripts/presentation/ui/settlement_panel.gd")
+const FaithController = preload("res://scripts/presentation/faith_controller.gd")
 
 var rig: Node3D
 var sim: RefCounted
@@ -40,6 +41,7 @@ var people: Node
 var construction_view: Node3D
 var stores_panel: Control
 var settlement_panel: Control
+var faith: Node
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
 var _loading: Label
@@ -132,6 +134,10 @@ func _start() -> void:
 	people.hud = hud
 	people.main = self
 	add_child(people)
+	faith = FaithController.new()
+	faith.sim = sim
+	faith.main = self
+	add_child(faith)
 	_sync_zone()
 	_loading.hide()
 	if capture_request.is_empty():
@@ -180,8 +186,8 @@ func _hud_state() -> Dictionary:
 		"stock": sim.god.divine_stock,
 		"hotbar": builder.hotbar,
 		"selected": builder.selected,
-		"shrine": "",
-		"prayers": [],
+		"shrine": faith.shrine_line(),
+		"prayers": faith.prayer_lines(),
 		"hint": design_tool.hint() if design_tool.active else Text.label("design_hint"),
 		"hotbar_visible": not design_tool.active and not library_screen.visible,
 		"crosshair": Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not capture_request.is_empty(),
@@ -189,7 +195,7 @@ func _hud_state() -> Dictionary:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if library_screen != null and (library_screen.visible or stores_panel.visible):
+	if library_screen != null and (library_screen.visible or stores_panel.visible or faith.menu.visible):
 		return
 	if event.is_action_pressed("design_tool"):
 		design_tool.finish()
@@ -207,7 +213,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("speed_down"):
 		driver.set_speed(driver.speed_index - 1)
 	elif event.is_action_pressed("interact"):
-		_open_stores()
+		if not faith.try_open_menu():
+			_open_stores()
 	elif event.is_action_pressed("toggle_settlement"):
 		if settlement_panel.visible:
 			settlement_panel.hide()
@@ -230,7 +237,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## Modal screens take the world's input; the inspector does not.
 func accepts_world_input() -> bool:
-	return library_screen != null and not library_screen.visible and not stores_panel.visible
+	return library_screen != null and not library_screen.visible and not stores_panel.visible and not faith.menu.visible
 
 
 func _offer(design: RefCounted) -> void:
@@ -253,6 +260,23 @@ func _open_stores() -> void:
 			stores_panel.open(id)
 			return
 	hud.flash(Text.label("stores_none_near"), true)
+
+
+func open_stores_for(id: int) -> void:
+	if not sim.settlements.entries.has(id):
+		hud.flash(Text.label("stores_none_near"), true)
+		return
+	builder.enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	stores_panel.open(id)
+
+
+func open_requests() -> void:
+	hud.flash(Text.label("requests_none_yet"), true)
+
+
+func rest(days: float) -> void:
+	driver.rest(days)
 
 
 func _close_stores() -> void:

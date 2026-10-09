@@ -13,6 +13,7 @@ static func arrange(main: Node3D, shot: Node, scenario: String) -> void:
 	design.id = "willow_cottage"
 	design.name = "Willow Cottage"
 	design.author = "local"
+	sim.run_ticks(12)
 	sim.apply_command({"type": "offer_template", "template": design})
 	var hours: int = days * 24 - 2
 	sim.run_ticks(sim.calendar.ticks_per_hour() * hours)

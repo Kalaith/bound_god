@@ -47,6 +47,31 @@ func _ready() -> void:
 	add_child(ring)
 
 
+## A miracle shows where it happened: a bright ring that widens and fades.
+func flash(center: Vector3, radius: float) -> void:
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.9
+	torus.outer_radius = 1.0
+	var marker := MeshInstance3D.new()
+	marker.mesh = torus
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(1.0, 0.92, 0.6, 0.9)
+	material.emission_enabled = true
+	material.emission = Color(1.0, 0.85, 0.5)
+	marker.material_override = material
+	marker.position = center
+	marker.scale = Vector3(0.5, 0.1, 0.5)
+	add_child(marker)
+	var grow: float = maxf(radius, 2.0)
+	var tween: Tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(marker, "scale", Vector3(grow, 0.1, grow), 1.6)
+	tween.tween_property(material, "albedo_color:a", 0.0, 1.6)
+	tween.chain().tween_callback(marker.queue_free)
+
+
 func set_zone(center: Vector3, radius: float) -> void:
 	# The 30-high wall spans from 6 below the shrine to 24 above it.
 	wall.global_position = Vector3(center.x, center.y + 9.0, center.z)

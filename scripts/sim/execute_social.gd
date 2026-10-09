@@ -5,6 +5,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
+const Goals = preload("res://scripts/agents/goals.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail
@@ -61,6 +62,9 @@ static func _talk(sim: RefCounted, agent: RefCounted, step: Dictionary, step_tic
 	agent.change_need(Need.RECREATION, 6.0)
 	Personality.practise(agent, Personality.Skill.SOCIAL)
 	sim.effects.interaction(agent.id, other.id, int(step.topic))
+	# One fight spends a lash-out; the rest of the break is sulking.
+	if int(step.topic) == Plans.Topic.INSULT and not agent.mental_break.is_empty():
+		agent.mental_break.kind = Goals.BreakKind.SULK
 	return Plans.DONE
 
 

@@ -17,7 +17,11 @@ static func cottage() -> Dictionary:
 
 func check_the_cottage_moment():
 	var sim: RefCounted = Sim.create(11)
+	# The travellers first see the god beside the tree; then it offers the design.
+	sim.run_ticks(12)
 	var result: Dictionary = sim.apply_command({"type": "offer_template", "template": cottage()})
+	if int(result.get("learned", 0)) < 2:
+		return "the travellers did not learn the offered design: %s" % str(result)
 	if not result.ok:
 		return "the offer was refused: " + str(result.reason)
 	var started: int = Time.get_ticks_msec()
@@ -41,6 +45,7 @@ func check_the_cottage_moment():
 func check_a_site_without_means_is_not_started() -> String:
 	var sim: RefCounted = Sim.create(21, {"world": "flat", "size": Vector3i(64, 16, 64), "ground": 4})
 	sim.settlements.entries[1].stock = {"berries": 30}
+	sim.run_ticks(12)
 	sim.apply_command({"type": "offer_template", "template": cottage()})
 	sim.run_ticks(sim.calendar.ticks_per_day)
 	if not sim.construction.sites.is_empty():

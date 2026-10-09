@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M8 — Faith (M7 complete).
+M9 — Expansion (M8 complete).
 
 ## Done
 
@@ -28,9 +28,11 @@ M8 — Faith (M7 complete).
 
 - M7 Social layer: Final Landing's social candidates (chat partner score, court, comfort, reconcile, help) and plans; Talk (approach within 2, hold for `chat_ticks`), Send, Give, Wait for help, Treat; conversation resolution (directional compatibility, small talk with friction, gossip, sightings, designs and places passed on, insult and fights, flirt and proposal, reconcile, comfort) with bond changes in the chronicle; help requests and replies, gossip and proposal receivers; hourly mental breaks by temperament (lash out, binge, sulk, wander); births to housed couples; daily ambition progress; low-mood accumulation into Migrate (to a believed settlement) or leaving the valley; settlements seen are remembered as places. Performance pass: site finder 290 ms → a few ms (cached heights, blocked columns, shared footprints, failed searches remembered for a day), local structure re-probing, perception without per-tick allocations: 2.4 ms/tick with 13 people. Checks: bonds form in 20 days and reach the chronicle, a hungry person with empty stores is fed by a friend, breaks override, clashing natures sour talk. Capture: `m7_bonds_day20_1080.png`.
 
+- M8 Faith: shrines (the sacred tree, the fallen ridge altar, any altar placed later) with support from three days of prayers, radius 16 + 6√support, Favour from prayers (halved below condition 30), condition decay and tending, active / dormant / fallen states, expulsion to the strongest active shrine or dormancy, waking when a shrine becomes active again, a five-day grace for the tree and 30 starting Favour; faith in people (first sight of the avatar, fear for the cautious, witnessed miracles weighted by relevance, answered prayers, unheard desperate prayers, drift toward friends, neglect, harm to homes by the god's hand with fear worship); Pray with intents, TendShrine; miracles (Whisper as an inbox message that raises a goal kind for a day and is logged, Bless Growth, Kindle, Veil of Fog, Mend) with identity discount and penalty; HUD shrine line and prayer feed, shrine menu (shrines and transfer, miracles with costs, designs, stores, rest), Whisper menu in the inspector, miracle flash, avatar position reported to the sim (not logged for replay). Checks: prayers raise Favour, Bless Growth before a hungry believer raises devotion and the harvest aspect, a whisper reaches the decision log and an urged adoption, an unsupported shrine goes dormant and expels the god. Capture: `m8_shrine_menu_1080.png`.
+
 ## Next
 
-- M8: faith state, Pray, shrines (support, Favour, condition, radius), renown, prayer feed, Whisper, Bless Growth, Kindle, Mend, Veil of Fog, god identity, Faith tab.
+- M9: requests, quests, Preach / Story, RestoreShrine, transfer, expulsion, dormancy end to end.
 
 ## Decisions
 
@@ -53,12 +55,15 @@ M8 — Faith (M7 complete).
 - Check scenarios are untyped functions: a runtime error then returns null and fails, where `-> String` returned "" and passed silently.
 - Builders never stand on the building they are raising; stand cells must be reachable by path.
 - Runtime errors inside the simulation do not fail `sim_checks` (only errors in a check function do), so every check run is also grepped for `SCRIPT ERROR`.
+- Offered designs reach residents of the shrine's settlement who know the god (seeing the avatar is enough).
+- A lash-out break spends itself on one fight, then the break is sulking: repeated insults otherwise killed both people.
 - `tools/scratch/` holds local diagnostic probes and is git-ignored.
 - Valley layout: sacred tree at (50,50), ridge ruin at (128,128) (~110 blocks), hamlet at (112,134). The river runs beside the tree-ridge axis so nobody must cross water.
 
 ## Questions for the user (decided, revisit if you disagree)
 
-- Who learns an offered design? Decided: residents of the shrine's settlement (from M8, only those who know the god). Alternative: only people inside the presence zone at the moment of offering.
+- Who learns an offered design? Decided: residents of the shrine's settlement who know the god. Alternative: only worshippers (Believer+) of that shrine, as GDD §5.4 literally says; that would delay the cottage moment until the player has won believers.
+- The tree starts with 30 Favour so a first Bless Growth is possible before anyone prays. Without player miracles the tree goes dormant after the 5-day grace and the god sleeps; is that the intended pressure?
 - Should travellers start knowing a vernacular design (the lean-to) so Tree Hollow can build without the god? Decided: no; only migrants sometimes bring the lean-to, so the first homes come from the god's designs.
 - Movement pace: 1 cell per tick reads as a brisk walk at 1x. Decided to favour a working economy over a slower on-screen pace.
 

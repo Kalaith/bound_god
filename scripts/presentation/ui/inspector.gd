@@ -5,6 +5,7 @@ extends Control
 signal closed
 signal follow_toggled(on: bool)
 signal person_chosen(id: int)
+signal whisper(id: int, nudge: String)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const AgentText = preload("res://scripts/presentation/ui/agent_text.gd")
@@ -67,6 +68,17 @@ func _ready() -> void:
 		following = on
 		follow_toggled.emit(on))
 	header.add_child(_follow)
+	var urge := MenuButton.new()
+	urge.text = Text.label("miracle_whisper")
+	urge.add_theme_font_size_override("font_size", 21)
+	urge.custom_minimum_size.y = 50
+	urge.flat = false
+	var nudges: Array = ["rest", "pray", "build", "gather", "talk", "make_peace", "shelter"]
+	for i in range(nudges.size()):
+		urge.get_popup().add_item(Text.label("nudge_" + nudges[i]), i)
+	urge.get_popup().add_theme_font_size_override("font_size", 20)
+	urge.get_popup().id_pressed.connect(func(index: int) -> void: whisper.emit(agent_id, nudges[index]))
+	header.add_child(urge)
 	var close: Button = Style.button(Text.label("inspect_close"))
 	close.pressed.connect(func() -> void: closed.emit())
 	header.add_child(close)

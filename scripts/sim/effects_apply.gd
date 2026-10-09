@@ -38,6 +38,12 @@ static func apply(sim: RefCounted) -> void:
 				_treat(sim, agent, action)
 			"join":
 				_join(sim, agent, int(action.settlement))
+			"prayer":
+				sim.faith.record_prayer(sim, agent, int(action.shrine), action.intent)
+			"tend":
+				var shrine: Dictionary = sim.faith.get_shrine(int(action.shrine))
+				if not shrine.is_empty():
+					shrine.condition = minf(float(shrine.condition) + float(action.amount), 100.0)
 			"leave":
 				_leave(sim, agent)
 			_:

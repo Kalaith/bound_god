@@ -12,6 +12,8 @@ var offered: Dictionary = {}
 ## template id -> shrine id it was offered at
 var offered_at: Dictionary = {}
 var grace_until_tick: int = 0
+## Where the avatar stands, so people can see the god.
+var avatar_cell := Vector3i(-1, -1, -1)
 ## Events for the presentation to react to: expelled, dormant, transfer.
 var events: Array = []
 
@@ -36,7 +38,7 @@ func to_dict() -> Dictionary:
 	return {
 		"divine_stock": divine_stock.duplicate(), "active_shrine_id": active_shrine_id, "dormant": dormant,
 		"renown": renown, "offered": offered.duplicate(true), "offered_at": offered_at.duplicate(),
-		"grace_until_tick": grace_until_tick,
+		"grace_until_tick": grace_until_tick, "avatar_cell": avatar_cell,
 	}
 
 
@@ -48,3 +50,4 @@ func from_dict(data: Dictionary) -> void:
 	offered = data.offered
 	offered_at = data.offered_at
 	grace_until_tick = int(data.grace_until_tick)
+	avatar_cell = data.avatar_cell

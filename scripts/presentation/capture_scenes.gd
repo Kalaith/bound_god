@@ -9,6 +9,7 @@ const TextForCapture = preload("res://scripts/core/text.gd")
 const Data = preload("res://scripts/core/data.gd")
 const CapturePeople = preload("res://scripts/presentation/capture_people.gd")
 const CaptureSettlement = preload("res://scripts/presentation/capture_settlement.gd")
+const CaptureFaith = preload("res://scripts/presentation/capture_faith.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -20,6 +21,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 	var avatar: Node3D = main.avatar
 	var sim: RefCounted = main.sim
 	sim.calendar.tick = sim.calendar.ticks_per_day * 10 / 24
+	if scenario.begins_with("faith_"):
+		CaptureFaith.arrange(main, shot, scenario)
+		return
 	if scenario.begins_with("settlement_"):
 		CaptureSettlement.arrange(main, shot, scenario)
 		return

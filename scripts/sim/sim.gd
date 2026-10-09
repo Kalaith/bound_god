@@ -27,6 +27,7 @@ const SettlementLife = preload("res://scripts/sim/settlement_life.gd")
 const Director = preload("res://scripts/sim/director.gd")
 const CommandsWorld = preload("res://scripts/sim/commands_world.gd")
 const Template = preload("res://scripts/building/template.gd")
+const Faith = preload("res://scripts/sim/faith.gd")
 
 var world_seed: int = 1
 var rng := RandomNumberGenerator.new()
@@ -110,6 +111,8 @@ func setup(seed: int, options: Dictionary) -> void:
 	_events_seen = structures.events.size()
 	god.grace_until_tick = calendar.tick + calendar.ticks_for_days(Balance.number("shrines.grace_days"))
 	Population.found(self, options)
+	faith = Faith.new()
+	faith.setup(self)
 	_refresh_site_buckets()
 	settlement_life.refresh_jobs(self)
 
@@ -130,6 +133,8 @@ func set_block(cell: Vector3i, block: int, meta: int = 0, source: String = "") -
 		edit_sources[cell] = source
 	if old != block:
 		structures.on_edit(voxels, cell, calendar.tick, source)
+		if faith != null:
+			faith.on_block(self, cell, old, block, source)
 		if Registry.passable[old] != Registry.passable[block] or Registry.solid[old] != Registry.solid[block] \
 				or Registry.opaque[old] != Registry.opaque[block]:
 			nav.update_cells([cell])

@@ -87,5 +87,5 @@ static func child(rng: RandomNumberGenerator, id: int, mother: RefCounted, fathe
 static func new_faith() -> Dictionary:
 	return {
 		"knows": false, "devotion": 0.0, "aspects": PackedFloat32Array([0.2, 0.2, 0.2, 0.2, 0.2]),
-		"shrine_id": -1, "last_prayer_tick": -1, "last_intent": {}, "stories_heard": 0, "saw_god": false,
+		"shrine_id": -1, "last_prayer_tick": -1, "last_intent": {}, "stories_heard": 0, "saw_god": false, "witnessed": [], "harmed_tick": -1,
 	}
