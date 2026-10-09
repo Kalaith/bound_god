@@ -66,18 +66,18 @@ M12 — Vertical slice polish: implemented; awaiting a fresh-player playtest (se
 - Runtime errors inside the simulation do not fail `sim_checks` (only errors in a check function do), so every check run is also grepped for `SCRIPT ERROR`.
 - Offered designs reach residents of the shrine's settlement who know the god (seeing the avatar is enough).
 - A lash-out break spends itself on one fight, then the break is sulking: repeated insults otherwise killed both people.
-- RestoreShrine is open to Believers (utility 0.35 × devotion) as well as the Devout (0.6 ×): with only the Devout the ridge altar was never restored by its own people.
+- RestoreShrine (confirmed by the user) is open to Believers (utility 0.35 × devotion) as well as the Devout (0.6 ×): with only the Devout the ridge altar was never restored by its own people.
 - `tools/scratch/` holds local diagnostic probes and is git-ignored.
 - Valley layout: sacred tree at (50,50), ridge ruin at (128,128) (~110 blocks), hamlet at (112,134). The river runs beside the tree-ridge axis so nobody must cross water.
 
 ## Questions for the user (decided, revisit if you disagree)
 
 - Who learns an offered design? Decided: residents of the shrine's settlement who know the god. Alternative: only worshippers (Believer+) of that shrine, as GDD §5.4 literally says; that would delay the cottage moment until the player has won believers.
-- The tree starts with 30 Favour so a first Bless Growth is possible before anyone prays. Without player miracles the tree goes dormant after the 5-day grace and the god sleeps; is that the intended pressure?
-- Should travellers start knowing a vernacular design (the lean-to) so Tree Hollow can build without the god? Decided: no; only migrants sometimes bring the lean-to, so the first homes come from the god's designs.
+- Resolved (user, 2026-10-10): the sacred tree is always active; its reach is 10 blocks without support and widens toward the full radius as support nears the threshold. No grace timer. The tree still starts with 30 Favour.
+- Resolved (user): travellers start knowing no designs; only migrants sometimes bring the lean-to.
 - Movement pace: 1 cell per tick reads as a brisk walk at 1x. Decided to favour a working economy over a slower on-screen pace.
 
-- Is the first-steps guide welcome, or should it be optional in settings? Decided: always shown until the god has stepped through to a second shrine.
+- Resolved (user): the first-steps guide is optional ("Show first-steps guide" in settings, on by default).
 - Ridge Hamlet relationships turn hostile quickly (enemies at -100 within days, frequent insults). Left at Final Landing's values; tune after a playtest?
 - Raids start on day 12 and can strike a shrine the player has just helped raise. Kept per GDD; confirm it does not feel unfair in play.
 

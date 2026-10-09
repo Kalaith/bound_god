@@ -95,7 +95,7 @@ func _build_general() -> void:
 		sliders[key] = slider
 		rows.add_child(row)
 	for entry in [["muted", "Mute all sound"], ["invert_look", "Invert vertical look"], ["fullscreen", "Fullscreen   ·   F11"],
-			["reduce_motion", "Reduce motion"], ["ssao", "Ambient occlusion (SSAO)"], ["glow", "Glow"], ["shadows", "Sun shadows"]]:
+			["reduce_motion", "Reduce motion"], ["show_guide", "Show first-steps guide"], ["ssao", "Ambient occlusion (SSAO)"], ["glow", "Glow"], ["shadows", "Sun shadows"]]:
 		if entry[0] == "ssao":
 			rows.add_child(Style.label("Graphics", 20, Style.LEAF))
 		var toggle := CheckButton.new()

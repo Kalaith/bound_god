@@ -61,6 +61,7 @@ var chronicle_screen: Control
 var pause_menu: Control
 var settings_screen: Control
 var _guide_text: String = ""
+var _show_guide: bool = true
 var _guide_left: float = 0.0
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
@@ -204,6 +205,9 @@ func _start() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
 	if sim.god.dormant:
 		avatar.set_dormant(true)
+	var preferences: RefCounted = SettingsStore.new()
+	preferences.load_settings()
+	_apply_settings(preferences)
 	var audio: Node = AudioDirector.new()
 	audio.sim = sim
 	add_child(audio)
@@ -248,7 +252,7 @@ func _process(_delta: float) -> void:
 	_guide_left -= _delta
 	if _guide_left <= 0.0:
 		_guide_left = 1.0
-		_guide_text = Guide.line(sim, library_screen.library)
+		_guide_text = Guide.line(sim, library_screen.library) if _show_guide else ""
 	hud.refresh(_hud_state())
 
 
@@ -349,6 +353,8 @@ func _open_settings() -> void:
 func _apply_settings(store: RefCounted) -> void:
 	camera_rig.look_sensitivity = float(store.values.get("look_sensitivity", camera_rig.look_sensitivity))
 	camera_rig.invert_look = bool(store.values.get("invert_look", camera_rig.invert_look))
+	_show_guide = bool(store.values.get("show_guide", true))
+	_guide_left = 0.0
 
 
 ## Screens that take the world's input while open.

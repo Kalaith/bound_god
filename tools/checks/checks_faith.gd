@@ -84,7 +84,7 @@ func check_a_whisper_reaches_the_decision_log():
 	return ""
 
 
-func check_a_shrine_without_support_goes_dormant_and_expels_the_god():
+func check_an_altar_without_support_sends_the_god_home_to_the_tree():
 	var sim: RefCounted = _flat()
 	var tree: int = sim.god.active_shrine_id
 	var altar_cell: Vector3i = sim.features.sacred_tree + Vector3i(10, 0, 10)
@@ -96,17 +96,29 @@ func check_a_shrine_without_support_goes_dormant_and_expels_the_god():
 	if other < 0:
 		return "placing an altar did not raise a shrine"
 	sim.faith.shrines[other].state = "active"
-	sim.god.grace_until_tick = 0
-	# Two devoted people keep praying at the new altar; nobody prays at the tree.
+	sim.god.active_shrine_id = other
 	for agent in sim.agents:
 		agent.faith.knows = false
-		agent.faith.devotion = 70.0
-	for _day in range(4):
-		for agent in sim.agents:
-			sim.faith.shrines[other].prayers.append({"tick": sim.calendar.tick, "agent": agent.id, "intent": {"kind": "thanks"}, "shrine": other, "answered": false})
-		sim.run_ticks(sim.calendar.ticks_per_day)
-	if sim.faith.shrines[tree].state != "dormant":
-		return "the unsupported tree shrine stayed %s" % sim.faith.shrines[tree].state
-	if sim.god.active_shrine_id != other or sim.god.dormant:
-		return "the god was not expelled to the active shrine"
+		agent.faith.devotion = 0.0
+	sim.run_ticks(sim.calendar.ticks_per_day * 4)
+	if sim.faith.shrines[other].state != "dormant":
+		return "the unsupported altar stayed %s" % sim.faith.shrines[other].state
+	if sim.god.active_shrine_id != tree or sim.god.dormant:
+		return "the god was not sent home to the tree"
+	return ""
+
+
+func check_the_tree_holds_a_small_circle_that_grows_with_support():
+	var sim: RefCounted = _flat()
+	var tree: Dictionary = sim.faith.current(sim)
+	for agent in sim.agents:
+		agent.faith.devotion = 0.0
+	sim.run_ticks(sim.calendar.ticks_per_day * 8)
+	if tree.state != "active" or sim.god.dormant:
+		return "the tree went %s without prayers" % tree.state
+	var small: float = sim.zone_radius()
+	tree.support = 2.0
+	var large: float = sim.zone_radius()
+	if small > 10.5 or large <= small + 5.0:
+		return "the tree's reach did not follow its support (%.1f unsupported, %.1f supported)" % [small, large]
 	return ""

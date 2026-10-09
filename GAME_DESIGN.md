@@ -263,7 +263,7 @@ A shrine is a recognised Shrine structure (§5.3) with a **congregation**: the N
 | Favour gain | Each prayer adds devotion ÷ 25 Favour; cap 100 per shrine |
 | Condition | 100 when built; decays 2/day untended; TendShrine restores; < 30 halves Favour gain; altar destroyed → 0 |
 
-The **sacred tree** is the origin shrine: always considered a shrine structure, but it still needs worshippers to be **active**. At the very start the god has a grace period of 5 days during which the tree is active without support.
+The **sacred tree** is the origin shrine: always considered a shrine structure and **always active**, so the god can always tend the small area around its tree. **Decision (2026-10-10):** with no support the tree's presence radius is 10 blocks; it widens toward the normal radius (16 + 6 × √support) as support approaches the active threshold, and shrinks back when prayers fade. There is no grace timer. Altars elsewhere still go dormant without support.
 
 ### 7.3 Miracles
 

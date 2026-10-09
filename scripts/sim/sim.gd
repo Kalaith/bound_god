@@ -119,7 +119,6 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	settlement_life = SettlementLife.new()
 	director = Director.new()
 	_events_seen = structures.events.size()
-	god.grace_until_tick = calendar.tick + calendar.ticks_for_days(Balance.number("shrines.grace_days"))
 	faith = Faith.new()
 	requests = Requests.new()
 	threats = Threats.new()

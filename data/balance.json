@@ -71,7 +71,7 @@
 	"shrines": {
 		"support_window_days": 3, "active_support": 1.2, "radius_base": 16.0, "radius_per_sqrt_support": 6.0,
 		"radius_max": 40.0, "favour_per_devotion": 0.04, "favour_cap": 100.0, "condition_decay_per_day": 2.0,
-		"low_condition": 30.0, "dormant_days": 3, "grace_days": 5, "tend_per_tick": 0.3, "start_favour": 30.0
+		"low_condition": 30.0, "dormant_days": 3, "tree_min_radius": 10.0, "tend_per_tick": 0.3, "start_favour": 30.0
 	},
 	"miracle_costs": {"identity_discount": 0.25, "identity_penalty": 0.25, "dormant_whisper_cost": 0},
 	"threats": {

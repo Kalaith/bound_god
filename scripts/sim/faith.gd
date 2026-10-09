@@ -96,9 +96,17 @@ func zone_radius(sim: RefCounted) -> float:
 	return radius_of(shrine)
 
 
+## Altars reach 16 + 6 * sqrt(support). The sacred tree always holds a small
+## circle around itself, widening toward that reach as support nears the
+## active threshold and shrinking back when prayers fade.
 static func radius_of(shrine: Dictionary) -> float:
-	var radius: float = Balance.number("shrines.radius_base") + Balance.number("shrines.radius_per_sqrt_support") * sqrt(maxf(float(shrine.support), 0.0))
-	return minf(radius, Balance.number("shrines.radius_max"))
+	var support: float = maxf(float(shrine.support), 0.0)
+	var radius: float = Balance.number("shrines.radius_base") + Balance.number("shrines.radius_per_sqrt_support") * sqrt(support)
+	radius = minf(radius, Balance.number("shrines.radius_max"))
+	if shrine.kind == "tree":
+		var share: float = clampf(support / Balance.number("shrines.active_support"), 0.0, 1.0)
+		radius = lerpf(Balance.number("shrines.tree_min_radius"), radius, share)
+	return radius
 
 
 ## Where a worshipper stands: beside the altar or the tree.
@@ -228,13 +236,13 @@ func hourly(sim: RefCounted) -> void:
 ## is counted, and people's faith drifts.
 func daily(sim: RefCounted) -> void:
 	var threshold: float = Balance.number("shrines.active_support")
-	var grace: bool = sim.calendar.tick < sim.god.grace_until_tick
 	for id in ids():
 		var shrine: Dictionary = shrines[id]
 		if shrine.state == "fallen":
 			continue
 		shrine.condition = maxf(float(shrine.condition) - Balance.number("shrines.condition_decay_per_day"), 0.0)
-		var supported: bool = float(shrine.support) >= threshold or (grace and shrine.kind == "tree")
+		# The sacred tree never sleeps; its reach shrinks with its support instead.
+		var supported: bool = float(shrine.support) >= threshold or shrine.kind == "tree"
 		if supported:
 			shrine.below_days = 0
 			if shrine.state != "active":

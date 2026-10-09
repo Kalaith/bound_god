@@ -12,6 +12,7 @@ const DEFAULTS: Dictionary = {
 	"look_sensitivity": 0.5, "invert_look": false,
 	"fullscreen": false, "reduce_motion": false,
 	"ssao": true, "glow": true, "shadows": true,
+	"show_guide": true,
 }
 var values: Dictionary = DEFAULTS.duplicate()
 var key_bindings: Dictionary = Keys.defaults()
