@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M12 — Vertical slice polish (M11 complete).
+M12 — Vertical slice polish: implemented; awaiting a fresh-player playtest (see Questions).
 
 ## Done
 
@@ -36,9 +36,12 @@ M12 — Vertical slice polish (M11 complete).
 
 - M11 Time and history: `sim_state` saves (regenerate from the seed, edited chunks compressed, everything else plain data; the navigation graph is rebuilt at every save in the running world too, so both continue identically), `world_io` (autosave each dawn and before resting, quick save, load at start, staged files with backups), rest overlay with "While you rested…" from the chronicle, chronicle screen with a place filter (J), `--load=<slot>` for captures. Fixed: "Raise a Shrine" ambitions are met by an altar raised or restored since joining, not by the tree; a bond is chronicled once per change. Checks: a saved world continues identically through a day, a damaged save falls back to its backup, a season of rest takes 10 s headless. Verified in the game: a save from one launch loads in another with the same state hash. Captures: `m11_while_you_rested_1080.png`, `m11_loaded_1080.png`.
 
+- M12 Vertical slice polish: pause menu on Esc (return, save, settings reusing the title's settings screen, save and leave to title), audio bus layout (Master, Music, Effects) and a synthesised sound director (wind by hour, place and break, miracle chime, prayer bell; no audio assets), a first-steps guide line under the clock that points to the next step of the GDD §14 moment (gather, build, capture, offer, miracle, carry the name, transfer, rest), controls hint moved bottom-left clear of the hotbar. Presentation scripts cost under 1 ms a frame (measured per node). `publish.ps1 -BuildOnly` produced a Windows build that boots and exits cleanly; nothing was deployed. Captures: `m12_first_steps_1080.png`, `m12_first_steps_720.png`.
+
 ## Next
 
-- M12: title flow, settings, audio pass, tuning, export; the GDD §14 moment from a new world in under an hour.
+- A fresh-player playtest of the GDD §14 moment (not something the checks can show), then balance from what it finds.
+- Profile with a full 30-person population; the season-of-rest check ran with about 10 people (10 s).
 
 ## Decisions
 
@@ -74,7 +77,13 @@ M12 — Vertical slice polish (M11 complete).
 - Should travellers start knowing a vernacular design (the lean-to) so Tree Hollow can build without the god? Decided: no; only migrants sometimes bring the lean-to, so the first homes come from the god's designs.
 - Movement pace: 1 cell per tick reads as a brisk walk at 1x. Decided to favour a working economy over a slower on-screen pace.
 
+- Is the first-steps guide welcome, or should it be optional in settings? Decided: always shown until the god has stepped through to a second shrine.
+- Ridge Hamlet relationships turn hostile quickly (enemies at -100 within days, frequent insults). Left at Final Landing's values; tune after a playtest?
+- Raids start on day 12 and can strike a shrine the player has just helped raise. Kept per GDD; confirm it does not feel unfair in play.
+
 ## Known issues
+
+- Not verified: the GDD §14 moment by a fresh player in under an hour, frame rate with 30 people at x10, and audio levels by ear (sounds are synthesised and only checked to load and play without errors).
 
 - Use `exports/tooling/Godot_v4.2.2-stable_win64_console.exe` for checks and exports (standard 4.2.2, official archive SHA512 verified). `Run.ps1` still uses Mono. The standard editor removes the Mono `EditorSettings::_EDITOR_GET` shutdown error. Its `--headless --editor --quit` still returns 1, also reproduced with an empty project and fresh portable editor settings. The pinned engine's automatic-quit path does not set a success exit code ([upstream issue](https://github.com/godotengine/godot/issues/83449)). Do not report this as a zero-exit import pass or suppress arbitrary failures: inspect import output for errors and require sim_checks (including all-script parsing) to exit 0. Current standard-editor output has only headless-cursor and unconfigured-Blender warnings.
 - Window captures at 1920x1080 are clamped by the desktop work area to 1920x1061; layouts are authored against the 1920x1080 stretch base, so this only trims the bottom 19 px of the capture.

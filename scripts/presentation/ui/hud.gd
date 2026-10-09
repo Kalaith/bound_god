@@ -12,6 +12,7 @@ var _shrine: Label
 var _stock: Label
 var _message: Label
 var _hint: Label
+var _guide: Label
 var _prayers: VBoxContainer
 var _slots: Array = []
 var _slot_labels: Array = []
@@ -38,6 +39,9 @@ func _ready() -> void:
 	left_box.add_child(_clock)
 	_stock = Style.label("", 18, Style.MUTED)
 	left_box.add_child(_stock)
+	_guide = Style.wrapped("", 19, Style.FAITH)
+	_guide.custom_minimum_size.x = 520
+	left_box.add_child(_guide)
 	var top_center := Style.panel(0.72)
 	top_center.name = "ShrinePanel"
 	add_child(top_center)
@@ -84,8 +88,8 @@ func _ready() -> void:
 	_message = Style.label("", 21)
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_message)
-	_hint = Style.label("", 16, Style.MUTED)
-	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_hint = Style.wrapped("", 16, Style.MUTED)
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	add_child(_hint)
 	resized.connect(_layout)
 	_layout()
@@ -100,8 +104,9 @@ func _layout() -> void:
 	_selected_name.size = Vector2(600, 30)
 	_message.position = Vector2(view.x * 0.5 - 500, view.y - 182)
 	_message.size = Vector2(1000, 32)
-	_hint.position = Vector2(view.x - 820, view.y - 40)
-	_hint.size = Vector2(800, 24)
+	# Bottom-left, clear of the centred hotbar even at 1280x720.
+	_hint.position = Vector2(20, view.y - 66)
+	_hint.size = Vector2(minf(520.0, (view.x - 9 * 82) * 0.5 - 40.0), 48)
 	var shrine_panel: Control = get_node("ShrinePanel")
 	shrine_panel.position = Vector2(view.x * 0.5 - shrine_panel.size.x * 0.5, 18)
 	_prayers.position = Vector2(view.x - 520, 18)
@@ -151,6 +156,8 @@ func refresh(state: Dictionary) -> void:
 	get_node("ShrinePanel").visible = not _shrine.text.is_empty()
 	_crosshair.visible = state.get("crosshair", true)
 	_hint.text = state.get("hint", "")
+	_guide.text = state.get("guide", "")
+	_guide.visible = not _guide.text.is_empty()
 	var hotbar: Array = state.get("hotbar", [])
 	var selected: int = int(state.get("selected", 0))
 	var page: int = selected / 9

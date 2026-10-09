@@ -229,6 +229,19 @@
 		"save_autosaved": "The world is saved for the new day.",
 		"save_load_failed": "The saved world could not be loaded: {error}",
 		"save_damaged": "the save is damaged",
-		"save_version": "the save is from another version"
+		"save_version": "the save is from another version",
+		"pause_resume": "Return to the valley",
+		"pause_save": "Save the world",
+		"pause_title": "Save and leave to the title",
+		"hud_controls": "LMB break · RMB place · F look · E shrine/stores · B designs · K settlement · J chronicle · Tab overlook",
+		"guide_gather": "First: break blocks with the left button to gather materials (logs give wood, tall grass thatch).",
+		"guide_build": "Build a small home near the tree: walls, a door, a bed under a roof. Place with the right button; 1-9 choose a block.",
+		"guide_capture": "Keep it as a design: press B, choose Capture in world, mark two corners around your home, then Save design.",
+		"guide_offer": "Offer the design at the tree (B, then Offer at the shrine). People who know you can now build it.",
+		"guide_miracle": "The travellers know you but do not yet believe. At the tree press E and work Bless Growth near them.",
+		"guide_request": "Your believers can carry your name: at the tree press E, Requests, Carry my name to the Ridge Hamlet.",
+		"guide_transfer": "The Ridge Altar is awake. At the tree press E and step through to it.",
+		"guide_rest": "Let days pass: at the tree press E and Rest, then read what happened.",
+		"guide_dormant": "The god sleeps. People who still believe may pray a shrine awake again."
 	}
 }

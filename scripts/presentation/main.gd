@@ -29,6 +29,12 @@ const ThreatViews = preload("res://scripts/presentation/threat_views.gd")
 const WorldIO = preload("res://scripts/presentation/world_io.gd")
 const RestOverlay = preload("res://scripts/presentation/ui/rest_overlay.gd")
 const ChronicleScreen = preload("res://scripts/presentation/ui/chronicle_screen.gd")
+const AudioDirector = preload("res://scripts/presentation/audio_director.gd")
+const PauseMenu = preload("res://scripts/presentation/ui/pause_menu.gd")
+const SettingsScreen = preload("res://scripts/presentation/ui/settings_screen.gd")
+const SettingsStore = preload("res://scripts/core/settings_store.gd")
+const Guide = preload("res://scripts/presentation/ui/guide.gd")
+const TITLE_SCENE: String = "res://scenes/title.tscn"
 
 var rig: Node3D
 var sim: RefCounted
@@ -52,6 +58,10 @@ var requests_panel: Control
 var world_io: Node
 var rest_overlay: Control
 var chronicle_screen: Control
+var pause_menu: Control
+var settings_screen: Control
+var _guide_text: String = ""
+var _guide_left: float = 0.0
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
 var _loading: Label
@@ -194,6 +204,17 @@ func _start() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
 	if sim.god.dormant:
 		avatar.set_dormant(true)
+	var audio: Node = AudioDirector.new()
+	audio.sim = sim
+	add_child(audio)
+	pause_menu = PauseMenu.new()
+	ui_layer.add_child(pause_menu)
+	pause_menu.resume.connect(_close_pause)
+	pause_menu.save.connect(func() -> void: world_io.save())
+	pause_menu.title.connect(func() -> void:
+		world_io.save()
+		get_tree().change_scene_to_file(TITLE_SCENE))
+	pause_menu.settings.connect(_open_settings)
 	_sync_zone()
 	_loading.hide()
 	if capture_request.is_empty():
@@ -218,12 +239,16 @@ func _sync_zone() -> void:
 
 
 func _process(_delta: float) -> void:
-	if sim == null:
+	if sim == null or avatar == null:
 		return
 	rig.set_hour(sim.calendar.hour())
 	avatar.camera_yaw = camera_rig.yaw
 	overlays.update_avatar(avatar.global_position)
 	_sync_zone()
+	_guide_left -= _delta
+	if _guide_left <= 0.0:
+		_guide_left = 1.0
+		_guide_text = Guide.line(sim, library_screen.library)
 	hud.refresh(_hud_state())
 
 
@@ -244,7 +269,8 @@ func _hud_state() -> Dictionary:
 		"selected": builder.selected,
 		"shrine": faith.shrine_line(),
 		"prayers": faith.prayer_lines(),
-		"hint": design_tool.hint() if design_tool.active else Text.label("design_hint"),
+		"hint": design_tool.hint() if design_tool.active else Text.label("hud_controls"),
+		"guide": _guide_text,
 		"hotbar_visible": not design_tool.active and not library_screen.visible,
 		"crosshair": Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not capture_request.is_empty(),
 	}
@@ -286,7 +312,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		people.close()
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event.is_action_pressed("toggle_settings"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
+		builder.enabled = false
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		pause_menu.open()
 	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		get_viewport().set_input_as_handled()
@@ -297,9 +325,37 @@ func _unhandled_input(event: InputEvent) -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if full else DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 
+func _close_pause() -> void:
+	pause_menu.hide()
+	builder.enabled = true
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func _open_settings() -> void:
+	if settings_screen == null:
+		var store: RefCounted = SettingsStore.new()
+		store.load_settings()
+		settings_screen = SettingsScreen.new()
+		settings_screen.store = store
+		ui_layer.add_child(settings_screen)
+		settings_screen.close_requested.connect(func() -> void: settings_screen.hide())
+		settings_screen.changed.connect(func() -> void:
+			store.apply_all(get_tree())
+			_apply_settings(store))
+	settings_screen.show()
+
+
+## Look settings reach the camera; the rest the store applies itself.
+func _apply_settings(store: RefCounted) -> void:
+	camera_rig.look_sensitivity = float(store.values.get("look_sensitivity", camera_rig.look_sensitivity))
+	camera_rig.invert_look = bool(store.values.get("invert_look", camera_rig.invert_look))
+
+
 ## Screens that take the world's input while open.
 func _modal_open() -> bool:
-	for screen in [library_screen, stores_panel, faith.menu, requests_panel, rest_overlay, chronicle_screen]:
+	if settings_screen != null and settings_screen.visible:
+		return true
+	for screen in [library_screen, stores_panel, faith.menu, requests_panel, rest_overlay, chronicle_screen, pause_menu]:
 		if screen.visible:
 			return true
 	return false
