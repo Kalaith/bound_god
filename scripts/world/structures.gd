@@ -11,6 +11,8 @@ var entries: Dictionary = {} # int -> structure dictionary
 var components: Dictionary = {} # Vector3i -> true
 var events: Array = [] # chronicle-ready records with tick and cause
 var _next_id: int = 1
+## Bumped on every rebuild so caches keyed on structures can tell.
+var version: int = 0
 
 
 func initialize(world: RefCounted) -> void:
@@ -38,6 +40,7 @@ func on_edit(world: RefCounted, cell: Vector3i, tick: int, source: String) -> vo
 
 func _rebuild(world: RefCounted, tick: int, cause: String) -> void:
 	var previous: Dictionary = entries
+	version += 1
 	entries = {}
 	var used: Dictionary = {}
 	var covered: Dictionary = {}
@@ -63,7 +66,7 @@ func _rebuild(world: RefCounted, tick: int, cause: String) -> void:
 		var residents: Array = previous[id].residents.duplicate() if previous.has(id) else []
 		if not result.functions.has("dwelling"):
 			residents.clear()
-		entries[id] = {"id": id, "anchor": anchor, "cells": room.cells, "closed": room.closed,
+		entries[id] = {"id": id, "anchor": anchor, "cells": room.cells, "inside": room.inside, "closed": room.closed,
 			"functions": result.functions, "capacity": result.capacity, "components": result.components,
 			"residents": residents, "template_id": previous[id].template_id if previous.has(id) else ""}
 		if not previous.has(id) or previous[id].functions != result.functions or previous[id].capacity != result.capacity:

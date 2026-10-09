@@ -5,11 +5,11 @@ const Data = preload("res://scripts/core/data.gd")
 
 
 static func has(key: String) -> bool:
-	return Data.file("text").get("labels", {}).has(key)
+	return Data.labels().has(key)
 
 
 static func label(key: String) -> String:
-	var labels: Dictionary = Data.file("text").get("labels", {})
+	var labels: Dictionary = Data.labels()
 	if not labels.has(key):
 		push_error("Text has no label " + key)
 		return key

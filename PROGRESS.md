@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M4 — Sim core + survival agents (M3 complete).
+M5 — Legibility (M4 complete).
 
 ## Done
 
@@ -20,9 +20,11 @@ M4 — Sim core + survival agents (M3 complete).
 
 - M3 Templates: design tool (two-corner box marked with Break, zone/size/bounds check tinting the outline), design library screen (private list, isometric preview, functions/capacity/bill, save, import/export through `FileDialog`). Shelter floor no longer counts the tops of beds. Captures: `m3_design_box_1080.png`, `m3_library_1080.png` (hand-placed hut: dwelling + shelter, 2 beds, 9 sleepers, worst edit command 9 ms).
 
+- M4 Sim core + survival agents: `nav_grid` (AStar3D over standable cells, local reconnect on edits, 0.9 s full build), spatial buckets, Final Landing BDI port (agent, beliefs, goals, plans, mind, personality, generation, deliberation, cognition with commitment, plan library with last-resort plans, execute with failure learning and backoff, perception, inbox, deferred Effects), body with Shelter replacing Warmth (roof = full cover, foliage = half), settlements with a pile and chests, lifecycle deaths, chronicle, daily hooks (stock broadcast, forgetting, opinion decay, berry regrowth), `sim_driver` (frame budget, busy flag, rest). Two travellers at Tree Hollow and five miners at Ridge Hamlet. Checks: situated beliefs, `should_switch` table, failed forage corrects beliefs and replans, exhausted goals back off, travellers live 5 days (eat, sleep, cover at night; 0.6 ms/tick with 7 people), same seed same hash after 2 days, label coverage.
+
 ## Next
 
-- M4: sim core, nav grid, agents with survival plans, sim driver.
+- M5: agent views, picking, inspector, decision log text, selection overlay, speed controls.
 
 ## Decisions
 
@@ -33,6 +35,10 @@ M4 — Sim core + survival agents (M3 complete).
 - `sim_checks` also loads every script under `res://scripts` so presentation parse errors fail headlessly.
 
 - The voxel grid is one flat PackedByteArray (index x + z*W + y*W*D) instead of a dictionary of chunk arrays: far faster in GDScript. Chunks stay the unit of meshing, dirtiness and saving.
+- Plans only use structures the person believes in (`beliefs.structures`, filled by perception); a vanished one fails on arrival and is remembered as failed.
+- Agents change the shared world only through `Effects` actions (take/deposit stock, forage, harvest, claim a bed, place blocks); the step reads the result from `agent.step_result` on a later tick, so conflicts resolve deterministically in id order.
+- Player-facing text is split into `data/text.json` (UI, blocks, templates) and `data/text_agents.json` (goals, plans, fail reasons, activities, log, chronicle); labels share one namespace and duplicates fail validation.
+- `tools/scratch/` holds local diagnostic probes and is git-ignored.
 - Valley layout: sacred tree at (50,50), ridge ruin at (128,128) (~110 blocks), hamlet at (112,134). The river runs beside the tree-ridge axis so nobody must cross water.
 
 ## Known issues

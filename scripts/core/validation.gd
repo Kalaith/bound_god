@@ -43,7 +43,13 @@ static func run() -> Array[String]:
 	errors.append_array(check_templates(Data.file("templates"), Data.file("blocks")))
 	errors.append_array(check_miracles(Data.file("miracles")))
 	errors.append_array(check_balance(Balance.data()))
-	errors.append_array(check_text(Data.file("text")))
+	var seen: Dictionary = {}
+	for name in Data.TEXT_FILES:
+		errors.append_array(check_text(Data.file(name)))
+		for key in Data.file(name).get("labels", {}):
+			if seen.has(key):
+				errors.append("text: label " + str(key) + " is defined in both " + seen[key] + " and " + name)
+			seen[key] = name
 	return errors
 
 

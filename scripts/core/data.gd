@@ -11,7 +11,10 @@ const FILES: Dictionary = {
 	"templates": "res://data/templates.json",
 	"miracles": "res://data/miracles.json",
 	"text": "res://data/text.json",
+	"text_agents": "res://data/text_agents.json",
 }
+## Text catalogs, split by responsibility; their labels share one namespace.
+const TEXT_FILES: Array[String] = ["text", "text_agents"]
 
 static var _files: Dictionary = {}
 static var _blocks_by_id: Array = []
@@ -20,6 +23,7 @@ static var _traits: Dictionary = {}
 static var _thoughts: Dictionary = {}
 static var _ambitions: Dictionary = {}
 static var _miracles: Dictionary = {}
+static var _labels: Dictionary = {}
 ## Parse errors from the last load, reported by validation.
 static var load_errors: Array[String] = []
 
@@ -43,7 +47,16 @@ static func reload() -> void:
 	_thoughts.clear()
 	_ambitions.clear()
 	_miracles.clear()
+	_labels.clear()
 	load_errors.clear()
+
+
+## Every label from every text catalog.
+static func labels() -> Dictionary:
+	if _labels.is_empty():
+		for name in TEXT_FILES:
+			_labels.merge(file(name).get("labels", {}))
+	return _labels
 
 
 # --- Blocks -----------------------------------------------------------------

@@ -11,6 +11,8 @@ var sites: Dictionary = {}
 ## Vector3i -> site id
 var by_cell: Dictionary = {}
 var next_id: int = 1
+## Bumped when a site appears or disappears, for spatial buckets.
+var version: int = 0
 
 
 func load_generated(list: Array) -> void:
@@ -19,6 +21,7 @@ func load_generated(list: Array) -> void:
 
 
 func _add(site: Dictionary) -> void:
+	version += 1
 	site.id = next_id
 	next_id += 1
 	sites[site.id] = site
@@ -79,6 +82,7 @@ func on_block_changed(cell: Vector3i, old_block: int, new_block: int, world: Ref
 
 
 func _remove(id: int) -> void:
+	version += 1
 	var site: Dictionary = sites.get(id, {})
 	for cell in site.get("cells", []):
 		by_cell.erase(cell)
@@ -96,6 +100,7 @@ func to_dict() -> Dictionary:
 
 
 func from_dict(data: Dictionary) -> void:
+	version += 1
 	sites = data.sites
 	next_id = int(data.next_id)
 	by_cell.clear()

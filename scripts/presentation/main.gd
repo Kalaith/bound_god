@@ -15,6 +15,7 @@ const Text = preload("res://scripts/core/text.gd")
 const CaptureScenes = preload("res://scripts/presentation/capture_scenes.gd")
 const DesignTool = preload("res://scripts/presentation/design_tool.gd")
 const LibraryScreen = preload("res://scripts/presentation/ui/template_library_screen.gd")
+const SimDriver = preload("res://scripts/presentation/sim_driver.gd")
 
 var rig: Node3D
 var sim: RefCounted
@@ -26,6 +27,7 @@ var overlays: Node3D
 var hud: Control
 var design_tool: Node3D
 var library_screen: Control
+var driver: Node
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
 var _loading: Label
@@ -50,6 +52,9 @@ func _start() -> void:
 	var started: int = Time.get_ticks_msec()
 	sim = Sim.create(Session.seed)
 	var generated: int = Time.get_ticks_msec()
+	driver = SimDriver.new()
+	driver.sim = sim
+	add_child(driver)
 	world_view = WorldView.new()
 	add_child(world_view)
 	world_view.build_all(sim.voxels)
@@ -90,6 +95,7 @@ func _start() -> void:
 	if capture_request.is_empty():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:
+		driver.set_speed(0)
 		CaptureScenes.arrange(self, capture_request)
 
 
