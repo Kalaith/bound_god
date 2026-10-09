@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M2 — Hands-on building (implemented and verified by capture; next step is an M2 sim_checks scenario for edit commands, then M3).
+M3 — Templates (next milestone; M2 command verification complete).
 
 ## Done
 
@@ -14,9 +14,10 @@ M2 — Hands-on building (implemented and verified by capture; next step is an M
 
 - M2 Hands-on building: core `Sim` (calendar, god state, resource sites, logged commands), `voxel_ray` DDA, build controller (break/place/hold-repeat, door orientation, hotbar 1-9 + wheel, red preview with reason), divine stock, presence boundary (lattice wall + ground ring), HUD (clock, stock, hotbar, messages). Captures: `build_test` places 6 blocks, re-mesh 9-11 ms; `zone_edge` avatar stops at 15.6 of radius 16; `walk_test` still passes.
 
+- M2 command verification: four scenarios in `tools/checks/checks_commands.gd`, registered with `sim_checks`: resource yields/costs and immediate mesh dirtiness, rejected edits leaving state unchanged (stock, zone, bounds, protected blocks, occupied cells, dormancy), bush harvest/dismantling/replanting and resource-site state, timed command replay and copied log entries. All 10 scenarios pass, including loading every game script. Standard 4.2.2 headless editor import reports no errors (exit-code caveat below). No presentation changes or new visual run in this verification-only step.
+
 ## Next
 
-- Add a sim_checks scenario for edit commands (stock, zone, unbreakable, bush harvest).
 - M3: design tool, capture, room_probe, function_rules, structures registry, library screen, import/export.
 - Text: edit `data/text.json` through a compact formatter (several labels per line) so it stays under 800 lines.
 
@@ -33,4 +34,5 @@ M2 — Hands-on building (implemented and verified by capture; next step is an M
 
 ## Known issues
 
+- Use `exports/tooling/Godot_v4.2.2-stable_win64_console.exe` for checks and exports (standard 4.2.2, official archive SHA512 verified). `Run.ps1` still uses Mono. The standard editor removes the Mono `EditorSettings::_EDITOR_GET` shutdown error. Its `--headless --editor --quit` still returns 1, also reproduced with an empty project and fresh portable editor settings. The pinned engine's automatic-quit path does not set a success exit code ([upstream issue](https://github.com/godotengine/godot/issues/83449)). Do not report this as a zero-exit import pass or suppress arbitrary failures: inspect import output for errors and require sim_checks (including all-script parsing) to exit 0. Current standard-editor output has only headless-cursor and unconfigured-Blender warnings.
 - Window captures at 1920x1080 are clamped by the desktop work area to 1920x1061; layouts are authored against the 1920x1080 stretch base, so this only trims the bottom 19 px of the capture.
