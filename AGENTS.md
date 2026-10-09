@@ -63,4 +63,10 @@ Scribes set down the covenant: design and building plan (docs)
 - Plain fixes still speak in-world: `Builders no longer wall themselves into the cottage they are raising (site reservation fix)`.
 - Add a body only when the reason is not obvious from the line.
 
+## Publishing
+
 Publishing requires separate authorisation.
+
+- `publish.ps1` exports the Windows build and deploys `bound_god_windows.zip` plus a download page generated from `tools/publishing/download.html` to `PREVIEW_ROOT/games/bound_god` (or production / FTP), then records the deployment in Project Roost. `-DryRun` changes nothing; `-BuildOnly` only builds.
+- `publish-itch.ps1` pushes the last build to the itch Windows channel set in `publish.json`.
+- Exports need the **standard (non-mono)** Godot 4.2.2 console editor, matching the installed export templates: pass `-GodotExe`, set `GODOT_EXE`, or place it at `exports/tooling/Godot_v4.2.2-stable_win64_console.exe`. `Run.ps1` uses the installed mono editor for playing.
