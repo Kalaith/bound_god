@@ -5,13 +5,13 @@ This repository holds The Bound God, a third-person voxel god game in Godot: `pr
 Read before working:
 
 - `GAME_DESIGN.md`: what the game is. Respect its pillars and its Decision / Later / Open markings.
-- `IMPLEMENTATION_PLAN.md`: architecture, file layout, data, milestones and their exit criteria. Work milestone by milestone.
+- `IMPLEMENTATION_PLAN.md`: Phase 2 (vertical slice to full game): definition of done, conventions, architecture changes, milestones M13–M24 and their exit criteria. Work milestone by milestone. For what Phase 1 built, the code and `PROGRESS.md` are the reference.
 - `NPC System Implementation Guide.md`: the Final Landing BDI agent system being ported. Its formulas and values apply unless the plan says otherwise. The Rust source is in `D:\WebHatchery\RustGames\finallanding\src` (read only).
 - `bound_god_game_concept.md`: the original concept. Do not edit it.
 
 ## Verification and checks
 
-- The only automated checks live in `tools/sim_checks.gd`, a headless scenario runner for the simulation (`--headless --path . --script res://tools/sim_checks.gd`). It prints PASS/FAIL and exits non-zero on failure. Add a scenario when a simulation feature lands, in the style of the plan's §12. Do not create a `tests/` directory, other test frameworks or test addons. Keep `tools/` out of the exported game.
+- The only automated checks live in `tools/sim_checks.gd`, a headless scenario runner for the simulation (`--headless --path . --script res://tools/sim_checks.gd`). It prints PASS/FAIL and exits non-zero on failure. Add a scenario when a simulation feature lands, in the style of the existing scenarios in `tools/checks/` (plan §5). Do not create a `tests/` directory, other test frameworks or test addons. Keep `tools/` out of the exported game.
 - Run the checks and a parse/import check (`--headless --editor --quit`) before every commit that touches scripts or data.
 - Verify anything visual by running the game (`Run.ps1`) and looking at it. Say plainly what was and was not checked.
 

@@ -1,467 +1,335 @@
-# The Bound God — Implementation Plan
+# The Bound God — Implementation Plan, Phase 2: from vertical slice to full game
 
-> Version 0.1 · 2026-10-09 · companion to `GAME_DESIGN.md`
+> Version 0.2 · 2026-10-10 · companion to `GAME_DESIGN.md`
 >
-> Engine baseline and conventions follow `../small_following` (Godot 4.2.2, GDScript), except the renderer: this project uses **Forward+** and targets Windows only. The NPC system is a port of Final Landing's BDI agents (`D:\WebHatchery\RustGames\finallanding\src\agents`, `src\sim`), documented in `NPC System Implementation Guide.md` — referred to below as **the NPC guide**. Where this plan says "as Final Landing", the formula, value and behaviour in the NPC guide apply unchanged.
+> Phase 1 (M0–M12, the vertical slice) is complete: the GDD §14 moment is built, checked headlessly and captured (see `PROGRESS.md` and `git log`). Phase 1's detailed specifications have been retired from this file; **the code and `PROGRESS.md` "Decisions" are now the reference for everything already built.** This plan covers what turns the slice into a complete, releasable game: milestones M13–M24.
+>
+> The NPC system remains a port of Final Landing's BDI agents (`NPC System Implementation Guide.md`, **the NPC guide**). Its formulas and values still apply unless this plan or `PROGRESS.md` says otherwise.
 
-## 1. Baseline and conventions
+## 1. What "fully playable" means
 
-Carried over from `small_following` (its `AGENTS.md`, `project.godot`, `scripts/balance.gd`, `scripts/progression.gd`):
+Version 1.0 is done when all of these hold:
+
+1. **A new player needs no outside help.** From the title screen, a player who has never seen the game reaches the cottage moment, a remote shrine and a transfer within the first two hours, guided only by the game.
+2. **A campaign lasts.** A world plays for at least **3 in-game years (120 days)** across **at least 3 regions and 5 settlements** without running out of meaningful decisions, and keeps producing caused, readable change: prosperity, famine, raids, occupation, schism, recovery.
+3. **The god has a shape.** Different play styles (nurturing, protective, feared, outlaw) produce different identities, miracles and people's responses, and each style can be played to an epilogue.
+4. **People feed themselves.** Food has an economy and seasons have teeth: fields, winter stores, weather. Ore and crafts have a use, and settlements trade.
+5. **The world is bigger than one valley.** Multiple regions, with only the god's region simulated in full detail and the rest advancing at lower fidelity in a consistent way.
+6. **It holds together.** 60 fps at 1080p on the dev PC with the active region populated; saves survive game updates; no known crash or soft-lock; a long headless soak (5 in-game years) finishes without script errors.
+7. **It looks and sounds finished.** Coherent art, animation, effects, music and UI, with accessibility and full gamepad navigation.
+
+Out of scope for 1.0 (kept as **Later**): online template sharing and moderation, multiplayer, rival gods as competing players, mod support beyond templates, a web build, platforms other than Windows.
+
+## 2. Baseline and conventions (unchanged from Phase 1)
 
 | Topic | Rule |
 | --- | --- |
-| Engine | Godot **4.2.2**, GDScript only, **Forward+** (`renderer/rendering_method="forward_plus"`, `config/features` `"4.2", "Forward Plus"`). Differs from `small_following` (Compatibility) by decision, for 3D lighting. No upgrade, plugin or GDExtension without approval. |
-| Platform | **Windows only.** One Windows Desktop preset in `export_presets.cfg`; the Web preset and HTML5 steps from `small_following`'s publish scripts are dropped. |
-| Built-ins first | `ArrayMesh`/`SurfaceTool`, `ConcavePolygonShape3D`, `AStar3D`, `FastNoiseLite`, `RandomNumberGenerator`, `WorkerThreadPool`, `FileAccess`/`DirAccess`. |
-| Scripts | `extends RefCounted` for pure logic, `Node`/`Node3D` only for presentation. Dependencies by `const X = preload("res://…")`, as `small_following` does (no global `class_name` sprawl). Static typing everywhere (`var x: int`, typed arrays). Tabs, LF, UTF-8 (`.editorconfig` copied). |
-| Data | All tuning in `data/*.json`, read through a `Balance`-style static loader (copy `small_following/scripts/balance.gd` and generalise to several files). Missing or mistyped keys `push_error` + `assert(false)`: fail fast. Catalog files carry `schema_version` and are validated on load like `progression.gd::load_catalog`. |
-| File size | **Hard limit: no file over 800 lines** (scripts, scenes, data, docs). Aim for ≤ 600 in scripts and split by responsibility like Final Landing's `plan_library/*`, `execute_*`. `small_following/main.gd` at 965 lines is the counter-example. |
-| Resolution | Designed for **1920×1080**: `viewport_width=1920`, `viewport_height=1080`, `stretch/mode="canvas_items"`, `stretch/aspect="expand"`. UI layouts and font sizes are authored at 1080p and must stay readable when scaled down to 1280×720. |
-| Saves | Under `user://`, schema-validated, staged writes (`.tmp` → rename), `.bak` recovery, `.corrupt` quarantine — copy the `_write_snapshot`/`_read_snapshot` pattern from `progression.gd`. |
-| Project files | `project.godot`, `Run.ps1`, `publish.ps1`, `publish-itch.ps1`, `publish.json` (`slug: bound_god`, Windows itch channel only), `export_presets.cfg`, `tools/publishing/` copied from `small_following`, renamed, and trimmed to the Windows export. |
-| Commits | Regular local commits after complete, working changes. Publishing needs separate authorisation. |
+| Engine | Godot **4.2.2**, GDScript only, **Forward+**. No upgrade, plugin or GDExtension without approval. A Godot upgrade is a separate, explicitly approved decision, not part of any milestone. |
+| Platform | **Windows only.** One Windows Desktop export preset. |
+| Built-ins first | `ArrayMesh`/`SurfaceTool`, `ConcavePolygonShape3D`, `AStar3D`, `FastNoiseLite`, `RandomNumberGenerator`, `WorkerThreadPool`, `GPUParticles3D`, `AudioStreamGenerator`, `FileAccess`/`DirAccess`. |
+| Scripts | `extends RefCounted` for pure logic, `Node`/`Node3D` only for presentation. `const X = preload("res://…")`, no `class_name` sprawl. Static typing everywhere. Tabs, LF, UTF-8. |
+| Data | All tuning in `data/*.json` with `schema_version`, validated at startup by `core/validation.gd`. Missing or mistyped keys fail fast; no silent defaults. New catalogs below follow the same pattern. |
+| File size | **Hard limit 800 lines per file** (scripts, scenes, data, docs); aim ≤ 600 in scripts. Split by responsibility; never compact formatting to fit. |
+| Resolution | Authored at **1920×1080** (`canvas_items`, `expand`), readable at 1280×720. |
+| Saves | `user://`, staged writes, `.bak` recovery, `.corrupt` quarantine; `var_to_bytes` on plain data for sim state, JSON only for hand-edited data and templates. |
+| Commits | Commit after every complete, working step; each commit boots and passes checks. Publishing needs separate authorisation. |
 
-GDScript-specific rules this project adds (they matter because the simulation must be deterministic and headless):
+Determinism rules (still binding): simulation code never touches the scene tree, physics, `Time`, `OS` or global `randi()`/`randf()`; all randomness from `sim.rng` (or a sub-stream seeded from it); every comparator tie-breaks on a stable id; iterate sorted keys when dictionary order affects outcomes; Godot 4.2 has no typed dictionaries, so document key and value types in a comment.
 
-1. **Simulation code never touches the scene tree, physics, `Time`, `randi()`/`randf()` globals or `OS`.** It reads `Calendar` and draws randomness from `sim.rng` only.
-2. **`Array.sort_custom` is not stable.** Every comparator tie-breaks on a stable id.
-3. **Dictionary iteration is insertion-ordered** (deterministic, unlike Rust `HashMap`), so Final Landing's `BTreeMap` becomes a plain `Dictionary` — but erase-and-reinsert changes order. When order affects outcomes, iterate sorted keys.
-4. **JSON loses types** (ints become floats, `Vector3i` and int keys become strings). Use JSON only for human-edited data and shareable templates. Simulation saves use `var_to_bytes` on plain `Dictionary`/`Array`/packed-array snapshots (never `var_to_bytes_with_objects`).
-5. Godot 4.2 has **no typed dictionaries**; document key/value types in a comment on each `Dictionary` field.
+## 3. Architecture changes in Phase 2
 
-## 2. Architecture
+The Phase 1 architecture stays: `Sim` owns all state and runs headless; presentation polls it and sends logged commands between ticks; agents write only to `Effects`. Phase 2 changes four things.
+
+### 3.1 Regions (M18)
 
 ```
-┌──────────────────────────── Presentation (Nodes, per frame) ─────────────────────────────┐
-│ main.tscn: WorldView (chunk meshes, collision) · Avatar · CameraRig · AgentViews · UI     │
-│ reads sim state, interpolates positions, sends player Commands                            │
-└───────────────▲──────────────────────────────────────────────┬────────────────────────────┘
-                │ dirty chunks / events (polled)               │ commands (applied between ticks)
-┌───────────────┴──────────────── Simulation (RefCounted, per tick) ────────────────────────┐
-│ Sim: Calendar · rng · VoxelWorld · NavGrid · Structures · Settlements · Faith · Agents    │
-│      Threats · Director · Chronicle · Effects                                             │
-│ agents/ = pure reasoning (reads views, writes Effects)   sim/ = all side effects          │
-└──────────────────────────────────────────────────────────────────────────────────────────┘
-                ▲
-          data/*.json (validated once at startup)
+World (sim/world_state.gd)
+├── regions: Dictionary          # int region id -> Region
+│   ├── Region (detailed)        # VoxelWorld + NavGrid + Structures + agents in full BDI (the Phase 1 Sim body)
+│   └── Region (abstract)        # RegionSummary: settlements, population records, stock, faith, projects, events
+├── travellers: Array            # people between regions: {agent record, from, to, arrive_tick}
+├── god, chronicle, calendar, rng, command_log, factions
 ```
 
-- **`Sim` owns all game state** and can run with no scene (`Sim.new(seed).run_ticks(n)`), which is what makes rest/fast-forward, determinism checks and headless verification possible.
-- **The voxel world is part of the simulation.** NPCs place blocks; the player's edits are commands. The presentation keeps meshes in sync by polling `voxel_world.take_dirty_chunks()`.
-- **Agents never mutate the world directly** (as Final Landing): they read immutable views and push into `Effects`; `sim/effects_apply.gd` applies voxel edits, messages, conversations, gifts, attacks and chronicle entries once at the end of the tick.
+- Exactly **one region is detailed**: the one the avatar is manifested in. Every other region is **abstract** and advances once per in-game hour by `sim/region_abstract.gd`.
+- **Abstracting** a region (the god leaves): agents are frozen into records (needs, beliefs, faith, bonds, current goal kind), construction sites into `{template, origin, rotation, cursor}`, edited chunks are kept compressed, nav and meshes are dropped.
+- **Materialising** a region (the god arrives): regenerate from the region seed, apply edited chunks, **stamp projects completed while abstract** at their reserved sites, advance partial sites to their cursor, apply recorded decay and overgrowth, rebuild nav, then thaw agents at plausible places (home by night, work site or stores by day). Arrival happens behind the transfer effect, which also hides the load.
+- **Consistency rule:** an abstract region may only produce outcomes the detailed simulation could also produce: building only known templates on sites found by `site_finder` (run at abstraction time, reserved), consuming stock at detailed-sim rates, rolling the same event kinds (births, deaths, migrations, raids, shrine state) from the same balance numbers. Each abstract outcome writes a chronicle entry with a cause, exactly like the detailed sim.
+- **Determinism:** each region draws from its own `RandomNumberGenerator` seeded from `(world_seed, region_id)`, and abstract steps run in region id order. Detailed vs abstract continuation will *not* hash-match; the check is statistical (§5, M18).
 
-### 2.1 Clock
+### 3.2 Save schema migrations (M13)
 
-`scripts/presentation/sim_driver.gd` (a `Node`):
+Players will carry campaigns across updates from Phase 2 onward.
 
-- In `_physics_process(delta)` accumulate `delta × ticks_per_second (6) × speed`.
-- Run whole ticks while the accumulator ≥ 1 and the frame budget (4 ms; 12 ms while resting) is not spent. If the budget runs out, carry the remainder and show "the world is busy" instead of spiralling.
-- After the ticks, store an interpolation alpha so `AgentView`s lerp between each agent's previous and current position.
-- **Rest:** `sim_driver.rest(days)` switches to the large budget, hides the world behind an overlay with a progress bar, and on completion shows the "While you rested…" chronicle summary.
-- Player commands (block edits, miracles, offers, requests, transfer) go through `sim.apply_command(cmd)` **between ticks**, and are appended to `sim.command_log` with the tick number. Same seed + same command log ⇒ same world.
+- `sim_state` writes `schema_version` (starting at 2 for the first Phase 2 format). `core/save_migrations.gd` holds one pure function per step (`_v2_to_v3(state: Dictionary) -> Dictionary`) applied in order on load.
+- Each migration ships with a **fixture save** under `tools/fixtures/` produced by the previous version, and a `sim_checks` scenario that loads it, migrates, and runs a day without errors.
+- A save from a *newer* version is refused with a clear message, never half-loaded.
 
-### 2.2 Per-tick order
+### 3.3 New data catalogs
 
-Final Landing's `Sim::step`, extended:
-
-1. `calendar.advance()`; day/hour hooks (`sim/daily.gd`: stock broadcast, belief forgetting, opinion decay, mood breaks, births, faith drift, shrine support, migrants, raid roll, decay).
-2. Every 10 ticks: refresh each settlement's `JobBoard`.
-3. Move threats (`sim/threats.gd`: wolves, raiders).
-4. `update_agents()` — for each present agent in id order: snapshot → body → perception → inbox → cognition → execute → movement (NPC guide "Per-tick order", steps 1–8).
-5. `effects_apply.apply(effects)` — deliver messages, resolve interactions, **apply voxel edits** (then `nav_grid.update_cells`, `structures.reevaluate`), chronicle entries; `lifecycle.resolve_deaths()`.
-
-## 3. Project layout
-
-```
-bound_god/
-├── AGENTS.md                    # project guidance for agents (M0)
-├── GAME_DESIGN.md · IMPLEMENTATION_PLAN.md
-├── project.godot · export_presets.cfg · .editorconfig
-├── Run.ps1 · publish.ps1 · publish-itch.ps1 · publish.json
-├── assets/
-│   ├── blocks_atlas.png         # 16 px tiles, nearest filtering
-│   ├── icon.svg
-│   └── audio/
-├── data/
-│   ├── balance.json             # time, needs, agents, social, mood, health, faith, world, threats
-│   ├── blocks.json              # block registry
-│   ├── people.json              # traits, ambitions, names (from Final Landing, extended)
-│   ├── society.json             # thoughts
-│   ├── templates.json           # function rules, starter vernacular templates
-│   ├── miracles.json            # miracle catalog
-│   └── text.json                # every player-facing label and template
-├── scenes/
-│   ├── title.tscn · main.tscn · avatar.tscn · agent_view.tscn
-└── scripts/
-    ├── core/          balance.gd · data.gd · validation.gd · save_store.gd · text.gd
-    ├── world/         block_registry.gd · voxel_world.gd · world_gen.gd · chunk_mesher.gd
-    │                  nav_grid.gd · voxel_ray.gd · room_probe.gd · structures.gd
-    ├── building/      template.gd · template_capture.gd · template_library.gd
-    │                  function_rules.gd · site_finder.gd · construction_site.gd
-    ├── agents/        agent.gd · personality.gd · skills.gd · needs.gd · health.gd · mind.gd
-    │                  beliefs.gd · faith_state.gd · goals.gd · plans.gd · intention.gd
-    │                  decision_log.gd · messages.gd · generation.gd · deliberation.gd
-    │                  deliberation_work.gd · deliberation_faith.gd
-    │                  plan_library.gd · plan_library_needs.gd · plan_library_work.gd
-    │                  plan_library_faith.gd · plan_library_social.gd
-    ├── sim/           sim.gd · calendar.gd · effects.gd · effects_apply.gd · commands.gd
-    │                  body.gd · perception.gd · inbox.gd · cognition.gd · movement.gd
-    │                  execute.gd · execute_life.gd · execute_work.gd · execute_social.gd
-    │                  execute_faith.gd · social.gd · lifecycle.gd · daily.gd
-    │                  settlements.gd · job_board.gd · director.gd · threats.gd
-    │                  faith.gd · miracles.gd · requests.gd · god_state.gd · chronicle.gd
-    └── presentation/  main.gd · sim_driver.gd · world_view.gd · chunk_view.gd · avatar.gd
-                       camera_rig.gd · build_controller.gd · design_tool.gd · agent_view.gd
-                       agent_views.gd · threat_view.gd · overlays.gd · picking.gd
-                       ui/hud.gd · ui/inspector.gd · ui/inspector_tabs.gd · ui/shrine_menu.gd
-                       ui/template_library_screen.gd · ui/settlement_panel.gd
-                       ui/chronicle_screen.gd · ui/rest_overlay.gd · ui/settings_screen.gd
-                       ui/title_screen.gd
-```
-
-`small_following` keeps all scripts in one folder; this project is several times larger, so it uses the subfolders above with the same flat-file, preload-by-path style.
-
-## 4. Data files
-
-| File | Contents | Validation |
+| File | Contents | Milestone |
 | --- | --- | --- |
-| `balance.json` | Final Landing sections `time`, `needs` (warmth → shelter), `agents`, `social`, `mood`, `health` with shipped values; new `faith`, `shrines`, `miracle_costs`, `world`, `construction`, `threats`, `migration` | Every path read by code exists (fail fast through `Balance.value`) |
-| `blocks.json` | `{id, name, resource, solid, opaque, passable, atlas: [x, y], component?, orientable?, breakable}` | Unique ids < 256; atlas in range; components from a known list |
-| `people.json` | Final Landing's 22 traits + `pious`, `sceptic`; 7 ambitions with `decode_spire` → `raise_shrine`, `map_the_wilds` kept; names | As Final Landing: unique ids, `excludes`/`clashes_with`/`bonds_with` resolve |
-| `society.json` | Final Landing's 39 thoughts + `saw_the_god`, `prayer_answered`, `prayer_unheard`, `witnessed_miracle`, `whispered_to`, `shrine_fell`, `home_built`, `raided` | `REQUIRED_THOUGHTS` list as Final Landing, extended |
-| `templates.json` | Function rules (§6.2) and 2–3 vernacular starter templates (lean-to, hut) for the ridge hamlet | Rules reference known components |
-| `miracles.json` | `{id, tier, cost, radius, aspect, renown_required, effect}` with `effect` from a fixed supported set | Effect types implemented in `sim/miracles.gd` only (no fake catalog entries, as `small_following`'s upgrade rule) |
-| `text.json` | Labels for every goal, plan id, fail reason, activity, message, chronicle kind, log template | Coverage check: every enum value has a label |
+| `crops.json` | Crops `{id, stages, days_per_stage, seasons, yield, rain_need}` | M14 |
+| `recipes.json` | `{id, station, inputs, outputs, ticks, skill}` for meals, tools and goods | M14, M16 |
+| `weather.json` | Weather kinds per season with weights, durations and modifiers | M15 |
+| `regions.json` | Region archetypes `{id, terrain profile, resources, features, settlement kinds}` | M18 |
+| `factions.json` | Faction kinds (village, mining town, bandits, traders) with culture biases and relations | M19 |
+| `saga.json` | Optional deeds and age-naming rules | M22 |
+| `miracles*.json` | Split by tier when the catalog grows (M20); effects remain a closed, implemented set | M20 |
 
-`scripts/core/data.gd` loads all files once into a static cache (same shape as `balance.gd`), and `validation.gd` runs all semantic checks at startup and in headless checks.
+Every new catalog gets validation and label coverage (every id has player-facing text in a text catalog).
 
-## 5. Voxel world
+### 3.4 Performance budget
 
-### 5.1 Storage — `world/voxel_world.gd`
-
-- Fixed bounds for the prototype: 160×48×160 (`world.size` in balance). Chunks of 16³ stored as `PackedByteArray(4096)` in `chunks: Dictionary # Vector3i -> PackedByteArray`. Index `x + z*16 + y*256`.
-- Sparse per-cell state in `meta: Dictionary # Vector3i -> int` (orientation, bush ripeness, construction-site ownership).
-- API used by everything else: `get_block(cell)`, `set_block(cell, id, meta := 0)`, `is_solid`, `is_passable`, `top_solid_y(x, z)`, `take_dirty_chunks()`, `generated_chunk_hash(chunk)` (to save only edited chunks).
-- `set_block` marks the chunk (and the neighbour when on a boundary) dirty, records the edit for nav and structure updates, and never touches nodes.
-
-### 5.2 Generation — `world/world_gen.gd`
-
-Deterministic from the world seed using `FastNoiseLite` instances seeded from `sim.rng`-derived integers:
-
-1. Height map (two octaves of simplex) shaped by a valley profile: low centre, raised rim, ridge on the far side.
-2. River: a noise-perturbed spline across the valley carved to water level.
-3. Layers: grass/sand top, 3 dirt, stone below, ore pockets in ridge stone, bedrock floor.
-4. Placement passes (Poisson-disc with seeded RNG): trees (log + leaves structures), berry bushes, tall grass, rock outcrops. Each registers a **resource site** (`{id, kind, cells, amount}`) in `sim.resource_sites`.
-5. Fixed features: sacred tree at the valley centre (registered as the origin shrine), ridge ruin (broken altar ring) and the ridge hamlet stamped from the vernacular starter templates.
-
-### 5.3 Meshing — `world/chunk_mesher.gd`, `presentation/chunk_view.gd`
-
-- Face-culled meshing per chunk: emit a quad for each solid face whose neighbour is non-opaque; separate surface for transparent blocks (water, glass, leaves).
-- Vertex attributes: position, normal, UV into `blocks_atlas.png`, vertex colour for per-vertex ambient occlusion (classic 3-neighbour AO, which keeps block edges crisp; SSAO adds soft contact shadows on top) and slight per-block tint.
-- One `StandardMaterial3D` (unshaded = false, vertex colour as albedo multiplier, `texture_filter = NEAREST`) per surface.
-- Collision: `ConcavePolygonShape3D` from the opaque solid faces on a `StaticBody3D` per chunk, layer 2 (world), as `small_following`'s collision layering.
-- Initial load: mesh arrays are computed on `WorkerThreadPool` tasks (pure data, no nodes), meshes and shapes are created on the main thread behind a loading screen. Edits re-mesh synchronously (one chunk ≈ a few ms); at most 4 dirty chunks per frame, the rest queue.
-- **Later:** greedy meshing if profiling demands it.
-
-### 5.4 Ray picking — `world/voxel_ray.gd`
-
-Voxel DDA traversal from the camera through the crosshair up to the reach distance returns `{cell, normal}`. This is exact and independent of physics, and used for the build controller and the design tool.
-
-### 5.5 Navigation — `world/nav_grid.gd`
-
-NPCs move on a cell grid like Final Landing's tiles, lifted to 3D:
-
-- A cell is **standable** when it and the cell above are passable (air, door, open fence gate) and the cell below is solid.
-- `AStar3D` point id = `x + z*W + y*W*D`; neighbours are the 8 horizontal directions with `dy ∈ {−1, 0, +1}` (and `−2` for drops), diagonals only when both orthogonal moves are open; costs 1 / 1.41, +0.5 for climbing.
-- After voxel edits, `update_cells(edits)` recomputes standability for the 3×3 columns around each edited cell and reconnects only those points.
-- World contract functions for the agent code: `find_path(from, to) -> Array[Vector3i]`, `is_walkable(cell)`, `nearest_walkable(cell, radius)`, `move_cost(cell)`.
-- Path requests are capped per tick (balance `agents.paths_per_tick`); agents over the cap wait a tick (`Running`).
-
-### 5.6 Spatial index
-
-`sim/spatial.gd` buckets agents, threats, resource sites and structures into 16×16 xz cells, rebuilt for agents each tick and updated incrementally for the rest. Perception, "who is nearby", chat partner search and earshot all query buckets instead of scanning lists.
-
-## 6. Building and templates
-
-### 6.1 Player building — `presentation/build_controller.gd`
-
-- Uses `voxel_ray` from the camera; actions `break_block`, `place_block`, `rotate_block`, `select_block_1..9`, scroll to cycle. Reach 5 (play camera), 24 (overlook).
-- Validity check: inside the active presence zone (horizontal distance to the shrine ≤ radius), not intersecting the avatar or an NPC, enough divine stock. Invalid targets tint the highlight red with a reason in the HUD.
-- Emits `Command.EditBlock{cell, id}`; the sim applies it immediately between ticks, updates `god_state.divine_stock`, and records the resource gain or cost.
-
-### 6.2 Structures and function recognition — `world/room_probe.gd`, `world/structures.gd`, `building/function_rules.gd`
-
-Two ways a structure is registered:
-
-1. **Template instance:** a construction site completing registers a structure with its template id, origin, rotation and cell set.
-2. **Freehand:** when a functional block (bed, chest, altar, hearth, workbench) is placed, or a block is edited within 16 cells of a known component, `room_probe` runs a bounded flood fill of air from the component (limit 16×12×16 = 3072 cells). If the fill closes, the enclosed volume plus its shell is a room; if it escapes, the structure is "open-air" (enough for a shrine).
-
-`function_rules.gd` evaluates the rules from `templates.json` on the component list (bed covered by roof within 4, door in the shell, chest count…) and sets `functions` and `capacity`. Structures are re-evaluated when any of their cells changes; a structure that loses all functions is unregistered and its residents become homeless (a chronicle entry records the cause).
-
-### 6.3 Template capture and file format — `building/template_capture.gd`, `template.gd`, `template_library.gd`
-
-Capture reads the marked box, trims empty margins, normalises to an origin at min corner, detects components with `room_probe` in the captured copy, and runs `function_rules`.
-
-```json
-{
-  "schema_version": 1,
-  "id": "willow_cottage_3f9a",
-  "name": "Willow Cottage",
-  "author": "local",
-  "size": [7, 6, 6],
-  "palette": ["air", "planks", "log", "thatch", "door", "bed", "storage_chest"],
-  "blocks": "<base64 of a PackedByteArray, palette indices, x + z*sx + y*sx*sz>",
-  "meta": {"12": 1, "40": 2},
-  "entrance": [3, 1, 0],
-  "functions": ["dwelling"],
-  "capacity": {"beds": 2},
-  "bill": {"wood": 64, "thatch": 30}
-}
-```
-
-- Block names, not numeric ids, so files survive registry changes. `functions`, `capacity` and `bill` are **recomputed on import**, never trusted.
-- Limits: size ≤ 16×12×16, palette entries must exist in `blocks.json`, size of `blocks` must match. Invalid files are rejected with a reason.
-- Library: `user://templates/*.json` for the player library (private). Offered templates are stored in the world save (copied in, so a save does not depend on the library folder). Import/export use `FileDialog` (`ACCESS_FILESYSTEM`) on desktop.
-
-### 6.4 NPC construction — `building/site_finder.gd`, `construction_site.gd`, `sim/job_board.gd`
-
-- `site_finder.find(agent_beliefs, settlement, template, rotation_options)` samples candidate origins in the settlement area on a spiral from the settlement centre (deterministic order), scores flatness, distance to centre and road access (entrance side faces a walkable cell with a path to the centre), rejects overlaps and footprint height variance > 1. Returns the best or none (`FailReason.NoSite`).
-- `ConstructionSite {id, template_id, origin, rotation, settlement_id, founder, order: PackedInt32Array, cursor, delivered: Dictionary # resource -> int, last_progress_tick}`. `order` is the template's non-air cells sorted bottom-up, then outer walls before interior, so the structure rises visibly. Site cells carry a meta flag so the player sees ghost blocks and other sites avoid them.
-- Job board entries: `Build(site)` when the next block's resource is delivered or believed available; `Haul` for delivered-but-loose materials. Final Landing's caps (≤ 4 builds offered) and the "others pursuing" divisor apply.
-- `PlaceBlock` step: standing within reach of the next cell, consumes one delivered unit, waits `construction.ticks_per_block / skill speed`, pushes a voxel edit into `Effects`. If the cell is now occupied by something else, the block is skipped and logged.
-- Completion registers the structure (§6.2), assigns residents (founder household for dwellings), adds the `home_built` thought, writes a chronicle entry with the cause the founder logged.
-- Abandonment: no progress for `construction.abandon_days`; delivered resources drop as loose items.
-
-## 7. Simulation core
-
-### 7.1 `sim/sim.gd`
-
-```gdscript
-extends RefCounted
-## Owns all world state. No nodes, no physics, no global RNG.
-var world_seed: int
-var rng := RandomNumberGenerator.new()
-var calendar: Calendar
-var voxels: VoxelWorld
-var nav: NavGrid
-var resource_sites: Dictionary   # int -> ResourceSite
-var structures: Structures
-var settlements: Settlements
-var agents: Array                # Array[Agent], index == id
-var threats: Threats
-var god: GodState
-var chronicle: Chronicle
-var effects: Effects
-var command_log: Array           # Array[Dictionary] {tick, command}
-
-func step() -> void: ...
-func run_ticks(count: int) -> void: ...
-func apply_command(command: Dictionary) -> bool: ...
-func to_dict() -> Dictionary: ...
-static func from_dict(state: Dictionary) -> Sim: ...
-```
-
-`rng.state` is saved and restored so a loaded game continues the same random stream.
-
-### 7.2 Representing Final Landing's types in GDScript
-
-| Rust | GDScript |
+| Measure | Target |
 | --- | --- |
-| `enum Goal` (25 variants, `Copy`) | `goals.gd`: `enum Kind { EAT, SLEEP, … }` and a lightweight `Goal` (`RefCounted` with `kind: int`, `target: int`, `extra: int`); `key() -> int` = `kind << 32 \| target` replaces `GoalKey` |
-| `enum Step` with payloads | `plans.gd`: `enum Op { GO_TO, TAKE_STOCK, … }`; a step is `{op, …args}` Dictionary built by small constructor functions (`Steps.go_to(target)`), dispatched by `match` in `execute*.gd` |
-| `Target` | `{type: TargetType, id: int, cell: Vector3i}` |
-| `PlanOption {id: &'static str, steps, preference}` | Dictionary `{id: String, steps: Array, preference: float}` |
-| `FailReason`, `StepOutcome` | enums; `StepOutcome` returned as int, fail reason stored on the agent for the log |
-| `Needs [f32; 6]` | `PackedFloat32Array` indexed by `Need` enum |
-| `BTreeMap<K, V>` | `Dictionary` + sorted-key iteration where order matters |
-| `VecDeque` (path, log) | `Array` with `push_front`/`pop_back` (paths are short) |
-| `OnceLock<GameData>` | static vars in `core/data.gd` |
-| `SeededRng` | `sim.rng` (`RandomNumberGenerator`, seeded) |
-| `serde` derive | explicit `to_dict()` / `from_dict()` per class; a validation helper checks types on load |
-| `split_at_mut` / `pair_mut` | not needed: agents are references |
+| Detailed region | 60 people at 3× within the 4 ms sim budget per frame; 10× may show "the world is busy" |
+| Abstract regions | All of them together < 2 ms per in-game hour |
+| Rest | One season of rest across a full world (9 regions) < 30 s |
+| Materialise a region | < 3 s behind the transfer effect (world gen + chunks + nav on the thread pool) |
+| Frame | 60 fps at 1080p, GPU < 10 ms with weather and particles |
 
-### 7.3 Port map: Final Landing → Bound God
+## 4. Phase 2 milestones
 
-| Final Landing | Bound God | Notes |
-| --- | --- | --- |
-| `agents.rs` | `agents/agent.gd` | `tile` → `cell: Vector3i`, `position: Vector3`, `inside` → `structure_id`; add `faith: FaithState`, `settlement_id`, `quest_id` |
-| `agents/personality.rs` | `personality.gd`, `skills.gd` | Skills: Construction, Gathering, Social, Defence, Medicine, Exploration, Devotion, Crafting (8, same shape) |
-| `agents/body.rs` | `needs.gd`, `health.gd`, `mind.gd` | Warmth → Shelter |
-| `agents/beliefs.rs` | `beliefs.gd` | `nodes` → resource sites; add `structures` (known buildings incl. instances of templates), `places` (known settlements and shrines with last-seen state), `known_templates` |
-| `agents/goals.rs` | `goals.gd` | Goal list in GDD §6.3 |
-| `agents/deliberation.rs` | `deliberation.gd` (needs, social, leisure) + `deliberation_work.gd` + `deliberation_faith.gd` | Work weight: player priority → settlement culture weight |
-| `agents/plans.rs`, `plan_library*.rs` | `plans.gd`, `plan_library*.gd` | New steps: `PLACE_BLOCK`, `MARK_SITE`, `PRAY`, `TEND_SHRINE`, `TRAVEL`, `TALK{topic: STORY}` |
-| `agents/intention.rs` | `intention.gd`, `decision_log.gd` | New log kinds: `WHISPERED{goal}`, `QUEST_TAKEN`, `PRAYED{intent}` |
-| `agents/messages.rs` | `messages.gd` | New kinds: `STORY`, `WHISPER`, `DIVINE_REQUEST`, `TEMPLATE_INFO` |
-| `agents/generation.rs` | `generation.gd` | Travellers, migrants, hamlet miners, children |
-| `sim/perception.rs` | `perception.gd` | Also perceives the avatar, miracles (from the effects of the previous tick), completed structures (learns template), shrines |
-| `sim/inbox.rs` | `inbox.gd` | Receivers for the new messages (§8.3) |
-| `sim/cognition.rs` | `cognition.gd` | `should_switch` unchanged; whisper bonus applied inside candidate scoring |
-| `sim/execute*.rs` | `execute.gd`, `execute_life.gd`, `execute_work.gd`, `execute_social.gd`, `execute_faith.gd` | 3D `GoTo` via `nav` |
-| `sim/body.rs`, `daily.rs` | `body.gd`, `daily.gd` | Shelter decay; faith drift; shrine support |
-| `sim/social.rs` | `social.gd` + `effects_apply.gd` | Story topic resolution |
-| `sim/jobs.rs` | `job_board.gd` | Per settlement |
-| `sim/creatures.rs` | `threats.gd` | Wolves + raider band |
-| `sim/director.rs` | `director.gd` | Migrants, raids |
-| `sim/expeditions.rs` | `requests.gd` | Quests replace expeditions; agents stay `Present` and travel on the map |
-| `sim/movement.rs` | `movement.gd` | Fractional move budget, `position` lerp in 3D |
-| `sim/lifecycle.rs` | `lifecycle.gd` | Births, deaths, departure → Migrate |
-| `ui/inspector_agent.rs` | `presentation/ui/inspector*.gd` | + Faith tab |
-| `ui/world_view/actors.rs` | `presentation/agent_view.gd` | 3D procedural figures |
+Each milestone ends with a runnable game, new `sim_checks` scenarios for its simulation features, captures in `docs/verification/` for anything visual, and local commits throughout. Order: make the slice hold up first, then deepen the local economy (it is the content every later system distributes across regions), then widen the world, then the god's identity, then finish and ship.
 
-### 7.4 The world contract (NPC guide "Integration steps") mapped
-
-| Need | Bound God provider |
+| Stage | Milestones |
 | --- | --- |
-| Grid positions | `Vector3i` cells; `Cells.distance` (xz Euclidean + `abs(dy)`), `Cells.steps` |
-| Pathfinding | `nav.find_path`, `nav.is_walkable`, `nav.nearest_walkable`, `nav.move_cost` |
-| Places | `structures.built()` with `functions` flags: `dwelling, storehouse, workshop, shrine, shelter`, `beds`, `free_beds`, `access_cell(id, from)`, `is_operational` (condition and not under construction) |
-| Resources in the world | `sim.resource_sites`, `site_access_cell`, loose items in `sim.items` |
-| Danger | `threats.list()` with `aggressive` and `targets_altar` flags |
-| Shared economy | `settlement.stock`, `settlement.jobs`, `settlement.culture_weight(work_type)` |
-| Time | `calendar` with `hour()`, `day()`, `season()`, `is_daylight()`, `ticks_per_day()`, `per_tick(x)` |
-| Environment | `calendar.season()`, `voxels.is_roofed(cell)` (column scan up to 8) |
-| Text | `Text.label(key)`, `Text.fill(template, args)` |
+| A. Hold up | M13 Playtest, balance and foundations |
+| B. A living economy | M14 Fields and meals · M15 Seasons and weather · M16 Crafts and tools |
+| C. Living architecture | M17 Designs that grow |
+| D. A wider world | M18 Regions · M19 Peoples, factions and trade |
+| E. The god's many faces | M20 Identity and miracles · M21 Followers and requests |
+| F. A whole game | M22 Campaign shape · M23 Look, sound and feel · M24 Release |
 
-## 8. Faith, shrines, requests
+---
 
-### 8.1 Data — `agents/faith_state.gd`, `sim/faith.gd`, `sim/god_state.gd`
+### M13 — Playtest, balance and foundations
 
-- `FaithState {knows: bool, devotion: float, aspects: PackedFloat32Array (5), shrine_id: int, last_prayer_tick: int, last_intent: Dictionary, stories_heard: int}`.
-- `Shrine {structure_id, settlement_id, condition, favour, support, below_threshold_days, state: ACTIVE|DORMANT|FALLEN, prayers: Array (recent, capped 20)}` held in `sim/faith.gd`.
-- `GodState {renown, active_shrine_id, divine_stock: Dictionary, dormant: bool, offered_templates, requests, grace_until_tick}`.
-- Renown = number of agents with `knows == true` (recomputed daily).
+**Goal:** the slice survives contact with players, and the foundations for a long campaign are in place before content is added.
 
-### 8.2 Faith goals (`deliberation_faith.gd`)
+- **Fresh-player playtests** (at least three people who have not seen the game) of the GDD §14 moment, observed without help. Record where each stalls and for how long in `docs/playtests/`.
+- **Balance pass** from the findings: Favour income vs miracle costs, travellers' starting conditions, the Ridge Hamlet hostility (enemies at −100 within days, listed in `PROGRESS.md` Questions), raid timing after the ridge shrine is raised.
+- **Onboarding v2:** the first-steps guide line becomes a short sequence of contextual prompts tied to world state (hungry person in view → "Someone is hungry. Bless Growth or bring berries to the stores"), each dismissible and remembered in settings. The guide never acts for the player.
+- **Profiling at scale:** a 60-person detailed population (raised cap behind a debug flag) at 1×, 3× and 10×. Fix the top costs (likely perception, job boards, social candidate search, nav path requests).
+- **Region feasibility spike:** measure world gen, meshing, nav build and memory for one region on the thread pool, and freeze/thaw of 40 agent records. This fixes the region size used in M18 (default 160×48×160).
+- **Save migrations** (§3.2) and a version stamp in `meta.json` and on the title screen.
 
-| Goal | Utility | Gate |
-| --- | --- | --- |
-| Pray | `0.25 × devotion/100 × (1 + 0.5 × spiritual + 0.5 × pious)` + `0.5 × deficit(lowest need)²` (desperation) + 0.15 at dawn/dusk | Believer+ or (Curious and a need < 25) |
-| TendShrine | `0.3 × devotion/100 × (1 − condition/100) × 2` | Believer+, attends a shrine with condition < 80 |
-| RestoreShrine | `0.6 × devotion/100` (+0.3 if `raise_shrine` ambition) | Devout or quest; knows a fallen/ruined shrine |
-| Preach | `0.2 × devotion/100 × (1 + sociability)` + 0.3 if quest | Believer+, an Unaware/Curious person believed within 30 cells |
-| Quest | `0.4 + devotion/200 + boon value`, × risk term `(1 − 0.5 × believed danger × (1 − bravery))` | Accepted request |
+**Exit:** two of three playtesters reach the §14 moment in under an hour unaided; 60 detailed people hold 60 fps at 3× on the dev PC; a fixture save from the slice loads through the migration path.
 
-Whisper bonus: `cognition` adds `whisper.bonus` to the matching goal kind's candidate utility until it expires and appends "(the god urged it)" to the reason string.
+---
 
-### 8.3 New message receivers (`inbox.gd`)
+### M14 — Fields and meals
 
-| Message | Receiver does |
-| --- | --- |
-| `STORY{devotion, aspects}` | If `!knows`: `knows = true`, chronicle "first heard of the god" for notable firsts. Else devotion += `faith.story_gain × trust × (speaker devotion − own)/100` (clamped up), aspects lerp toward the speaker's by `0.1 × trust` |
-| `WHISPER{goal_kind, target}` | Believer+: store bonus `0.4 × devotion/100` for one day, thought `whispered_to`, log `WHISPERED`. Aware/Curious: Safety −5, curiosity-weighted devotion +2 |
-| `DIVINE_REQUEST{request_id}` | Accept rule (modelled on Final Landing's `RequestHelp`): not a child, not in crisis, `devotion/100 + 0.3 × bravery + 0.2 × curiosity + boon − danger > balance.faith.request_accept` and the request still has free slots → `quest_id`, force deliberation, reply via `requests.gd` |
-| `TEMPLATE_INFO{template_id}` | Add to `beliefs.known_templates` if trust > 0.3 |
+**Goal:** food becomes an economy that people plan for, with stores to see a settlement through winter.
 
-### 8.4 Miracles — `sim/miracles.gd`
+- **Blocks:** `farmland` (made from dirt with a hoe or by hand), `crop` (one block, growth stage in cell meta), `hearth` already exists, `granary_bin` (storage for grain only, larger capacity).
+- **Resources:** `grain` (keeps), `seed` (from harvest; sowing consumes it), `meal` (cooked; spoils after 3 days). Berries now **spoil after 6 days** in stock, so they no longer carry a settlement through winter.
+- **Functions** (`templates.json`): **Field** (≥ 6 connected farmland blocks, open sky), **Kitchen** (hearth, roofed, worktop: a workbench or a chest), **Granary** (≥ 2 granary bins, roofed, door).
+- **Crop growth** (`sim/crops.gd`, daily): stage advances by `days_per_stage` in growing seasons when tended; untended fields gain weeds that halve yield; winter kills unharvested crops. Bless Growth advances every crop in its radius by one stage.
+- **Goals and plans:** `Farm(field)` (sow in spring, tend, harvest in late summer and autumn; job board entries per field), `Cook` (meals at a Kitchen from grain and berries; recipe in `recipes.json`). Eating prefers meals (Food +60, thought `ate_a_meal`) over grain (+35) over berries (+25).
+- **Planning ahead:** each settlement tracks **food days** = stored food ÷ daily consumption. Below 20 food days in autumn, `ProposeProject(field)` and `ProposeProject(granary)` gain utility, Farm culture weight drifts up, and prayers carry the intent "fear of winter".
+- **Templates:** a field is a capturable template (flat), so the player can offer a field layout, and NPCs build fields through the normal construction path (fences and farmland as blocks).
+- **Presentation:** crop stages in the block atlas, field ghosts, food days on the settlement panel, a sowing/harvest glyph.
 
-`cast(id, at_cell, args)` validates (active shrine, inside the zone, renown tier, Favour after identity discount), deducts Favour, applies the effect, and records a **miracle event** `{id, cell, radius, aspect, tick}` that `perception` delivers to agents with the cell in sight next tick (each witness adds `witnessed_miracle`, devotion and aspect, interpreted per GDD §6.4). Answered prayers: `faith.gd` matches recent prayer intents in the area against the miracle's relief type within one day.
+**Exit:** a settlement of 10 people offered a field template sows in spring, harvests, stores grain and gets through its first winter without starving in a 40-day headless run (seed 11), and the chronicle records the first harvest. Checks: spoilage, winter crop death, food-days-driven project, meal preference.
 
-### 8.5 Shrine lifecycle — `sim/faith.gd` (hourly and daily)
+---
 
-Hourly: recompute support from congregations' recent prayers; update presence radius. Daily: condition decay, threshold counters, ACTIVE ↔ DORMANT transitions, FALLEN when the altar block is gone. On loss of the god's current shrine: expel the avatar (command to presentation through `god.events`), or set `dormant`. Chronicle entries record the cause (low support, untended, raid).
+### M15 — Seasons and weather
 
-### 8.6 Requests — `sim/requests.gd`
+**Goal:** seasons and weather change what people need and give the god new ways to help or harm.
 
-`Request {id, kind, shrine_id, target (place/resource/settlement), amount, boon, slots, takers, state, posted_tick, deadline_tick}`. The shrine menu posts it; `requests.broadcast()` sends `DIVINE_REQUEST` to the congregation. Completion checks run daily and on relevant effects; outcomes become prayers ("Brannoc returns: the ridge folk have heard your name") and chronicle entries; boons are paid from the shrine's Favour on success.
+- **Weather per region** (`sim/weather.gd`, from `weather.json`): clear, overcast, rain, storm, snow, drought, each with seasonal weights and durations rolled from the region's RNG at dawn. Forecast-free: people only know the weather they see.
+- **Effects:** rain waters fields (drought stalls growth after 3 dry days in summer); storms damage exposed thatch and crops (chronicle cause); snow slows walking (nav cost ×1.5 outdoors) and doubles Shelter decay; winter nights cost health when Shelter is at 0 (exposure), so housing matters in winter in a way it does not in summer.
+- **People react** through existing goals: TakeShelter weights rise with weather, Farm avoids storms, prayers carry weather intents ("rain for the fields").
+- **Miracles** (closed catalog additions, implemented in `sim/miracles.gd`): **Call Rain** (harvest, medium, ends a drought locally for a day) and **Still the Storm** (protection, medium). Kindle gains value in winter.
+- **Presentation:** sky and light by weather, rain and snow particles (`GPUParticles3D`, culled to the camera), wet-ground tint, snow cover as a shader overlay on top faces (no block edits), wind audio by weather.
 
-## 9. Settlements, director, threats
+**Exit:** a year in the valley shows a visible seasonal rhythm in the chronicle (a drought summer and a hard winter on seed 11), people die of exposure only when homeless in winter, and Call Rain after a drought prayer counts as an answered prayer. Checks: weather determinism, drought growth stall, exposure rule, weather intents.
 
-- **`sim/settlements.gd`:** `Settlement {id, name, center, radius, residents, structure_ids, stock, culture: Dictionary # work_type -> float, known_templates, site_ids, shrine_ids}`. Membership follows home ownership; homeless newcomers join the nearest settlement they believe in. Stock = Σ storage chests (each chest caps 40 units); with no storehouse, a 60-unit "pile" at the centre (as early Final Landing).
-- **Culture drift (daily):** each weight moves 2% toward `need_signal(work_type)` (e.g. housing deficit → Build) and 1% toward what the top-3 opinion-weighted residents spent the day doing; clamp 0.4–1.6.
-- **`sim/director.gd`:** migrants (attractiveness = spare beds + food days + safety + shrine renown, roll every 3 days), raids (§9.2 of the GDD: from day 12, every 4 days, target score = wealth / defenders), grace period for the tree shrine.
-- **`sim/threats.gd`:** wolves (wander, chase, flee when outnumbered) and raiders (simple state machine: approach → loot nearest storage → smash altar if `targets_altar` → retreat with loot), all pathing on `nav`. Raiders are not BDI agents in the prototype. **Later:** raiders as BDI agents of a bandit faction.
+---
 
-## 10. Presentation
+### M16 — Crafts and tools
 
-### 10.1 Scenes
+**Goal:** ore and workshops matter, and the ridge has something to trade.
 
-- **`title.tscn`:** new world (seed field), continue, load, settings, quit (pattern of `small_following/scripts/title_screen.gd`).
-- **`main.tscn`:** `Main` (Node3D) → `SimDriver`, `WorldView` (chunk views), `Avatar` (CharacterBody3D, capsule, layer 1 / mask 2), `CameraRig` (SpringArm3D + Camera3D, overlook mode), `AgentViews`, `ThreatViews`, `Overlays`, `DirectionalLight3D` with shadows, driven by the calendar hour, `WorldEnvironment` (Forward+: ProceduralSky, SSAO, distance fog, glow for the avatar and miracles, tonemap; volumetric fog reserved for Veil of Fog), `UI` (CanvasLayer). A graphics setting toggles SSAO, shadows quality and glow for weaker GPUs. SDFGI is off (cost not justified for a mutable voxel world).
+- **Workshop function** becomes useful: `Craft(recipe)` work goal at a workbench, job board entries driven by settlement demand (tools wearing out, missing goods).
+- **Tools** (`recipes.json`): axe, pick, hoe from wood + ore. A worker with the right tool works ×1.5 at the matching task; tools wear (40 uses) and are stocked like resources. A **Smithy** function (hearth + workbench + stone floor, roofed) is required for ore tools.
+- **Goods** for trade and comfort: furniture (planks), pottery (stone + hearth), a small set kept within the closed-catalog rule. Furnished dwellings give the `comfortable_home` thought.
+- **Skills:** Crafting skill gains use; apprentices learn faster near a skilled crafter (social layer reuse).
+- **The ridge economy:** the hamlet's culture biases toward mining and smithing, so it accumulates tools and ore and lacks food: the precondition for trade in M19.
 
-### 10.2 Avatar and camera
+**Exit:** the ridge hamlet produces tools within 15 days and Tree Hollow's gatherers work visibly faster with them; a settlement without a smithy never makes ore tools. Checks: tool wear and restock demand, smithy gating, tool speed bonus.
 
-- `avatar.gd`: input-relative movement on `_physics_process`, `move_and_slide`, step-up of 1 block via a short forward shape test, jump. After moving, clamp the horizontal position to the presence radius around the active shrine (soft push-back + boundary shader on a cylinder mesh in `overlays.gd`).
-- Movement is independent of the sim and the UI (the `small_following` invariant "player can always move" is kept, except in modal screens that take focus).
-- `camera_rig.gd`: mouse/right-stick orbit, zoom, and an `overlook` toggle that tweens to an elevated orbit around the shrine and widens build reach.
+---
 
-### 10.3 NPC views — `agent_view.gd`
+### M17 — Designs that grow
 
-Final Landing's procedural actors in 3D, no art pipeline needed: capsule body tinted by `hue` and portrait archetype, sphere head, child scale 0.7; a flat mood ring under the feet; carried item as a small cube; `Label3D` billboard glyph for activity (Zs, "…", "!", ×, ring, +, a "^" glyph for praying and a hammer glyph for building, all plain characters because the default font has no emoji); walk bob and work sway; hidden or faded when inside a structure. Positions lerp between ticks with the driver's alpha.
+**Goal:** architecture becomes a living tradition that no longer depends on the player's library (GDD §5.4 Later items).
 
-### 10.4 Picking and inspector
+- **Vernacular designs** (`building/vernacular.gd`): a builder with a need and no fitting known design can **devise one**: a small parametric generator (footprint 3×3 to 7×7, wall material from settlement stock, roof style, bed or chest count by need) that produces a normal template, validated by `function_rules` before use. Devised designs spread like offered ones and appear in the chronicle ("Edda devised a hut of her own"). The player can **learn** a design from any building they can see (capture it with the design tool), so knowledge flows both ways.
+- **Material substitution:** substitution groups in `blocks.json` (walls: planks ↔ cobble ↔ cut stone; roofs: thatch ↔ planks). Builders substitute by settlement stock; a substituted building keeps its template id and function. The settlement panel and inspector show "built from Willow Cottage, in stone".
+- **Mirroring and orientation:** `site_finder` tries 8 orientations (4 rotations × mirror) and prefers facing the nearest path.
+- **Renovation and repurposing:** residents move into empty dwellings before building new ones; a structure whose function changes is chronicled as converted; `Salvage(structure)` dismantles ruins and abandoned sites for materials when stock is short.
+- **Roads by use:** foot traffic is counted per column; after a threshold the top block wears into a `path` block (lower nav cost; grass regrows on unused paths). The chronicle and the settlement panel can answer "why does this road exist" ("worn by haulers between the ridge quarry and the stores since day 31").
+- **Traditions:** each settlement weights designs by how many it has built (preference in FoundHome/ProposeProject), and the library shows adoption counts per settlement.
 
-- `picking.gd`: on click/tap, project agent positions to screen and pick the nearest within a zoom-aware radius (Final Landing's rule), then threats, then structures (via `voxel_ray` cell → structure id).
-- `ui/inspector*.gd`: Final Landing's Mind / Needs / Bonds / Life tabs + Faith tab; Follow and Close buttons; strings from `text.json`. The **beliefs vs reality** block now includes believed stock vs actual, believed templates, believed shrine state.
-- Selection overlay: pulsing ring, current path as a line mesh, lines to strong relations.
+**Exit:** a settlement never offered a design still builds homes within 15 days by devising them; on seed 11 a worn path forms between Tree Hollow and its quarry within 20 days; a stone-rich settlement builds the offered wooden cottage in stone. Checks: devised designs pass function rules, substitution keeps function, path wear and regrowth, empty dwellings adopted first.
 
-### 10.5 Input map (`project.godot`)
+---
 
-`move_*`, `jump`, `sprint`, `camera_orbit`, `zoom_in/out`, `overlook`, `break_block`, `place_block`, `rotate_block`, `hotbar_1..9`, `design_tool`, `interact`, `inspect`, `speed_pause`, `speed_up`, `speed_down`, `toggle_chronicle`, `toggle_settlement`, `toggle_settings`, `toggle_fullscreen`, `quick_save`. Keyboard + gamepad bindings like `small_following`, with its key/pad rebinding scripts reused.
+### M18 — Regions
 
-## 11. Save and load — `core/save_store.gd`
+**Goal:** the world grows beyond one valley, and only the god's region runs in full detail (§3.1). This is the largest technical risk in Phase 2; M13's spike de-risks it.
 
-```
-user://worlds/<slot>/
-  meta.json        # {schema_version, name, seed, day, created, played_seconds}
-  sim.bin          # var_to_bytes(sim.to_dict()) — agents, settlements, structures, faith, god, chronicle, rng.state, calendar
-  chunks.bin       # var_to_bytes({Vector3i: PackedByteArray.compress(ZSTD)}) for edited chunks only
-  templates.json   # offered templates (copies)
-```
+- **World layout:** a world of **3×3 regions** (standard; small 2×2, large 4×4 in M22), each a bounded voxel volume of the M13 size, joined by **passes** at the edges. Region archetypes from `regions.json`: home valley (Phase 1 generator), highlands (mining town), forest (wolves, outlaws), coast or lake (fishing, a later food source if scope allows), each with a ruined altar or standing stone.
+- **Detailed/abstract switching** as §3.1, triggered by transfer, expulsion and loading.
+- **Abstract model** (`sim/region_abstract.gd`, hourly): per settlement — food produced and eaten from population, culture and fields; construction progress from labour-hours on reserved sites; births, deaths, migrants and departures from detailed-sim rates; faith drift, prayers (Favour and support still accrue at abstract shrines, so shrines can go dormant or wake while the god is away); raids rolled by the director with the same wealth/defender score.
+- **Travel between regions:** quest takers, migrants, traders and raiders leaving a region become `travellers` with a travel time from distance through passes; they arrive as BDI agents if the target is detailed, as records otherwise.
+- **World map screen** (M key): regions and known places as the god believes them, with the **age of each report** ("last heard of 6 days ago, from Brannoc"). Places are revealed by followers' reports and prayers, never by default (GDD §7.4 imperfect information).
+- **Prayer summaries** from other active shrines arrive delayed, as designed in GDD §7.4.
 
-- Written with the `progression.gd` pattern: `.tmp` files, rename current to `.bak`, rename `.tmp` into place; on read failure fall back to `.bak`, quarantine as `.corrupt`.
-- Load = regenerate the world from the seed, overwrite edited chunks, then `Sim.from_dict`. Every `from_dict` validates types and ranges and fails with a clear message.
-- Autosave at each dawn and before rest; quick save on demand.
+**Exit:** a follower carries the name from the home valley through a pass to the highland mining town while the god stays home; the town (abstract) raises a shrine; the god transfers and finds the shrine, its builders and the town's projects materialised in place, and the chronicle explains them. Statistical check: a settlement run 20 days abstract vs 20 days detailed from the same state ends within tolerance on population, stock, built structures and believers (tolerances written in the check). Performance targets in §3.4 met.
 
-## 12. Verification
+---
 
-`small_following`'s game-only branch forbids test files and verifies by running the game. This project relies on determinism and emergent behaviour that a playthrough cannot check reliably, so this project uses a **headless scenario runner** kept outside the shipped game (approved 2026-10-09):
+### M19 — Peoples, factions and trade
 
-- `tools/sim_checks.gd` (`extends SceneTree`), run with `Godot_v4.2.2-stable_mono_win64_console.exe --headless --path . --script res://tools/sim_checks.gd`. It builds small sims and asserts properties, printing PASS/FAIL and exiting non-zero on failure. Not exported (excluded in `export_presets.cfg`).
-- Scenarios are the NPC guide's property list, adapted: situated (only perceived sites believed), reactive (wolf sighting interrupts and warns), robust (failed forage → different plan, site forgotten), proactive (`should_switch` table), social (knowledge sharing, help requests), determinism (same seed and command log → same `var_to_bytes` hash after 2 days), save round-trip, backoff on exhausted plans, labour spread (≤ 3 per build), mental break override, text coverage.
-- Bound God additions: a settlement with an offered dwelling template and a housing deficit builds at least one copy in 10 days; a site with missing materials is not started; a story chain makes a stranger Aware; whispers change utility but never force an adoption below commitment; a shrine below threshold for 3 days goes dormant and expels the avatar; a raid that destroys the altar marks the shrine fallen and writes a chronicle cause.
-- Always also: `--headless --editor --quit` parse/import check, and a manual run through `Run.ps1` for anything visual. Visual captures of the inspector and construction go in `docs/verification/` as Final Landing does.
+**Goal:** settlements have allegiances and interests, outlaws are people rather than a raid timer, and goods and stories travel by trade.
 
-## 13. Milestones
+- **Factions** (`factions.json`, `sim/factions.gd`): every settlement belongs to a faction (villages, the mining town, an outlaw band, travelling traders); faction relations come from accumulated events (trades, raids, help, insults between members) and set default trust between strangers.
+- **Outlaws as BDI agents** (replacing the scripted raider band, Phase 1 Later): an outlaw camp in the forest region with its own people, needs and goals: `Raid(settlement)`, `Loot`, `Camp`, `Recruit`. Raids are decided by outlaw leaders from believed wealth and defenders, instead of a director roll. The director keeps only pacing guards (no raid before day 12, cooldowns, warnings via prayers).
+- **Occupation and change of hands:** outlaws can occupy an abandoned or defeated settlement; a starving, low-mood settlement with outlaw sympathisers can **turn outlaw** itself (culture drift toward raiding). Occupied buildings keep their history in the chronicle.
+- **Trade:** `Trade(settlement)` goal for traders and believers with the Merchant leaning: carry surplus to a settlement believed to lack it, exchange at prices from relative scarcity, return. Trade raises faction relations, spreads stories and designs (the concept's Year 6 beat), and wears roads (M17).
+- **Mutual aid:** allied settlements send defenders or food in a crisis through the existing help-request path, scaled to settlements.
+- **Abstract support:** factions, trade runs and raids all have abstract versions in `region_abstract.gd`.
 
-Each milestone ends with a runnable game and a local commit. Order follows the NPC guide's advice: agent core on a small world contract first, **presentation before tuning**.
+**Exit:** over 60 days on seed 11 at least one trade route forms between the ridge (tools) and Tree Hollow (food) and appears in the chronicle; the outlaw camp raids by its own decision and can be driven off or reconciled; a settlement left to starve can turn outlaw, with the chronicle explaining why. Checks: outlaw raid decision from beliefs, price from scarcity, occupation of an empty settlement, faction relation drift.
 
-| # | Milestone | Deliverables | Exit criteria |
+---
+
+### M20 — Identity and miracles
+
+**Goal:** reciprocal belief: what people believe the god is shapes what the god can do, and both benevolent and malevolent paths are fully playable (concept principle 7).
+
+- **Identity-gated miracles:** each miracle requires renown *and* a minimum share of its aspect in the identity of the shrine's congregation (local identity, so two communities can unlock different miracles). Tiers by renown: small 0, medium 15, **large 40**, **exceptional 80**.
+- **New miracles** (each implemented before it enters the catalog):
+
+| Tier | Miracle | Aspect | Effect |
 | --- | --- | --- | --- |
-| M0 | Skeleton | `project.godot` (3D, Forward+, input map), Windows export preset, `tools/sim_checks.gd` stub, `Run.ps1`, `publish*`, `AGENTS.md`, `core/data.gd` + validation, empty title and main scenes | Game boots to title and an empty 3D scene; data validation runs at startup and fails loudly on a broken key |
-| M1 | Voxel valley | `voxel_world`, `world_gen`, `chunk_mesher`, chunk views + collision, avatar, camera, day/night light | Same seed → same valley; avatar walks, jumps, steps up blocks; 60 fps on the full valley on the dev PC |
-| M2 | Hands-on building | `voxel_ray`, build controller, divine stock, presence zone and boundary, block hotbar | Break/place feels immediate; edits re-mesh within a frame; avatar cannot leave the zone |
-| M3 | Templates | Design tool, capture, `room_probe`, `function_rules`, structures registry, library screen, import/export | A cottage built by hand is recognised as Dwelling (2 beds); a roofless one is not; exported file re-imports identically; invalid files are rejected with a reason |
-| M4 | Sim core + survival agents | `sim`, `calendar`, `effects`, `nav_grid`, spatial index, agent model, body, generation, perception, inbox, cognition, survival plans (Eat, Sleep, TakeShelter, Flee, Idle), execute, movement, `sim_driver` | Two travellers live through 5 days at 10×: eat berries, sleep, seek shelter at night; same seed → same hash |
-| M5 | Legibility | Agent views, picking, inspector (all tabs), decision log text, selection overlay, speed controls | Clicking any NPC shows goal, reason, plan steps, tried plans, log and beliefs vs reality — readable at 1920×1080 and still legible at 1280×720 |
-| M6 | Settlement and work | Settlements, stockpile and chests, job board, Gather/Haul/Build/Repair, construction sites, `site_finder`, FoundHome, ProposeProject, culture weights, migrants | **The cottage moment:** offer a dwelling template, rest 10 days, find ≥ 2 copies built by NPCs without any command |
-| M7 | Social layer | Talk topics, compatibility, gossip, knowledge and template sharing, courtship, help requests, comfort, reconcile, births, breaks, departure/Migrate | Relationships form over 20 days and are visible in the Bonds tab; a hungry NPC with an empty store gets food from a friend |
-| M8 | Faith | Faith state, Pray, shrines (support, Favour, condition, radius), renown, prayer feed, Whisper, Bless Growth, Kindle, Mend, Veil of Fog, god identity, Faith tab | Prayers raise Favour; Bless Growth in front of a hungry believer raises devotion and the harvest aspect; a whisper shows in the decision log |
-| M9 | Expansion | Requests, quests, Preach/Story spreading, ridge hamlet, RestoreShrine, transfer, expulsion, dormancy | A follower carries the name to the ridge, miners restore the altar, the ridge shrine becomes active and the avatar transfers there |
-| M10 | Threats and change | Wolves, raider band and director, desecration, structure decay, abandonment and overgrowth | An undefended, wealthy ridge hamlet is eventually raided and its shrine can fall; the chronicle names the cause |
-| M11 | Time and history | Rest overlay, chronicle screen, "While you rested…" summary, save/load, autosave | Save → quit → load continues identically (hash check); rest of a full season completes in under a minute |
-| M12 | Vertical slice polish | Title flow, settings (reuse `small_following` settings/rebinding), audio pass, tuning, export | The GDD §14 proof-of-concept moment is reproducible from a new world by a fresh player in under an hour |
+| Small | Guide Animals | travel | Wolves in range wander away for a day |
+| Small | Ease Hardship | harvest | One person's lowest need +30 |
+| Large | Bless Settlement | harvest | A season of faster crop growth and +mood for residents |
+| Large | Awaken Guardian | protection | A guardian creature defends the shrine area against threats for a season; it is a world actor with its own simple behaviour, not commanded |
+| Large | Divert Water | travel | Carve or fill a drawn channel of water blocks inside the zone |
+| Large | Summon Storm | wrath | A storm (M15) over a chosen settlement area, damaging thatch, crops and morale |
+| Exceptional | Raise the Land | protection | Lift or sink a large area of terrain inside the zone |
+| Exceptional | Calamity | wrath | A blight and storm together over a settlement |
+| Malevolent (small) | Smite | wrath | Injure one person or threat; witnesses' devotion follows GDD §6.4 fear worship |
+| Malevolent (medium) | Blight | wrath | Crops and bushes in range wither |
 
-Rough sizing (GDScript lines, for planning only): M1–M3 ≈ 2,500; M4–M7 agent port ≈ 5,000 (Final Landing's 4,500 Rust lines plus construction and 3D movement); M8–M10 ≈ 2,500; UI ≈ 2,500.
+- **Fear worship** extended: a god whose wrath identity dominates gains devotion from the cautious through fear, and fearful believers pray to avert harm rather than ask for help (new prayer intents). A feared god's people tend shrines out of fear.
+- **Outlaw faith:** the shadow aspect read by outlaws makes the god a protector of the unwanted; an outlaw camp can build an altar and become a congregation (concept Year 10).
+- **Schisms:** when two congregations' identities diverge beyond a threshold, they become **sects** of the same god: friction in talk between members, rival preaching, and in extreme cases desecration of the other sect's shrine. Chronicled with the cause.
+- **The god's look:** avatar colour, glow and particle style, and shrine dressing follow the identity, so a player sees what the god has become.
 
-## 14. Risks and mitigations
+**Exit:** two scripted runs on the same seed, one using harvest and protection miracles and one using wrath, end 40 days later with different dominant identities, different unlocked miracles, and different behaviour from the cautious; a schism forms when two shrines are driven to opposite identities. Checks: aspect gating, fear-worship devotion, guardian not obeying commands, schism threshold.
+
+---
+
+### M21 — Followers and requests
+
+**Goal:** followers are the god's hands in the wider world; requests cover the concept's list, and stories of named followers carry the campaign.
+
+- **Requests** (closed catalog, each with an implemented completion rule): Carry my name, Bring, Raise a shrine, Restore (Phase 1), plus **Protect** (no successful raid on a settlement for 5 days), **Investigate** (reach a place or danger and report), **Trade with** (complete a trade run with a settlement), **Recruit** (persuade migrants to come), **Convert** (reach N believers in a settlement), **Found an outpost** (build a dwelling and an altar at a place).
+- **Reports:** a returning follower's beliefs about a place become the god's knowledge of it on the world map, including stale or wrong beliefs, marked with their source and age.
+- **Relics:** a fallen shrine's altar leaves a relic item; believers may hide it, carry it, and use it to found a new shrine elsewhere with a support bonus (concept: survivors hide sacred objects). Raiders may take relics as loot.
+- **Notable followers:** Devout people with long service gain titles (Voice, Keeper, Wanderer) by what they did; titles add weight to their stories and preaching; their deeds and deaths are chronicle highlights and feed the epilogue.
+- **Request UI:** stays in the shrine menu, with a requests journal listing open, taken, completed and failed requests and who took them.
+
+**Exit:** each request kind can be completed by NPCs in a headless scenario; a relic carried from a fallen ridge shrine founds a new shrine elsewhere; a world map entry shows a wrong report that is corrected when a second follower returns. Checks per request kind, relic chain, report staleness.
+
+---
+
+### M22 — Campaign shape
+
+**Goal:** a run has a beginning, a shape over years, and an end the player can choose (GDD §15 "formal endgame": open-ended with an epilogue).
+
+- **New world screen:** seed; world size (small 2×2, standard 3×3, large 4×4 regions); **harshness** (gentle / standard / hard: raid start and frequency, winter severity, outlaw strength); **starting anchor**: sacred tree (harvest bias), standing stone (protection bias), spring (travel bias), each with its own shrine look and starting zone shape; starting people (two travellers or a small family).
+- **Ages:** the chronicle divides the run into named ages from its dominant events ("The Age of Founding", "The Hungry Years", "The Ashen Wars"), shown in the chronicle and the rest summary.
+- **Saga** (`saga.json`): optional deeds tracked in a journal (a street of ten homes from one design, shrines in three regions, a settlement through a famine without a death, a schism healed, an outlaw camp converted). No victory screen; deeds frame long-term goals.
+- **Epilogue:** when the god fades (no believers) or when the player chooses "Close the book", an epilogue summarises the world: settlements and their fates, the god's identity, notable followers, ages and deeds. The player may continue watching.
+- **Chronicle export:** the chronicle and epilogue export to a readable HTML file through `FileDialog` (shareable story).
+- **Statistics:** population, believers, shrines, Favour, food days over time, shown as simple charts in the chronicle screen.
+
+**Exit:** each starting anchor and harshness level starts a valid world; a 3-year headless run produces at least three named ages and an epilogue; "Close the book" and continuing to watch both work. Checks: new-world options produce valid sims, age naming is deterministic, epilogue covers every settlement.
+
+---
+
+### M23 — Look, sound and feel
+
+**Goal:** the game looks and sounds like one coherent, finished work.
+
+- **Blocks:** atlas v2 at 16 px with per-block variants and seasonal tints; crops, paths, granary and smithy blocks; consistent palette across regions.
+- **People and creatures:** procedural figures gain simple limbs with code-driven walk, work, pray, sleep and fight poses (still no art pipeline); wolves, outlaws and the guardian get distinct silhouettes; clothing tint by faction and role.
+- **Effects:** miracle VFX per aspect, transfer effect, shrine states (active glow, dormant fade, fallen), weather (M15).
+- **Music and sound:** an ambient score by region and season, stingers for births, deaths, shrines and raids, and a mix pass. Whether music is synthesised or recorded tracks is an open decision (§6).
+- **UI pass:** one consistent theme across all screens, readable at 1280×720, icons for resources and needs, a tooltip pass.
+- **Accessibility:** UI scale, colour-blind-safe mood and state colours, reduced motion (camera bob, flashes), hold or toggle for held inputs, subtitles for sound cues, **full gamepad navigation** of every screen.
+- **Localisation readiness:** every string from text catalogs, no sentence assembly by concatenation, a pseudo-locale check that finds hard-coded text.
+
+**Exit:** a capture set of every screen at 1080p and 720p in `docs/verification/`; every screen usable with a gamepad only; pseudo-locale run shows no untranslated strings.
+
+---
+
+### M24 — Release
+
+**Goal:** a stable 1.0 Windows release.
+
+- **Stability:** a 5-year headless soak on the three world sizes with no script errors and stable memory; crash-safe autosave rotation (3 autosaves); an error log file under `user://logs/`.
+- **Saves:** fixture saves from every Phase 2 schema version migrate and run (§3.2).
+- **Performance:** the §3.4 targets on the dev PC and on a lower-spec reference machine (graphics settings tested).
+- **Onboarding final:** the contextual guide (M13) extended to Phase 2 systems (fields, weather, regions, map, requests), still optional.
+- **Release build:** version numbering, credits and licences screen, `publish.ps1` build, download page, itch page and channel (publishing only with authorisation), release notes from the chronicle of changes.
+- **Closed beta:** a small group plays a full campaign; fixes from their reports before 1.0.
+
+**Exit:** §1's definition of "fully playable" holds, each point verified and recorded in `PROGRESS.md`.
+
+## 5. Verification in Phase 2
+
+Phase 1's approach stays: `tools/sim_checks.gd` (headless scenarios, PASS/FAIL, non-zero exit), the parse/import check, every check run grepped for `SCRIPT ERROR`, off-screen window captures for visuals, and plain reporting of what was and was not checked. Additions:
+
+- **Long-run scenarios** (`tools/checks/checks_campaign.gd`): a 120-day standard world with no player commands must not empty every settlement, must produce shrines in more than one region, and must keep all invariants (no agent stuck in one plan for more than 2 days, no unreachable construction cell, stock never negative).
+- **Statistical checks** for abstract vs detailed regions (M18), with tolerances in the check file and fixed seeds.
+- **Fixture saves** for migrations (§3.2).
+- **Playtest notes** in `docs/playtests/` at M13, M18, M22 and M24: who played, how long, where they stalled, what they said, what changed as a result.
+- `sim_checks` runtime must stay under 5 minutes; long-run scenarios run behind a `--long` flag before each milestone commit.
+
+## 6. Open decisions
+
+Each is the user's call; the plan proceeds on the leaning until decided.
+
+| Question | Leaning |
+| --- | --- |
+| World size and region count | 3×3 regions standard, 160×48×160 each (fixed by the M13 spike) |
+| Music | Synthesised ambient score (matches the current no-asset audio) with recorded tracks as an option if commissioned |
+| Art direction beyond procedural figures | Stay procedural and code-animated; improve the atlas by hand |
+| Rival gods and religions | Later (after 1.0); schisms inside the god's own faith (M20) carry that role in 1.0 |
+| Malevolent miracles | In 1.0 (concept principle 7); fear worship already exists |
+| Distribution | itch.io Windows build; Steam is a separate decision |
+| Population caps | 60 detailed in the active region, 200 across the world |
+| Coast or lake region with fishing | Only if M18 lands on time; otherwise Later |
+
+## 7. Risks and mitigations
 
 | Risk | Mitigation |
 | --- | --- |
-| GDScript too slow for meshing or 30 agents at 10× | Mesh arrays on `WorkerThreadPool`; spatial buckets; staggered perception/deliberation (as Final Landing); path request cap; profile at M4 and M6 with 30 agents; greedy meshing; reduce `ticks_per_day` and scale per-day rates (rates are per day, so retuning is free) |
-| 3D pathfinding across a mutable voxel world | Local `AStar3D` updates per edit; NPC failure learning already handles `NoPath`; construction blocks never fill the cell an agent stands in |
-| Agents building nonsense (blocked doors, overlaps) | `site_finder` checks entrance access and overlaps; sites reserve cells; structures re-evaluated after completion; failed sites logged with reasons |
-| The god feels powerless | Hands-on building is always available in the zone; Whisper is cheap; prayer feed gives clear things to fix; tune Favour so a small miracle is affordable most days |
-| Remote losses feel arbitrary | Raids only after day 12 with cooldowns; prayers warn before raids ("strangers watch the ridge"); dormancy and restoration instead of deletion; every loss has a chronicle cause |
-| Determinism breaks silently | Rules in §1; the hash scenario in §12 runs after every milestone; no `randf()` in sim code (grep check) |
-| Template files as an attack surface | Strict validation, size caps, block names resolved against the registry, no code or scene data in templates |
-| Scope creep (the concept is vast) | Every "Later" item stays out until M12 passes; new block types need a system that uses them |
-
-## 15. Decisions (2026-10-09)
-
-| Question | Decision |
-| --- | --- |
-| Headless scenario runner | Accepted: `tools/sim_checks.gd`, outside the exported game (§12) |
-| Renderer | **Forward+** (not `small_following`'s Compatibility); environment and graphics settings in §10.1 |
-| Platforms | Windows only at this stage; no web export |
-| Art | Simple procedural shapes for NPCs and creatures, 16 px block texture atlas |
+| Regions refactor destabilises the working sim | M13 spike first; keep the detailed region code path identical to Phase 1; abstract model behind its own checks; statistical consistency check before moving on |
+| Abstract and detailed outcomes diverge visibly on return | Consistency rule (§3.1): abstract regions only produce detailed-sim-possible outcomes, sites reserved through `site_finder`, every outcome chronicled |
+| GDScript too slow for 60 detailed people | M13 profiling; staggered deliberation and perception; caps on path and site searches per tick; reduce work done by sleepers; abstract everything outside the active region |
+| Content sprawl (crops, recipes, miracles) | Closed catalogs tied to implemented effects; every addition needs a system that uses it (concept principle 10) |
+| Saves break between updates | Migrations with fixtures from M13 on; newer-version saves refused cleanly |
+| Players feel lost in a larger world | World map with report ages, prayer summaries, contextual guide, saga journal as optional direction |
+| Malevolent play breaks the world | No game over; fear worship and outlaw faith keep a feared god playable; the world recovers through people |
+| Influence-not-obedience erodes under pressure for convenience | Product invariants in `AGENTS.md` apply to every new system: guardians, trade, factions and requests change what NPCs know, want or can do, never what they must do |

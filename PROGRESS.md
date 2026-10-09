@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M12 — Vertical slice polish: implemented; awaiting a fresh-player playtest (see Questions).
+Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) planned in `IMPLEMENTATION_PLAN.md`. Next: **M13 — Playtest, balance and foundations**.
 
 ## Done
 
@@ -40,8 +40,7 @@ M12 — Vertical slice polish: implemented; awaiting a fresh-player playtest (se
 
 ## Next
 
-- A fresh-player playtest of the GDD §14 moment (not something the checks can show), then balance from what it finds.
-- Profile with a full 30-person population; the season-of-rest check ran with about 10 people (10 s).
+- M13 (see `IMPLEMENTATION_PLAN.md` §4): fresh-player playtests of the GDD §14.1 moment and balance from what they find; contextual onboarding; profiling at 60 detailed people; the region feasibility spike; save schema migrations with fixture saves.
 
 ## Decisions
 

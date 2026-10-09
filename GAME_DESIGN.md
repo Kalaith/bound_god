@@ -1,6 +1,6 @@
 # The Bound God — Game Design Document
 
-> Version 0.1 · 2026-10-09 · Godot 4.2.2 (GDScript, Forward+ renderer, Windows)
+> Version 0.2 · 2026-10-10 (Phase 2 scope added in §14) · Godot 4.2.2 (GDScript, Forward+ renderer, Windows)
 >
 > Source material: `bound_god_game_concept.md` (vision), `NPC System Implementation Guide.md` (the BDI agent system shipped in Final Landing, `RustGames/finallanding`). Implementation is planned in `IMPLEMENTATION_PLAN.md`.
 >
@@ -159,7 +159,7 @@ Adopting the goal places a **construction site**: ghost blocks visible in the wo
 
 ### 5.6 Template sharing
 
-- Templates are versioned JSON files (see `IMPLEMENTATION_PLAN.md` §6.3). The library screen has **Import** and **Export** (file dialog) on desktop.
+- Templates are versioned JSON files (format and validation in `scripts/building/template.gd` and `template_validation.gd`). The library screen has **Import** and **Export** (file dialog) on desktop.
 - Imported designs are validated (size limits, known block ids) and land in the player's private library; they still have to be offered.
 - **Later:** online sharing, moderation, and cultural traditions (settlements weighting designs they have built before).
 
@@ -407,24 +407,32 @@ Taken from the `small_following` Godot baseline; details in `IMPLEMENTATION_PLAN
 - Windows only at this stage. Forward+ rules out an HTML5 export; revisiting the web means switching to Compatibility and is not planned.
 - Visual style: simple procedural shapes for people and creatures, a small 16 px block texture atlas.
 
-## 14. First playable (vertical slice)
+## 14. From first playable to full game
 
-**Goal:** prove that building a design, empowering autonomous residents and leaving them alone is enjoyable.
+### 14.1 First playable (complete)
 
-Scope:
+The vertical slice (milestones M0–M12) proved that building a design, empowering autonomous residents and leaving them alone works: one 160×48×160 valley, the sacred tree and the ridge, the design tool and offered templates, the BDI people with their social layer and faith, Whisper and four small and medium miracles, three request kinds, wolves and one raider band, rest, chronicle and saves. Its acceptance moment (build a cottage, offer it, rest, find more; carry the name to the ridge; transfer; a later absence changes something with a cause) is built and checked. Record: `PROGRESS.md`.
 
-- One 160×48×160 valley, sacred tree, ridge ruin, ridge hamlet of 5 unaware miners.
-- Avatar bound to the tree's presence zone; place/break, divine stock, stockpile transfer.
-- Design tool, function recognition (Dwelling, Storehouse, Shrine, Shelter), offer, import/export.
-- Two travellers on day 1, migrants afterwards, population cap 30.
-- Needs: Food, Rest, Shelter, Social, Recreation, Safety. Resources: wood, stone, thatch, berries, ore.
-- BDI goals listed in §6.3 except those marked Later; social layer; faith state.
-- Pray, Favour, renown, Whisper, Bless Growth, Kindle, Veil of Fog, Mend.
-- Divine requests "Carry my name", "Bring", "Raise a shrine".
-- Wolves and one raider band.
-- Speeds, rest, chronicle, save/load.
+### 14.2 Full game (Phase 2)
 
-**Proof-of-concept moment (acceptance):** the player builds one cottage, saves and offers it, rests 10 days and returns to find at least two more built by villagers. A follower has carried the name to the ridge and miners restored the shrine, so the player can transfer there. A later absence produces a believable change in the first settlement or the ridge (prosperity, a raid, a lost shrine) that the chronicle explains.
+**Goal:** a complete game that a new player can learn unaided and play for years of in-game time across several regions, with a god whose identity is shaped by how it is worshipped. Planned in `IMPLEMENTATION_PLAN.md` (milestones M13–M24, with the definition of "fully playable" in its §1).
+
+These **Later** items from this document are promoted into Phase 2:
+
+| Item | Section | Milestone |
+| --- | --- | --- |
+| Grain, farm plots, Farm and Cook goals | §4.3, §6.3 | M14 |
+| Weather and temperature | §4.4 | M15 |
+| Craft goal, tools from ore | §4.3, §6.3 | M16 |
+| NPC-devised vernacular designs, material substitution, mirroring, traditions | §5.4, §5.6, §15 | M17 |
+| Region-based world with low-fidelity distant regions | §4.1, §11.3 | M18 |
+| Raiders as BDI agents, occupation, bandit settlements adopting the faith | §9.2 | M19, M20 |
+| Large and exceptional miracles, the malevolent path | §7.3 | M20 |
+| Formal endgame (epilogue, ages, optional deeds) | §15 | M22 |
+
+Still **Later** (after 1.0): online template sharing and moderation, rival gods and religions as separate faiths, multiplayer, platforms other than Windows. Research and ore trade with off-map peoples stay out; trade happens between settlements in the world (M19).
+
+**Acceptance for 1.0:** a fresh player reaches the first-playable moment in under two hours unaided; a world plays for at least three in-game years across three regions and five settlements, producing caused change (prosperity, famine, raids, occupation, schism, recovery); nurturing, protective, feared and outlaw gods each develop a distinct identity and reach an epilogue.
 
 ## 15. Open questions
 
@@ -432,15 +440,15 @@ Carried from the concept, with current leanings:
 
 | Question | Leaning |
 | --- | --- |
-| Size of influence zones; overlapping and rival religions | Radius from support (§7.2); rival religions Later |
+| Size of influence zones; overlapping and rival religions | Radius from support (§7.2); schisms within the god's own faith in M20; rival religions Later |
 | How many believers enable manifestation | Support ≥ 1.2 for the prototype; tune by playtest |
 | Avatar capabilities vs miracles | Avatar builds and carries; anything affecting people or many blocks is a miracle |
-| Can NPCs create original templates | Later: vernacular designs from a small generator |
-| Template substitution, renovation, destruction | Later; prototype builds exact copies, rotation in 90° steps |
+| Can NPCs create original templates | Yes, from M17: vernacular designs from a small parametric generator, validated by the function rules |
+| Template substitution, renovation, destruction | M17: material substitution groups, mirroring, adoption of empty buildings, salvage of ruins |
 | Worship vs faction vs culture | Separate fields: faith state per NPC, settlement membership, settlement culture weights |
 | Quest UI without excess | Shrine menu only; outcomes arrive as prayers and chronicle entries |
-| World time and fast-forward limits | Speeds up to 10×; rest up to one season |
+| World time and fast-forward limits | Speeds up to 10×; rest up to one season; distant regions advance at low fidelity (M18) |
 | Remote destruction: consequential not exhausting | Raid cooldowns, warnings via prayers, survivors and dormancy instead of hard loss |
-| Formal endgame | Open; prototype is open-ended with an epilogue on fading |
+| Formal endgame | Open-ended, with named ages, optional saga deeds and an epilogue on fading or when the player closes the book (M22) |
 
-*Status: v0.1 design for the first playable. Agreed concept direction is preserved; prototype decisions are marked and expected to change after the first playtests.*
+*Status: v0.2. The first playable is complete; Phase 2 scope is in §14.2. Agreed concept direction is preserved; prototype decisions are marked and expected to change after playtests.*
