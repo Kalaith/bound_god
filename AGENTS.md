@@ -49,6 +49,8 @@ Read before working:
 
 Commit early and often: after every complete, working step (a system, a fix, a data pass), not at the end of a milestone. Each commit must leave the game booting and the checks passing.
 
+Commit **all pending project changes**, including modified, added and deleted files, even when you did not make those changes. Do not leave user changes or changes from another agent uncommitted merely because you did not touch them. Review and preserve their contents, include them in the required validation, and finish with a clean Git working tree. Existing ignore rules still apply to generated files, local tooling and credentials; do not force-add ignored files.
+
 Message style, following `small_following` but in the voice of the bound god: one line describing what changed **as it is felt in the world**, followed by a short plain tag in parentheses saying what it is technically.
 
 ```
