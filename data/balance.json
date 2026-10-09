@@ -1,0 +1,82 @@
+{
+	"schema_version": 1,
+	"time": {
+		"ticks_per_day": 720, "ticks_per_second": 6.0, "speeds": [0.0, 1.0, 3.0, 10.0],
+		"days_per_season": 10, "seasons": 4,
+		"dawn_hour": 6.0, "dusk_hour": 20.0, "work_start_hour": 7.0, "work_end_hour": 18.0, "sleep_hour": 22.0,
+		"frame_budget_ms": 4.0, "rest_budget_ms": 14.0
+	},
+	"needs": {
+		"decay_per_day": {"food": 95.0, "rest": 80.0, "shelter": 0.0, "social": 40.0, "recreation": 30.0, "safety": 0.0},
+		"shelter_loss_per_night_hour": 6.0, "shelter_winter_factor": 2.0, "shelter_gain_per_day": 140.0,
+		"raw_food_restore": 38.0, "forage_restore": 30.0,
+		"bed_rest_per_day": 220.0, "ground_rest_per_day": 140.0, "recreation_gain_per_day": 180.0,
+		"safety_recovery_per_day": 60.0, "safety_loss_on_threat": 35.0, "urgent_threshold": 25.0
+	},
+	"agents": {
+		"cells_per_tick": 0.75, "sight_radius": 12.0, "night_sight_factor": 0.6,
+		"perception_interval": 3, "deliberation_interval": 10, "commitment_bonus": 0.25,
+		"max_plan_attempts": 4, "goal_backoff_ticks": 120, "carry_capacity": 12.0,
+		"belief_forget_days": 20.0, "help_wait_ticks": 90, "child_growth_days": 120, "adult_age_years": 18.0,
+		"earshot": 14.0, "paths_per_tick": 12, "move_timeout_ticks": 600, "failure_memory_ticks": 240,
+		"reach": 3.5
+	},
+	"social": {
+		"chat_ticks": 12, "chat_social_gain": 26.0, "chat_opinion_range": [-6.0, 8.0], "familiarity_per_chat": 4.0,
+		"proximity_familiarity_per_day": 2.0, "shared_work_opinion_per_day": 2.5, "friend_threshold": 30.0,
+		"close_friend_threshold": 60.0, "rival_threshold": -25.0, "enemy_threshold": -55.0,
+		"romance_gain_per_flirt": 9.0, "partner_romance_threshold": 60.0, "gossip_weight": 0.2,
+		"trait_clash_penalty": 7.0, "trait_bond_bonus": 6.0, "child_chance_per_day": 0.025, "opinion_decay_per_day": 0.4,
+		"chat_range": 30.0
+	},
+	"mood": {
+		"baseline": 50.0, "need_weight": 0.3, "break_threshold": 22.0, "extreme_threshold": 10.0,
+		"break_chance_per_day": 0.6, "break_ticks": 90, "departure_threshold": 12.0, "departure_days": 6.0
+	},
+	"health": {
+		"regen_per_day": 4.0, "starvation_damage_per_day": 14.0, "exposure_damage_per_day": 6.0,
+		"care_threshold": 70.0, "old_age_years": 88.0
+	},
+	"work": {
+		"skill_speed_per_level": 0.05, "xp_per_tick": 1.0, "xp_per_level": 420.0, "passion_xp_multiplier": 2.0,
+		"harvest_ticks_per_block": {"wood": 14, "stone": 10, "thatch": 5, "berries": 6, "ore": 14},
+		"base_work_hours": 0.42, "off_hours": 0.08
+	},
+	"construction": {
+		"ticks_per_block": 6, "abandon_days": 5, "max_open_sites": 2, "site_search_radius": 26, "site_spacing": 2,
+		"max_height_variation": 1, "builds_offered": 4, "found_home_base": 0.55
+	},
+	"world": {
+		"size": [160, 48, 160], "chunk": 16, "sea_level": 6, "water_level": 9,
+		"tree_spacing": 5.5, "bush_spacing": 7.0, "grass_spacing": 6.0, "rock_spacing": 14.0,
+		"tree_centre_clear": 7, "berry_regrow_days": 2.0, "bush_max_berries": 4, "grass_regrow_per_day": 2,
+		"sacred_tree": [80, 80], "ridge_ruin": [80, 140], "ridge_hamlet": [96, 136]
+	},
+	"settlements": {
+		"start_radius": 22, "radius_per_structure": 1.0, "max_radius": 40, "pile_capacity": 60, "chest_capacity": 40,
+		"culture_need_drift": 0.02, "culture_example_drift": 0.01, "culture_min": 0.4, "culture_max": 1.6
+	},
+	"population": {
+		"travellers": 2, "miners": 5, "cap": 30, "migrant_roll_days": 3, "migrant_threshold": 0.35,
+		"migrant_group": [1, 3], "first_migrant_day": 3
+	},
+	"faith": {
+		"story_gain": 30.0, "story_aspect_lerp": 0.1, "drift_per_day": 0.05, "decay_per_day": 0.6,
+		"unheard_decay": 1.5, "first_sight_devotion": 4.0, "miracle_devotion": 10.0, "answered_bonus": 18.0,
+		"harm_loss": 20.0, "pious_factor": 1.5, "sceptic_factor": 0.5, "request_accept": 0.75,
+		"whisper_factor": 0.4, "prayer_ticks": 30, "stages": [20, 40, 70]
+	},
+	"shrines": {
+		"support_window_days": 3, "active_support": 1.2, "radius_base": 16.0, "radius_per_sqrt_support": 6.0,
+		"radius_max": 40.0, "favour_per_devotion": 0.04, "favour_cap": 100.0, "condition_decay_per_day": 2.0,
+		"low_condition": 30.0, "dormant_days": 3, "grace_days": 5, "tend_per_tick": 0.3
+	},
+	"miracle_costs": {"identity_discount": 0.25, "identity_penalty": 0.25, "dormant_whisper_cost": 0},
+	"threats": {
+		"wolf": {"count": 3, "speed": 0.8, "health": 30.0, "damage": 4.0, "sight": 10.0, "aggressive": true},
+		"raider": {"speed": 0.7, "health": 40.0, "damage": 5.0, "band": [3, 5], "carry": 15.0, "aggressive": true},
+		"first_raid_day": 12, "raid_every_days": 4, "raid_base_chance": 0.35, "raid_wealth_weight": 0.004
+	},
+	"decay": {"unattended_days": 20, "block_loss_chance": 0.15, "abandoned_days": 10},
+	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 5.6, "gravity": 16.0}
+}

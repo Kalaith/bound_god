@@ -1,0 +1,51 @@
+{
+	"schema_version": 1,
+	"limits": {"max_size": [16, 12, 16], "max_palette": 32},
+	"functions": [
+		{"id": "dwelling", "requires": {"bed": 1, "door": 1}, "requires_any": [], "roofed": ["bed"], "roof_reach": 4, "capacity": {"beds": "bed"}},
+		{"id": "storehouse", "requires": {"chest": 2, "door": 1}, "requires_any": [], "roofed": ["chest"], "roof_reach": 4, "capacity": {"stock": "chest"}},
+		{"id": "workshop", "requires": {"workbench": 1}, "requires_any": [], "roofed": ["workbench"], "roof_reach": 4, "capacity": {"workers": "workbench"}},
+		{"id": "shrine", "requires": {"altar": 1}, "requires_any": [], "roofed": [], "roof_reach": 4, "sky_or_tree_within": 3, "capacity": {}},
+		{"id": "shelter", "requires": {}, "requires_any": ["hearth", "bed"], "roofed": [], "roof_reach": 4, "min_roofed_floor": 6, "capacity": {"sleepers": "roofed_floor"}}
+	],
+	"starters": [
+		{
+			"id": "miner_hut",
+			"name": "Miner's Hut",
+			"author": "ridge folk",
+			"legend": {".": "air", "C": "cobble", "P": "planks", "L": "log", "D": "door", "B": "bed", "T": "thatch", "H": "hearth"},
+			"entrance": [2, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPDPL", "C...C", "C.B.C", "CB..C", "LCCCL"],
+				["LPDPL", "C...C", "C...C", "C...C", "LCCCL"],
+				["TTTTT", "TTTTT", "TTTTT", "TTTTT", "TTTTT"]
+			]
+		},
+		{
+			"id": "lean_to",
+			"name": "Lean-to",
+			"author": "ridge folk",
+			"legend": {".": "air", "L": "log", "T": "thatch", "H": "hearth"},
+			"entrance": [1, 0, 0],
+			"meta": {},
+			"layers": [
+				["L..L", "....", ".H..", "L..L"],
+				["L..L", "....", "....", "L..L"],
+				["TTTT", "TTTT", "TTTT", "TTTT"]
+			]
+		},
+		{
+			"id": "ridge_altar",
+			"name": "Ridge Altar",
+			"author": "the old faith",
+			"legend": {".": "air", "S": "cut_stone", "A": "altar"},
+			"entrance": [2, 0, 0],
+			"meta": {},
+			"layers": [
+				["S.S.S", ".....", "S.A.S", ".....", "S.S.S"],
+				["S...S", ".....", ".....", ".....", "S...S"]
+			]
+		}
+	]
+}

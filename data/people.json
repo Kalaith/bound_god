@@ -1,0 +1,71 @@
+{
+	"schema_version": 1,
+	"skills": ["construction", "gathering", "social", "defence", "medicine", "exploration", "devotion", "crafting"],
+	"needs": ["food", "rest", "shelter", "social", "recreation", "safety"],
+	"traits": [
+		{"id": "social", "name": "Social", "description": "Draws energy from company and seeks people out.", "modifiers": {"sociability": 0.5, "need_decay": {"social": 0.3}}, "excludes": ["loner"], "clashes_with": [], "bonds_with": ["social", "kind"]},
+		{"id": "loner", "name": "Loner", "description": "Needs quiet; crowds wear them down.", "modifiers": {"sociability": -0.5, "need_decay": {"social": -0.5}}, "excludes": ["social"], "clashes_with": ["social"], "bonds_with": []},
+		{"id": "brave", "name": "Brave", "description": "Faces danger head-on and goes where others will not.", "modifiers": {"bravery": 0.6}, "excludes": ["cautious"], "clashes_with": [], "bonds_with": ["brave", "leader"]},
+		{"id": "cautious", "name": "Cautious", "description": "Avoids risk and prefers the safe plan.", "modifiers": {"bravery": -0.5}, "excludes": ["brave"], "clashes_with": ["hot_headed"], "bonds_with": []},
+		{"id": "kind", "name": "Kind", "description": "Helps without being asked and comforts the hurting.", "modifiers": {"kindness": 0.6, "sociability": 0.1}, "excludes": ["abrasive"], "clashes_with": [], "bonds_with": ["kind", "optimist"]},
+		{"id": "abrasive", "name": "Abrasive", "description": "Says what they think, whether or not anyone wants it.", "modifiers": {"kindness": -0.3, "temper": 0.3}, "excludes": ["kind"], "clashes_with": ["abrasive", "stubborn", "kind"], "bonds_with": []},
+		{"id": "optimist", "name": "Optimist", "description": "Finds the bright side, even here.", "modifiers": {"optimism": 8.0}, "excludes": ["pessimist"], "clashes_with": [], "bonds_with": ["optimist", "kind"]},
+		{"id": "pessimist", "name": "Pessimist", "description": "Expects the worst and is rarely disappointed.", "modifiers": {"optimism": -8.0}, "excludes": ["optimist"], "clashes_with": ["optimist"], "bonds_with": []},
+		{"id": "diligent", "name": "Diligent", "description": "Works long and well.", "modifiers": {"diligence": 0.5}, "excludes": ["lazy"], "clashes_with": ["lazy"], "bonds_with": ["diligent"]},
+		{"id": "lazy", "name": "Lazy", "description": "Finds a reason to rest.", "modifiers": {"diligence": -0.5, "need_decay": {"recreation": 0.3}}, "excludes": ["diligent"], "clashes_with": [], "bonds_with": []},
+		{"id": "curious", "name": "Curious", "description": "Must know what lies over the next hill.", "modifiers": {"curiosity": 0.6, "skill_speed": {"exploration": 0.2}}, "excludes": [], "clashes_with": [], "bonds_with": ["curious", "tinkerer"]},
+		{"id": "romantic", "name": "Romantic", "description": "Falls in love easily and deeply.", "modifiers": {"romance": 0.6}, "excludes": [], "clashes_with": [], "bonds_with": []},
+		{"id": "stubborn", "name": "Stubborn", "description": "Once decided, will not be moved.", "modifiers": {"temper": 0.2, "diligence": 0.2}, "excludes": [], "clashes_with": ["leader"], "bonds_with": []},
+		{"id": "gourmand", "name": "Gourmand", "description": "Lives for a good meal.", "modifiers": {"need_decay": {"food": 0.2}, "skill_speed": {"gathering": 0.15}}, "excludes": [], "clashes_with": [], "bonds_with": ["gourmand"]},
+		{"id": "green_thumb", "name": "Green Thumb", "description": "Plants thrive under their care.", "modifiers": {"skill_speed": {"gathering": 0.3}}, "excludes": [], "clashes_with": [], "bonds_with": []},
+		{"id": "tinkerer", "name": "Tinkerer", "description": "Happiest with a tool in hand.", "modifiers": {"skill_speed": {"crafting": 0.25, "construction": 0.15}}, "excludes": [], "clashes_with": [], "bonds_with": []},
+		{"id": "spiritual", "name": "Spiritual", "description": "Senses meaning in the land itself.", "modifiers": {"optimism": 3.0, "skill_speed": {"devotion": 0.15}}, "excludes": ["sceptic"], "clashes_with": ["tinkerer"], "bonds_with": ["pious", "spiritual"]},
+		{"id": "leader", "name": "Leader", "description": "Others listen when they speak.", "modifiers": {"leadership": 0.6, "sociability": 0.2}, "excludes": [], "clashes_with": [], "bonds_with": ["diligent"]},
+		{"id": "hot_headed", "name": "Hot-headed", "description": "Quick to anger, quick to swing.", "modifiers": {"temper": 0.6}, "excludes": [], "clashes_with": ["hot_headed", "abrasive"], "bonds_with": []},
+		{"id": "night_owl", "name": "Night Owl", "description": "Comes alive after dark.", "modifiers": {"night_owl": true}, "excludes": [], "clashes_with": [], "bonds_with": []},
+		{"id": "homesick", "name": "Homesick", "description": "Dreams of the home they walked away from.", "modifiers": {"optimism": -2.0}, "excludes": [], "clashes_with": [], "bonds_with": []},
+		{"id": "resilient", "name": "Resilient", "description": "Bends but does not break.", "modifiers": {"optimism": 4.0, "bravery": 0.2}, "excludes": [], "clashes_with": [], "bonds_with": []},
+		{"id": "pious", "name": "Pious", "description": "Prays readily and believes deeply.", "modifiers": {"skill_speed": {"devotion": 0.3}}, "excludes": ["sceptic"], "clashes_with": ["sceptic"], "bonds_with": ["pious", "spiritual"]},
+		{"id": "sceptic", "name": "Sceptic", "description": "Wants proof, and fear does not count.", "modifiers": {"curiosity": 0.2}, "excludes": ["pious", "spiritual"], "clashes_with": ["pious"], "bonds_with": []}
+	],
+	"ambitions": [
+		{"id": "master_skill", "kind": "master_skill", "name": "Master a Craft", "description": "Reach the highest level in their favourite skill.", "target": 14},
+		{"id": "raise_family", "kind": "raise_family", "name": "Raise a Family", "description": "Find a partner and raise a child in this valley.", "target": 1},
+		{"id": "befriend_village", "kind": "befriend_village", "name": "Befriend the Village", "description": "Count many of the village as friends.", "target": 5},
+		{"id": "map_the_wilds", "kind": "map_the_wilds", "name": "Map the Wilds", "description": "See the far places of the valley with their own eyes.", "target": 3},
+		{"id": "raise_shrine", "kind": "raise_shrine", "name": "Raise a Shrine", "description": "See an altar to the god stand where they live.", "target": 1},
+		{"id": "build_home", "kind": "build_home", "name": "Build a Home", "description": "Live in a home of their own making.", "target": 1},
+		{"id": "lead_village", "kind": "lead_village", "name": "Lead the Village", "description": "Be the most respected voice in their settlement.", "target": 40}
+	],
+	"names": {
+		"given": ["Edda", "Brannoc", "Maren", "Tobin", "Ysolde", "Corin", "Hesper", "Alder", "Wenna", "Rook", "Isolde", "Garrick", "Linnet", "Osric", "Petra", "Fenna", "Hal", "Ilse", "Joss", "Kestrel", "Liesl", "Merrin", "Nell", "Orla", "Piet", "Quill", "Rowan", "Sabine", "Tamsin", "Ulric", "Vesna", "Wyn", "Aster", "Bryn", "Cass", "Dagny", "Emrys", "Frey", "Gwen", "Hollis", "Ivo", "Jory", "Kit", "Lark", "Mabyn", "Nils", "Odo", "Pell", "Ree", "Sorrel", "Thane", "Una", "Vale", "Wilm", "Yarrow", "Zeno", "Elsbet", "Morwen", "Caddoc", "Briar"],
+		"family": ["Ashby", "Bracken", "Coldwell", "Dunmore", "Elder", "Fairweather", "Greaves", "Hartley", "Ingle", "Juniper", "Kettle", "Longbarrow", "Marsh", "Nettle", "Oakes", "Penrose", "Quarry", "Rushwick", "Sallow", "Thorne", "Underhill", "Vane", "Wren", "Yew", "Alderley", "Birch", "Cobb", "Dray", "Elmstead", "Fallow"],
+		"origins": ["the salt marshes", "the burned mill town", "the high pastures", "the river barges", "the old abbey lands", "the flooded villages", "the quarry towns", "the wandering fairs", "the northern fells", "the city that fell"],
+		"former_roles": [
+			{"name": "carpenter", "skill": "construction"},
+			{"name": "stonemason", "skill": "construction"},
+			{"name": "forager", "skill": "gathering"},
+			{"name": "woodcutter", "skill": "gathering"},
+			{"name": "storyteller", "skill": "social"},
+			{"name": "peddler", "skill": "social"},
+			{"name": "watchman", "skill": "defence"},
+			{"name": "hunter", "skill": "defence"},
+			{"name": "herbalist", "skill": "medicine"},
+			{"name": "midwife", "skill": "medicine"},
+			{"name": "drover", "skill": "exploration"},
+			{"name": "pathfinder", "skill": "exploration"},
+			{"name": "hermit", "skill": "devotion"},
+			{"name": "shrine keeper", "skill": "devotion"},
+			{"name": "smith", "skill": "crafting"},
+			{"name": "weaver", "skill": "crafting"},
+			{"name": "miner", "skill": "gathering"},
+			{"name": "thatcher", "skill": "construction"}
+		],
+		"memories": ["still carries a sister's ribbon", "buried a child on the road", "once saw a light walk across a lake", "left a debt unpaid in the last town", "can name every star but not their father", "lost a house to fire and will not light one indoors", "was born in a storm", "has walked further than anyone they know", "keeps a stone from the first home they ever had", "dreams of a tree that speaks"],
+		"miner_roles": [
+			{"name": "miner", "skill": "gathering"},
+			{"name": "stonemason", "skill": "construction"},
+			{"name": "smith", "skill": "crafting"}
+		]
+	}
+}

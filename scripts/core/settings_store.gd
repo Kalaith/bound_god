@@ -126,6 +126,25 @@ func _failed() -> bool:
 	return false
 
 
+## Push every stored preference into the engine: bindings, window mode and the
+## master bus. Graphics toggles are read by the world environment each frame.
+func apply_all(_tree: SceneTree) -> void:
+	Keys.apply(key_bindings)
+	Pad.apply(pad_bindings)
+	var fullscreen: bool = bool(values.fullscreen)
+	if DisplayServer.get_name() != "headless":
+		var mode: int = DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
+		if DisplayServer.window_get_mode() != mode and (fullscreen or DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN):
+			DisplayServer.window_set_mode(mode)
+	for bus in ["Master", "Music", "Effects"]:
+		var index: int = AudioServer.get_bus_index(bus)
+		if index < 0:
+			continue
+		var level: float = float(values[bus.to_lower()])
+		AudioServer.set_bus_volume_db(index, linear_to_db(maxf(level, 0.0001)))
+		AudioServer.set_bus_mute(index, bool(values.muted) or level <= 0.001)
+
+
 func rebind(action: String, slot: int, code: int) -> String:
 	var error: String = Keys.change_error(key_bindings, action, slot, code)
 	if error.is_empty():

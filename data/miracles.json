@@ -1,0 +1,12 @@
+{
+	"schema_version": 1,
+	"effects": ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend"],
+	"aspects": ["harvest", "protection", "travel", "shadow", "wrath"],
+	"miracles": [
+		{"id": "whisper", "tier": "small", "cost": 2, "radius": 0, "aspect": "", "renown_required": 0, "effect": "whisper"},
+		{"id": "bless_growth", "tier": "small", "cost": 15, "radius": 10, "aspect": "harvest", "renown_required": 0, "effect": "bless_growth"},
+		{"id": "kindle", "tier": "small", "cost": 5, "radius": 6, "aspect": "protection", "renown_required": 0, "effect": "kindle"},
+		{"id": "veil_of_fog", "tier": "medium", "cost": 30, "radius": 20, "aspect": "shadow", "renown_required": 15, "effect": "veil_of_fog"},
+		{"id": "mend", "tier": "medium", "cost": 25, "radius": 12, "aspect": "protection", "renown_required": 15, "effect": "mend"}
+	]
+}
