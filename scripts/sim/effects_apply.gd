@@ -38,6 +38,9 @@ static func apply(sim: RefCounted) -> void:
 				_treat(sim, agent, action)
 			"join":
 				_join(sim, agent, int(action.settlement))
+			"attack_threat":
+				if sim.threats != null:
+					sim.threats.hit(sim, int(action.threat), float(action.damage), agent)
 			"prayer":
 				sim.faith.record_prayer(sim, agent, int(action.shrine), action.intent)
 			"tend":

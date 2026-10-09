@@ -175,7 +175,7 @@ static func _people(sim: RefCounted, source: String) -> Array:
 func _fall(sim: RefCounted, shrine: Dictionary, source: String) -> void:
 	shrine.state = "fallen"
 	shrine.condition = 0.0
-	sim.chronicle_event("shrine_fell", int(shrine.settlement_id), {"shrine": shrine.name}, "cause_altar_broken|" + Text.label(_cause(source)), _people(sim, source))
+	sim.chronicle_event("shrine_fell", int(shrine.settlement_id), {"shrine": shrine.name}, "cause_altar_broken|" + _cause(source), _people(sim, source))
 	for agent in sim.agents:
 		if agent.is_present() and int(agent.faith.shrine_id) == int(shrine.id):
 			Mind.add(agent, "shrine_fell", sim.calendar.ticks_per_day)

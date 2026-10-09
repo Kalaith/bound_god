@@ -12,7 +12,8 @@ static func cause(value: String) -> String:
 		return parts[0]
 	var args: Dictionary = {}
 	for i in range(1, parts.size()):
-		args[str(i - 1)] = parts[i]
+		# A value may itself be a label key ("cause_raid"); it is worded here.
+		args[str(i - 1)] = Text.label(parts[i]) if parts[i].begins_with("cause_") and Text.has(parts[i]) else parts[i]
 	return Text.format(parts[0], args)
 
 

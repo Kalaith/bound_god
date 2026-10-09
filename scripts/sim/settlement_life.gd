@@ -5,6 +5,7 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
+const Registry = preload("res://scripts/world/block_registry.gd")
 
 ## settlement id -> job board
 var boards: Dictionary = {}
@@ -58,6 +59,8 @@ func daily(sim: RefCounted) -> void:
 		_drift(sim, settlement)
 	samples.clear()
 	_abandon(sim)
+	_decay(sim)
+	_overgrow(sim)
 
 
 func _grow(sim: RefCounted, settlement: Dictionary) -> void:
@@ -109,6 +112,63 @@ func _abandon(sim: RefCounted) -> void:
 			sim.drop_item(site.origin, resource, float(site.delivered[resource]))
 		sim.chronicle_event("site_abandoned", int(site.settlement_id), {"design": sim.template_name(site.template_id)}, "cause_stalled", [int(site.founder)])
 		sim.construction.release(id)
+
+
+## Buildings nobody lives in or mends lose a block now and then.
+func _decay(sim: RefCounted) -> void:
+	var now: int = sim.calendar.tick
+	var limit: int = sim.calendar.ticks_for_days(Balance.number("decay.unattended_days"))
+	var keys: Array = layouts.keys()
+	keys.sort()
+	for id in keys:
+		var record: Dictionary = layouts[id]
+		var entry: Dictionary = sim.structures.entries.get(id, {})
+		if not entry.is_empty() and not entry.residents.is_empty():
+			record["attended_tick"] = now
+			continue
+		if now - int(record.get("attended_tick", record.built_tick)) < limit:
+			continue
+		if sim.rng.randf() >= Balance.number("decay.block_loss_chance"):
+			continue
+		var standing: Array = []
+		for part in record.layout:
+			if part[1] != 0 and sim.voxels.get_block(part[0]) == part[1]:
+				standing.append(part)
+		if standing.is_empty():
+			continue
+		var part: Array = standing[sim.rng.randi_range(0, standing.size() - 1)]
+		sim.set_block(part[0], 0, 0, "decay")
+		if not record.get("decaying", false):
+			record["decaying"] = true
+			sim.chronicle_event("structure_decaying", int(record.settlement_id), {"design": sim.template_name(record.template_id)}, "cause_unattended")
+
+
+## A settlement with nobody left is taken back by the grass.
+func _overgrow(sim: RefCounted) -> void:
+	var grass: int = Registry.id("tall_grass")
+	var turf: int = Registry.id("grass")
+	for id in sim.settlements.ids():
+		var settlement: Dictionary = sim.settlements.entries[id]
+		var empty: bool = true
+		for agent_id in settlement.residents:
+			empty = empty and not sim.agents[agent_id].is_present()
+		if not empty:
+			settlement["empty_since"] = -1
+			continue
+		if int(settlement.get("empty_since", -1)) < 0:
+			settlement["empty_since"] = sim.calendar.tick
+		if sim.calendar.tick - int(settlement.empty_since) < sim.calendar.ticks_for_days(Balance.number("decay.abandoned_days")):
+			continue
+		if not settlement.get("abandoned", false):
+			settlement["abandoned"] = true
+			sim.chronicle_event("settlement_abandoned", id, {"place": settlement.name}, "cause_nobody_left")
+		for _i in range(6):
+			var x: int = settlement.center.x + sim.rng.randi_range(-int(settlement.radius), int(settlement.radius))
+			var z: int = settlement.center.z + sim.rng.randi_range(-int(settlement.radius), int(settlement.radius))
+			var top: int = sim.voxels.top_solid_y(x, z)
+			var cell := Vector3i(x, top + 1, z)
+			if top >= 0 and sim.voxels.get_block(cell - Vector3i(0, 1, 0)) == turf and sim.voxels.get_block(cell) == 0 and not sim.is_occupied(cell):
+				sim.set_block(cell, grass, 0, "growth")
 
 
 ## A finished site's design is remembered against the structure it became.

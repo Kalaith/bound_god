@@ -29,6 +29,8 @@ const CommandsWorld = preload("res://scripts/sim/commands_world.gd")
 const Template = preload("res://scripts/building/template.gd")
 const Faith = preload("res://scripts/sim/faith.gd")
 const Requests = preload("res://scripts/sim/requests.gd")
+const Threats = preload("res://scripts/sim/threats.gd")
+const Raids = preload("res://scripts/sim/raids.gd")
 
 var world_seed: int = 1
 var rng := RandomNumberGenerator.new()
@@ -59,6 +61,7 @@ var faith: RefCounted = null
 var requests: RefCounted = null
 var director: RefCounted = null
 var threats: RefCounted = null
+var raids: RefCounted = null
 var settlement_life: RefCounted = null
 var construction: RefCounted = null
 ## Kindled cells (miracle): Array of {cell, radius, until}.
@@ -115,6 +118,11 @@ func setup(seed: int, options: Dictionary) -> void:
 	faith = Faith.new()
 	faith.setup(self)
 	requests = Requests.new()
+	threats = Threats.new()
+	raids = Raids.new()
+	director.raid_hooks = raids
+	if options.get("threats", options.get("world", "valley") == "valley"):
+		threats.setup_wolves(self)
 	_refresh_site_buckets()
 	settlement_life.refresh_jobs(self)
 

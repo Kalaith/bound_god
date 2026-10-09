@@ -13,7 +13,7 @@ const REQUIRED_THOUGHTS: Array[String] = [
 	"arrived", "learned", "fought", "mental_break", "death_witness", "cared_for", "saw_the_god",
 	"feared_the_god", "prayer_answered", "prayer_unheard", "witnessed_miracle", "whispered_to",
 	"strange_voice", "shrine_fell", "home_built", "raided", "lost_home", "heard_of_god",
-	"quest_done", "blessed", "mourned_shrine",
+	"quest_done", "blessed", "mourned_shrine", "strangers_watching",
 ]
 const PERSONALITY_KEYS: Array[String] = [
 	"sociability", "bravery", "kindness", "diligence", "curiosity", "romance", "temper",

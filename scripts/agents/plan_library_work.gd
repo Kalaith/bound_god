@@ -29,6 +29,8 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 			return _build(sim, agent, int(goal.target))
 		Kind.REPAIR:
 			return _repair(sim, agent, int(goal.target))
+		Kind.DEFEND:
+			return [H.option("drive_off", 1.0, [Plans.step(Op.ATTACK, {"threat": int(goal.target)})])]
 		Kind.SCOUT:
 			return [H.option("look_around", 1.0, [Plans.go_cell(frontier_cell(sim, agent)), Plans.step(Op.SCOUT, {"ticks": 12})])]
 		Kind.FOUND_HOME:

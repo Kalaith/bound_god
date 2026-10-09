@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-M10 — Threats and change (M9 complete).
+M11 — Time and history (M10 complete).
 
 ## Done
 
@@ -32,9 +32,11 @@ M10 — Threats and change (M9 complete).
 
 - M9 Expansion: divine requests (carry the name to a place, bring materials, restore a shrine, raise one) posted at the active shrine and broadcast to its believers, each of whom weighs devotion, bravery, curiosity, needs, danger and the boon; Quest goals and plans (travel and tell stories to three people there, gather and deliver, quarry or fetch stone and put a shrine's old blocks back altar first, set up an altar); Preach (stories to those who believe less, a bonus on a carry-the-name quest); believers bring the god into small talk; RestoreShrine for believers who know a fallen shrine near home; boons paid from Favour; requests fail at their deadline; requests panel in the shrine menu. Tuning: stories give a stranger 8 + 12 × trust devotion and story gain is 40; neglect wears only on Curious and above. Checks: the name reaches the ridge (6 ridge folk know the god), the altar is restored by the ridge folk and wakes on day 6, and the god transfers there; a story makes a stranger aware; a whisper never forces a goal below commitment. Capture: `m9_ridge_transfer_1080.png`.
 
+- M10 Threats and change: wolves (dens far from settlements, wander, chase what they see, strike when adjacent, flee when two people are close or when hurt), the raider band (approach the stores, loot, break the altar of a settlement with a shrine, retreat; turn back when as many people fight them, or when a Veil of Fog hides the place), the raid director (from day 12, every 4 days, wealth over defenders, a warning the day before so believers pray about it), Defend goal and attack step, threats driven off, raid outcome in the chronicle with the band, defenders and raiders; decay of buildings nobody lives in or mends for 20 days; abandoned settlements overgrow; chronicle causes keep label keys and are worded on display. Checks: a sighted wolf interrupts and warns others, a wealthy hamlet is raided and its altar falls with the raid named, an empty building decays. Capture: `m10_raid_1080.png`.
+
 ## Next
 
-- M10: wolves, raider band and director, desecration, structure decay, abandonment and overgrowth.
+- M11: rest overlay, chronicle screen, "While you rested…" summary, save/load, autosave; performance for resting a season in under a minute.
 
 ## Decisions
 

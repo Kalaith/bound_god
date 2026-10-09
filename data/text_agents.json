@@ -244,6 +244,27 @@
 		"chronicle_request_failed": "No one answered the request to {request}.",
 		"cause_devotion": "devotion",
 		"cause_gave_up": "it was too hard",
-		"cause_time": "time ran out"
+		"cause_time": "time ran out",
+		"reason_defend": "Danger at",
+		"plan_drive_off": "drive it off",
+		"band_ashen": "the Ashen band",
+		"band_crows": "the Crow band",
+		"band_hollow": "the Hollow band",
+		"chronicle_raid_warning": "Strangers were seen watching: {band}.",
+		"chronicle_raid_begins": "{band} came, {count} strong.",
+		"chronicle_raid_turned_back": "{band} turned back.",
+		"chronicle_raid_over": "{band} left with {loot} goods.",
+		"chronicle_raid_over_desecrated": "{band} left with {loot} goods, and the altar broken.",
+		"chronicle_threat_driven_off": "{name} drove off a {kind}.",
+		"chronicle_structure_decaying": "An empty \"{design}\" began to fall apart.",
+		"chronicle_settlement_abandoned": "{place} was abandoned.",
+		"cause_wealth": "wealth {0}, {1} defenders",
+		"cause_veiled": "the fog hid the place",
+		"cause_defenders": "{0} stood against them",
+		"cause_raid_outcome": "raid by {0}; {1} defenders, {2} raiders",
+		"cause_unattended": "no one lived there or mended it",
+		"cause_nobody_left": "nobody was left",
+		"cause_wolf": "a wolf",
+		"cause_raider": "raiders"
 	}
 }

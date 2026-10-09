@@ -4,6 +4,7 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
+const Mind = preload("res://scripts/agents/mind.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail
@@ -15,7 +16,7 @@ static func intent(sim: RefCounted, agent: RefCounted) -> Dictionary:
 	var lowest: int = agent.lowest_need()
 	if agent.need(lowest) < 50.0:
 		return {"kind": Personality.NEEDS[lowest], "level": agent.need(lowest)}
-	if not agent.beliefs.threats.is_empty():
+	if not agent.beliefs.threats.is_empty() or Mind.has(agent, "strangers_watching"):
 		return {"kind": "threat", "level": 30.0}
 	if agent.partner >= 0 and sim.agents[agent.partner].needs_care(Balance.number("health.care_threshold")):
 		return {"kind": "partner", "level": 40.0}

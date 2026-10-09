@@ -101,6 +101,15 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	if not board.items.is_empty() or loaded:
 		var load_factor: float = 1.0 if loaded else minf(board.items.size() / 3.0, 1.3)
 		push.call(Goals.make(Kind.HAUL), float(culture.haul) * 0.75 * load_factor, "reason_haul")
+	if agent.personality.bravery > 0.1 or agent.has_trait("leader"):
+		for threat_id in board.threats:
+			if not sim.threat_exists(threat_id):
+				continue
+			var threat_cell: Vector3i = sim.threats.entries[threat_id].cell
+			var reach: float = Vector2(threat_cell.x - agent.cell.x, threat_cell.z - agent.cell.z).length()
+			if reach < 16.0:
+				out.append({"goal": Goals.make(Kind.DEFEND, threat_id), "utility": 0.8 * (0.4 + agent.personality.bravery) * float(agent.health.hp) / 100.0,
+					"reason": "reason_defend", "value": reach})
 	_found_home(sim, agent, out, base)
 	_propose(sim, agent, out, base, board)
 

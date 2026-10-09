@@ -24,6 +24,7 @@ const StoresPanel = preload("res://scripts/presentation/ui/stores_panel.gd")
 const SettlementPanel = preload("res://scripts/presentation/ui/settlement_panel.gd")
 const FaithController = preload("res://scripts/presentation/faith_controller.gd")
 const RequestsPanel = preload("res://scripts/presentation/ui/requests_panel.gd")
+const ThreatViews = preload("res://scripts/presentation/threat_views.gd")
 
 var rig: Node3D
 var sim: RefCounted
@@ -110,6 +111,10 @@ func _start() -> void:
 	agent_views.sim = sim
 	agent_views.driver = driver
 	add_child(agent_views)
+	var threat_views: Node3D = ThreatViews.new()
+	threat_views.sim = sim
+	threat_views.driver = driver
+	add_child(threat_views)
 	inspector = Inspector.new()
 	inspector.sim = sim
 	ui_layer.add_child(inspector)

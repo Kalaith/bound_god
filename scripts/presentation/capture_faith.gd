@@ -15,6 +15,9 @@ static func arrange(main: Node3D, shot: Node, scenario: String) -> void:
 	if scenario == "faith_ridge":
 		_ridge(main, shot)
 		return
+	if scenario == "faith_raid":
+		_raid(main, shot)
+		return
 	sim.run_ticks(sim.calendar.ticks_per_hour() * 20)
 	main.world_view.remesh_now()
 	var tree: Vector3i = sim.features.sacred_tree
@@ -63,3 +66,36 @@ static func _ridge(main: Node3D, shot: Node) -> void:
 	print("FAITH ridge day=%d state=%s transfer=%s" % [sim.calendar.day(), sim.faith.shrines[2].state, result.reason])
 	main.faith.try_open_menu()
 	shot.shoot_after(60)
+
+
+## A wealthy ridge with a living altar on raid day: the band at the stores.
+static func _raid(main: Node3D, shot: Node) -> void:
+	var sim: RefCounted = main.sim
+	sim.set_block(sim.features.ruin.altar, preload("res://scripts/world/block_registry.gd").id("altar"), 0, "capture")
+	sim.faith.shrines[2].state = "active"
+	sim.settlements.entries[2].stock = {"berries": 30, "stone": 25, "ore": 20, "wood": 25}
+	sim.calendar.tick = sim.calendar.ticks_per_day * 11
+	var raiders: int = 0
+	for _hour in range(24 * 14):
+		sim.run_ticks(sim.calendar.ticks_per_hour())
+		raiders = 0
+		for id in sim.threats.ids():
+			if sim.threats.entries[id].kind == "raider" and sim.threats.entries[id].state in ["loot", "altar"]:
+				raiders += 1
+		if raiders > 0:
+			break
+	# Debug shot only: show it by daylight, with the god standing at the ridge.
+	sim.calendar.tick = (sim.calendar.tick / sim.calendar.ticks_per_day) * sim.calendar.ticks_per_day + sim.calendar.ticks_per_hour() * 13
+	sim.god.dormant = false
+	sim.god.active_shrine_id = 2
+	main.avatar.set_dormant(false)
+	main.faith._process(0.0)
+	var pile: Vector3i = sim.settlements.entries[2].pile
+	main.avatar.global_position = Vector3(sim.features.ruin.altar) + Vector3(1.5, 0.2, -2.5)
+	main.camera_rig.overlook = true
+	main.camera_rig.overlook_center = Vector3(pile)
+	main.camera_rig._overlook_distance = 22.0
+	main.camera_rig._overlook_pitch = -0.7
+	main.world_view.remesh_now()
+	print("FAITH raid day=%d raiders_at_stores=%d" % [sim.calendar.day(), raiders])
+	shot.shoot_after(40)

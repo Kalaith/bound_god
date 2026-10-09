@@ -113,7 +113,8 @@ func check_travellers_live_through_five_days():
 	var elapsed: float = (Time.get_ticks_msec() - started) / 1000.0
 	print("      5 days, %d people: %.1fs (%.2f ms/tick)" % [sim.agents.size(), elapsed, elapsed * 1000.0 / (sim.calendar.ticks_per_day * 5)])
 	for agent in sim.agents:
-		if agent.settlement_id != 1:
+		# The two travellers of the first morning; migrants come later.
+		if agent.settlement_id != 1 or agent.joined_day != 1:
 			continue
 		if not agent.is_present():
 			return "%s died of %s" % [agent.given_name, agent.life_cause]
