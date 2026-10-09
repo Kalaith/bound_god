@@ -16,6 +16,8 @@ M3 — Templates (next milestone; M2 command verification complete).
 
 - M2 command verification: four scenarios in `tools/checks/checks_commands.gd`, registered with `sim_checks`: resource yields/costs and immediate mesh dirtiness, rejected edits leaving state unchanged (stock, zone, bounds, protected blocks, occupied cells, dormancy), bush harvest/dismantling/replanting and resource-site state, timed command replay and copied log entries. All 10 scenarios pass, including loading every game script. Standard 4.2.2 headless editor import reports no errors (exit-code caveat below). No presentation changes or new visual run in this verification-only step.
 
+- M3 data slice: bounded room probes, component-driven function rules, edit-driven structures and cause records, trimmed capture, strict import validation, staged library writes and backup recovery. Three new scenarios cover two-bed recognition/roof loss, untrusted fields, and file round-trip/recovery.
+
 ## Next
 
 - M3: design tool, capture, room_probe, function_rules, structures registry, library screen, import/export.

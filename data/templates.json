@@ -1,6 +1,6 @@
 {
 	"schema_version": 1,
-	"limits": {"max_size": [16, 12, 16], "max_palette": 32},
+	"limits": {"max_size": [16, 12, 16], "max_palette": 32, "max_file_bytes": 65536},
 	"functions": [
 		{"id": "dwelling", "requires": {"bed": 1, "door": 1}, "requires_any": [], "roofed": ["bed"], "roof_reach": 4, "capacity": {"beds": "bed"}},
 		{"id": "storehouse", "requires": {"chest": 2, "door": 1}, "requires_any": [], "roofed": ["chest"], "roof_reach": 4, "capacity": {"stock": "chest"}},

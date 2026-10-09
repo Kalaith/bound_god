@@ -6,6 +6,11 @@ extends RefCounted
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 
+const TemplateValidation = preload("res://scripts/building/template_validation.gd")
+const VoxelWorld = preload("res://scripts/world/voxel_world.gd")
+const RoomProbe = preload("res://scripts/world/room_probe.gd")
+const Rules = preload("res://scripts/building/function_rules.gd")
+
 const SCHEMA: int = 1
 
 var id: String = ""
@@ -119,7 +124,7 @@ static func from_starter(def: Dictionary) -> RefCounted:
 				template.cells[template.index_of(Vector3i(x, y, z))] = template.palette.find(legend[row[x]])
 	var door: Array = def.get("entrance", [0, 0, 0])
 	template.entrance = Vector3i(int(door[0]), int(door[1]), int(door[2]))
-	template.compute_bill()
+	template.recompute()
 	return template
 
 
@@ -136,55 +141,51 @@ func to_dict() -> Dictionary:
 	}
 
 
-## Parses an untrusted template file. Returns [template, ""] or [null, reason].
+## Parses an untrusted design without repairing malformed values silently.
 static func from_dict(data: Variant) -> Array:
-	if not data is Dictionary:
-		return [null, "not a template"]
-	if not (data.get("schema_version") is float or data.get("schema_version") is int) or int(data.schema_version) != SCHEMA:
-		return [null, "unsupported template version"]
-	var limits: Array = Data.template_limits().get("max_size", [16, 12, 16])
-	var raw_size: Variant = data.get("size")
-	if not raw_size is Array or raw_size.size() != 3:
-		return [null, "size must be three numbers"]
-	for axis in range(3):
-		if not (raw_size[axis] is float or raw_size[axis] is int) or int(raw_size[axis]) < 1 or int(raw_size[axis]) > int(limits[axis]):
-			return [null, "size is outside %dx%dx%d" % [limits[0], limits[1], limits[2]]]
-	var raw_palette: Variant = data.get("palette")
-	var max_palette: int = int(Data.template_limits().get("max_palette", 32))
-	if not raw_palette is Array or raw_palette.is_empty() or raw_palette.size() > max_palette or raw_palette[0] != "air":
-		return [null, "palette must start with air and hold at most %d blocks" % max_palette]
-	for entry in raw_palette:
-		if not entry is String or Data.block_id(entry) < 0:
-			return [null, "palette names an unknown block: " + str(entry)]
-		if entry != "air" and not bool(Data.block(Data.block_id(entry)).get("placeable", false)):
-			return [null, "palette holds a block that cannot be built: " + str(entry)]
-	if not data.get("blocks") is String:
-		return [null, "blocks are missing"]
-	var bytes: PackedByteArray = Marshalls.base64_to_raw(data.blocks)
-	var expected: int = int(raw_size[0]) * int(raw_size[1]) * int(raw_size[2])
-	if bytes.size() != expected:
-		return [null, "blocks do not match the size"]
-	for value in bytes:
-		if value >= raw_palette.size():
-			return [null, "a block points outside the palette"]
-	var template = load("res://scripts/building/template.gd").new()
-	template.id = str(data.get("id", "")).validate_filename().left(64)
-	template.name = str(data.get("name", "Untitled")).strip_edges().left(40)
-	template.author = str(data.get("author", "unknown")).left(40)
-	template.size = Vector3i(int(raw_size[0]), int(raw_size[1]), int(raw_size[2]))
-	template.palette = raw_palette.duplicate()
-	template.cells = bytes
-	var raw_meta: Variant = data.get("meta", {})
-	if raw_meta is Dictionary:
-		for key in raw_meta:
-			if str(key).is_valid_int() and int(key) >= 0 and int(key) < expected and (raw_meta[key] is float or raw_meta[key] is int):
-				template.meta[int(key)] = clampi(int(raw_meta[key]), 0, 3)
-	var raw_entrance: Variant = data.get("entrance", [0, 0, 0])
-	if raw_entrance is Array and raw_entrance.size() == 3:
-		template.entrance = Vector3i(clampi(int(raw_entrance[0]), 0, template.size.x - 1), clampi(int(raw_entrance[1]), 0, template.size.y - 1), clampi(int(raw_entrance[2]), 0, template.size.z - 1))
-	template.compute_bill()
-	if template.block_count() == 0:
-		return [null, "the design is empty"]
-	if template.id.is_empty():
-		template.id = template.name.to_snake_case().validate_filename() + "_" + str(abs(hash(bytes)) % 65536)
+	var problem: String = TemplateValidation.problem(data)
+	if not problem.is_empty():
+		return [null, problem]
+	var template: RefCounted = load("res://scripts/building/template.gd").new()
+	template.id = data.id
+	template.name = data.name
+	template.author = data.author
+	template.size = Vector3i(int(data.size[0]), int(data.size[1]), int(data.size[2]))
+	template.palette = data.palette.duplicate()
+	template.cells = Marshalls.base64_to_raw(data.blocks)
+	for key in data.meta:
+		template.meta[int(key)] = int(data.meta[key])
+	template.recompute()
 	return [template, ""]
+
+
+func recompute() -> void:
+	compute_bill()
+	var world := VoxelWorld.new(size)
+	for y in range(size.y):
+		for z in range(size.z):
+			for x in range(size.x):
+				var cell := Vector3i(x, y, z)
+				world.fill(cell, block_at(cell))
+	var seen: Dictionary = {}
+	functions = []
+	capacity = {}
+	entrance = Vector3i.ZERO
+	var found_door: bool = false
+	for index in range(world.blocks.size()):
+		var cell: Vector3i = world.cell_of(index)
+		var kind: String = Registry.component(world.blocks[index])
+		if kind == "door" and not found_door:
+			entrance = cell
+			found_door = true
+		if not kind in ["bed", "chest", "hearth", "workbench", "altar"] or seen.has(cell):
+			continue
+		var room: Dictionary = RoomProbe.probe(world, cell)
+		seen.merge(room.inside)
+		var result: Dictionary = Rules.evaluate(world, room.cells)
+		for function in result.functions:
+			if not functions.has(function):
+				functions.append(function)
+		for key in result.capacity:
+			capacity[key] = int(capacity.get(key, 0)) + int(result.capacity[key])
+	functions.sort()

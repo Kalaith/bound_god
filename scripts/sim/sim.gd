@@ -10,6 +10,7 @@ const Calendar = preload("res://scripts/sim/calendar.gd")
 const ResourceSites = preload("res://scripts/sim/resource_sites.gd")
 const GodState = preload("res://scripts/sim/god_state.gd")
 const Commands = preload("res://scripts/sim/commands.gd")
+const Structures = preload("res://scripts/world/structures.gd")
 
 var world_seed: int = 1
 var rng := RandomNumberGenerator.new()
@@ -17,6 +18,7 @@ var calendar: RefCounted
 var voxels: RefCounted
 var sites: RefCounted
 var god: RefCounted
+var structures: RefCounted
 ## Fixed places from generation: sacred_tree, ruin, hamlet.
 var features: Dictionary = {}
 var command_log: Array = []
@@ -50,6 +52,8 @@ func setup(seed: int, options: Dictionary) -> void:
 	var result: Dictionary = gen.flat(int(options.get("ground", 4))) if options.get("world", "valley") == "flat" else gen.valley()
 	features = result.features
 	sites.load_generated(result.sites)
+	structures = Structures.new()
+	structures.initialize(voxels)
 	god.grace_until_tick = calendar.tick + calendar.ticks_for_days(Balance.number("shrines.grace_days"))
 
 
@@ -65,6 +69,7 @@ func set_block(cell: Vector3i, block: int, meta: int = 0, source: String = "") -
 	sites.on_block_changed(cell, old, block, voxels)
 	if not source.is_empty():
 		edit_sources[cell] = source
+	structures.on_edit(voxels, cell, calendar.tick, source)
 	return true
 
 

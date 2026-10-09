@@ -191,22 +191,40 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 		names[entry.get("name")] = true
 	var seen: Dictionary = {}
 	for rule in data.get("functions", []):
+		if not rule is Dictionary or not rule.get("requires") is Dictionary or not rule.get("requires_any") is Array or not rule.get("roofed") is Array or not rule.get("capacity") is Dictionary or not _number(rule.get("roof_reach")):
+			errors.append("templates: malformed function rule")
+			continue
 		if not FUNCTION_IDS.has(rule.get("id")):
 			errors.append("templates: unknown function " + str(rule.get("id")))
 			continue
 		seen[rule.id] = true
 		for key in rule.get("requires", {}):
+			if not _number(rule.requires[key]) or float(rule.requires[key]) <= 0:
+				errors.append("templates: component count must be positive")
 			if not components.has(key):
 				errors.append("templates: " + rule.id + " requires unknown component " + key)
 		for key in rule.get("requires_any", []) + rule.get("roofed", []):
 			if not components.has(key):
 				errors.append("templates: " + rule.id + " names unknown component " + str(key))
+		for key in rule.capacity:
+			if not key in ["beds", "stock", "workers", "sleepers"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
+				errors.append("templates: unknown capacity mapping")
+		for key in ["sky_or_tree_within", "min_roofed_floor"]:
+			if rule.has(key) and (not _number(rule[key]) or float(rule[key]) < 0):
+				errors.append("templates: invalid " + key)
 	for id in FUNCTION_IDS:
 		if not seen.has(id):
 			errors.append("templates: function rule missing: " + id)
 	var limits: Variant = data.get("limits", {}).get("max_size")
 	if not limits is Array or limits.size() != 3:
 		errors.append("templates: limits.max_size must be [x, y, z]")
+	else:
+		for value in limits:
+			if not _number(value) or float(value) < 1 or float(value) != floor(float(value)):
+				errors.append("templates: size limits must be positive integers")
+	for key in ["max_palette", "max_file_bytes"]:
+		if not _number(data.get("limits", {}).get(key)) or float(data.limits[key]) < 1:
+			errors.append("templates: missing or invalid " + key)
 	for starter in data.get("starters", []):
 		var label: String = "templates: starter " + str(starter.get("id"))
 		var legend: Variant = starter.get("legend")
