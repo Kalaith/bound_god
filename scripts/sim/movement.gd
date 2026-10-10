@@ -73,6 +73,7 @@ static func advance(sim: RefCounted, agent: RefCounted) -> void:
 		agent.move_budget -= cost
 		agent.cell = next
 		agent.path.pop_front()
+		sim.paths.step_on(next)
 	if agent.path.is_empty():
 		agent.move_budget = 0.0
 		agent.position = center(agent.cell)

@@ -1,8 +1,9 @@
 extends RefCounted
 ## Debug-only captures of sect architecture: `arch_hall` (a meditation hall
 ## with cultivators on its mats, and a tribulation ground beyond),
-## `arch_blueprint` (a cottage the god has laid as a proposal) and
-## `arch_library` (the design library with Lay blueprint).
+## `arch_ground` (a tribulation ground), `arch_blueprint` (a cottage the god
+## has laid as a proposal), `arch_library` (the design library with Lay
+## blueprint) and `arch_paths` (the ways six days of life have worn).
 const Data = preload("res://scripts/core/data.gd")
 const Template = preload("res://scripts/building/template.gd")
 const SiteFinder = preload("res://scripts/building/site_finder.gd")
@@ -40,6 +41,19 @@ static func arrange(main: Node3D, shot: Node, scenario: String) -> void:
 	for id in ["meditation_hall", "trial_ground", "timber_cottage"]:
 		sim.apply_command({"type": "offer_template", "template": Template.from_starter(Data.starter(id)).to_dict()})
 	match scenario:
+		"arch_paths":
+			sim.run_ticks(sim.calendar.ticks_per_day * 6)
+			main.world_view.remesh_now()
+			var worn: Array = []
+			for column in sim.paths.wear:
+				var top: int = sim.voxels.top_solid_y(column.x, column.y)
+				if sim.voxels.get_block(Vector3i(column.x, top, column.y)) == Data.block_id("path"):
+					worn.append(Vector3(column.x, top, column.y))
+			var middle := Vector3.ZERO
+			for at in worn:
+				middle += at / maxf(worn.size(), 1.0)
+			_look(main, middle if not worn.is_empty() else Vector3(sim.settlements.entries[1].camp), 24.0, -0.95, 0.0)
+			print("ARCH paths=%d" % worn.size())
 		"arch_hall":
 			var hall: Dictionary = _stamp(sim, "meditation_hall")
 			var ground: Dictionary = _stamp(sim, "trial_ground")

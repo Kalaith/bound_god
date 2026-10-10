@@ -19,6 +19,10 @@ const CONTAINERS: Array[String] = ["chest", "granary_bin"]
 ##        site_ids, shrine_ids, camp, founded_tick}
 var entries: Dictionary = {}
 var next_id: int = 1
+## Designs settlements have devised themselves (sim/vernacular.gd):
+## template id -> Template dictionary.
+var designs: Dictionary = {}
+var next_design: int = 1
 ## container cell -> {resource: int}, for every chest and granary bin in the world.
 var chests: Dictionary = {}
 ## container cell -> true for the granary bins among them.
@@ -389,7 +393,7 @@ static func _distance(a: Vector3i, b: Vector3i) -> float:
 
 func to_dict() -> Dictionary:
 	return {"entries": entries.duplicate(true), "next_id": next_id, "chests": chests.duplicate(true), "bins": bins.duplicate(),
-		"lots": lots.duplicate(true)}
+		"lots": lots.duplicate(true), "designs": designs.duplicate(true), "next_design": next_design}
 
 
 func from_dict(data: Dictionary) -> void:
@@ -398,6 +402,9 @@ func from_dict(data: Dictionary) -> void:
 	chests = data.chests
 	bins = data.bins
 	lots = data.lots
+	# Devised designs came with M19 (schema 5 worlds may lack them).
+	designs = data.get("designs", {})
+	next_design = int(data.get("next_design", 1))
 	version += 1
 	_chest_cache.clear()
 	_stock_cache.clear()

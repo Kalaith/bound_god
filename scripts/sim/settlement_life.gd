@@ -7,6 +7,7 @@ const Goals = preload("res://scripts/agents/goals.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Construction = preload("res://scripts/sim/construction.gd")
+const Vernacular = preload("res://scripts/sim/vernacular.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 
 ## settlement id -> job board
@@ -65,6 +66,7 @@ func daily(sim: RefCounted) -> void:
 	samples.clear()
 	Standing.daily(sim)
 	_make_do(sim)
+	Vernacular.daily(sim)
 	_abandon(sim)
 	_decay(sim)
 	_overgrow(sim)
@@ -110,33 +112,36 @@ func _drift(sim: RefCounted, settlement: Dictionary) -> void:
 		settlement.culture[work] = clampf(weight, low, high)
 
 
-## Builders who wait a day for stone nobody has or knows where to find raise
-## the rest of the walls in planks. Only plain walling changes: a hearth or
-## an altar is still stone, so the building keeps its function.
+## Builders who wait a day for stone or thatch nobody has or knows where to
+## find raise the rest of the walls, or the roof, in planks. Only plain
+## blocks change: a hearth or an altar is still stone, so the building keeps
+## its function.
 func _make_do(sim: RefCounted) -> void:
 	var day: int = sim.calendar.ticks_per_day
 	for id in sim.construction.ids():
 		var site: Dictionary = sim.construction.get_site(id)
 		var settlement_id: int = int(site.settlement_id)
-		if not sim.construction.missing(id).has("stone") or sim.calendar.tick - int(site.last_progress_tick) < day:
+		if sim.calendar.tick - int(site.last_progress_tick) < day:
 			continue
-		if sim.settlements.amount(settlement_id, "stone") > 0 or _stone_known(sim, settlement_id):
-			continue
-		if Construction.in_timber(site.order, int(site.cursor)) > 0:
-			site["made_do"] = true
-			sim.chronicle_event("site_made_do", settlement_id, {"design": sim.template_name(site.template_id)}, "cause_no_stone", [int(site.founder)])
+		var missing: Dictionary = sim.construction.missing(id)
+		for resource in ["stone", "thatch"]:
+			if not missing.has(resource) or sim.settlements.amount(settlement_id, resource) > 0 or _known(sim, settlement_id, resource):
+				continue
+			if Construction.in_planks(site.order, int(site.cursor), resource) > 0:
+				site["made_do"] = true
+				sim.chronicle_event("site_made_do", settlement_id, {"design": sim.template_name(site.template_id)}, Construction.MAKE_DO_CAUSE[resource], [int(site.founder)])
 
 
-## Whether anyone in the settlement has stone to hand or knows a place for it
-## within a short walk.
-func _stone_known(sim: RefCounted, settlement_id: int) -> bool:
+## Whether anyone in the settlement has the resource to hand or knows a place
+## for it within a short walk.
+func _known(sim: RefCounted, settlement_id: int, resource: String) -> bool:
 	for item_id in sim.items:
 		var item: Dictionary = sim.items[item_id]
-		if item.resource == "stone" and sim.settlements.at_cell(item.cell) == settlement_id:
+		if item.resource == resource and sim.settlements.at_cell(item.cell) == settlement_id:
 			return true
 	for agent_id in sim.settlements.entries[settlement_id].residents:
 		var agent: RefCounted = sim.agents[agent_id]
-		if agent.is_present() and Construction.knows_stone_near(sim, agent):
+		if agent.is_present() and Construction.knows_near(sim, agent, resource):
 			return true
 	return false
 

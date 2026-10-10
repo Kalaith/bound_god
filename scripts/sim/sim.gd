@@ -39,6 +39,7 @@ const Qi = preload("res://scripts/sim/qi.gd")
 const Sects = preload("res://scripts/sim/sects.gd")
 const Tribulations = preload("res://scripts/sim/tribulations.gd")
 const TreeGrowth = preload("res://scripts/sim/tree_growth.gd")
+const Paths = preload("res://scripts/sim/paths.gd")
 
 var world_seed: int = 1
 ## How this world was made (world kind, size); saved so a load regenerates it.
@@ -81,6 +82,7 @@ var qi: RefCounted = null
 var sects: RefCounted = null
 var tribulations: RefCounted = null
 var tree_growth: RefCounted = null
+var paths: RefCounted = null
 ## Kindled cells (miracle): Array of {cell, radius, until}.
 var kindled: Array = []
 ## Veils of fog (miracle): Array of {cell, radius, until}.
@@ -151,6 +153,7 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	sects = Sects.new()
 	tribulations = Tribulations.new()
 	tree_growth = TreeGrowth.new()
+	paths = Paths.new()
 	settlement_life = SettlementLife.new()
 	director = Director.new()
 	_events_seen = structures.events.size()
@@ -463,6 +466,8 @@ func template(id: String) -> RefCounted:
 	var result: RefCounted = null
 	if god.offered.has(id):
 		result = Template.from_dict(god.offered[id])[0]
+	elif settlements.designs.has(id):
+		result = Template.from_dict(settlements.designs[id])[0]
 	elif not Data.starter(id).is_empty():
 		result = Template.from_starter(Data.starter(id))
 	_templates[id] = result
@@ -477,6 +482,8 @@ func forget_template_cache(id: String) -> void:
 func template_name(id: String) -> String:
 	if god.offered.has(id):
 		return str(god.offered[id].get("name", id))
+	if settlements.designs.has(id):
+		return str(settlements.designs[id].get("name", id))
 	return str(Data.starter(id).get("name", id))
 
 

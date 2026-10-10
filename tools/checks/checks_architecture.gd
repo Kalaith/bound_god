@@ -14,6 +14,8 @@ const ExecuteCultivation = preload("res://scripts/sim/execute_cultivation.gd")
 const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
 const Tribulations = preload("res://scripts/sim/tribulations.gd")
 const SiteFinder = preload("res://scripts/building/site_finder.gd")
+const AbstractWorld = preload("res://scripts/sim/abstract/abstract_world.gd")
+const Vernacular = preload("res://scripts/sim/vernacular.gd")
 
 const NONE := Vector3i(-1, -1, -1)
 
@@ -222,14 +224,21 @@ func check_a_blueprint_is_taken_up():
 	return "no cottage was begun in three days"
 
 
-## A blueprint nobody needs is never built and fades after a season.
+## A blueprint nobody needs is never built and fades after a season (two
+## days lived in full, the rest of the season through the abstract model,
+## which honours blueprints too).
 func check_a_blueprint_nobody_needs_fades():
 	var sim: RefCounted = Sim.create(11)
 	sim.apply_command({"type": "offer_template", "template": Template.from_starter(Data.starter("trial_ground")).to_dict()})
 	var laid: Dictionary = _lay_away(sim, "trial_ground")
 	if laid.is_empty():
 		return "no spot took the blueprint"
-	sim.run_ticks(sim.calendar.ticks_for_days(float(sim.calendar.days_per_season)) + sim.calendar.ticks_per_day)
+	sim.run_ticks(sim.calendar.ticks_per_day * 2)
+	var end: int = int(laid.laid_tick) + sim.calendar.ticks_for_days(float(sim.calendar.days_per_season)) + sim.calendar.ticks_per_day
+	var model: RefCounted = AbstractWorld.begin(sim)
+	while sim.calendar.tick < end - 30:
+		model.run_hours(sim, (end - sim.calendar.tick) / 30)
+	model.finish(sim)
 	for id in sim.construction.ids():
 		if sim.construction.get_site(id).template_id == "trial_ground":
 			return "a ground nobody needed was begun"
@@ -239,3 +248,116 @@ func check_a_blueprint_nobody_needs_fades():
 		if entry.kind == "blueprint_faded":
 			return ""
 	return "its fading was not chronicled"
+
+
+## A settlement with people to house and no dwelling design among them
+## devises one from what lies to hand, everyone there learns it, and the
+## next home is built to it.
+func check_a_settlement_with_no_home_design_devises_one():
+	var sim: RefCounted = Sim.create(11)
+	var settlement: Dictionary = sim.settlements.entries[1]
+	settlement.known_templates.clear()
+	for agent in sim.agents:
+		agent.beliefs.known_templates.clear()
+	var devised: String = ""
+	for _day in range(2):
+		sim.run_ticks(sim.calendar.ticks_per_day)
+		if not sim.settlements.designs.is_empty():
+			devised = sim.settlements.designs.keys()[0]
+			break
+	if devised.is_empty():
+		return "nobody devised a home"
+	var template: RefCounted = sim.template(devised)
+	if template == null or not template.functions.has("dwelling"):
+		return "the devised design is not a dwelling: %s" % (str(template.functions) if template else "missing")
+	for agent_id in settlement.residents:
+		if sim.agents[agent_id].is_present() and not sim.agents[agent_id].beliefs.known_templates.has(devised):
+			return "%s did not learn the devised home" % sim.agents[agent_id].full_name()
+	if not sim.template_name(devised).contains(str(settlement.name)):
+		return "the devised home is not named from the place: %s" % sim.template_name(devised)
+	for _hour in range(sim.calendar.ticks_per_day * 3 / 30):
+		sim.run_ticks(30)
+		for id in sim.construction.ids():
+			if sim.construction.get_site(id).template_id == devised:
+				return ""
+	return "no home was begun to the devised design"
+
+
+## Without stone or grass known, a site's plain stone walls and thatch roof
+## are raised in planks, and the chronicle says why.
+func check_builders_make_do_without_thatch():
+	const Construction = preload("res://scripts/sim/construction.gd")
+	var template: RefCounted = Template.from_starter(Data.starter("timber_cottage"))
+	var order: Array = template.placement(0).map(func(e: Array) -> Array: return [Vector3i.ZERO + e[0], e[1], e[2]])
+	var thatch: int = Data.block_id("thatch")
+	var before: int = order.filter(func(e: Array) -> bool: return int(e[1]) == thatch).size()
+	if before == 0:
+		return "the cottage has no thatch to swap"
+	var changed: int = Construction.in_planks(order, 0, "thatch")
+	if changed != before or order.any(func(e: Array) -> bool: return int(e[1]) == thatch):
+		return "%d of %d thatch blocks went to planks" % [changed, before]
+	if order.any(func(e: Array) -> bool: return int(e[1]) == Data.block_id("bed")) == false:
+		return "the bed was swapped away"
+	return ""
+
+
+## Grass walked often wears to path, which navigation prefers slightly; a
+## path left unwalked grasses over. In a few days of ordinary life the
+## valley's busiest ways wear.
+func check_paths_wear_and_grass_over():
+	var sim: RefCounted = Sim.create(11)
+	var camp: Vector3i = sim.settlements.entries[1].camp
+	var cell: Vector3i = NONE
+	for dx in range(3, 15):
+		var at: Vector3i = sim.nav.surface(camp.x + dx, camp.z + 5)
+		if at.x >= 0 and sim.voxels.get_block(at + Vector3i.DOWN) == Data.block_id("grass"):
+			cell = at
+			break
+	if cell.x < 0:
+		return "no grass to walk on"
+	for _day in range(3):
+		for _step in range(20):
+			sim.paths.step_on(cell)
+		sim.paths.daily(sim)
+	if sim.voxels.get_block(cell + Vector3i.DOWN) != Data.block_id("path"):
+		return "twenty steps a day for three days did not wear a path"
+	var weight: float = sim.nav.astar.get_point_weight_scale(sim.voxels.index_of(cell))
+	if weight >= 1.0:
+		return "navigation does not prefer the path (weight %.2f)" % weight
+	for _day in range(20):
+		sim.paths.daily(sim)
+	if sim.voxels.get_block(cell + Vector3i.DOWN) != Data.block_id("grass"):
+		return "an unwalked path did not grass over"
+	if sim.nav.astar.get_point_weight_scale(sim.voxels.index_of(cell)) != 1.0:
+		return "grassed-over ground still counts as path"
+	var lived: RefCounted = Sim.create(11)
+	lived.run_ticks(lived.calendar.ticks_per_day * 4)
+	var worn: int = 0
+	for column in lived.paths.wear:
+		var top: int = lived.voxels.top_solid_y(column.x, column.y)
+		worn += 1 if lived.voxels.get_block(Vector3i(column.x, top, column.y)) == Data.block_id("path") else 0
+	print("      %d path cells after four days of ordinary life" % worn)
+	if worn == 0:
+		return "four days of ordinary life wore no path"
+	return ""
+
+
+## Blueprints, devised designs and the wear of paths are saved and come back.
+func check_sect_architecture_is_saved():
+	const SimState = preload("res://scripts/sim/sim_state.gd")
+	var sim: RefCounted = Sim.create(11)
+	sim.apply_command({"type": "offer_template", "template": Template.from_starter(Data.starter("trial_ground")).to_dict()})
+	if _lay_away(sim, "trial_ground").is_empty():
+		return "no spot took the blueprint"
+	var devised: String = Vernacular.devise(sim, 1)
+	sim.paths.step_on(sim.settlements.entries[1].camp)
+	sim.run_ticks(sim.calendar.ticks_per_day)
+	var saved: Dictionary = SimState.capture(sim)
+	var restored: RefCounted = SimState.restore(bytes_to_var(var_to_bytes(saved.sim)), bytes_to_var(var_to_bytes(saved.chunks)))
+	if restored.god.blueprints != sim.god.blueprints:
+		return "blueprints were not restored"
+	if devised.is_empty() or restored.template(devised) == null or restored.template_name(devised) != sim.template_name(devised):
+		return "the devised design was not restored"
+	if restored.paths.wear != sim.paths.wear:
+		return "path wear was not restored"
+	return ""

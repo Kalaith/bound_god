@@ -10,8 +10,12 @@ const HORIZONTAL: Array[Vector2i] = [
 	Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1),
 ]
 const CLIMB_COST: float = 0.5
+## A worn path's cost to stand on, against 1 for any other ground.
+const PATH_WEIGHT: float = 0.85
 
 var world: RefCounted
+## The worn path block, looked up when the graph is built.
+var _path_block: int = -1
 var astar := AStar3D.new()
 ## Paths found this tick, reset by the sim; agents over the cap wait.
 var paths_this_tick: int = 0
@@ -43,6 +47,7 @@ func is_walkable(cell: Vector3i) -> bool:
 ## Full build from the grid with flat index arithmetic: GDScript call
 ## overhead dominates here, so the hot loops avoid helper functions.
 func build() -> void:
+	_path_block = Registry.id("path")
 	astar.clear()
 	var size: Vector3i = world.size
 	var stride_y: int = size.x * size.z
@@ -71,7 +76,7 @@ func build() -> void:
 	for index in range(stand.size()):
 		if stand[index] == 1:
 			var cell: Vector3i = world.cell_of(index)
-			astar.add_point(index, Vector3(cell))
+			astar.add_point(index, Vector3(cell), _weight(cell))
 	for index in range(stand.size()):
 		if stand[index] == 0:
 			continue
@@ -104,9 +109,21 @@ func _add_column(x: int, z: int, y_low: int, y_high: int) -> void:
 		var id: int = world.index_of(cell)
 		var stand: bool = standable(cell)
 		if stand and not astar.has_point(id):
-			astar.add_point(id, Vector3(x, y, z))
+			astar.add_point(id, Vector3(x, y, z), _weight(cell))
 		elif not stand and astar.has_point(id):
 			astar.remove_point(id)
+
+
+## Standing on a worn path costs a little less, so routes drift onto paths.
+func _weight(cell: Vector3i) -> float:
+	return PATH_WEIGHT if world.get_block(cell + Vector3i.DOWN) == _path_block else 1.0
+
+
+## After the ground under a standing place changes (grass worn to path).
+func set_ground_weight(ground: Vector3i) -> void:
+	var id: int = world.index_of(ground + Vector3i.UP)
+	if world.in_bounds(ground + Vector3i.UP) and astar.has_point(id):
+		astar.set_point_weight_scale(id, _weight(ground + Vector3i.UP))
 
 
 func _connect_column(x: int, z: int, y_low: int, y_high: int) -> void:

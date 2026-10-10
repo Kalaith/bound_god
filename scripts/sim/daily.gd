@@ -33,6 +33,7 @@ static func new_day(sim: RefCounted) -> void:
 	if sim.sects != null:
 		sim.sects.daily(sim)
 	Blueprints.daily(sim)
+	sim.paths.daily(sim)
 	if sim.tree_growth != null:
 		sim.tree_growth.daily(sim)
 	if sim.faith != null:

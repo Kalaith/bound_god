@@ -62,32 +62,50 @@ func next_entry(id: int) -> Array:
 	return site.order[site.cursor]
 
 
-## Plain stone walling that builders may raise in planks instead. Components
-## (a hearth, an altar) are never swapped, so a building keeps its function.
+## Plain materials builders may raise in planks when none is to hand: stone
+## walling and thatch roofs, by the resource that is lacking. Components (a
+## hearth, an altar, a mat) are never swapped, so a building keeps its function.
+## Where each make-do resource is gathered (as JobBoard names places).
+const SITE_OF: Dictionary = {"stone": "rock", "thatch": "grass"}
+const MAKE_DO: Dictionary = {"stone": ["cobble", "cut_stone", "stone"], "thatch": ["thatch"]}
+## Why a site made do, by the resource it lacked.
+const MAKE_DO_CAUSE: Dictionary = {"stone": "cause_no_stone", "thatch": "cause_no_grass"}
+
+
 static func is_walling(block: int) -> bool:
-	return Registry.block_name(block) in ["cobble", "cut_stone", "stone"]
+	return Registry.block_name(block) in MAKE_DO.stone
 
 
-## Swaps the stone walling still to be placed in `order` (from `from` on) for
-## planks; returns how many blocks changed.
-static func in_timber(order: Array, from: int) -> int:
+## Swaps the plain `resource` blocks still to be placed in `order` (from
+## `from` on) for planks; returns how many blocks changed.
+static func in_planks(order: Array, from: int, resource: String) -> int:
 	var changed: int = 0
+	var names: Array = MAKE_DO.get(resource, [])
 	for index in range(from, order.size()):
-		if is_walling(int(order[index][1])):
+		if Registry.block_name(int(order[index][1])) in names:
 			order[index][1] = Registry.id("planks")
 			changed += 1
 	return changed
 
 
+static func in_timber(order: Array, from: int) -> int:
+	return in_planks(order, from, "stone")
+
+
 ## Whether a person knows stone to hand: carried, in their stores, or a rock
 ## they believe in within a short walk of their settlement.
 static func knows_stone_near(sim: RefCounted, agent: RefCounted) -> bool:
-	if agent.carried("stone") >= 1.0 or agent.beliefs.believes_stock("stone"):
+	return knows_near(sim, agent, "stone")
+
+
+## The same for any resource gathered from a kind of place (rock, grass).
+static func knows_near(sim: RefCounted, agent: RefCounted, resource: String) -> bool:
+	if agent.carried(resource) >= 1.0 or agent.beliefs.believes_stock(resource):
 		return true
 	var settlement: Dictionary = sim.settlements.get_settlement(agent.settlement_id)
 	var home: Vector3i = settlement.get("center", agent.cell)
 	var reach: float = float(settlement.get("radius", 22.0)) + Balance.number("construction.stone_walk")
-	for id in agent.beliefs.known_sites("rock", home):
+	for id in agent.beliefs.known_sites(str(SITE_OF.get(resource, "")), home):
 		var cell: Vector3i = agent.beliefs.sites[id].cell
 		return Vector2(cell.x - home.x, cell.z - home.z).length() <= reach
 	return false
@@ -95,9 +113,15 @@ static func knows_stone_near(sim: RefCounted, agent: RefCounted) -> bool:
 
 ## Whether a design needs stone only for walling.
 static func stone_is_walling(template: RefCounted) -> bool:
+	return only_plain(template, "stone")
+
+
+## Whether every block of `resource` in a design is plain enough to make do.
+static func only_plain(template: RefCounted, resource: String) -> bool:
+	var names: Array = MAKE_DO.get(resource, [])
 	for index in range(template.cells.size()):
 		var block: int = Registry.id(template.palette[template.cells[index]])
-		if Registry.resource(block) == "stone" and not is_walling(block):
+		if Registry.resource(block) == resource and not Registry.block_name(block) in names:
 			return false
 	return true
 

@@ -161,8 +161,8 @@ static func means_believed(sim: RefCounted, agent: RefCounted, template: RefCoun
 	for resource in template.bill:
 		if agent.beliefs.believes_stock(resource):
 			continue
-		# Without stone, plain stone walls can go up in planks.
-		if resource == "stone" and Construction.stone_is_walling(template) and (agent.beliefs.believes_stock("wood") or agent.beliefs.has_site("tree")):
+		# Without stone or thatch, plain walls and roofs can go up in planks.
+		if resource in Construction.MAKE_DO and Construction.only_plain(template, resource) and (agent.beliefs.believes_stock("wood") or agent.beliefs.has_site("tree")):
 			continue
 		if not agent.beliefs.has_site(JobBoard.SITE_KIND.get(resource, "")):
 			return false

@@ -111,5 +111,6 @@
 		"witness_prayer": 0.5, "bless_factor": 1.5, "hall_factor": 1.3, "hall_members": 4, "bless_days": 1.0, "shield_amount": 0.4,
 		"inherit_talent": 0.5, "inherit_drive": 0.4, "manual_chance": 0.15, "relic_preparation": 0.03, "relics_most": 5, "join_chance": 0.1
 	},
+	"paths": {"wear_keep": 0.7, "wear_to_path": 30.0, "wear_to_grass": 0.5},
 	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 6.4, "gravity": 16.0, "hotbar_slots": 9}
 }

@@ -30,11 +30,12 @@ static func _mark(sim: RefCounted, agent: RefCounted, action: Dictionary) -> voi
 		if sim.construction.is_reserved(entry[0]):
 			agent.step_result = {"site": 0}
 			return
-	var order: Array = action.order
-	var timber: bool = not Construction.knows_stone_near(sim, agent)
-	if timber:
-		order = order.duplicate(true)
-		timber = Construction.in_timber(order, 0) > 0
+	var order: Array = action.order.duplicate(true)
+	var made_do: Array = []
+	for resource in ["stone", "thatch"]:
+		if not Construction.knows_near(sim, agent, resource) and Construction.in_planks(order, 0, resource) > 0:
+			made_do.append(resource)
+	var timber: bool = not made_do.is_empty()
 	var id: int = sim.construction.create(action.template_id, action.origin, int(action.rotation), agent.settlement_id,
 		agent.id, action.purpose, order, sim.calendar.tick)
 	agent.step_result = {"site": id}
@@ -45,8 +46,8 @@ static func _mark(sim: RefCounted, agent: RefCounted, action: Dictionary) -> voi
 	var cause: String = _cause(sim, agent, str(action.purpose))
 	sim.construction.sites[id]["cause"] = cause
 	sim.chronicle_event("site_marked", agent.settlement_id, {"name": agent.full_name(), "design": sim.template_name(action.template_id)}, cause, [agent.id])
-	if timber:
-		sim.chronicle_event("site_made_do", agent.settlement_id, {"design": sim.template_name(action.template_id)}, "cause_no_stone", [agent.id])
+	for resource in made_do:
+		sim.chronicle_event("site_made_do", agent.settlement_id, {"design": sim.template_name(action.template_id)}, Construction.MAKE_DO_CAUSE[resource], [agent.id])
 
 
 ## Why a site was started, in words the chronicle can keep.
