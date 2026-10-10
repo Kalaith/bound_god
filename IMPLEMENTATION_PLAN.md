@@ -100,7 +100,7 @@ Each milestone ends with a runnable game, new `sim_checks` scenarios for its sim
 | A. Hold up | M13 Playtest, balance and foundations | Built except the fresh-player playtests (need people) |
 | B. A living economy | M14 Fields and meals | Built (`PROGRESS.md`) |
 | C. The cultivation slice | M15 Qi and cultivators · M16 Breakthroughs and tribulations · M17 The tree learns · M18 Meditation and generations | Built headlessly; the key test's fresh-player sessions are open |
-| D. A living sect | M19 Sect architecture and living designs · M20 Seasons, weather and herbs | |
+| D. A living sect | M19 Sect architecture and living designs · M20 Seasons, weather and herbs | M19 detailed, in progress |
 | E. A wider world | M21 Branches and sacred sites · M22 Regions, other sects and outsiders | |
 | F. A whole game | M23 Campaign shape · M24 Look, sound and feel · M25 Release | |
 
@@ -176,9 +176,25 @@ Built: save migrations and version stamp, the village track (standing, halls, ga
 
 ---
 
-### Stage D–F outline (to be detailed after M18)
+### M19 — Sect architecture and living designs
 
-- **M19 Sect architecture and living designs:** sect functions (meditation hall, training ground, tribulation ground, alchemy room) from components; blueprints placed as proposals; vernacular designs, material substitution, mirroring, renovation, salvage; worn paths; design traditions. (Carries the former M17.)
+**Goal:** the sect builds places for its Way by its own judgement, the god proposes where without commanding, and people make designs of their own.
+
+Detailed after M18 ahead of its fresh-player sessions (the key test's human half is still open), so its order follows what the slice most lacks: places that change how cultivation and trials go, then the god's proposals, then designs people devise.
+
+- **Meditation hall** (function, `templates.json`): roofed, at least two meditation mats (a new mat block and component), in qi of at least 0.5 at its anchor. Effect: meditating on a mat inside it progresses faster (`cultivation.hall_factor`) and shelters. The Cultivate plan prefers a free mat in a known hall over the ring round the trunk when its qi is near; abstract cultivation uses the factor for sect members while a hall stands. A starter design, offered or brought by seekers; a sect's leaders propose one once the sect has four members and none stands.
+- **Tribulation ground** (function): an open platform of cut stone (6+ cells, sky above) with at least two formation stones (a new block and component), its anchor at least 10 blocks from any dwelling. Effect: a trial faced on it counts as sanctuary when it lies within the tree's sanctuary reach, and lightning that would strike the surroundings strikes a formation stone instead (no scorching); cultivators choose it over their spot when they know one. Starter design; proposed by a sect's leaders once a member has faced Heaven.
+- **Blueprints** (GDD §5.4 leaning): from the design library the god lays a design it has offered as a ghost on a chosen spot in the zone (`lay_blueprint` command: template, origin, rotation, checked like a site). A blueprint is a proposal: a founder who wants that function and knows the design takes the blueprint's spot when it is still free (a preference, chronicled with "where the god proposed"), otherwise finds their own; a blueprint nobody takes for a season fades. Whispering "build" to a person still only raises Build. Ghosts in the presentation, a "Lay blueprint" mode in the library.
+- **Vernacular homes:** a settlement whose people know no dwelling design devises one from what lies to hand (`sim/vernacular.gd`: a small roofed room with a bed and a door in the walling and roofing its people can get: timber or stone, thatch or planks), named from the place, chronicled ("devised by"), learned by its people; designs it devises spread like any other.
+- **Material substitution** generalises the timber make-do: stone walling in planks when stone is not known, thatch roofs in planks when grass is not.
+- **Worn paths:** cells walked often wear from grass to a path (a new path block, daily), and navigation prefers them slightly; unwalked paths grass over.
+- Later in stage D, as play shows the need: mirrored and renovated designs, salvage from fallen buildings, design traditions (a settlement preferring designs it has built).
+- Moved: the alchemy room comes with herbs and pills (M20); the training ground with sparring, when outsiders give fighting a purpose (M22). Neither has an effect to give it before then.
+
+**Exit:** on seed 11 with a sect, offered the meditation hall and tribulation ground designs, the sect raises both by its own proposals; cultivators in the hall progress faster than on the ring (same person, same qi); a trial on the ground scorches nothing and counts as sanctuary; a blueprint laid by the god is taken up by the next founder who wants that function, and one that conflicts with nobody's needs is not built. Checks: hall factor, ground draws lightning, blueprint preference and fading, a settlement with no dwelling design devises one, paths wear and grass over. Captures: hall, ground, blueprint ghost, paths.
+
+### Stage D–F outline (to be detailed after M19)
+
 - **M20 Seasons, weather and herbs:** weather per season with storms that worsen lightning trials; exposure in winter; spirit herbs and an alchemy station making pills for breakthroughs; tools from ore where they speed work. (Carries the former M15 and M16.)
 - **M21 Branches and sacred sites:** disciples found branch shrines and sects on founding grounds and beyond; avatar transfer cost and cooldown; branches drifting in doctrine; relics carried from fallen sites. (Carries the former M21 follower and relic work.)
 - **M22 Regions, other sects and outsiders:** regions with the abstract model; visiting cultivators seeking sanctuary and the sect's admission decision; rival sects and outlaw cultivators as BDI agents replacing the scripted raid director; trade in herbs and manuals; schisms. (Carries the former M18 and M19.)
