@@ -257,10 +257,23 @@ func at_store(sim: RefCounted, agent: RefCounted) -> bool:
 	return false
 
 
-## The settlement whose area holds a cell, or -1.
+## The settlement whose area holds a cell, or -1. Where two areas overlap,
+## the cell belongs to the nearer centre (the lower id on a tie).
 func at_cell(cell: Vector3i) -> int:
+	var best: int = -1
+	var best_distance: float = INF
 	for id in ids():
-		if _distance(cell, entries[id].center) <= float(entries[id].radius):
+		var distance: float = _distance(cell, entries[id].center)
+		if distance <= float(entries[id].radius) and distance < best_distance:
+			best = id
+			best_distance = distance
+	return best
+
+
+## The settlement founded on a founding ground, or -1.
+func on_ground(index: int) -> int:
+	for id in ids():
+		if int(entries[id].get("ground", -1)) == index:
 			return id
 	return -1
 

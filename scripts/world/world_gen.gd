@@ -56,6 +56,7 @@ func valley() -> Dictionary:
 	_ruin()
 	_hamlet()
 	_vegetation()
+	_founding_grounds()
 	return {"sites": sites, "features": features}
 
 
@@ -70,7 +71,7 @@ func flat(ground: int) -> Dictionary:
 				world.fill(Vector3i(x, y, z), _id("stone"))
 			world.fill(Vector3i(x, ground - 1, z), _id("dirt"))
 			world.fill(Vector3i(x, ground, z), _id("grass"))
-	features = {"sacred_tree": Vector3i(world.size.x / 2, ground + 1, world.size.z / 2)}
+	features = {"sacred_tree": Vector3i(world.size.x / 2, ground + 1, world.size.z / 2), "grounds": []}
 	return {"sites": sites, "features": features}
 
 
@@ -513,3 +514,57 @@ func _outcrop(x: int, z: int) -> bool:
 		_site("rock", cells, cells.size())
 		return true
 	return false
+
+
+## Open, level land well away from the tree and the hamlet where a second
+## settlement could be founded, named by its direction from the tree. Read
+## from the finished terrain without drawing randomness or changing a block.
+func _founding_grounds() -> void:
+	var tree := Vector2(float(_b.sacred_tree[0]), float(_b.sacred_tree[1]))
+	var hamlet := Vector2(float(_b.ridge_hamlet[0]), float(_b.ridge_hamlet[1]))
+	var ruin := Vector2(float(_b.ridge_ruin[0]), float(_b.ridge_ruin[1]))
+	var reach: Array = _b.ground_distance
+	var radius: int = int(_b.ground_radius)
+	var candidates: Array = []
+	for z in range(radius + 8, world.size.z - radius - 8, 3):
+		for x in range(radius + 8, world.size.x - radius - 8, 3):
+			var at := Vector2(x, z)
+			var from_tree: float = at.distance_to(tree)
+			if from_tree < float(reach[0]) or from_tree > float(reach[1]) or at.distance_to(hamlet) < 36.0 or at.distance_to(ruin) < 30.0:
+				continue
+			var spread: int = _level(x, z, radius)
+			if spread < 0 or spread > int(_b.ground_flatness):
+				continue
+			candidates.append([spread, absf(from_tree - (float(reach[0]) + float(reach[1])) * 0.5), z, x])
+	candidates.sort()
+	var names: Array = ["east", "south_east", "south", "south_west", "west", "north_west", "north", "north_east"]
+	var taken: Dictionary = {}
+	var grounds: Array = []
+	for entry in candidates:
+		if grounds.size() >= int(_b.ground_count):
+			break
+		var at := Vector2(int(entry[3]), int(entry[2]))
+		var direction: int = posmod(roundi((at - tree).angle() / (TAU / 8.0)), 8)
+		var apart: bool = not taken.has(direction)
+		for ground in grounds:
+			apart = apart and at.distance_to(Vector2(ground.center.x, ground.center.z)) >= float(_b.ground_spacing)
+		if not apart:
+			continue
+		taken[direction] = true
+		grounds.append({"name": "place_ground_" + names[direction], "center": Vector3i(int(at.x), _top(int(at.x), int(at.y)) + 1, int(at.y))})
+	features["grounds"] = grounds
+
+
+## How uneven the land is within `radius` of a column, or -1 where it is not
+## open grass (water, rock, trees, buildings).
+func _level(x: int, z: int, radius: int) -> int:
+	var low: int = 1 << 20
+	var high: int = -1
+	for dz in range(-radius, radius + 1, 2):
+		for dx in range(-radius, radius + 1, 2):
+			var top: int = _top(x + dx, z + dz)
+			if world.get_xyz(x + dx, top, z + dz) != _id("grass") or reserved.has(Vector2i(x + dx, z + dz)):
+				return -1
+			low = mini(low, top)
+			high = maxi(high, top)
+	return high - low

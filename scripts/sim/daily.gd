@@ -38,10 +38,10 @@ static func new_hour(sim: RefCounted) -> void:
 		sim.faith.hourly(sim)
 
 
-## Bushes ripen again every few days, but not in winter.
+## Bushes ripen again every few days, but not in winter, when only a bush
+## in a planter's tended soil still bears.
 static func _regrow(sim: RefCounted) -> void:
-	if sim.calendar.is_winter():
-		return
+	var winter: bool = sim.calendar.is_winter()
 	var every: int = maxi(1, int(round(Balance.number("world.berry_regrow_days"))))
 	if sim.calendar.day() % every != 0:
 		return
@@ -56,5 +56,8 @@ static func _regrow(sim: RefCounted) -> void:
 		var berries: int = sim.voxels.block_meta(cell)
 		if sim.voxels.get_block(cell) == bush and berries < most:
 			# A bush in a planter is tended soil and ripens faster.
-			var grow: int = tended if Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter" else 1
+			var planted: bool = Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter"
+			if winter and not planted:
+				continue
+			var grow: int = 1 if winter else (tended if planted else 1)
 			sim.set_block(cell, bush, mini(berries + grow, most), "growth")

@@ -5,6 +5,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Generation = preload("res://scripts/agents/generation.gd")
 const Population = preload("res://scripts/sim/population.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
+const Perception = preload("res://scripts/sim/perception.gd")
 
 var raid_hooks: RefCounted = null
 
@@ -39,6 +40,9 @@ static func attractiveness(sim: RefCounted, id: int) -> Array:
 	var renown: float = sim.faith.settlement_renown(sim, id) if sim.faith != null else 0.0
 	var standing: float = float(Balance.list("population.migrant_standing_pull")[Standing.rank(str(settlement.get("standing", "camp")))])
 	var score: float = spare * 0.08 + minf(food_days, 2.0) * 0.12 + safety + renown + standing - homeless * 0.03
+	# Word travels that a place is going hungry.
+	if food_days < Balance.number("population.hungry_food_days") and Standing.present(sim, id) > Balance.integer("population.hungry_people"):
+		score -= Balance.number("population.hungry_penalty")
 	return [score, spare, food_days]
 
 
@@ -84,6 +88,10 @@ func _migrants(sim: RefCounted) -> void:
 				var design: String = str(designs[sim.rng.randi_range(0, designs.size() - 1)])
 				if not agent.beliefs.known_templates.has(design):
 					agent.beliefs.known_templates.append(design)
+			# They passed open land on the road and remember it.
+			var grounds: Array = sim.features.get("grounds", [])
+			if not grounds.is_empty() and sim.rng.randf() < Balance.number("population.migrant_knows_ground"):
+				Perception.note_ground(sim, agent, sim.rng.randi_range(0, grounds.size() - 1))
 			var cell: Vector3i = sim.nav.nearest_walkable(edge + Vector3i(i, 0, 0), 8)
 			if cell.x < 0:
 				cell = settlement.camp

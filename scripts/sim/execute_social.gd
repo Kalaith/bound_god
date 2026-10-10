@@ -140,6 +140,14 @@ static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks
 		Op.JOIN:
 			sim.effects.action("join", agent.id, {"settlement": int(step.settlement)})
 			return Plans.DONE
+		Op.SETTLE:
+			if step_ticks == 0:
+				agent.activity = "settling"
+				sim.effects.action("settle", agent.id, {"ground": int(step.ground)})
+				return Plans.RUNNING
+			if not agent.step_result.has("settled"):
+				return Plans.RUNNING
+			return Plans.DONE if int(agent.step_result.settled) > 0 else Fail.OCCUPIED
 		Op.LEAVE:
 			sim.effects.action("leave", agent.id)
 			return Plans.DONE

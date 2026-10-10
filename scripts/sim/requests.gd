@@ -12,7 +12,7 @@ const RequestPlans = preload("res://scripts/agents/plan_library_quest.gd")
 const Text = preload("res://scripts/core/text.gd")
 const FaithPeople = preload("res://scripts/sim/faith_people.gd")
 
-const KINDS: Array[String] = ["carry_name", "bring", "restore_shrine", "raise_shrine"]
+const KINDS: Array[String] = ["carry_name", "bring", "restore_shrine", "raise_shrine", "found_settlement"]
 const Kind = Goals.Kind
 
 ## id -> {id, kind, shrine_id, target, resource, amount, boon, slots, takers,
@@ -53,6 +53,11 @@ func post(sim: RefCounted, command: Dictionary) -> Dictionary:
 		"raise_shrine":
 			if not sim.settlements.entries.has(target):
 				return {"ok": false, "reason": "request_target"}
+		"found_settlement":
+			if target < 0 or target >= sim.features.get("grounds", []).size() or sim.settlements.on_ground(target) >= 0:
+				return {"ok": false, "reason": "request_target"}
+			if str(sim.settlements.get_settlement(int(shrine.settlement_id)).get("standing", "")) != "village":
+				return {"ok": false, "reason": "request_not_village"}
 	var id: int = next_id
 	next_id += 1
 	requests[id] = {"id": id, "kind": kind, "shrine_id": int(shrine.id), "target": target,
@@ -74,6 +79,8 @@ func _describe(sim: RefCounted, request: Dictionary) -> String:
 			return Text.format("request_" + str(request.kind), {"place": sim.settlements.get_settlement(int(request.target)).get("name", "")})
 		"restore_shrine":
 			return Text.format("request_restore_shrine", {"shrine": sim.faith.shrine_name(sim, int(request.target))})
+		"found_settlement":
+			return Text.format("request_found_settlement", {"place": Text.label(sim.features.grounds[int(request.target)].name)})
 	return Text.format("request_bring", {"amount": request.amount, "resource": Text.label("resource_" + str(request.resource)).to_lower()})
 
 
@@ -104,6 +111,9 @@ func receive(sim: RefCounted, agent: RefCounted, message: Dictionary) -> bool:
 func candidates(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	var request: Dictionary = requests.get(agent.quest_id, {})
 	if request.is_empty() or request.state != "open":
+		return
+	# A founder who already lives on the new ground has done their part.
+	if request.kind == "found_settlement" and agent.settlement_id >= 0 and agent.settlement_id == sim.settlements.on_ground(int(request.target)):
 		return
 	var danger: float = 0.4 if not agent.beliefs.threats.is_empty() else 0.0
 	var risk: float = 1.0 - 0.5 * danger * (1.0 - clampf(agent.personality.bravery, 0.0, 1.0))
@@ -180,12 +190,29 @@ func daily(sim: RefCounted) -> void:
 				if sim.faith.settlement_has_shrine(sim, int(request.target)):
 					complete(sim, request)
 					continue
+			"found_settlement":
+				if _settled(sim, request):
+					complete(sim, request)
+					continue
 		if sim.calendar.tick > int(request.deadline_tick):
 			request.state = "failed"
 			for agent_id in request.takers:
 				if sim.agents[agent_id].quest_id == id:
 					sim.agents[agent_id].quest_id = -1
 			sim.chronicle_event("request_failed", -1, {"request": _describe(sim, request)}, "cause_time")
+
+
+## Done when the founders (as many as took it, up to the number needed) live
+## in the new settlement and it has a chest.
+func _settled(sim: RefCounted, request: Dictionary) -> bool:
+	var id: int = sim.settlements.on_ground(int(request.target))
+	if id < 0 or sim.settlements.chest_cells(sim, id).is_empty():
+		return false
+	var living: int = 0
+	for agent_id in sim.settlements.entries[id].residents:
+		if sim.agents[agent_id].is_present():
+			living += 1
+	return living >= mini(maxi(request.takers.size(), 1), Balance.integer("population.founders_needed"))
 
 
 func to_dict() -> Dictionary:

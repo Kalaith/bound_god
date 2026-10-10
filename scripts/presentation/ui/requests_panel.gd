@@ -57,15 +57,15 @@ func open() -> void:
 	show()
 
 
-## Places the god has heard of through its believers.
-func _known_settlements() -> Array:
+## Places of a kind the god has heard of through its believers.
+func _known(kind: String) -> Array:
 	var result: Array = []
 	for agent in sim.agents:
 		if not agent.is_present() or not agent.faith.knows:
 			continue
 		for key in agent.beliefs.places:
 			var place: Dictionary = agent.beliefs.places[key]
-			if place.kind == "settlement" and not result.has(int(place.id)):
+			if place.kind == kind and not result.has(int(place.id)):
 				result.append(int(place.id))
 	result.sort()
 	return result
@@ -83,7 +83,7 @@ func _process(_delta: float) -> void:
 	for child in _offers.get_children():
 		child.queue_free()
 	var here: int = int(sim.faith.current(sim).get("settlement_id", -1))
-	for id in _known_settlements():
+	for id in _known("settlement"):
 		if id != here:
 			var name: String = sim.settlements.get_settlement(id).name
 			_offer(Text.format("request_offer_carry", {"place": name}), {"kind": "carry_name", "target": id})
@@ -92,9 +92,23 @@ func _process(_delta: float) -> void:
 	for id in sim.faith.ids():
 		if sim.faith.shrines[id].state == "fallen":
 			_offer(Text.format("request_offer_restore", {"shrine": sim.faith.shrines[id].name}), {"kind": "restore_shrine", "target": id})
+	var grounds: Array = []
+	for index in _known("ground"):
+		if sim.settlements.on_ground(index) < 0:
+			grounds.append(index)
+	var home: Dictionary = sim.settlements.get_settlement(here)
+	var hint: String = ""
+	if not grounds.is_empty() and str(home.get("standing", "")) == "village":
+		for index in grounds:
+			_offer(Text.format("request_offer_found", {"place": Text.label(sim.features.grounds[index].name)}), {"kind": "found_settlement", "target": index, "slots": 3, "days": 15.0})
+	elif not home.is_empty():
+		hint = Text.format("request_need_village", {"place": home.name})
 	for resource in ["wood", "stone", "thatch", "berries"]:
 		_offer(Text.format("request_offer_bring", {"resource": Text.label("resource_" + resource).to_lower()}), {"kind": "bring", "resource": resource, "amount": 10})
-	var lines: Array[String] = ["[color=#%s]%s[/color]" % [Style.GOLD.to_html(false), Text.label("requests_history")]]
+	var lines: Array[String] = []
+	if not hint.is_empty():
+		lines.append(hint)
+	lines.append("[color=#%s]%s[/color]" % [Style.GOLD.to_html(false), Text.label("requests_history")])
 	for id in sim.requests.ids():
 		var request: Dictionary = sim.requests.requests[id]
 		var takers: Array[String] = []

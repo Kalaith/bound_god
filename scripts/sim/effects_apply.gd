@@ -9,6 +9,7 @@ const Beliefs = preload("res://scripts/agents/beliefs.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Social = preload("res://scripts/sim/social.gd")
 const EffectsBuild = preload("res://scripts/sim/effects_build.gd")
+const Text = preload("res://scripts/core/text.gd")
 
 const Need = Personality.Need
 
@@ -51,6 +52,8 @@ static func apply(sim: RefCounted) -> void:
 				_leave(sim, agent)
 			"plant":
 				_plant(sim, agent, action.cell)
+			"settle":
+				_settle(sim, agent, int(action.ground))
 			_:
 				EffectsBuild.apply(sim, agent, action)
 	for entry in effects.interactions:
@@ -237,3 +240,52 @@ static func _leave(sim: RefCounted, agent: RefCounted) -> void:
 	if agent.partner >= 0 and sim.agents[agent.partner].partner == agent.id:
 		sim.agents[agent.partner].partner = -1
 	sim.chronicle_event("departed", agent.settlement_id, {"name": agent.full_name()}, "cause_unhappy", [agent.id])
+
+
+## A founder arrives at open land: the first sets down a chest from the wood
+## they carried and names the new settlement after the place; whoever comes
+## later joins it. Either way they live there now and put down their load.
+static func _settle(sim: RefCounted, agent: RefCounted, index: int) -> void:
+	var ground: Dictionary = sim.features.grounds[index]
+	var id: int = sim.settlements.on_ground(index)
+	var from: String = sim.settlements.get_settlement(agent.settlement_id).get("name", "")
+	if id < 0:
+		if agent.carried("wood") < 1.0:
+			agent.step_result = {"settled": 0}
+			return
+		var camp: Vector3i = sim.nav.nearest_walkable(ground.center, 4)
+		var chest: Vector3i = _chest_spot(sim, camp)
+		if camp.x < 0 or chest.x < 0:
+			agent.step_result = {"settled": 0}
+			return
+		id = sim.settlements.create(Text.label(ground.name), ground.center, camp, sim.calendar.tick)
+		sim.settlements.entries[id]["ground"] = index
+		agent.carrying.amount = float(agent.carrying.amount) - 1.0
+		sim.set_block(chest, Registry.id("storage_chest"), 0, "npc:%d" % agent.id)
+		sim.chronicle_event("settlement_founded", id, {"name": agent.full_name(), "place": Text.label(ground.name), "from": from}, "cause_devotion", [agent.id])
+	sim.set_home(agent, -1)
+	sim.settlements.join(agent, id)
+	var settlement: Dictionary = sim.settlements.entries[id]
+	for design in agent.beliefs.known_templates:
+		if not settlement.known_templates.has(design):
+			settlement.known_templates.append(design)
+	if not agent.carrying.is_empty() and float(agent.carrying.amount) >= 1.0:
+		var stored: int = sim.settlements.add(sim, id, agent.carrying.resource, int(agent.carrying.amount), agent.cell)
+		agent.carrying.amount = float(agent.carrying.amount) - stored
+	if agent.carrying.is_empty() or float(agent.carrying.amount) < 0.05:
+		agent.carrying = {}
+	agent.beliefs.stock = sim.settlements.stock_of(id).duplicate()
+	agent.low_mood_ticks = 0
+	Mind.add(agent, "arrived", sim.calendar.ticks_per_day)
+	agent.step_result = {"settled": 1}
+
+
+## Open ground beside the camp for the first chest.
+static func _chest_spot(sim: RefCounted, camp: Vector3i) -> Vector3i:
+	if camp.x < 0:
+		return camp
+	for side in [Vector3i(1, 0, 0), Vector3i(0, 0, 1), Vector3i(-1, 0, 0), Vector3i(0, 0, -1)]:
+		var cell: Vector3i = sim.nav.surface(camp.x + side.x * 2, camp.z + side.z * 2)
+		if cell.x >= 0 and sim.voxels.get_block(cell) == 0 and not sim.is_occupied(cell) and not sim.is_reserved_cell(cell):
+			return cell
+	return Vector3i(-1, -1, -1)

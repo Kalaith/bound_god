@@ -7,7 +7,7 @@
 		{"id": "workshop", "requires": {"workbench": 1}, "requires_any": [], "roofed": ["workbench"], "roof_reach": 4, "capacity": {"workers": "workbench"}},
 		{"id": "shrine", "requires": {"altar": 1}, "requires_any": [], "roofed": [], "roof_reach": 4, "sky_or_tree_within": 3, "capacity": {}},
 		{"id": "shelter", "requires": {}, "requires_any": ["hearth", "bed"], "roofed": [], "roof_reach": 4, "min_roofed_floor": 6, "capacity": {"sleepers": "roofed_floor"}},
-		{"id": "hall", "requires": {"hearth": 1, "table": 1, "bench": 2}, "requires_any": [], "roofed": ["table"], "roof_reach": 4, "min_roofed_floor": 12, "capacity": {"seats": "bench"}},
+		{"id": "hall", "requires": {"table": 1, "bench": 2}, "requires_any": [], "roofed": ["table"], "roof_reach": 4, "min_roofed_floor": 12, "capacity": {"seats": "bench"}},
 		{"id": "garden", "requires": {"planter": 4}, "requires_any": [], "roofed": [], "roof_reach": 4, "capacity": {"plots": "planter"}}
 	],
 	"starters": [
@@ -67,11 +67,11 @@
 			"id": "village_hall",
 			"name": "Village Hall",
 			"author": "valley folk",
-			"legend": {".": "air", "P": "planks", "L": "log", "D": "door", "N": "bench", "A": "table", "H": "hearth", "T": "thatch"},
+			"legend": {".": "air", "P": "planks", "L": "log", "D": "door", "N": "bench", "A": "table", "T": "thatch"},
 			"entrance": [3, 0, 0],
 			"meta": {},
 			"layers": [
-				["LPPDPPL", "P.....P", "P.NAN.P", "P.....P", "PH....P", "LPPPPPL"],
+				["LPPDPPL", "P.....P", "P.NAN.P", "P.....P", "P.....P", "LPPPPPL"],
 				["LPPDPPL", "P.....P", "P.....P", "P.....P", "P.....P", "LPPPPPL"],
 				["TTTTTTT", "TTTTTTT", "TTTTTTT", "TTTTTTT", "TTTTTTT", "TTTTTTT"]
 			]

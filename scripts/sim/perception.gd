@@ -89,6 +89,19 @@ static func _places(sim: RefCounted, agent: RefCounted, radius: float) -> void:
 				agent.beliefs.places[key] = {"kind": "settlement", "id": id, "cell": settlement.center, "state": "seen", "seen_tick": sim.calendar.tick}
 			else:
 				known.seen_tick = sim.calendar.tick
+	var grounds: Array = sim.features.get("grounds", [])
+	for index in range(grounds.size()):
+		if _distance(grounds[index].center, agent.cell) <= radius + 6.0:
+			note_ground(sim, agent, index)
+
+
+## Open land where a settlement could stand, remembered as a place.
+static func note_ground(sim: RefCounted, agent: RefCounted, index: int) -> void:
+	var key: String = "ground:%d" % index
+	if agent.beliefs.places.has(key):
+		agent.beliefs.places[key].seen_tick = sim.calendar.tick
+		return
+	agent.beliefs.places[key] = {"kind": "ground", "id": index, "cell": sim.features.grounds[index].center, "state": "seen", "seen_tick": sim.calendar.tick}
 
 
 static func _threats(sim: RefCounted, agent: RefCounted, radius: float) -> bool:

@@ -31,9 +31,12 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 				board.items.append(item_id)
 			loose[item.resource] = float(loose.get(item.resource, 0.0)) + float(item.amount)
 	var residents: int = settlement.residents.size()
+	# Before winter, people want food put by for the months without berries.
+	var autumn: bool = sim.calendar.season() == int(Balance.number("settlements.autumn_season"))
 	for resource in RESOURCES:
 		var reserve: Array = RESERVE[resource]
-		var wanted: float = float(reserve[0]) + float(reserve[1]) * residents + float(site_need.get(resource, 0))
+		var per_person: float = Balance.number("settlements.autumn_berries_per_person") if autumn and resource == "berries" else float(reserve[1])
+		var wanted: float = float(reserve[0]) + per_person * residents + float(site_need.get(resource, 0))
 		var have: float = float(stock.get(resource, 0)) + float(loose.get(resource, 0.0))
 		if wanted > 0.0:
 			board.gather_demand[resource] = clampf((wanted - have) / wanted, 0.0, 1.0)

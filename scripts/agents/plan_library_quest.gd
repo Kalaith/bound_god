@@ -31,6 +31,8 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary, request:
 			return restore(sim, agent, int(request.target))
 		"raise_shrine":
 			return _raise(sim, agent, int(request.target))
+		"found_settlement":
+			return _found(sim, agent, int(request.target))
 	return []
 
 
@@ -117,4 +119,32 @@ static func _raise(sim: RefCounted, agent: RefCounted, settlement_id: int) -> Ar
 	if not rocks.is_empty():
 		result.append(H.option("quarry_for_altar", 0.8, H.free_hands(agent, "stone") + [Plans.go_to(Plans.target(T.SITE, rocks[0])),
 			Plans.step(Op.HARVEST, {"site": rocks[0], "once": 1}), Plans.go_cell(spot + Vector3i(1, 0, 0)), place]))
+	return result
+
+
+## Walk to open land and settle there. The first founder carries wood for the
+## new settlement's chest; later ones carry food from the old stores.
+static func _found(sim: RefCounted, agent: RefCounted, index: int) -> Array:
+	var grounds: Array = sim.features.get("grounds", [])
+	if index < 0 or index >= grounds.size():
+		return []
+	var camp: Vector3i = sim.nav.nearest_walkable(grounds[index].center, 4)
+	if camp.x < 0:
+		return []
+	var founded: bool = sim.settlements.on_ground(index) >= 0
+	var resource: String = "berries" if founded else "wood"
+	var settle: Array = [Plans.go_cell(camp), Plans.step(Op.SETTLE, {"ground": index})]
+	var amount: int = Balance.integer("population.founders_provisions")
+	var result: Array = []
+	if agent.carried(resource) >= 1.0:
+		result.append(H.option("set_out", 1.2, settle))
+	if agent.beliefs.believes_stock(resource):
+		result.append(H.option("pack_provisions", 1.0, H.free_hands(agent, resource) + [Plans.go_to(Plans.target(T.STORE, agent.settlement_id)),
+			Plans.step(Op.TAKE_STOCK, {"resource": resource, "amount": amount})] + settle))
+	var sites: Array = H.known_sites(sim, agent, JobBoard.SITE_KIND[resource])
+	if not sites.is_empty():
+		result.append(H.option("gather_provisions", 0.8, H.free_hands(agent, resource) + [Plans.go_to(Plans.target(T.SITE, sites[0])),
+			Plans.step(Op.HARVEST, {"site": sites[0], "once": 1})] + settle))
+	if founded:
+		result.append(H.option("set_out_empty_handed", 0.4, settle))
 	return result
