@@ -34,6 +34,7 @@ static func capture(sim: RefCounted) -> Dictionary:
 		"requests": sim.requests.to_dict(), "threats": sim.threats.to_dict(), "raids": sim.raids.to_dict(),
 		"command_log": sim.command_log.duplicate(true), "kindled": sim.kindled.duplicate(true), "veils": sim.veils.duplicate(true),
 		"lanterns": sim.lanterns.duplicate(), "crops": sim.crops.to_dict(), "kitchens": sim.kitchens.to_dict(),
+		"woods": sim.woods.to_dict(),
 	}
 	return {"sim": state, "chunks": chunks}
 
@@ -103,6 +104,8 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	sim.lanterns = Migration.lanterns(state)
 	sim.crops.from_dict(Migration.crops(state))
 	sim.kitchens.from_dict(Migration.kitchens(state))
+	# Saplings and falling leaves came after schema 4; older worlds have none.
+	sim.woods.from_dict(state.get("woods", {}))
 	sim.nav.build()
 	Migration.store_old_stock(sim, old_stock)
 	sim.rng.seed = int(state.rng_seed)

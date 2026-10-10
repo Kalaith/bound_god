@@ -370,18 +370,27 @@ func _tree(x: int, z: int) -> void:
 		world.fill(Vector3i(x, y, z), _id("log"))
 		logs.append(Vector3i(x, y, z))
 	var leaves: Array = []
-	for dy in range(height - 1, height + 2):
-		var radius: int = 1 if dy == height + 1 else 2
+	for cell in crown_cells(Vector3i(x, top + 1, z), height):
+		if world.get_block(cell) == 0:
+			world.fill(cell, _id("leaves"))
+			leaves.append(cell)
+	reserved[Vector2i(x, z)] = true
+	sites.append({"id": sites.size() + 1, "kind": "tree", "cells": logs, "leaves": leaves, "amount": logs.size() * Registry.yields[_id("log")]})
+
+
+## The leaf cells of a tree whose trunk rises `height` logs from `base`:
+## two wide layers round the top logs and a narrow one above. Trees grown
+## from saplings share the shape.
+static func crown_cells(base: Vector3i, height: int) -> Array:
+	var cells: Array = []
+	for dy in range(height - 2, height + 1):
+		var radius: int = 1 if dy == height else 2
 		for dz in range(-radius, radius + 1):
 			for dx in range(-radius, radius + 1):
 				if absi(dx) == 2 and absi(dz) == 2:
 					continue
-				var cell := Vector3i(x + dx, top + dy, z + dz)
-				if world.get_block(cell) == 0:
-					world.fill(cell, _id("leaves"))
-					leaves.append(cell)
-	reserved[Vector2i(x, z)] = true
-	sites.append({"id": sites.size() + 1, "kind": "tree", "cells": logs, "leaves": leaves, "amount": logs.size() * Registry.yields[_id("log")]})
+				cells.append(base + Vector3i(dx, dy, dz))
+	return cells
 
 
 func _bush(x: int, z: int) -> void:

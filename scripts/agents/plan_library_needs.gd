@@ -115,16 +115,17 @@ static func covered_cell(sim: RefCounted, agent: RefCounted) -> Vector3i:
 	var settlement: Dictionary = sim.settlements.get_settlement(agent.settlement_id)
 	var home: Vector3i = settlement.get("center", agent.cell)
 	var area: float = float(settlement.get("radius", 30.0)) + 6.0
+	# Each person has their own spot under a crown, so a crowd spreads out.
 	if tree.x >= 0 and H.distance(tree, agent.cell) < 40.0 and H.distance(tree, home) <= area:
-		bases.append(tree + Vector3i(-1, 0, 2))
+		bases.append(H.ring_cell(sim, Vector3(tree.x + 1.0, tree.y, tree.z + 1.0), agent.id, 2.5, 4.5))
 	for id in agent.beliefs.known_sites("tree", agent.cell):
-		bases.append(agent.beliefs.sites[id].cell + Vector3i(1, 0, 1))
+		var trunk: Vector3i = agent.beliefs.sites[id].cell
+		bases.append(H.ring_cell(sim, Vector3(trunk.x + 0.5, trunk.y, trunk.z + 0.5), agent.id, 1.0, 2.0))
 		if bases.size() >= 4:
 			break
 	var best := Vector3i(-1, -1, -1)
 	var best_distance: float = INF
-	for base in bases:
-		var cell: Vector3i = sim.nav.nearest_walkable(base, 2)
+	for cell in bases:
 		if cell.x < 0 or not sim.is_under_canopy(cell) or H.distance(cell, home) > area:
 			continue
 		var d: float = H.distance(cell, agent.cell)
@@ -181,7 +182,8 @@ static func relax(sim: RefCounted, agent: RefCounted) -> Array:
 		plans.append(H.option("gather_in_the_hall", 0.8, [_structure(hall), Plans.step(Op.RELAX, {"ticks": 60})]))
 	var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))
 	if tree.x >= 0 and H.distance(tree, agent.cell) < 30.0:
-		var spot: Vector3i = sim.nav.nearest_walkable(tree + Vector3i(2, 0, -1), 3)
+		# Each person sits in their own place round the trunk.
+		var spot: Vector3i = H.ring_cell(sim, Vector3(tree.x + 1.0, tree.y, tree.z + 1.0), agent.id, 2.5, 5.0)
 		if spot.x >= 0:
 			plans.append(H.option("sit_by_the_tree", 0.5, [Plans.go_cell(spot), Plans.step(Op.RELAX, {"ticks": 50})]))
 	plans.append(H.option("stroll", 0.3, [Plans.go_cell(H.wander_cell(sim, agent)), Plans.step(Op.RELAX, {"ticks": 40})]))

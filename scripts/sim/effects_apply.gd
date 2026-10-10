@@ -10,6 +10,7 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const Social = preload("res://scripts/sim/social.gd")
 const EffectsBuild = preload("res://scripts/sim/effects_build.gd")
 const EffectsFood = preload("res://scripts/sim/effects_food.gd")
+const Woods = preload("res://scripts/sim/woods.gd")
 const Text = preload("res://scripts/core/text.gd")
 
 const Need = Personality.Need
@@ -52,7 +53,7 @@ static func apply(sim: RefCounted) -> void:
 			"leave":
 				_leave(sim, agent)
 			"plant":
-				_plant(sim, agent, action.cell)
+				_plant(sim, agent, action.cell, str(action.get("seed", "berries")))
 			"settle":
 				_settle(sim, agent, int(action.ground))
 			_:
@@ -115,8 +116,9 @@ static func _forage(sim: RefCounted, agent: RefCounted, action: Dictionary) -> v
 	agent.step_result = {"ate": 1, "count": count}
 
 
-## Take one block's yield from a site: trees are felled from the top, and a
-## felled tree's leaves fall with its last log.
+## Take one block's yield from a site: trees are felled from the top (the
+## leaves they leave hanging fall over the next hours), and a tree can be
+## searched for a seed without felling it.
 static func _harvest(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
 	var id: int = int(action.site)
 	var site: Dictionary = sim.sites.get_site(id)
@@ -124,11 +126,18 @@ static func _harvest(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 		agent.step_result = {"got": 0}
 		return
 	var resource: String = sim.sites.resource_of(id)
-	# Grass shaken for its seed gives seed, as much as it would give thatch.
-	if site.kind == "grass" and not str(action.get("as", "")).is_empty():
-		resource = str(action.as)
+	# Grass shaken for its seed gives seed, as much as it would give thatch;
+	# a tree searched for a seed gives one and is left standing.
+	var wanted: String = str(action.get("as", ""))
+	var searching: bool = site.kind == "tree" and wanted == "tree_seed"
+	if (site.kind == "grass" and not wanted.is_empty()) or searching:
+		resource = wanted
 	if not agent.carrying.is_empty() and agent.carrying.resource != resource:
 		agent.step_result = {"got": 0}
+		return
+	if searching:
+		agent.carrying = {"resource": resource, "amount": agent.carried(resource) + 1.0}
+		agent.step_result = {"got": 1}
 		return
 	# Trees are felled and boulders broken from the top down, and nobody's
 	# floor is taken from under them.
@@ -143,31 +152,28 @@ static func _harvest(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 		return
 	var block: int = sim.voxels.get_block(cell)
 	var gained: int = Registry.yields[block]
-	var leaves: Array = site.get("leaves", [])
 	var source: String = "npc:%d" % agent.id
 	if site.kind == "bush":
 		sim.set_block(cell, block, maxi(sim.voxels.block_meta(cell) - 1, 0), source)
 		gained = 1
 	else:
 		sim.set_block(cell, 0, 0, source)
-	if site.kind == "tree" and sim.sites.get_site(id).is_empty():
-		for leaf in leaves:
-			if sim.voxels.get_block(leaf) == Registry.id("leaves"):
-				sim.set_block(leaf, 0, 0, source)
 	agent.carrying = {"resource": resource, "amount": agent.carried(resource) + gained}
 	agent.step_result = {"got": gained}
 
 
-## A berry pressed into an empty planter becomes a bare bush that ripens.
-static func _plant(sim: RefCounted, agent: RefCounted, cell: Vector3i) -> void:
-	var open: bool = sim.voxels.get_block(cell) == 0 and Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter"
-	if not open or agent.carried("berries") < 1.0 or sim.is_occupied(cell):
+## A berry pressed into an empty planter becomes a bare bush that ripens; a
+## tree seed set in open ground becomes a sapling.
+static func _plant(sim: RefCounted, agent: RefCounted, cell: Vector3i, seed_resource: String) -> void:
+	var tree: bool = seed_resource == "tree_seed"
+	var open: bool = Woods.room_for_tree(sim, cell) if tree else 		sim.voxels.get_block(cell) == 0 and Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter"
+	if not open or agent.carried(seed_resource) < 1.0 or sim.is_occupied(cell):
 		agent.step_result = {"planted": 0}
 		return
 	agent.carrying.amount = float(agent.carrying.amount) - 1.0
 	if float(agent.carrying.amount) < 0.05:
 		agent.carrying = {}
-	sim.set_block(cell, Registry.id("berry_bush"), 0, "npc:%d" % agent.id)
+	sim.set_block(cell, Registry.id("sapling" if tree else "berry_bush"), 0, "npc:%d" % agent.id)
 	agent.step_result = {"planted": 1}
 
 

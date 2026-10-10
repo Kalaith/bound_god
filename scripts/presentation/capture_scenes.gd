@@ -15,6 +15,7 @@ const CaptureTime = preload("res://scripts/presentation/capture_time.gd")
 const CaptureVillage = preload("res://scripts/presentation/capture_village.gd")
 const CaptureFood = preload("res://scripts/presentation/capture_food.gd")
 const CaptureInput = preload("res://scripts/presentation/capture_input.gd")
+const CaptureWoods = preload("res://scripts/presentation/capture_woods.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -50,6 +51,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 		return
 	if scenario.begins_with("food_"):
 		CaptureFood.arrange(main, shot, scenario)
+		return
+	if scenario.begins_with("woods_"):
+		CaptureWoods.arrange(main, shot, scenario)
 		return
 	match scenario:
 		"design_library", "design_box", "design_invalid":

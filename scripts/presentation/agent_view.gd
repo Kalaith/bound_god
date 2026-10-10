@@ -12,7 +12,8 @@ const GLYPHS: Dictionary = {
 	"sowing": ".:.", "reaping": "/", "tending": "%", "cooking": "&", "gardening": "*",
 }
 const RESOURCE_COLORS: Dictionary = {"wood": Color("9a6b3f"), "stone": Color("9fa6aa"), "thatch": Color("d8c27a"), "berries": Color("b8324a"), "ore": Color("6f7f9a"),
-	"grain": Color("e0b84a"), "seed": Color("a88a4a"), "meal": Color("d9793a")}
+	"grain": Color("e0b84a"), "seed": Color("a88a4a"), "meal": Color("d9793a"),
+	"tree_seed": Color("6b8a3a")}
 ## Activities shown as work at hand: the body sways.
 const HANDWORK: Array[String] = ["working", "building", "sowing", "reaping", "tending", "cooking", "gardening"]
 

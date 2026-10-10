@@ -105,6 +105,12 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 		var garden: int = int(ripe[0][0]) if not ripe.is_empty() else int(plots[0][0])
 		var pull: float = minf(0.45 + ripe.size() * 0.1 + (plots.size() * 0.06 if can_plant else 0.0), 1.1) * hungry
 		push.call(Goals.make(Kind.GARDEN, garden), float(culture.gather) * aptitude(agent, Skill.GATHERING) * pull, "reason_garden")
+	# Plant trees where the woods near home are thin, with a seed to hand or
+	# a tree to search for one.
+	var groves: Array = board.get("groves", [])
+	if not groves.is_empty() and (agent.carried("tree_seed") >= 1.0 or agent.beliefs.believes_stock("tree_seed") 			or H.loose_item(sim, agent, "tree_seed") >= 0 or agent.beliefs.has_site("tree")):
+		var pull: float = Balance.number("work.plant_trees_pull") * (0.5 + float(board.get("woods_thin", 0.0))) 			+ float(board.gather_demand.get("wood", 0.0)) * 0.3
+		push.call(Goals.make(Kind.PLANT_TREES), float(culture.gather) * aptitude(agent, Skill.GATHERING) * pull, "reason_plant_trees")
 	DeliberationFood.add(sim, agent, board, culture, aptitude(agent, Skill.GATHERING), aptitude(agent, Skill.CRAFTING), hungry, push)
 	var unknown: int = 0
 	for resource in board.gather_demand:

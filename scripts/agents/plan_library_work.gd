@@ -36,6 +36,8 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 			return [H.option("look_around", 1.0, [Plans.go_cell(frontier_cell(sim, agent)), Plans.step(Op.SCOUT, {"ticks": 12})])]
 		Kind.GARDEN:
 			return _garden(sim, agent, int(goal.target))
+		Kind.PLANT_TREES:
+			return _plant_trees(sim, agent)
 		Kind.FOUND_HOME:
 			return [H.option("mark_home", 1.0, [Plans.step(Op.MARK_SITE, {"function": "dwelling", "purpose": "home"})])]
 		Kind.PROPOSE_PROJECT:
@@ -77,6 +79,38 @@ static func _garden(sim: RefCounted, agent: RefCounted, garden_id: int) -> Array
 	if not bushes.is_empty():
 		result.append(H.option("pick_a_berry_to_plant", 0.7, H.free_hands(agent, "berries") + [Plans.go_to(Plans.target(T.SITE, bushes[0])),
 			Plans.step(Op.HARVEST, {"site": bushes[0], "once": 1})] + plant))
+	return result
+
+
+## Plant a tree seed at the nearest open spot by the settlement's edge: one
+## carried, one from the stores, one lying loose, or one searched from a tree.
+static func _plant_trees(sim: RefCounted, agent: RefCounted) -> Array:
+	var spots: Array = sim.settlement_life.board(agent.settlement_id).get("groves", [])
+	var result: Array = []
+	if spots.is_empty():
+		return result
+	var spot: Vector3i = spots[0]
+	for cell in spots:
+		if H.distance(cell, agent.cell) < H.distance(spot, agent.cell):
+			spot = cell
+	var stand: Vector3i = plot_stand(sim, spot, agent.cell)
+	if stand.x < 0:
+		return result
+	var seed_resource: String = "tree_seed"
+	var plant: Array = [Plans.go_cell(stand), Plans.step(Op.PLANT, {"cell": spot, "seed": seed_resource})]
+	if agent.carried(seed_resource) >= 1.0:
+		result.append(H.option("plant_a_tree_seed", 1.2, plant))
+	if agent.beliefs.believes_stock(seed_resource):
+		result.append(H.option("fetch_tree_seed_to_plant", 1.0, H.free_hands(agent, seed_resource) + [_store(agent),
+			Plans.step(Op.TAKE_STOCK, {"resource": seed_resource, "amount": 1})] + plant))
+	var loose: int = H.loose_item(sim, agent, seed_resource)
+	if loose >= 0:
+		result.append(H.option("fetch_loose_tree_seed", 0.95, H.free_hands(agent, seed_resource) + [Plans.go_cell(sim.items[loose].cell),
+			Plans.step(Op.PICK_UP, {"item": loose})] + plant))
+	var trees: Array = H.known_sites(sim, agent, "tree")
+	if not trees.is_empty():
+		result.append(H.option("gather_tree_seed", 0.7, H.free_hands(agent, seed_resource) + [Plans.go_to(Plans.target(T.SITE, trees[0])),
+			Plans.step(Op.HARVEST, {"site": trees[0], "as": seed_resource, "once": 1})] + plant))
 	return result
 
 

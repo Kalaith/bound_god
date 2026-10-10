@@ -10,7 +10,7 @@ const Goals = preload("res://scripts/agents/goals.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const StandingText = preload("res://scripts/presentation/ui/standing_text.gd")
 ## Goods listed on the panel, food last.
-const STOCK: Array[String] = ["wood", "stone", "thatch", "ore", "seed", "berries", "grain", "meal"]
+const STOCK: Array[String] = ["wood", "stone", "thatch", "ore", "seed", "tree_seed", "berries", "grain", "meal"]
 
 var sim: RefCounted
 var settlement_id: int = -1

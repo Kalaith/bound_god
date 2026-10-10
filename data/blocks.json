@@ -1,6 +1,6 @@
 {
 	"schema_version": 1,
-	"resources": ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal"],
+	"resources": ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal", "tree_seed"],
 	"divine_only": ["soil"],
 	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree", "table", "bench", "planter", "lantern", "farmland", "granary_bin"],
 	"shapes": ["cube", "cross", "panel", "slab", "post"],
@@ -39,6 +39,7 @@
 		{"id": 30, "name": "lantern", "resource": "stone", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [5, 5], "shape": "post", "component": "lantern", "breakable": true, "placeable": true},
 		{"id": 31, "name": "farmland", "resource": "soil", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [2, 0], "atlas_top": [6, 5], "atlas_bottom": [2, 0], "shape": "cube", "component": "farmland", "breakable": true, "placeable": true},
 		{"id": 32, "name": "crop", "resource": "", "yield": 0, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [1, 6], "atlas_stages": [[1, 6], [2, 6], [3, 6], [4, 6]], "shape": "cross", "breakable": true, "placeable": false},
-		{"id": 33, "name": "granary_bin", "resource": "wood", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [7, 5], "atlas_top": [0, 6], "atlas_bottom": [3, 1], "shape": "cube", "component": "granary_bin", "breakable": true, "placeable": true}
+		{"id": 33, "name": "granary_bin", "resource": "wood", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [7, 5], "atlas_top": [0, 6], "atlas_bottom": [3, 1], "shape": "cube", "component": "granary_bin", "breakable": true, "placeable": true},
+		{"id": 34, "name": "sapling", "resource": "tree_seed", "yield": 1, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [5, 6], "shape": "cross", "breakable": true, "placeable": true}
 	]
 }

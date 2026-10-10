@@ -97,16 +97,18 @@ static func _pick_up(sim: RefCounted, agent: RefCounted, step: Dictionary, step_
 	return Plans.DONE if int(agent.step_result.picked) > 0 else Fail.TARGET_GONE
 
 
-## Set a berry into an empty planter, where it grows into a bush.
+## Set a berry into an empty planter, where it grows into a bush, or a tree
+## seed into open ground, where it grows into a tree.
 static func _plant(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:
 	agent.activity = "gardening"
-	if agent.carried("berries") < 1.0:
+	var seed_resource: String = str(step.get("seed", "berries"))
+	if agent.carried(seed_resource) < 1.0:
 		return Fail.STOCK_EMPTY
 	var work: int = int(Balance.dict("work.harvest_ticks_per_block").berries)
 	if step_ticks < work:
 		return Plans.RUNNING
 	if step_ticks == work:
-		sim.effects.action("plant", agent.id, {"cell": step.cell})
+		sim.effects.action("plant", agent.id, {"cell": step.cell, "seed": seed_resource})
 		return Plans.RUNNING
 	if not agent.step_result.has("planted"):
 		return Plans.RUNNING

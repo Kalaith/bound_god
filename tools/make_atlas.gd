@@ -1,6 +1,8 @@
 extends SceneTree
 ## Paints assets/blocks_atlas.png: 16 px procedural tiles in an 8 x 7 grid,
-## laid out as data/blocks.json expects (8 x 7 since fields and granaries). Run once after changing a tile:
+## laid out as data/blocks.json expects (8 x 7 since fields and granaries).
+## Tiles are painted in order from one seed, so new tiles go at the end.
+## Run once after changing a tile:
 ## Godot --headless --path . --script res://tools/make_atlas.gd
 
 const TILE: int = 16
@@ -58,6 +60,7 @@ func _init() -> void:
 	_bin_top(Vector2i(0, 6))
 	for stage in range(4):
 		_crop(Vector2i(1 + stage, 6), stage)
+	_sapling(Vector2i(5, 6))
 	var error: int = image.save_png("res://assets/blocks_atlas.png")
 	print("atlas saved: ", error == OK)
 	quit(0 if error == OK else 1)
@@ -378,3 +381,15 @@ func _crop(tile: Vector2i, stage: int) -> void:
 		if stage == 3:
 			for y in range(TILE - height, TILE - height + 4):
 				_px(tile, x + 1, y, Color("e6c65c"))
+
+
+## A sapling: a thin brown stem with a few small leaf tufts.
+func _sapling(tile: Vector2i) -> void:
+	for y in range(5, TILE):
+		_px(tile, 7, y, Color("7a5434"))
+		_px(tile, 8, y, Color("8a6440") if y > 9 else Color("7a5434"))
+	for tuft in [Vector2i(6, 1), Vector2i(4, 3), Vector2i(9, 3), Vector2i(5, 6), Vector2i(9, 7)]:
+		for dy in range(3):
+			for dx in range(3):
+				if rng.randf() < 0.85:
+					_px(tile, tuft.x + dx, tuft.y + dy, Color("4f8a3a").darkened(rng.randf() * 0.25))

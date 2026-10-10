@@ -61,6 +61,16 @@ static func friend_nearby(sim: RefCounted, agent: RefCounted, min_opinion: float
 	return best
 
 
+## A walkable cell on a ring round `center`, its own for each person (by id,
+## without the rng), so a crowd spreads round a tree instead of standing in
+## one spot.
+static func ring_cell(sim: RefCounted, center: Vector3, id: int, inner: float, outer: float) -> Vector3i:
+	var angle: float = float(id) * 2.39996
+	var radius: float = inner + fposmod(float(id) * 0.618034, 1.0) * (outer - inner)
+	var target := Vector3i(floori(center.x + cos(angle) * radius), roundi(center.y), floori(center.z + sin(angle) * radius))
+	return sim.nav.nearest_walkable(target, 2)
+
+
 ## A nearby cell to wander to, varied by id and time without the rng.
 static func wander_cell(sim: RefCounted, agent: RefCounted) -> Vector3i:
 	var seed: int = agent.id * 31 + sim.calendar.tick / 60

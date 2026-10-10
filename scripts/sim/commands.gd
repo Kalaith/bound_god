@@ -3,6 +3,7 @@ extends RefCounted
 ## same seed and command log replay the same world. Every command is checked
 ## here; the presentation asks `edit_problem` to colour its preview.
 const Registry = preload("res://scripts/world/block_registry.gd")
+const Woods = preload("res://scripts/sim/woods.gd")
 
 
 ## Why the god cannot set `cell` to `block` right now, or "" if it can.
@@ -30,6 +31,8 @@ static func edit_problem(sim: RefCounted, cell: Vector3i, block: int, from: Vect
 		return "edit_unbreakable"
 	if Registry.solid[block] == 1 and sim.is_occupied(cell):
 		return "edit_someone_there"
+	if block == Registry.id("sapling") and not Woods.can_root(sim, cell):
+		return "edit_needs_ground"
 	var resource: String = Registry.resource(block)
 	if not resource.is_empty() and sim.god.stock(resource) < 1:
 		return "edit_no_stock"
@@ -68,6 +71,9 @@ static func _edit(sim: RefCounted, command: Dictionary) -> Dictionary:
 			sim.set_block(cell, current, 0, "god")
 			return {"ok": true, "reason": "edit_harvested"}
 		sim.god.add_stock(Registry.resource(current), Registry.yields[current])
+		# Some leaves hold a tree seed.
+		if current == Registry.id("leaves") and Woods.leaf_holds_seed(cell):
+			sim.god.add_stock("tree_seed", 1)
 		sim.set_block(cell, 0, 0, "god")
 		return {"ok": true, "reason": ""}
 	var meta: int = int(command.get("meta", 0))

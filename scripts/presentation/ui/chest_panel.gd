@@ -8,7 +8,7 @@ signal transfer(chest: Vector3i, resource: String, amount: int)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 
-const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal"]
+const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal", "tree_seed"]
 const STEPS: Array[int] = [1, 10]
 
 var sim: RefCounted

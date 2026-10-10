@@ -5,6 +5,7 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const Food = preload("res://scripts/sim/food.gd")
 const Crops = preload("res://scripts/sim/crops.gd")
+const Woods = preload("res://scripts/sim/woods.gd")
 
 const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore"]
 const SITE_KIND: Dictionary = {"wood": "tree", "stone": "rock", "thatch": "grass", "berries": "bush", "ore": "ore"}
@@ -58,6 +59,9 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 	board["ripe"] = ripe(sim, id)
 	board["fields"] = fields(sim, id)
 	board["kitchens"] = kitchens(sim, id)
+	# Where the woods near home are thin, open ground at the edge to plant.
+	board["woods_thin"] = Woods.thinness(sim, settlement)
+	board["groves"] = Woods.grove_spots(sim, settlement) if float(board.woods_thin) > 0.0 else []
 	return board
 
 

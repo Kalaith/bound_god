@@ -1,7 +1,7 @@
 extends RefCounted
 ## Day and hour hooks: the stores' stock reaches everyone's beliefs, stale
-## beliefs fade, opinions cool, berries regrow, and the larger systems take
-## their daily and hourly turns.
+## beliefs fade, opinions cool, berries regrow, saplings grow, loose leaves
+## fall, and the larger systems take their daily and hourly turns.
 const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Lifecycle = preload("res://scripts/sim/lifecycle.gd")
@@ -25,6 +25,7 @@ static func new_day(sim: RefCounted) -> void:
 			var relation: Dictionary = agent.beliefs.relations[other]
 			relation.opinion = move_toward(float(relation.opinion), 0.0, decay)
 	_regrow(sim)
+	sim.woods.daily(sim)
 	Lifecycle.daily(sim)
 	if sim.settlement_life != null:
 		sim.settlement_life.daily(sim)
@@ -38,6 +39,7 @@ static func new_day(sim: RefCounted) -> void:
 
 static func new_hour(sim: RefCounted) -> void:
 	Lifecycle.hourly(sim)
+	sim.woods.hourly(sim)
 	if sim.faith != null:
 		sim.faith.hourly(sim)
 
