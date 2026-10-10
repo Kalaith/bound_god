@@ -69,6 +69,9 @@ Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) plan
 - A lash-out break spends itself on one fight, then the break is sulking: repeated insults otherwise killed both people.
 - RestoreShrine (confirmed by the user) is open to Believers (utility 0.35 × devotion) as well as the Devout (0.6 ×): with only the Devout the ridge altar was never restored by its own people.
 - `tools/scratch/` holds local diagnostic probes and is git-ignored.
+- Someone asleep at night keeps sleeping until the sleep hours end (`deliberation.gd` keeps the night sleep utility while asleep; the step no longer wakes a rested sleeper early). Before, rest reaching ~92 dropped sleep's utility and people got up to chat around 03:00 (6.8 h of broken sleep; now they wake at dawn).
+- Faith pacing (user found it slow): a witnessed miracle gives 14 devotion (was 10), first sight 6 (was 4), so two or three miracles make a Believer within the starting Favour. The first-steps line shows the nearest person's devotion against the Believer threshold, or says when Favour is too low for any miracle.
+- The crosshair shows "F · Inspect <name>" over a person; from the overlook the pick margin is a fixed 200 px instead of shrinking with distance.
 - People learn what the chests hold when they use one, pass within reach of one, or at the day's end; they do not see into chests from afar.
 - Key bindings saved before an action existed still load: the new action takes its default key, or the first free one.
 - Valley layout: sacred tree at the valley centre (80,80), ridge ruin at (128,128) (~68 blocks), hamlet at (112,134). The tree's first circle (20 blocks) always holds a few trees, stone outcrops and berry bushes. The river runs beside the tree-ridge axis so nobody must cross water.

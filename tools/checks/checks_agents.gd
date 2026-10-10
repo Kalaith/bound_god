@@ -171,3 +171,23 @@ func check_every_label_resolves():
 				if not Text.has(found.get_string(1)):
 					missing.append(found.get_string(1))
 	return "" if missing.is_empty() else "missing labels: " + ", ".join(missing)
+
+
+func check_sleepers_sleep_the_night_through():
+	var sim: RefCounted = Sim.create(11)
+	var hour: int = sim.calendar.ticks_per_hour()
+	# To 23:00 on the second night.
+	sim.run_ticks(sim.calendar.ticks_per_day * 2 - sim.calendar.tick % sim.calendar.ticks_per_day + hour * 23)
+	var asleep: Array = []
+	for agent in sim.agents:
+		if agent.is_present() and agent.activity == "sleeping" and not agent.personality.night_owl:
+			asleep.append(agent)
+	if asleep.size() < 3:
+		return "only %d people asleep at 23:00" % asleep.size()
+	sim.run_ticks(hour * 6)
+	var still: int = 0
+	for agent in asleep:
+		still += 1 if agent.activity == "sleeping" else 0
+	if still < asleep.size() - 1:
+		return "%d of %d sleepers were up before 05:00" % [asleep.size() - still, asleep.size()]
+	return ""

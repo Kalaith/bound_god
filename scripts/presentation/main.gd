@@ -282,11 +282,20 @@ func _hud_state() -> Dictionary:
 		"shrine": faith.shrine_line(),
 		"prayers": faith.prayer_lines(),
 		"hint": design_tool.hint() if design_tool.active else Text.label("hud_controls"),
-		"prompt": interaction.prompt() if accepts_world_input() else "",
+		"prompt": _prompt() if accepts_world_input() else "",
 		"guide": _guide_text,
 		"hotbar_visible": not design_tool.active and not library_screen.visible,
 		"crosshair": Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not capture_request.is_empty(),
 	}
+
+
+## Someone under the crosshair is inspected before a block is used.
+func _prompt() -> String:
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not inspector.visible:
+		var id: int = people.aimed()
+		if id >= 0:
+			return Text.format("inspect_prompt", {"name": sim.agents[id].full_name()})
+	return interaction.prompt()
 
 
 func _unhandled_input(event: InputEvent) -> void:

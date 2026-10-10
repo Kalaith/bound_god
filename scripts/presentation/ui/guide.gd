@@ -4,6 +4,8 @@ extends RefCounted
 const Text = preload("res://scripts/core/text.gd")
 const FaithState = preload("res://scripts/agents/faith_state.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const Balance = preload("res://scripts/core/balance.gd")
+const Data = preload("res://scripts/core/data.gd")
 
 
 ## The guide's line for now, or "" once the god has found its way.
@@ -35,11 +37,16 @@ static func line(sim: RefCounted, library: RefCounted) -> String:
 	if sim.god.offered.is_empty():
 		return Text.label("guide_offer")
 	var believers: int = 0
+	var closest: RefCounted = null
 	for agent in sim.agents:
-		if agent.is_present() and FaithState.stage(agent.faith) >= 3:
+		if not agent.is_present() or not agent.faith.get("knows", false):
+			continue
+		if FaithState.stage(agent.faith) >= 3:
 			believers += 1
+		elif closest == null or float(agent.faith.devotion) > float(closest.faith.devotion):
+			closest = agent
 	if believers == 0:
-		return Text.label("guide_miracle")
+		return _miracle_line(sim, closest)
 	var ridge_active: bool = false
 	for id in sim.faith.ids():
 		if id != 1 and sim.faith.shrines[id].state == "active":
@@ -51,6 +58,18 @@ static func line(sim: RefCounted, library: RefCounted) -> String:
 	if sim.calendar.day() < 6:
 		return Text.label("guide_rest")
 	return ""
+
+
+## How near the first believer is, so the god sees its miracles count.
+static func _miracle_line(sim: RefCounted, closest: RefCounted) -> String:
+	var shrine: Dictionary = sim.faith.current(sim)
+	var favour: float = float(shrine.get("favour", 0.0))
+	if favour < float(Data.miracle("kindle").cost):
+		return Text.format("guide_miracle_favour", {"favour": floori(favour)})
+	if closest == null or float(closest.faith.devotion) <= 0.0:
+		return Text.label("guide_miracle")
+	return Text.format("guide_miracle_progress", {"name": closest.given_name,
+		"devotion": floori(float(closest.faith.devotion)), "needed": int(Balance.list("faith.stages")[1])})
 
 
 ## Whether a home stands in the settlement by the tree, built by anyone.

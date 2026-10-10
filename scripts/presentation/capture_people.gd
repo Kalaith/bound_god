@@ -1,6 +1,8 @@
 extends RefCounted
 ## Debug-only captures of people and the inspector: `people_<tab>` runs the
-## valley for a few hours, selects the first traveller and shows that tab.
+## valley for a few hours, selects the first traveller and shows that tab;
+## `people_aim` looks down on a traveller from the overlook, unselected, to
+## show the inspect prompt.
 const TABS: Array[String] = ["mind", "needs", "bonds", "life", "faith"]
 
 
@@ -18,6 +20,17 @@ static func arrange(main: Node3D, shot: Node, scenario: String) -> void:
 	for other in sim.agents:
 		if other.is_present() and other.beliefs.relations.size() > agent.beliefs.relations.size():
 			agent = other
+	if scenario == "people_aim":
+		var rig: Node3D = main.camera_rig
+		rig.overlook = true
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		print("PEOPLE aim at %s" % agent.full_name())
+		shot.shoot_after(40)
+		for _frame in range(30):
+			rig.overlook_center = agent.position + Vector3(0, -1.1, 0)
+			await main.get_tree().process_frame
+		print("PEOPLE prompt=%s" % main._prompt())
+		return
 	main.avatar.global_position = agent.position + Vector3(-3.5, 0.2, -4.5)
 	main.camera_rig.yaw = atan2(-3.5, -4.5)
 	main.camera_rig.pitch = -0.32

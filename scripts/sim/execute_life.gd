@@ -58,7 +58,7 @@ static func _sleep(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ti
 	agent.change_need(Need.REST, sim.calendar.per_tick(rate))
 	var rested: bool = agent.need(Need.REST) >= 99.0
 	var too_long: bool = step_ticks > sim.calendar.ticks_per_day * 6 / 10
-	if (rested and not Schedule.is_sleep_time(sim, agent)) or too_long or (rested and step_ticks > 200):
+	if (rested and not Schedule.is_sleep_time(sim, agent)) or too_long:
 		Mind.add(agent, "slept_bed" if in_bed else "slept_ground", sim.calendar.ticks_per_day)
 		agent.inside = -1
 		return Plans.DONE

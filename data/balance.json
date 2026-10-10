@@ -66,7 +66,7 @@
 	},
 	"faith": {
 		"story_gain": 40.0, "story_aspect_lerp": 0.1, "drift_per_day": 0.05, "decay_per_day": 0.6,
-		"unheard_decay": 1.5, "first_sight_devotion": 4.0, "miracle_devotion": 10.0, "answered_bonus": 18.0,
+		"unheard_decay": 1.5, "first_sight_devotion": 6.0, "miracle_devotion": 14.0, "answered_bonus": 18.0,
 		"harm_loss": 20.0, "pious_factor": 1.5, "sceptic_factor": 0.5, "request_accept": 0.75,
 		"whisper_factor": 0.4, "prayer_ticks": 30, "stages": [20, 40, 70], "carry_name_listeners": 3
 	},

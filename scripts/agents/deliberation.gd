@@ -44,7 +44,9 @@ static func _survival(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 
 	var rest: float = agent.need(Need.REST)
 	var sleep: float
-	if is_sleep_time(sim, agent) and rest < 92.0:
+	# Someone already asleep sleeps the night through; a full rest need is no
+	# reason to get up and chat in the dark.
+	if is_sleep_time(sim, agent) and (rest < 92.0 or agent.activity == "sleeping"):
 		sleep = 0.62 + deficit(rest) * 0.6
 	else:
 		sleep = pow(deficit(rest), 2) * 1.3 + (0.8 if rest < 15.0 else 0.0)

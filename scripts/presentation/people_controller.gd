@@ -43,7 +43,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		var screen: Vector2 = viewport.get_visible_rect().size * 0.5
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			screen = viewport.get_mouse_position()
-		var id: int = views.pick(camera_rig.camera, screen, 70.0)
+		var id: int = person_at(screen)
 		if id >= 0:
 			select(id)
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -53,6 +53,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				hud.flash(Text.label("inspect_nobody"), true)
 		viewport.set_input_as_handled()
+
+
+## The person nearest a screen point, with a wider margin from the overlook,
+## where people are small; -1 when nobody is close.
+func person_at(screen: Vector2) -> int:
+	if camera_rig.overlook:
+		return views.pick(camera_rig.camera, screen, 200.0, 1.0)
+	return views.pick(camera_rig.camera, screen, 70.0)
+
+
+## The person under the crosshair, for the HUD prompt; -1 for nobody.
+func aimed() -> int:
+	return person_at(get_viewport().get_visible_rect().size * 0.5)
 
 
 func _process(_delta: float) -> void:

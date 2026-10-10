@@ -94,7 +94,9 @@ func _draw_selection() -> void:
 
 
 ## The person nearest a screen point within a zoom-aware radius, or -1.
-func pick(camera: Camera3D, screen: Vector2, reach: float) -> int:
+## Close people get a wider margin; `min_scale` keeps far ones from
+## shrinking below a share of `reach` (the overlook keeps the full reach).
+func pick(camera: Camera3D, screen: Vector2, reach: float, min_scale: float = 0.6) -> int:
 	var best: int = -1
 	var best_distance: float = INF
 	for id in views:
@@ -103,7 +105,7 @@ func pick(camera: Camera3D, screen: Vector2, reach: float) -> int:
 		if camera.is_position_behind(point):
 			continue
 		var distance_to_camera: float = camera.global_position.distance_to(point)
-		var radius: float = reach * clampf(12.0 / maxf(distance_to_camera, 1.0), 0.6, 3.0)
+		var radius: float = reach * clampf(12.0 / maxf(distance_to_camera, 1.0), min_scale, 3.0)
 		var d: float = camera.unproject_position(point).distance_to(screen)
 		if d <= radius and d < best_distance:
 			best = id
