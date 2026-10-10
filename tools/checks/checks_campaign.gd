@@ -92,12 +92,13 @@ func long_check_a_sect_forms_under_the_tree():
 
 ## M16 exit: cultivators at Qi Refining's peak decide for themselves to face
 ## Heaven, most at the tree and a few (loners) away from it; over several
-## worlds the sanctuary's trials succeed more often, and lightning scorches
+## worlds the sanctuary's trials face better odds and pass more often (judged
+## on the odds, over 24 seeds), and lightning scorches
 ## the ground and is chronicled.
 func long_check_breakthroughs_at_the_tree_and_elsewhere():
-	var tally: Dictionary = {"sanctuary": [0, 0], "elsewhere": [0, 0]}
+	var tally: Dictionary = {"sanctuary": [0, 0, 0.0], "elsewhere": [0, 0, 0.0]}
 	var scorched: int = 0
-	for seed in range(11, 23):
+	for seed in range(11, 35):
 		var sim: RefCounted = Sim.create(seed)
 		var camp: Vector3i = sim.settlements.entries[1].camp
 		for i in range(6):
@@ -122,17 +123,22 @@ func long_check_breakthroughs_at_the_tree_and_elsewhere():
 				var key: String = "sanctuary" if bool(trial.sanctuary) else "elsewhere"
 				tally[key][0] += 1
 				tally[key][1] += 1 if trial.outcome == "passed" else 0
+				tally[key][2] += float(trial.get("odds", 0.0))
 		for entry in sim.chronicle.entries:
 			scorched += 1 if entry.kind == "trial_scorched" else 0
 	var rates: Dictionary = {}
+	var odds: Dictionary = {}
 	for key in tally:
 		rates[key] = float(tally[key][1]) / maxf(float(tally[key][0]), 1.0)
-	print("      sanctuary %d/%d passed (%.0f%%), elsewhere %d/%d (%.0f%%), %d scorchings chronicled" % [tally.sanctuary[1], tally.sanctuary[0], rates.sanctuary * 100.0,
-		tally.elsewhere[1], tally.elsewhere[0], rates.elsewhere * 100.0, scorched])
-	if tally.sanctuary[0] < 10 or tally.elsewhere[0] < 4:
+		odds[key] = float(tally[key][2]) / maxf(float(tally[key][0]), 1.0)
+	print("      sanctuary %d/%d passed (%.0f%%, mean odds %.2f), elsewhere %d/%d (%.0f%%, mean odds %.2f), %d scorchings chronicled" % [tally.sanctuary[1], tally.sanctuary[0],
+		rates.sanctuary * 100.0, odds.sanctuary, tally.elsewhere[1], tally.elsewhere[0], rates.elsewhere * 100.0, odds.elsewhere, scorched])
+	if tally.sanctuary[0] < 20 or tally.elsewhere[0] < 8:
 		return "too few trials in one place or the other: %s" % str(tally)
-	if rates.sanctuary <= rates.elsewhere:
-		return "the sanctuary did not help: %s" % str(rates)
+	# Judged on the odds each trial faced: a hundred-odd rolls are too few to
+	# show a 0.2 bonus through the other differences every run.
+	if odds.sanctuary < odds.elsewhere + 0.1:
+		return "the sanctuary did not help: mean odds %s, passed %s" % [str(odds), str(rates)]
 	if scorched == 0:
 		return "no scorching was chronicled"
 	return ""

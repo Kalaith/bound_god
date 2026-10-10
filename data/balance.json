@@ -42,7 +42,7 @@
 		"harvest_ticks_per_block": {"wood": 14, "stone": 10, "thatch": 5, "berries": 6, "ore": 14},
 		"base_work_hours": 0.42, "off_hours": 0.08, "hungry_food_pull": 1.5, "plant_trees_pull": 0.6
 	},
-	"construction": {
+	"construction": {"vernacular_after_days": 12.0, 
 		"ticks_per_block": 6, "abandon_days": 5, "max_open_sites": 2, "site_search_radius": 26, "site_spacing": 2,
 		"max_height_variation": 1, "builds_offered": 4, "found_home_base": 0.55,
 		"stone_walk": 12.0, "hall_residents": 6, "garden_food_days": 2.0, "people_per_garden": 5

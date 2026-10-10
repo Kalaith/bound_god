@@ -253,7 +253,7 @@ func _resolve(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 	trial.outcome = outcome
 	events.append({"kind": "end", "trial": trial.id, "cell": agent.cell, "tick": sim.calendar.tick, "outcome": outcome})
 	var record: Dictionary = {"tick": sim.calendar.tick, "kind": trial.kind, "outcome": outcome, "sanctuary": trial.sanctuary,
-		"severity": trial.severity, "shield": trial.shield}
+		"severity": trial.severity, "shield": trial.shield, "odds": p}
 	agent.cultivation.trials.append(record)
 	var outcomes: Dictionary = Data.tribulations().outcomes
 	var where: String = "cause_trial_sanctuary" if bool(trial.sanctuary) else "cause_trial_elsewhere"

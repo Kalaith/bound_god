@@ -1,6 +1,8 @@
 extends RefCounted
-## Vernacular homes (M19): a settlement with people to house whose people
-## know no dwelling design devises one from what lies to hand: a small roofed
+## Vernacular homes (M19): a settlement that has had people to house for a
+## while (`construction.vernacular_after_days` since it was founded, so the
+## god has time to offer a design first) and whose people still know no
+## dwelling design devises one from what lies to hand: a small roofed
 ## room with a bed and a door, walled in stone where its deviser knows stone
 ## near (else planks between log corners) and roofed in thatch where grass is
 ## known (else planks). It is named from the place, chronicled with who
@@ -13,7 +15,10 @@ const Balance = preload("res://scripts/core/balance.gd")
 
 
 static func daily(sim: RefCounted) -> void:
+	var wait: int = sim.calendar.ticks_for_days(Balance.number("construction.vernacular_after_days"))
 	for id in sim.settlements.ids():
+		if sim.calendar.tick - int(sim.settlements.entries[id].get("founded_tick", 0)) < wait:
+			continue
 		if _homeless(sim, id) and not _knows_dwelling(sim, id):
 			devise(sim, id)
 

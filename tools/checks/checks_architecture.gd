@@ -4,6 +4,7 @@ extends RefCounted
 ## proposing them, blueprints, devised homes and worn paths.
 const Sim = preload("res://scripts/sim/sim.gd")
 const Data = preload("res://scripts/core/data.gd")
+const Balance = preload("res://scripts/core/balance.gd")
 const Template = preload("res://scripts/building/template.gd")
 const Build = preload("res://tools/checks/build.gd")
 const Meditation = preload("res://tools/checks/meditation.gd")
@@ -251,17 +252,25 @@ func check_a_blueprint_nobody_needs_fades():
 
 
 ## A settlement with people to house and no dwelling design among them
-## devises one from what lies to hand, everyone there learns it, and the
-## next home is built to it.
+## devises one from what lies to hand once the god has had time to offer
+## one (not on its first day), everyone there learns it, and the next home
+## is built to it.
 func check_a_settlement_with_no_home_design_devises_one():
 	var sim: RefCounted = Sim.create(11)
 	var settlement: Dictionary = sim.settlements.entries[1]
 	settlement.known_templates.clear()
 	for agent in sim.agents:
 		agent.beliefs.known_templates.clear()
+	sim.run_ticks(sim.calendar.ticks_per_day + 1)
+	if not sim.settlements.designs.is_empty():
+		return "a home was devised on the first day, before the god could offer one"
+	# The settlement has gone without for its while.
+	settlement.founded_tick = sim.calendar.tick - sim.calendar.ticks_for_days(Balance.number("construction.vernacular_after_days"))
 	var devised: String = ""
-	for _day in range(2):
-		sim.run_ticks(sim.calendar.ticks_per_day)
+	var there: Array = []
+	for _hour in range(sim.calendar.ticks_per_day * 2 / 30):
+		there = settlement.residents.filter(func(id: int) -> bool: return sim.agents[id].is_present())
+		sim.run_ticks(30)
 		if not sim.settlements.designs.is_empty():
 			devised = sim.settlements.designs.keys()[0]
 			break
@@ -270,7 +279,7 @@ func check_a_settlement_with_no_home_design_devises_one():
 	var template: RefCounted = sim.template(devised)
 	if template == null or not template.functions.has("dwelling"):
 		return "the devised design is not a dwelling: %s" % (str(template.functions) if template else "missing")
-	for agent_id in settlement.residents:
+	for agent_id in there:
 		if sim.agents[agent_id].is_present() and not sim.agents[agent_id].beliefs.known_templates.has(devised):
 			return "%s did not learn the devised home" % sim.agents[agent_id].full_name()
 	if not sim.template_name(devised).contains(str(settlement.name)):
@@ -361,3 +370,4 @@ func check_sect_architecture_is_saved():
 	if restored.paths.wear != sim.paths.wear:
 		return "path wear was not restored"
 	return ""
+
