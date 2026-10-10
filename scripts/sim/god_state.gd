@@ -25,6 +25,9 @@ var followed: Array = []
 ## Rules the god leaves for pinned people while meditating:
 ## agent id -> {mode: "shield" | "defy", limit: Favour it may spend}.
 var protect: Dictionary = {}
+## Blueprints the god has laid (sim/blueprints.gd), oldest first.
+var blueprints: Array = []
+var next_blueprint: int = 1
 ## Events for the presentation to react to: expelled, dormant, transfer.
 var events: Array = []
 
@@ -51,6 +54,7 @@ func to_dict() -> Dictionary:
 		"renown": renown, "offered": offered.duplicate(true), "offered_at": offered_at.duplicate(),
 		"avatar_cell": avatar_cell, "hotbar": hotbar.duplicate(), "prompts_dismissed": prompts_dismissed.duplicate(),
 		"followed": followed.duplicate(), "protect": protect.duplicate(true),
+		"blueprints": blueprints.duplicate(true), "next_blueprint": next_blueprint,
 	}
 
 
@@ -67,3 +71,6 @@ func from_dict(data: Dictionary) -> void:
 	prompts_dismissed = data.get("prompts_dismissed", [])
 	followed = data.get("followed", [])
 	protect = data.get("protect", {})
+	# Blueprints came with M19 (schema 5 worlds may lack them).
+	blueprints = data.get("blueprints", [])
+	next_blueprint = int(data.get("next_blueprint", 1))

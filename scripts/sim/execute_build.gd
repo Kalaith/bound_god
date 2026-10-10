@@ -5,6 +5,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const SiteFinder = preload("res://scripts/building/site_finder.gd")
+const Blueprints = preload("res://scripts/sim/blueprints.gd")
 const DeliberationWork = preload("res://scripts/agents/deliberation_work.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 
@@ -42,6 +43,13 @@ static func _mark_site(sim: RefCounted, agent: RefCounted, step: Dictionary, ste
 		var settlement: Dictionary = sim.settlements.get_settlement(agent.settlement_id)
 		if design == null or settlement.is_empty():
 			return Fail.NO_SITE
+		# The god's blueprint for this function, while its spot is free, first.
+		var proposal: Dictionary = Blueprints.proposal(sim, agent, str(step.function))
+		if not proposal.is_empty():
+			agent.activity = "building"
+			sim.effects.action("mark_site", agent.id, {"template_id": proposal.template.id, "origin": proposal.choice.origin, "rotation": proposal.choice.rotation,
+				"order": proposal.choice.order, "purpose": step.purpose, "blueprint": proposal.blueprint})
+			return Plans.RUNNING
 		var memo: String = "%d:%s" % [agent.settlement_id, design.id]
 		if int(sim.settlement_life.no_site_until.get(memo, -1)) > sim.calendar.tick:
 			return Fail.NO_SITE

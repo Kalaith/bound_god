@@ -3,6 +3,7 @@ extends RefCounted
 ## and moving materials between the divine stock and a storage chest.
 ## Neither asks anyone to do anything; they change what people know and have.
 const Balance = preload("res://scripts/core/balance.gd")
+const Blueprints = preload("res://scripts/sim/blueprints.gd")
 const Template = preload("res://scripts/building/template.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 
@@ -21,6 +22,10 @@ static func apply(sim: RefCounted, command: Dictionary) -> Dictionary:
 			return _follow(sim, command)
 		"protect":
 			return _protect(sim, command)
+		"lay_blueprint":
+			return Blueprints.lay(sim, command)
+		"lift_blueprint":
+			return Blueprints.lift(sim, int(command.get("id", -1)))
 		"dismiss_prompt":
 			var id: String = str(command.get("prompt", ""))
 			if id.is_empty():

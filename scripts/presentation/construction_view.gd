@@ -1,12 +1,13 @@
 extends Node3D
-## Ghost blocks for every block a building site still has to place, and
-## loose materials lying about. Stores need no marker: they are the chests.
+## Ghost blocks for every block a building site still has to place, the
+## god's blueprints in a paler ghost, and loose materials lying about. Stores need no marker: they are the chests.
 ## Rebuilt only when the sites or items change.
 const AgentView = preload("res://scripts/presentation/agent_view.gd")
 
 var sim: RefCounted
 var _ghosts := MultiMeshInstance3D.new()
 var _items := MultiMeshInstance3D.new()
+var _plans := MultiMeshInstance3D.new()
 var _key: String = ""
 
 
@@ -20,6 +21,12 @@ func _ready() -> void:
 	_ghosts.material_override = ghost_material
 	_ghosts.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_ghosts)
+	var plan_material: StandardMaterial3D = ghost_material.duplicate()
+	plan_material.albedo_color = Color(0.6, 0.8, 1.0, 0.16)
+	_plans.multimesh = _multimesh(Vector3(0.96, 0.96, 0.96), false)
+	_plans.material_override = plan_material
+	_plans.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_plans)
 	var loose := StandardMaterial3D.new()
 	loose.vertex_color_use_as_albedo = true
 	_items.multimesh = _multimesh(Vector3(0.3, 0.2, 0.3), true)
@@ -44,6 +51,8 @@ func _process(_delta: float) -> void:
 	for id in sim.construction.ids():
 		key += ":%d/%d" % [id, sim.construction.get_site(id).cursor]
 	key += "#%d" % sim.items.size()
+	for entry in sim.god.blueprints:
+		key += "b%d" % int(entry.id)
 	if key == _key:
 		return
 	_key = key
@@ -62,6 +71,16 @@ func _rebuild() -> void:
 	ghosts.instance_count = cells.size()
 	for i in range(cells.size()):
 		ghosts.set_instance_transform(i, Transform3D(Basis(), Vector3(cells[i]) + Vector3(0.5, 0.5, 0.5)))
+	var planned: Array = []
+	for entry in sim.god.blueprints:
+		var template: RefCounted = sim.template(str(entry.template_id))
+		if template == null:
+			continue
+		for placed in template.placement(int(entry.rotation)):
+			planned.append(entry.origin + placed[0])
+	_plans.multimesh.instance_count = planned.size()
+	for i in range(planned.size()):
+		_plans.multimesh.set_instance_transform(i, Transform3D(Basis(), Vector3(planned[i]) + Vector3(0.5, 0.5, 0.5)))
 	var items: MultiMesh = _items.multimesh
 	var keys: Array = sim.items.keys()
 	items.instance_count = keys.size()

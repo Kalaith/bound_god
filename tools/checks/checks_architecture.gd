@@ -13,6 +13,7 @@ const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const ExecuteCultivation = preload("res://scripts/sim/execute_cultivation.gd")
 const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
 const Tribulations = preload("res://scripts/sim/tribulations.gd")
+const SiteFinder = preload("res://scripts/building/site_finder.gd")
 
 const NONE := Vector3i(-1, -1, -1)
 
@@ -174,3 +175,67 @@ func long_check_the_sect_raises_its_hall_and_ground():
 			return ""
 	print("      after 30 days: marked %s" % str(raised))
 	return "the sect did not raise both (hall %s, ground %s)" % [not _structure(sim, "meditation_hall").is_empty(), not _structure(sim, "tribulation_ground").is_empty()]
+
+
+## Lays `id` as a blueprint on the first spot, away from the one the
+## settlement would choose itself, that the command accepts.
+static func _lay_away(sim: RefCounted, id: String) -> Dictionary:
+	var template: RefCounted = Template.from_starter(Data.starter(id))
+	var settlement: Dictionary = sim.settlements.entries[1]
+	var own: Dictionary = SiteFinder.find(sim, template, settlement)
+	for ring in range(4, 20, 2):
+		for k in range(8):
+			var angle: float = k * PI / 4.0
+			var corner := Vector3i(settlement.center.x + roundi(cos(angle) * ring), 0, settlement.center.z + roundi(sin(angle) * ring))
+			if not own.is_empty() and Vector2(corner.x - own.origin.x, corner.z - own.origin.z).length() < 6.0:
+				continue
+			var result: Dictionary = sim.apply_command({"type": "lay_blueprint", "template": id, "origin": corner, "rotation": 0})
+			if result.ok:
+				return sim.god.blueprints.back()
+	return {}
+
+
+## A blueprint laid by the god is taken up by the next founder who wants
+## that function and knows the design, on the god's spot.
+func check_a_blueprint_is_taken_up():
+	var valley: Dictionary = Meditation.valley(11)
+	var sim: RefCounted = valley.sim
+	var laid: Dictionary = _lay_away(sim, "timber_cottage")
+	if laid.is_empty():
+		return "no spot took the blueprint"
+	var refused: Dictionary = sim.apply_command({"type": "lay_blueprint", "template": "meditation_hall", "origin": laid.origin, "rotation": 0})
+	if refused.ok:
+		return "a design never offered was laid"
+	for _hour in range(sim.calendar.ticks_per_day * 3 / 30):
+		sim.run_ticks(30)
+		for id in sim.construction.ids():
+			var site: Dictionary = sim.construction.get_site(id)
+			if site.template_id == "timber_cottage":
+				if site.origin != laid.origin:
+					return "the first cottage went up at %s, not the god's %s" % [site.origin, laid.origin]
+				if not sim.god.blueprints.is_empty():
+					return "the blueprint stayed after it was taken"
+				for entry in sim.chronicle.entries:
+					if entry.kind == "blueprint_taken":
+						return ""
+				return "taking the blueprint was not chronicled"
+	return "no cottage was begun in three days"
+
+
+## A blueprint nobody needs is never built and fades after a season.
+func check_a_blueprint_nobody_needs_fades():
+	var sim: RefCounted = Sim.create(11)
+	sim.apply_command({"type": "offer_template", "template": Template.from_starter(Data.starter("trial_ground")).to_dict()})
+	var laid: Dictionary = _lay_away(sim, "trial_ground")
+	if laid.is_empty():
+		return "no spot took the blueprint"
+	sim.run_ticks(sim.calendar.ticks_for_days(float(sim.calendar.days_per_season)) + sim.calendar.ticks_per_day)
+	for id in sim.construction.ids():
+		if sim.construction.get_site(id).template_id == "trial_ground":
+			return "a ground nobody needed was begun"
+	if not sim.god.blueprints.is_empty():
+		return "the blueprint did not fade"
+	for entry in sim.chronicle.entries:
+		if entry.kind == "blueprint_faded":
+			return ""
+	return "its fading was not chronicled"

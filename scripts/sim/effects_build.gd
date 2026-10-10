@@ -7,6 +7,7 @@ const Mind = preload("res://scripts/agents/mind.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
 const Construction = preload("res://scripts/sim/construction.gd")
+const Blueprints = preload("res://scripts/sim/blueprints.gd")
 
 
 static func apply(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
@@ -37,6 +38,8 @@ static func _mark(sim: RefCounted, agent: RefCounted, action: Dictionary) -> voi
 	var id: int = sim.construction.create(action.template_id, action.origin, int(action.rotation), agent.settlement_id,
 		agent.id, action.purpose, order, sim.calendar.tick)
 	agent.step_result = {"site": id}
+	if action.has("blueprint"):
+		Blueprints.taken(sim, int(action.blueprint), agent)
 	if timber:
 		sim.construction.sites[id]["made_do"] = true
 	var cause: String = _cause(sim, agent, str(action.purpose))

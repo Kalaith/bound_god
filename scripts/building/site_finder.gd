@@ -30,15 +30,7 @@ static func _spiral(radius: int) -> Array:
 static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary, enough: int = 0, most_spots: int = 0) -> Dictionary:
 	var center: Vector3i = settlement.center
 	var radius: int = mini(Balance.integer("construction.site_search_radius"), int(settlement.radius))
-	# Columns other buildings or sites already hold, and ground heights, are
-	# gathered once: per-candidate scans made this the slowest thing in the sim.
-	var blocked: Dictionary = {}
-	for entry in sim.structures.built():
-		for cell in entry.cells:
-			blocked[Vector2i(cell.x, cell.z)] = true
-	for cell in sim.construction.reserved:
-		blocked[Vector2i(cell.x, cell.z)] = true
-	var context: Dictionary = {"blocked": blocked, "tops": {}, "footprints": {}, "rules": _place_rules(sim, template)}
+	var context: Dictionary = _context(sim, template)
 	var candidates: Array = []
 	var looked: int = 0
 	for offset in _spiral(radius):
@@ -57,14 +49,39 @@ static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary, 
 		if a.origin != b.origin:
 			return sim.voxels.index_of(a.origin) < sim.voxels.index_of(b.origin)
 		return a.rotation < b.rotation)
-	var camp: Vector3i = settlement.camp
 	for i in range(mini(candidates.size(), 4)):
-		var choice: Dictionary = candidates[i]
-		var door_out: Vector3i = sim.nav.nearest_walkable(choice.outside, 1)
-		if door_out.x >= 0 and (door_out == camp or not sim.nav.find_path(door_out, camp).is_empty()):
-			choice["order"] = _order(sim, template, choice)
-			return choice
+		if _reaches(sim, candidates[i], settlement.camp):
+			candidates[i]["order"] = _order(sim, template, candidates[i])
+			return candidates[i]
 	return {}
+
+
+## One chosen spot (a blueprint's) checked as a candidate would be:
+## {origin, rotation, order} or {} when it is not a site today.
+static func check(sim: RefCounted, template: RefCounted, corner: Vector2i, rotation: int, settlement: Dictionary) -> Dictionary:
+	var choice: Dictionary = _score(sim, template, corner, rotation, settlement, _context(sim, template))
+	if choice.is_empty() or not _reaches(sim, choice, settlement.camp):
+		return {}
+	choice["order"] = _order(sim, template, choice)
+	return choice
+
+
+## Columns other buildings or sites already hold, and ground heights, are
+## gathered once: per-candidate scans made this the slowest thing in the sim.
+static func _context(sim: RefCounted, template: RefCounted) -> Dictionary:
+	var blocked: Dictionary = {}
+	for entry in sim.structures.built():
+		for cell in entry.cells:
+			blocked[Vector2i(cell.x, cell.z)] = true
+	for cell in sim.construction.reserved:
+		blocked[Vector2i(cell.x, cell.z)] = true
+	return {"blocked": blocked, "tops": {}, "footprints": {}, "rules": _place_rules(sim, template)}
+
+
+## A path runs from outside the door to the stores.
+static func _reaches(sim: RefCounted, choice: Dictionary, camp: Vector3i) -> bool:
+	var door_out: Vector3i = sim.nav.nearest_walkable(choice.outside, 1)
+	return door_out.x >= 0 and (door_out == camp or not sim.nav.find_path(door_out, camp).is_empty())
 
 
 static func _top(world: RefCounted, context: Dictionary, x: int, z: int) -> int:

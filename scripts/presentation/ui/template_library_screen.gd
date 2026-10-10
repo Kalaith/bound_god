@@ -2,6 +2,7 @@ extends Control
 signal closed
 signal capture_requested
 signal offer_requested(design: RefCounted)
+signal blueprint_requested(design: RefCounted)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const FunctionRules = preload("res://scripts/building/function_rules.gd")
@@ -23,6 +24,7 @@ var _preview: Control
 var _save: Button
 var _export: Button
 var _offer: Button
+var _blueprint: Button
 ## Ids already offered at a shrine, pushed in by main when the screen opens.
 var offered: Dictionary = {}
 var _dialog: FileDialog
@@ -77,6 +79,9 @@ func _ready() -> void:
 	_offer = _button(actions, "design_offer", func() -> void:
 		if selected != null and not draft:
 			offer_requested.emit(selected))
+	_blueprint = _button(actions, "design_blueprint", func() -> void:
+		if selected != null and offered.has(selected.id):
+			blueprint_requested.emit(selected))
 	_help_button = _button(actions, "design_functions", func() -> void:
 		_help = not _help
 		_refresh())
@@ -158,6 +163,7 @@ func _refresh() -> void:
 	_export.disabled = selected == null or draft
 	_offer.disabled = selected == null or draft or offered.has(selected.id)
 	_offer.text = Text.label("design_offered" if selected != null and offered.has(selected.id) else "design_offer")
+	_blueprint.disabled = selected == null or draft or not offered.has(selected.id)
 	_name.editable = draft
 	_name.text = selected.name if selected != null else ""
 	_preview.show_design(selected)

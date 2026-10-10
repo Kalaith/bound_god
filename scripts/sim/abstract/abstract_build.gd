@@ -14,6 +14,7 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const SiteFinder = preload("res://scripts/building/site_finder.gd")
+const Blueprints = preload("res://scripts/sim/blueprints.gd")
 const Construction = preload("res://scripts/sim/construction.gd")
 const EffectsBuild = preload("res://scripts/sim/effects_build.gd")
 const DeliberationFood = preload("res://scripts/agents/deliberation_food.gd")
@@ -139,6 +140,13 @@ static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
 			continue
 		if not design.bill.is_empty() and open >= Balance.integer("construction.max_open_sites"):
 			continue
+		# The god's blueprint for this function, while its spot is free, first.
+		var proposal: Dictionary = _blueprint(sim, id, str(want[0]))
+		if not proposal.is_empty():
+			design = proposal.template
+			_mark(sim, id, design, proposal.choice, want)
+			Blueprints.taken(sim, int(proposal.blueprint), sim.agents[int(want[2])])
+			return
 		var failed: Array = tried.get(design.id, [-1, 0, -1, -1])
 		var ground: Array = [int(sim.structures.version), sim.construction.reserved.size()]
 		# Nothing built, fallen or reserved since it last failed: it would fail again.
@@ -152,12 +160,32 @@ static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
 			record["no_site"] = tried
 			continue
 		tried.erase(design.id)
-		var site_id: int = sim.construction.create(design.id, choice.origin, int(choice.rotation), id, int(want[2]), str(want[1]), choice.order, sim.calendar.tick)
-		var site: Dictionary = sim.construction.sites[site_id]
-		site["cause"] = EffectsBuild._cause(sim, sim.agents[int(want[2])], str(want[1]))
-		site["placed_to"] = 0
-		sim.chronicle_event("site_marked", id, {"name": sim.agents[int(want[2])].full_name(), "design": sim.template_name(design.id)}, str(site.cause), [int(want[2])])
+		_mark(sim, id, design, choice, want)
 		return
+
+
+static func _mark(sim: RefCounted, id: int, design: RefCounted, choice: Dictionary, want: Array) -> void:
+	var site_id: int = sim.construction.create(design.id, choice.origin, int(choice.rotation), id, int(want[2]), str(want[1]), choice.order, sim.calendar.tick)
+	var site: Dictionary = sim.construction.sites[site_id]
+	site["cause"] = EffectsBuild._cause(sim, sim.agents[int(want[2])], str(want[1]))
+	site["placed_to"] = 0
+	sim.chronicle_event("site_marked", id, {"name": sim.agents[int(want[2])].full_name(), "design": sim.template_name(design.id)}, str(site.cause), [int(want[2])])
+
+
+## A free blueprint in the settlement of a design its people know.
+static func _blueprint(sim: RefCounted, id: int, function: String) -> Dictionary:
+	for entry in sim.god.blueprints:
+		if int(entry.settlement_id) != id:
+			continue
+		var design: RefCounted = design_for(sim, id, function)
+		var known: bool = sim.settlements.entries[id].known_templates.has(entry.template_id)
+		for agent_id in sim.settlements.entries[id].residents:
+			known = known or sim.agents[agent_id].beliefs.known_templates.has(entry.template_id)
+		if design != null and known:
+			var found: Dictionary = Blueprints.still_free(sim, entry, function)
+			if not found.is_empty():
+				return found
+	return {}
 
 
 static func _open_for(sim: RefCounted, id: int, purpose: String) -> bool:

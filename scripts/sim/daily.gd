@@ -6,6 +6,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Lifecycle = preload("res://scripts/sim/lifecycle.gd")
 const Spoilage = preload("res://scripts/sim/spoilage.gd")
+const Blueprints = preload("res://scripts/sim/blueprints.gd")
 
 
 static func new_day(sim: RefCounted) -> void:
@@ -31,6 +32,7 @@ static func new_day(sim: RefCounted) -> void:
 		sim.settlement_life.daily(sim)
 	if sim.sects != null:
 		sim.sects.daily(sim)
+	Blueprints.daily(sim)
 	if sim.tree_growth != null:
 		sim.tree_growth.daily(sim)
 	if sim.faith != null:

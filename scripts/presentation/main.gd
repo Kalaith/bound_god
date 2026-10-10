@@ -16,6 +16,7 @@ const Hud = preload("res://scripts/presentation/ui/hud.gd")
 const Text = preload("res://scripts/core/text.gd")
 const CaptureScenes = preload("res://scripts/presentation/capture_scenes.gd")
 const DesignTool = preload("res://scripts/presentation/design_tool.gd")
+const BlueprintTool = preload("res://scripts/presentation/blueprint_tool.gd")
 const LibraryScreen = preload("res://scripts/presentation/ui/template_library_screen.gd")
 const SimDriver = preload("res://scripts/presentation/sim_driver.gd")
 const AgentViews = preload("res://scripts/presentation/agent_views.gd")
@@ -54,6 +55,7 @@ var qi_overlay: MeshInstance3D
 var tree_screen: Control
 var hud: Control
 var design_tool: Node3D
+var blueprint_tool: Node3D
 var library_screen: Control
 var driver: Node
 var agent_views: Node3D
@@ -76,6 +78,8 @@ var _show_guide: bool = true
 var _guide_left: float = 0.0
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
+## Set by a capture that frames its own shot: the overlook stays where it put it.
+var camera_hold: bool = false
 var _loading: Label
 var _zone_key: String = ""
 
@@ -150,6 +154,11 @@ func _start() -> void:
 	add_child(design_tool)
 	design_tool.message.connect(hud.flash)
 	design_tool.captured.connect(_open_library)
+	blueprint_tool = BlueprintTool.new()
+	blueprint_tool.sim = sim
+	blueprint_tool.builder = builder
+	add_child(blueprint_tool)
+	blueprint_tool.message.connect(hud.flash)
 	library_screen = LibraryScreen.new()
 	ui_layer.add_child(library_screen)
 	library_screen.closed.connect(_close_library)
@@ -202,6 +211,9 @@ func _start() -> void:
 		settlement_panel.hide()
 		resume_world_input())
 	library_screen.offer_requested.connect(_offer)
+	library_screen.blueprint_requested.connect(func(design: RefCounted) -> void:
+		_close_library()
+		blueprint_tool.begin(design))
 	people = PeopleController.new()
 	people.sim = sim
 	people.views = agent_views
@@ -279,7 +291,7 @@ func _sync_zone() -> void:
 	var radius: float = sim.zone_radius()
 	avatar.zone_center = center
 	avatar.zone_radius = radius
-	if inspector == null or not inspector.following:
+	if (inspector == null or not inspector.following) and not camera_hold:
 		camera_rig.overlook_center = center
 	var key: String = "%s/%.2f" % [center, radius]
 	if key != _zone_key:
@@ -319,10 +331,10 @@ func _hud_state() -> Dictionary:
 		"selected": builder.selected,
 		"shrine": faith.shrine_line(),
 		"prayers": faith.prayer_lines(),
-		"hint": design_tool.hint() if design_tool.active else Text.label("hud_controls"),
+		"hint": design_tool.hint() if design_tool.active else (blueprint_tool.hint() if blueprint_tool.active else Text.label("hud_controls")),
 		"prompt": _prompt() if accepts_world_input() else "",
 		"guide": _prompt_now.get("text", ""),
-		"hotbar_visible": not design_tool.active and not library_screen.visible,
+		"hotbar_visible": not design_tool.active and not blueprint_tool.active and not library_screen.visible,
 		"crosshair": Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not capture_request.is_empty(),
 	}
 
@@ -346,6 +358,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if design_tool != null and design_tool.active and event.is_action_pressed("toggle_settings"):
 		design_tool.finish()
+		get_viewport().set_input_as_handled()
+		return
+	if blueprint_tool != null and blueprint_tool.active and event.is_action_pressed("toggle_settings"):
+		blueprint_tool.finish()
 		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("speed_pause"):
