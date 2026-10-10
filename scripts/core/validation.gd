@@ -28,7 +28,8 @@ const AMBITION_KINDS: Array[String] = [
 ## Miracle effects that sim/miracles.gd implements; the catalog may not name others.
 const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend", "bless_cultivation", "shield_trial", "defy_heaven", "nurture"]
 ## Kept in step with FunctionRules.FUNCTIONS (not preloaded: the rules load data).
-const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary"]
+const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary",
+	"meditation_hall", "tribulation_ground"]
 const BALANCE_SECTIONS: Array[String] = [
 	"time", "needs", "agents", "social", "mood", "health", "work", "construction", "world",
 	"settlements", "food", "farming", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
@@ -228,8 +229,16 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 			if not components.has(key):
 				errors.append("templates: " + rule.id + " names unknown component " + str(key))
 		for key in rule.capacity:
-			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots", "furrows", "cooks", "grain"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
+			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots", "furrows", "cooks", "grain", "mats", "formations"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
 				errors.append("templates: unknown capacity mapping")
+		for name in rule.get("requires_blocks", {}):
+			if not names.has(name) or not _number(rule.requires_blocks[name]):
+				errors.append("templates: " + rule.id + " requires unknown block " + str(name))
+		for other in rule.get("apart_from", {}):
+			if not FUNCTION_IDS.has(other) or not _number(rule.apart_from[other]):
+				errors.append("templates: " + rule.id + " keeps apart from unknown function " + str(other))
+		if rule.has("qi_at_least") and (not _number(rule.qi_at_least) or rule.requires.is_empty()):
+			errors.append("templates: " + rule.id + " has a qi threshold but no component to measure it at")
 		for key in ["sky_or_tree_within", "min_roofed_floor"]:
 			if rule.has(key) and (not _number(rule[key]) or float(rule[key]) < 0):
 				errors.append("templates: invalid " + key)

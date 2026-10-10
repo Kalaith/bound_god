@@ -1,0 +1,176 @@
+extends RefCounted
+## M19 Sect architecture: the meditation hall and tribulation ground as
+## designs and as places that change cultivation and trials, the sect
+## proposing them, blueprints, devised homes and worn paths.
+const Sim = preload("res://scripts/sim/sim.gd")
+const Data = preload("res://scripts/core/data.gd")
+const Template = preload("res://scripts/building/template.gd")
+const Build = preload("res://tools/checks/build.gd")
+const Meditation = preload("res://tools/checks/meditation.gd")
+const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
+const Movement = preload("res://scripts/sim/movement.gd")
+const SectPlaces = preload("res://scripts/sim/sect_places.gd")
+const ExecuteCultivation = preload("res://scripts/sim/execute_cultivation.gd")
+const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
+const Tribulations = preload("res://scripts/sim/tribulations.gd")
+
+const NONE := Vector3i(-1, -1, -1)
+
+
+static func _seat(agent: RefCounted, cell: Vector3i) -> void:
+	agent.cell = cell
+	agent.position = Movement.center(cell)
+	agent.previous_position = agent.position
+
+
+## Progress one cultivator makes sitting at `cell` for `ticks` ticks.
+static func _sit(sim: RefCounted, agent: RefCounted, cell: Vector3i, ticks: int) -> float:
+	_seat(agent, cell)
+	agent.cultivation.progress = 0.0
+	agent.step_result = {}
+	for i in range(ticks):
+		ExecuteCultivation._cultivate(sim, agent, {"ticks": ticks + 10}, i)
+	return float(agent.cultivation.progress)
+
+
+static func _structure(sim: RefCounted, function: String) -> Dictionary:
+	for entry in sim.structures.built():
+		if entry.functions.has(function):
+			return entry
+	return {}
+
+
+## The starter designs carry their functions on their own.
+func check_the_sect_designs_have_their_functions():
+	for pair in [["meditation_hall", "meditation_hall"], ["trial_ground", "tribulation_ground"]]:
+		var template: RefCounted = Template.from_starter(Data.starter(pair[0]))
+		if not template.functions.has(pair[1]):
+			return "%s gives %s, not %s" % [pair[0], str(template.functions), pair[1]]
+	return ""
+
+
+## The same person sitting in the same qi progresses faster on a hall's mat
+## than outside it; the hall stands only where the tree's qi is dense.
+func check_a_hall_speeds_cultivation():
+	var sim: RefCounted = Sim.create(11)
+	if Build.stamp(sim, 1, "meditation_hall").x < 0:
+		return "no site for a meditation hall"
+	var hall: Dictionary = _structure(sim, "meditation_hall")
+	if hall.is_empty():
+		return "the stamped hall is not a meditation hall"
+	var mat: Vector3i = hall.components.mat[0]
+	if sim.qi.density(sim, mat) < 0.5:
+		return "a hall stands in thin qi (%.2f)" % sim.qi.density(sim, mat)
+	var agent: RefCounted = sim.agents[0]
+	agent.cultivation = CultivationState.fresh(0.6, "none", 0.9)
+	agent.cultivation.realm = 1
+	var inside: float = _sit(sim, agent, mat, 60) / sim.qi.density(sim, mat)
+	var out: Vector3i = sim.nav.nearest_walkable(hall.anchor + Vector3i(0, 0, -6), 3)
+	if out.x < 0 or SectPlaces.in_hall(sim, out):
+		return "no place outside the hall to compare with"
+	var outside: float = _sit(sim, agent, out, 60) / sim.qi.density(sim, out)
+	var factor: float = inside / maxf(outside, 0.0001)
+	if absf(factor - 1.3) > 0.05:
+		return "the hall's help was %.2f, not 1.3" % factor
+	# A cultivator of the settlement looks for the hall's mats.
+	agent.settlement_id = 1
+	_seat(agent, out)
+	var spot: Vector3i = DeliberationCultivation.spot(sim, agent)
+	if not SectPlaces.in_hall(sim, spot) and DeliberationCultivation.sitting_qi(sim, spot) < DeliberationCultivation.sitting_qi(sim, mat):
+		return "the cultivator chose %s over a better mat" % spot
+	return ""
+
+
+## A trial faced on a tribulation ground counts as sanctuary, its lightning
+## strikes the formation stones and nothing is scorched.
+func check_a_ground_draws_the_lightning():
+	var sim: RefCounted = Sim.create(11)
+	if Build.stamp(sim, 1, "trial_ground").x < 0:
+		return "no site for a trial ground"
+	var ground: Dictionary = _structure(sim, "tribulation_ground")
+	if ground.is_empty():
+		return "the stamped ground is not a tribulation ground"
+	var agent: RefCounted = sim.agents[0]
+	agent.settlement_id = 1
+	agent.cultivation = CultivationState.fresh(0.6, "none", 0.9)
+	agent.cultivation.realm = 1
+	agent.cultivation.progress = CultivationState.needed(agent.cultivation)
+	agent.cultivation.foundation = 0.6
+	agent.cultivation.techniques = ["tree_breath"]
+	var site: Vector3i = DeliberationCultivation.trial_site(sim, agent)
+	if SectPlaces.ground_at(sim, site).is_empty():
+		return "the cultivator would not face Heaven on the ground (%s)" % site
+	_seat(agent, site)
+	if not Tribulations.in_sanctuary(sim, site):
+		return "the ground is not counted as sanctuary"
+	var before: Dictionary = {}
+	for dz in range(-12, 13):
+		for dx in range(-12, 13):
+			for dy in range(-6, 8):
+				before[site + Vector3i(dx, dy, dz)] = sim.voxels.get_block(site + Vector3i(dx, dy, dz))
+	var id: int = sim.tribulations.announce(sim, agent, site)
+	var trial: Dictionary = sim.tribulations.entries[id]
+	trial.start_tick = sim.calendar.tick + 1
+	for i in range(trial.strikes.size()):
+		trial.strikes[i] = sim.calendar.tick + 2 + i * 3
+	trial.end_tick = sim.calendar.tick + 4 + trial.strikes.size() * 3
+	for _i in range(trial.strikes.size() * 3 + 6):
+		sim.tribulations.step(sim)
+		sim.calendar.tick += 1
+	if not bool(trial.sanctuary):
+		return "the trial was not held in sanctuary"
+	if int(trial.scorched) > 0:
+		return "lightning scorched %d blocks on the ground" % trial.scorched
+	for cell in before:
+		if sim.voxels.get_block(cell) != before[cell]:
+			return "lightning changed %s" % cell
+	if int(trial.get("drawn", 0)) == 0:
+		return "no strike went to a formation stone"
+	return ""
+
+
+## A sect of four wants a hall; once one of them has faced Heaven it wants a
+## ground; its master proposes them, a disciple or an outsider does not.
+func check_the_sect_wants_its_places():
+	var valley: Dictionary = Meditation.valley(11)
+	var sim: RefCounted = valley.sim
+	var wants: Array = SectPlaces.wants(sim, 1, {}).map(func(w: Array) -> String: return str(w[0]))
+	if wants != ["meditation_hall"]:
+		return "a young sect wants %s" % str(wants)
+	sim.agents[int(valley.members[1])].cultivation.trials.append({"tick": 0, "realm": 1, "outcome": "passed"})
+	var master: RefCounted = sim.agents[int(valley.master)]
+	wants = SectPlaces.wants(sim, 1, {"meditation_hall": 1}, master).map(func(w: Array) -> String: return str(w[0]))
+	if wants != ["tribulation_ground"]:
+		return "after a trial the master wants %s" % str(wants)
+	var sect: Dictionary = sim.sects.in_settlement(1)
+	for agent in sim.agents:
+		if agent.is_present() and agent.settlement_id == 1 and str(sect.members.get(agent.id, "")) in ["", "disciple"]:
+			if not SectPlaces.wants(sim, 1, {}, agent).is_empty():
+				return "%s (%s) proposes the sect's places" % [agent.full_name(), str(sect.members.get(agent.id, "outsider"))]
+	return ""
+
+
+## Exit (plan M19): on seed 11 with a sect, offered the two designs, the sect
+## raises a meditation hall and a tribulation ground by its own proposals.
+func long_check_the_sect_raises_its_hall_and_ground():
+	var valley: Dictionary = Meditation.valley(11)
+	var sim: RefCounted = valley.sim
+	for id in ["meditation_hall", "trial_ground"]:
+		sim.apply_command({"type": "offer_template", "template": Template.from_starter(Data.starter(id)).to_dict()})
+	var start: int = sim.calendar.tick
+	var raised: Array = []
+	for day in range(30):
+		sim.run_ticks(sim.calendar.ticks_per_day)
+		# One of them faces Heaven early on, so the ground is wanted.
+		if day == 2:
+			sim.agents[int(valley.members[1])].cultivation.trials.append({"tick": sim.calendar.tick, "realm": 1, "outcome": "passed"})
+		for entry in sim.chronicle.since(start):
+			if entry.kind == "site_marked" and str(entry.cause).begins_with("cause_sect_needs"):
+				var line: String = "%s day %d" % [str(entry.cause), day]
+				if not raised.any(func(r: String) -> bool: return r.begins_with(str(entry.cause))):
+					raised.append(line)
+		if not _structure(sim, "meditation_hall").is_empty() and not _structure(sim, "tribulation_ground").is_empty():
+			print("      both stand by day %d; marked %s" % [day, str(raised)])
+			return ""
+	print("      after 30 days: marked %s" % str(raised))
+	return "the sect did not raise both (hall %s, ground %s)" % [not _structure(sim, "meditation_hall").is_empty(), not _structure(sim, "tribulation_ground").is_empty()]

@@ -17,6 +17,7 @@ const SiteFinder = preload("res://scripts/building/site_finder.gd")
 const Construction = preload("res://scripts/sim/construction.gd")
 const EffectsBuild = preload("res://scripts/sim/effects_build.gd")
 const DeliberationFood = preload("res://scripts/agents/deliberation_food.gd")
+const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const DeliberationWork = preload("res://scripts/agents/deliberation_work.gd")
 const AbstractPeople = preload("res://scripts/sim/abstract/abstract_people.gd")
 
@@ -81,6 +82,9 @@ static func wants(sim: RefCounted, id: int) -> Array:
 		result.append(["storehouse", "storehouse", leader])
 	if people >= Balance.integer("construction.hall_residents") and int(have.get("hall", 0)) == 0:
 		result.append(["hall", "hall", leader])
+	var sect: Dictionary = sim.sects.in_settlement(id) if sim.sects != null else {}
+	for want in SectPlaces.wants(sim, id, have):
+		result.append([want[0], want[0], int(sect.get("master", leader))])
 	return result
 
 

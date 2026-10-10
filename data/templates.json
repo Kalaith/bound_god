@@ -11,7 +11,9 @@
 		{"id": "garden", "requires": {"planter": 4}, "requires_any": [], "roofed": [], "roof_reach": 4, "capacity": {"plots": "planter"}},
 		{"id": "field", "requires": {"farmland": 6}, "requires_any": [], "roofed": [], "open_sky": ["farmland"], "roof_reach": 4, "capacity": {"furrows": "farmland"}},
 		{"id": "kitchen", "requires": {"hearth": 1}, "requires_any": ["workbench", "chest"], "roofed": ["hearth"], "roof_reach": 4, "capacity": {"cooks": "hearth"}},
-		{"id": "granary", "requires": {"granary_bin": 2, "door": 1}, "requires_any": [], "roofed": ["granary_bin"], "roof_reach": 4, "capacity": {"grain": "granary_bin"}}
+		{"id": "granary", "requires": {"granary_bin": 2, "door": 1}, "requires_any": [], "roofed": ["granary_bin"], "roof_reach": 4, "capacity": {"grain": "granary_bin"}},
+		{"id": "meditation_hall", "requires": {"mat": 2}, "requires_any": [], "roofed": ["mat"], "roof_reach": 4, "qi_at_least": 0.5, "capacity": {"mats": "mat"}},
+		{"id": "tribulation_ground", "requires": {"formation": 2}, "requires_any": [], "roofed": [], "open_sky": ["formation"], "requires_blocks": {"cut_stone": 6}, "apart_from": {"dwelling": 10}, "roof_reach": 4, "capacity": {"formations": "formation"}}
 	],
 	"starters": [
 		{
@@ -126,6 +128,31 @@
 				["LPPL", "PHWP", "P..P", "L..L"],
 				["LPPL", "P..P", "P..P", "L..L"],
 				["TTTT", "TTTT", "TTTT", "TTTT"]
+			]
+		},
+		{
+			"id": "meditation_hall",
+			"name": "Meditation Hall",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "P": "planks", "L": "log", "D": "door", "M": "meditation_mat", "T": "thatch"},
+			"entrance": [3, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPPDPPL", "P.....P", "P.M.M.P", "P.....P", "P.M.M.P", "LPPPPPL"],
+				["LPPDPPL", "P.....P", "P.....P", "P.....P", "P.....P", "LPPPPPL"],
+				["TTTTTTT", "TTTTTTT", "TTTTTTT", "TTTTTTT", "TTTTTTT", "TTTTTTT"]
+			]
+		},
+		{
+			"id": "trial_ground",
+			"name": "Trial Ground",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "S": "cut_stone", "O": "formation_stone"},
+			"entrance": [2, 1, 0],
+			"meta": {},
+			"layers": [
+				["SSSSS", "SSSSS", "SSSSS", "SSSSS", "SSSSS"],
+				["O...O", ".....", ".....", ".....", "O...O"]
 			]
 		},
 		{

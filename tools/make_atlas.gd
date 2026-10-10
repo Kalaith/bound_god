@@ -69,6 +69,15 @@ func _init() -> void:
 	_strokes(Vector2i(6, 6), Color("8a4a2a"), 3, 3, 0.25)
 	_earth(Vector2i(7, 6), Color("4b4038"))
 	_strokes(Vector2i(7, 6), Color("2a2420"), 8, 5, 0.45)
+	# Sect architecture (M19): a woven meditation mat, a carved formation
+	# stone (side and top) and a worn path.
+	_thatch(Vector2i(2, 4))
+	_strokes(Vector2i(2, 4), Color("8c6c3c"), 6, 6, 0.3)
+	_stone(Vector2i(3, 4), Color("8f9a92"))
+	_glow_lines(Vector2i(3, 4))
+	_stone(Vector2i(4, 4), Color("9aa59c"))
+	_earth(Vector2i(5, 4), Color("a08a68"))
+	_pebbles_on(Vector2i(5, 4))
 	var error: int = image.save_png("res://assets/blocks_atlas.png")
 	print("atlas saved: ", error == OK)
 	quit(0 if error == OK else 1)
@@ -481,3 +490,13 @@ func _sapling(tile: Vector2i) -> void:
 			for x in range(int(tuft.x) - 3, int(tuft.x) + 4):
 				if Vector2(x, y).distance_to(tuft) < 3.2 and rng.randf() < 0.9:
 					_px(tile, x, y, Color("6f8a5c").darkened(rng.randf() * 0.18))
+
+
+## A few pale stones pressed into packed earth.
+func _pebbles_on(tile: Vector2i) -> void:
+	for _i in range(9):
+		var x: int = rng.randi_range(1, TILE - 3)
+		var y: int = rng.randi_range(1, TILE - 3)
+		for dy in range(2):
+			for dx in range(2):
+				_blend(tile, x + dx, y + dy, Color("c4b89c"), 0.7)

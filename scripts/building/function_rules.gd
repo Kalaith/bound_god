@@ -4,10 +4,12 @@ const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const RoomProbe = preload("res://scripts/world/room_probe.gd")
 const Balance = preload("res://scripts/core/balance.gd")
+const Qi = preload("res://scripts/sim/qi.gd")
 
 ## Every function a structure can have, in a fixed order: goal targets and
 ## saved proposals refer to a function by its index here, so only append.
-const FUNCTIONS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary"]
+const FUNCTIONS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary",
+	"meditation_hall", "tribulation_ground"]
 
 
 static func evaluate(world: RefCounted, cells: Dictionary) -> Dictionary:
@@ -45,6 +47,17 @@ static func evaluate(world: RefCounted, cells: Dictionary) -> Dictionary:
 				if RoomProbe.permeable(world, cell) and world.is_solid(below) and not RoomProbe.permeable(world, below) and world.is_roofed(cell, int(rule.roof_reach)):
 					floor_count += 1
 			valid = valid and floor_count >= int(rule.min_roofed_floor)
+		# Blocks that must be part of it, by name (a trial ground's stone platform).
+		for name in rule.get("requires_blocks", {}):
+			var count: int = 0
+			var wanted: int = Registry.id(str(name))
+			for cell in cells:
+				count += 1 if world.get_block(cell) == wanted else 0
+			valid = valid and count >= int(rule.requires_blocks[name])
+		# A meditation hall stands where the tree's qi is dense enough.
+		if rule.has("qi_at_least"):
+			var at: Array = components.get(rule.requires.keys()[0], []) if not rule.requires.is_empty() else []
+			valid = valid and not at.is_empty() and tree_qi(world, at[0]) >= float(rule.qi_at_least)
 		if rule.has("sky_or_tree_within"):
 			var sacred: bool = false
 			for altar in components.get("altar", []):
@@ -78,3 +91,16 @@ static func _near_sky(world: RefCounted, altar: Vector3i, reach: int) -> bool:
 				if world.in_bounds(cell) and world.get_block(cell) == 0 and world.sees_sky(cell):
 					return true
 	return world.sees_sky(altar)
+
+
+## The tree's qi at a cell. Function rules see only blocks, so this uses the
+## tree's place, which world generation fixes at the middle of the map;
+## nurtured spots, which pass in a season, do not make a hall. A design on
+## its own (a world no bigger than a design) always meets it: where it may
+## stand is the site finder's question.
+static func tree_qi(world: RefCounted, cell: Vector3i) -> float:
+	var limits: Array = Data.template_limits().max_size
+	if world.size.x <= int(limits[0]) and world.size.z <= int(limits[2]):
+		return 1.0
+	var centre := Vector2(world.size.x / 2 + 1.0, world.size.z / 2 + 1.0)
+	return Qi.curve_at(Vector2(cell.x + 0.5, cell.z + 0.5).distance_to(centre))

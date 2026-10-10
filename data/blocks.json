@@ -2,7 +2,7 @@
 	"schema_version": 1,
 	"resources": ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal", "tree_seed", "spirit_fruit"],
 	"divine_only": ["soil"],
-	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree", "table", "bench", "planter", "lantern", "farmland", "granary_bin"],
+	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree", "table", "bench", "planter", "lantern", "farmland", "granary_bin", "mat", "formation"],
 	"shapes": ["cube", "cross", "panel", "slab", "post"],
 	"atlas_size": [8, 7],
 	"blocks": [
@@ -42,6 +42,9 @@
 		{"id": 33, "name": "granary_bin", "resource": "wood", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [7, 5], "atlas_top": [0, 6], "atlas_bottom": [3, 1], "shape": "cube", "component": "granary_bin", "breakable": true, "placeable": true},
 		{"id": 34, "name": "sapling", "resource": "tree_seed", "yield": 1, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [5, 6], "shape": "cross", "breakable": true, "placeable": true},
 		{"id": 35, "name": "charred_wood", "resource": "wood", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [6, 6], "shape": "cube", "breakable": true, "placeable": false},
-		{"id": 36, "name": "scorched_earth", "resource": "soil", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [2, 0], "atlas_top": [7, 6], "shape": "cube", "breakable": true, "placeable": false}
+		{"id": 36, "name": "scorched_earth", "resource": "soil", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [2, 0], "atlas_top": [7, 6], "shape": "cube", "breakable": true, "placeable": false},
+		{"id": 37, "name": "meditation_mat", "resource": "thatch", "yield": 1, "solid": false, "opaque": false, "passable": true, "transparent": true, "atlas": [2, 4], "shape": "slab", "component": "mat", "breakable": true, "placeable": true},
+		{"id": 38, "name": "formation_stone", "resource": "stone", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [3, 4], "atlas_top": [4, 4], "shape": "post", "component": "formation", "breakable": true, "placeable": true},
+		{"id": 39, "name": "path", "resource": "soil", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [2, 0], "atlas_top": [5, 4], "shape": "cube", "breakable": true, "placeable": false}
 	]
 }

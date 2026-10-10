@@ -148,6 +148,11 @@ func _index(entry: Dictionary) -> void:
 		_owner[cell] = entry.id
 
 
+## The structure whose inside holds a cell, or {}.
+func containing(cell: Vector3i) -> Dictionary:
+	return entries.get(int(_owner.get(cell, -1)), {})
+
+
 func _unindex(entry: Dictionary) -> void:
 	for cell in entry.inside:
 		if int(_owner.get(cell, -1)) == int(entry.id):

@@ -8,6 +8,7 @@ const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
+const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail
@@ -32,6 +33,9 @@ static func _cultivate(sim: RefCounted, agent: RefCounted, step: Dictionary, ste
 	var rate: float = CultivationState.rate(cultivation, qi)
 	if int(cultivation.blessed_until) > sim.calendar.tick:
 		rate *= Balance.number("cultivation.bless_factor")
+	# A mat in a meditation hall: shelter and a settled mind.
+	if SectPlaces.in_hall(sim, agent.cell):
+		rate *= Balance.number("cultivation.hall_factor")
 	cultivation.progress = minf(float(cultivation.progress) + rate / per_hour, needed)
 	if int(cultivation.realm) >= 1 and float(cultivation.progress) >= needed and int(cultivation.peak_tick) < 0:
 		cultivation.peak_tick = sim.calendar.tick

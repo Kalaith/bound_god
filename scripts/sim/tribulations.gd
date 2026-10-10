@@ -11,6 +11,7 @@ extends RefCounted
 ##        preparation, start_tick, end_tick, strikes: Array[int] (ticks), struck: int,
 ##        scorched: int, state: "warning"|"storm"|"done", outcome: String}
 const Balance = preload("res://scripts/core/balance.gd")
+const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
@@ -54,6 +55,8 @@ func storm_active(id: int) -> bool:
 ## Whether a cell stands within the tree's sanctuary.
 static func in_sanctuary(sim: RefCounted, cell: Vector3i) -> bool:
 	var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))
+	if SectPlaces.ground_sanctuary(sim, cell):
+		return true
 	return tree.x >= 0 and Vector2(cell.x - tree.x - 1.0, cell.z - tree.z - 1.0).length() <= Balance.number("cultivation.sanctuary_radius")
 
 
@@ -184,6 +187,13 @@ func _strike(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 	var column := Vector2i(agent.cell.x, agent.cell.z)
 	if not at_person:
 		column += Vector2i(sim.rng.randi_range(-radius, radius), sim.rng.randi_range(-radius, radius))
+	# On a tribulation ground the formation stones draw what would scorch.
+	var stones: Array = SectPlaces.ground_at(sim, agent.cell).get("components", {}).get("formation", [])
+	if not at_person and not stones.is_empty():
+		var stone: Vector3i = stones[sim.rng.randi_range(0, stones.size() - 1)]
+		events.append({"kind": "strike", "trial": trial.id, "cell": stone + Vector3i.UP, "tick": sim.calendar.tick})
+		trial["drawn"] = int(trial.get("drawn", 0)) + 1
+		return
 	var top: int = sim.voxels.top_solid_y(column.x, column.y)
 	var cell := Vector3i(column.x, top, column.y)
 	events.append({"kind": "strike", "trial": trial.id, "cell": cell + Vector3i.UP, "tick": sim.calendar.tick})

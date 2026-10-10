@@ -13,6 +13,7 @@ const FunctionRules = preload("res://scripts/building/function_rules.gd")
 const Construction = preload("res://scripts/sim/construction.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const DeliberationFood = preload("res://scripts/agents/deliberation_food.gd")
+const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -226,11 +227,11 @@ static func _functions_in(sim: RefCounted, id: int) -> Dictionary:
 	return counts
 
 
-## Respected people notice what the whole settlement lacks.
+## Respected people notice what the whole settlement lacks; a sect's
+## master and elders, whatever their nature, what their sect lacks.
 static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float, board: Dictionary) -> void:
-	if agent.personality.leadership <= 0.2 and agent.personality.diligence <= 0.3:
-		return
-	if _founding(sim, agent):
+	var sect_only: bool = agent.personality.leadership <= 0.2 and agent.personality.diligence <= 0.3
+	if (sect_only and not SectPlaces.leads(sim, agent)) or _founding(sim, agent):
 		return
 	var busy: bool = _open_sites(sim, agent.settlement_id) >= Balance.integer("construction.max_open_sites")
 	var id: int = agent.settlement_id
@@ -252,11 +253,16 @@ static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float
 	if Standing.food_days(sim, id) < Balance.number("construction.garden_food_days") and int(have.get("garden", 0)) < gardens_wanted:
 		wants.append(["garden", "reason_food_low", 0.8])
 	wants.append_array(DeliberationFood.wants(sim, id, people, have))
+	var sect_wants: Array = SectPlaces.wants(sim, id, have, agent)
+	if sect_only:
+		wants = sect_wants
+	else:
+		wants.append_array(sect_wants)
 	for want in wants:
 		var design: RefCounted = known_design(sim, agent, want[0])
 		if design == null or not means_believed(sim, agent, design) or (busy and not design.bill.is_empty()):
 			continue
 		if _site_open_for(sim, id, want[0]):
 			continue
-		var weight: float = 0.5 + maxf(agent.personality.leadership, 0.0)
+		var weight: float = 0.5 + maxf(agent.personality.leadership, 0.0) + (0.5 if sect_wants.has(want) else 0.0)
 		out.append(_candidate(Kind.PROPOSE_PROJECT, base * weight * float(want[2]) / 0.42 * 0.6, want[1], FUNCTIONS.find(want[0])))

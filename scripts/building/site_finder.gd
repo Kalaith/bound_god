@@ -6,6 +6,8 @@ extends RefCounted
 ## sites or buildings hold, and requires a path from the door to the stores.
 const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const Data = preload("res://scripts/core/data.gd")
+const FunctionRules = preload("res://scripts/building/function_rules.gd")
 
 const SIDES: Array[Vector3i] = [Vector3i(0, 0, -1), Vector3i(0, 0, 1), Vector3i(-1, 0, 0), Vector3i(1, 0, 0)]
 
@@ -36,7 +38,7 @@ static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary, 
 			blocked[Vector2i(cell.x, cell.z)] = true
 	for cell in sim.construction.reserved:
 		blocked[Vector2i(cell.x, cell.z)] = true
-	var context: Dictionary = {"blocked": blocked, "tops": {}, "footprints": {}}
+	var context: Dictionary = {"blocked": blocked, "tops": {}, "footprints": {}, "rules": _place_rules(sim, template)}
 	var candidates: Array = []
 	var looked: int = 0
 	for offset in _spiral(radius):
@@ -127,6 +129,8 @@ static func _score(sim: RefCounted, template: RefCounted, corner: Vector2i, rota
 	if footprint.is_empty():
 		return {}
 	var origin: Vector3i = footprint.origin
+	if not _suits(sim, origin, size, context.rules):
+		return {}
 	# The door must open onto the outside, onto ground a person can walk on.
 	var door: Vector3i = template.rotate_local(template.entrance, rotation)
 	var outside: Vector3i = Vector3i(-1, -1, -1)
@@ -180,3 +184,29 @@ static func _order(sim: RefCounted, template: RefCounted, choice: Dictionary) ->
 	for entry in template.placement(choice.rotation):
 		order.append([origin + entry[0], entry[1], entry[2]])
 	return order
+
+
+## What the design's functions ask of where it stands (a meditation hall in
+## dense qi, a tribulation ground away from homes), with the anchors of the
+## buildings it must keep apart from gathered once.
+static func _place_rules(sim: RefCounted, template: RefCounted) -> Dictionary:
+	var result: Dictionary = {"qi": 0.0, "apart": []}
+	for rule in Data.function_rules():
+		if not template.functions.has(rule.id):
+			continue
+		result.qi = maxf(float(result.qi), float(rule.get("qi_at_least", 0.0)))
+		for other in rule.get("apart_from", {}):
+			for entry in sim.structures.built():
+				if entry.functions.has(other):
+					result.apart.append([entry.anchor, float(rule.apart_from[other])])
+	return result
+
+
+static func _suits(sim: RefCounted, origin: Vector3i, size: Vector3i, rules: Dictionary) -> bool:
+	var middle := Vector3i(origin.x + size.x / 2, origin.y, origin.z + size.z / 2)
+	if float(rules.qi) > 0.0 and FunctionRules.tree_qi(sim.voxels, middle) < float(rules.qi):
+		return false
+	for apart in rules.apart:
+		if Vector2(apart[0].x - middle.x, apart[0].z - middle.z).length() < float(apart[1]):
+			return false
+	return true

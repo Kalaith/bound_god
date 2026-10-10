@@ -4,11 +4,11 @@ const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const DIRECTIONS: Array[Vector3i] = [Vector3i.LEFT, Vector3i.RIGHT, Vector3i.UP, Vector3i.DOWN, Vector3i.FORWARD, Vector3i.BACK]
 ## Furniture: components a room holds and the probe passes through.
-const FURNITURE: Array[String] = ["bed", "chest", "hearth", "workbench", "altar", "table", "bench", "lantern", "granary_bin"]
+const FURNITURE: Array[String] = ["bed", "chest", "hearth", "workbench", "altar", "table", "bench", "lantern", "granary_bin", "mat"]
 ## Components a structure is found from: furniture that gives a room its use,
 ## and planters and farmland, whose connected beds make a garden or a field
 ## under the open sky.
-const ANCHORS: Array[String] = ["bed", "chest", "altar", "hearth", "workbench", "table", "planter", "farmland", "granary_bin"]
+const ANCHORS: Array[String] = ["bed", "chest", "altar", "hearth", "workbench", "table", "planter", "farmland", "granary_bin", "mat", "formation"]
 ## Bed components: probed as connected beds, not as rooms.
 const BEDS: Array[String] = ["planter", "farmland"]
 
@@ -35,6 +35,8 @@ static func permeable(world: RefCounted, cell: Vector3i) -> bool:
 static func probe(world: RefCounted, seed: Vector3i) -> Dictionary:
 	if Registry.component(world.get_block(seed)) in BEDS:
 		return beds(world, seed)
+	if Registry.component(world.get_block(seed)) == "formation":
+		return platform(world, seed)
 	var limits: Array = Data.template_limits().max_size
 	var limit := Vector3i(int(limits[0]), int(limits[1]), int(limits[2]))
 	var maximum: int = limit.x * limit.y * limit.z
@@ -130,4 +132,35 @@ static func beds(world: RefCounted, seed: Vector3i) -> Dictionary:
 	for cell in planters:
 		inside[cell + Vector3i.UP] = true
 		_widen(reads, cell + Vector3i.DOWN)
+	return {"closed": false, "inside": inside, "cells": inside.duplicate(), "reads": reads}
+
+
+## A trial ground: the cut stone joined side by side under a formation stone,
+## and the formation stones standing on it. Its inside is the platform and
+## the cell above each stone of it.
+static func platform(world: RefCounted, seed: Vector3i) -> Dictionary:
+	var stone: int = Registry.id("cut_stone")
+	var base: Vector3i = seed + Vector3i.DOWN
+	var reads: Array = [seed.x - 1, seed.z - 1, seed.x + 1, seed.z + 1, seed.y - 2]
+	if world.get_block(base) != stone:
+		return {"closed": false, "inside": {seed: true}, "cells": {seed: true}, "reads": reads}
+	var limits: Array = Data.template_limits().max_size
+	var floor: Dictionary = {base: true}
+	var queue: Array[Vector3i] = [base]
+	var cursor: int = 0
+	while cursor < queue.size():
+		var cell: Vector3i = queue[cursor]
+		cursor += 1
+		for direction in [Vector3i.LEFT, Vector3i.RIGHT, Vector3i.FORWARD, Vector3i.BACK]:
+			var other: Vector3i = cell + direction
+			if floor.has(other) or world.get_block(other) != stone:
+				continue
+			if absi(other.x - base.x) >= int(limits[0]) or absi(other.z - base.z) >= int(limits[2]):
+				continue
+			floor[other] = true
+			queue.append(other)
+	var inside: Dictionary = floor.duplicate()
+	for cell in floor:
+		inside[cell + Vector3i.UP] = true
+		_widen(reads, cell)
 	return {"closed": false, "inside": inside, "cells": inside.duplicate(), "reads": reads}

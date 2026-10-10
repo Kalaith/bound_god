@@ -10,6 +10,7 @@ const Schedule = preload("res://scripts/agents/schedule.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 const FruitChoice = preload("res://scripts/agents/fruit_choice.gd")
+const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -33,7 +34,9 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 
 
 ## The densest spot round the tree this person can sit in that nobody else
-## is sitting in: their own place on the ring, or one of a few others.
+## is sitting in: their own place on the ring, one of a few others, or a
+## free mat in their settlement's meditation hall (its qi counted with the
+## hall's help).
 static func spot(sim: RefCounted, agent: RefCounted) -> Vector3i:
 	var tree: Vector3i = sim.features.get("sacred_tree", NONE)
 	if tree.x < 0:
@@ -49,14 +52,21 @@ static func spot(sim: RefCounted, agent: RefCounted) -> Vector3i:
 		for nurtured in sim.tree_growth.nurtured:
 			var at: Vector3i = nurtured.cell
 			cells.append(H.ring_cell(sim, Vector3(at.x + 0.5, at.y, at.z + 0.5), agent.id, 0.5, float(nurtured.radius) * 0.7))
+	cells.append(SectPlaces.hall_mat(sim, agent))
 	for cell in cells:
 		if cell.x < 0 or _taken(sim, agent, cell):
 			continue
-		var qi: float = sim.qi.density(sim, cell)
+		var qi: float = sitting_qi(sim, cell)
 		if qi > best_qi:
 			best = cell
 			best_qi = qi
 	return best
+
+
+## The qi a sitting at a cell is worth: the field, helped by a hall.
+static func sitting_qi(sim: RefCounted, cell: Vector3i) -> float:
+	var qi: float = sim.qi.density(sim, cell)
+	return qi * Balance.number("cultivation.hall_factor") if SectPlaces.in_hall(sim, cell) else qi
 
 
 static func _taken(sim: RefCounted, agent: RefCounted, cell: Vector3i) -> bool:
@@ -73,7 +83,7 @@ static func _cultivate(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	var cell: Vector3i = spot(sim, agent)
 	if cell.x < 0:
 		return
-	var qi: float = sim.qi.density(sim, cell)
+	var qi: float = sitting_qi(sim, cell)
 	var utility: float = (Balance.number("cultivation.utility_base") + Balance.number("cultivation.utility_drive") * drive) \
 		* (0.4 + 0.6 * qi) * (1.0 + Balance.number("cultivation.realm_bonus") * realm) * agent.capacity()
 	# A long walk to the tree weighs against it.
@@ -186,9 +196,15 @@ static func _breakthrough(sim: RefCounted, agent: RefCounted, out: Array) -> voi
 	out.append(_candidate(Kind.BREAKTHROUGH, utility, "reason_at_peak", -1, prep * 100.0))
 
 
-## Where to face Heaven: the tree's sanctuary when it can be reached, unless
-## a loner would rather be alone with it, near home.
+## Where to face Heaven: their settlement's tribulation ground when it has
+## one; otherwise the tree's sanctuary when it can be reached, unless a loner
+## would rather be alone with it, near home.
 static func trial_site(sim: RefCounted, agent: RefCounted) -> Vector3i:
+	var ground: Dictionary = SectPlaces.ground(sim, agent.settlement_id)
+	if not ground.is_empty():
+		var stand: Vector3i = SectPlaces.ground_cell(sim, ground)
+		if stand.x >= 0:
+			return stand
 	var tree: Vector3i = sim.features.get("sacred_tree", NONE)
 	var near_tree: bool = tree.x >= 0 and H.distance(tree, agent.cell) <= Balance.number("cultivation.sanctuary_reach")
 	if near_tree and not agent.has_trait("loner"):
