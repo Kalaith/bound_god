@@ -4,6 +4,7 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const Generation = preload("res://scripts/agents/generation.gd")
 const Population = preload("res://scripts/sim/population.gd")
+const Standing = preload("res://scripts/sim/standing.gd")
 
 var raid_hooks: RefCounted = null
 
@@ -33,11 +34,22 @@ static func attractiveness(sim: RefCounted, id: int) -> Array:
 	for agent_id in settlement.residents:
 		if sim.agents[agent_id].home < 0:
 			homeless += 1
-	var food_days: float = float(sim.settlements.amount(id, "berries")) / (residents * 2.5)
-	var safety: float = 0.2 if sim.threats_list().is_empty() else 0.05
+	var food_days: float = Standing.food_days(sim, id)
+	var safety: float = 0.05 if threatened(sim, id) else 0.2
 	var renown: float = sim.faith.settlement_renown(sim, id) if sim.faith != null else 0.0
-	var score: float = spare * 0.08 + minf(food_days, 2.0) * 0.12 + safety + renown - homeless * 0.03
+	var standing: float = float(Balance.list("population.migrant_standing_pull")[Standing.rank(str(settlement.get("standing", "camp")))])
+	var score: float = spare * 0.08 + minf(food_days, 2.0) * 0.12 + safety + renown + standing - homeless * 0.03
 	return [score, spare, food_days]
+
+
+## A threat near the settlement, not a wolf somewhere in the valley.
+static func threatened(sim: RefCounted, id: int) -> bool:
+	var settlement: Dictionary = sim.settlements.entries[id]
+	var reach: float = float(settlement.radius) + Balance.number("population.safety_reach")
+	for threat in sim.threats_list():
+		if Vector2(threat.cell.x - settlement.center.x, threat.cell.z - settlement.center.z).length() <= reach:
+			return true
+	return false
 
 
 func _migrants(sim: RefCounted) -> void:
@@ -49,8 +61,9 @@ func _migrants(sim: RefCounted) -> void:
 		if float(reason[0]) < Balance.number("population.migrant_threshold") or sim.rng.randf() >= float(reason[0]):
 			continue
 		var group: Array = Balance.list("population.migrant_group")
-		var count: int = mini(sim.rng.randi_range(int(group[0]), int(group[1])), cap - sim.present_count())
 		var settlement: Dictionary = sim.settlements.entries[id]
+		var extra: int = int(Balance.list("population.migrant_standing_group")[Standing.rank(str(settlement.get("standing", "camp")))])
+		var count: int = mini(sim.rng.randi_range(int(group[0]), int(group[1]) + extra), cap - sim.present_count())
 		var angle: float = sim.rng.randf() * TAU
 		var edge: Vector3i = settlement.center + Vector3i(roundi(cos(angle) * (float(settlement.radius) - 3.0)), 0, roundi(sin(angle) * (float(settlement.radius) - 3.0)))
 		var names: Array = []
@@ -58,6 +71,12 @@ func _migrants(sim: RefCounted) -> void:
 			var agent: RefCounted = Generation.adult(sim.rng, sim.agents.size())
 			if sim.rng.randf() < 0.5:
 				agent.beliefs.known_templates.append("lean_to")
+			# Newcomers bring the ways of building where they came from.
+			if sim.rng.randf() < Balance.number("population.migrant_design_chance"):
+				var designs: Array = Balance.list("population.migrant_designs")
+				var design: String = str(designs[sim.rng.randi_range(0, designs.size() - 1)])
+				if not agent.beliefs.known_templates.has(design):
+					agent.beliefs.known_templates.append(design)
 			var cell: Vector3i = sim.nav.nearest_walkable(edge + Vector3i(i, 0, 0), 8)
 			if cell.x < 0:
 				cell = settlement.camp

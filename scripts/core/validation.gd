@@ -255,6 +255,12 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 				for character in str(row):
 					if not legend.has(character):
 						errors.append(label + " uses a character with no legend: " + character)
+	var starters: Array = []
+	for starter in data.get("starters", []):
+		starters.append(starter.get("id"))
+	for id in Balance.data().get("population", {}).get("migrant_designs", []):
+		if not starters.has(id):
+			errors.append("balance: migrants bring an unknown design " + str(id))
 	return errors
 
 

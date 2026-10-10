@@ -57,11 +57,17 @@
 	},
 	"settlements": {
 		"start_radius": 22, "radius_per_structure": 1.0, "max_radius": 40, "chest_capacity": 40,
-		"culture_need_drift": 0.02, "culture_example_drift": 0.01, "culture_min": 0.4, "culture_max": 1.6
+		"culture_need_drift": 0.02, "culture_example_drift": 0.01, "culture_min": 0.4, "culture_max": 1.6,
+		"berries_per_person_day": 2.5,
+		"standing": {
+			"hamlet": {"residents": 4, "housed": 0.5, "food_days": 0.0, "functions": {"dwelling": 2}, "shrine": false},
+			"village": {"residents": 10, "housed": 1.0, "food_days": 3.0, "functions": {"dwelling": 4, "storehouse": 1, "hall": 1, "garden": 1}, "shrine": true}
+		}
 	},
 	"population": {
-		"travellers": 2, "miners": 5, "cap": 30, "migrant_roll_days": 3, "migrant_threshold": 0.35,
-		"migrant_group": [1, 3], "first_migrant_day": 3,
+		"travellers": 2, "miners": 5, "cap": 45, "migrant_roll_days": 3, "migrant_threshold": 0.35,
+		"migrant_group": [1, 3], "first_migrant_day": 3, "migrant_standing_group": [0, 1, 1], "migrant_standing_pull": [0.0, 0.08, 0.15],
+		"migrant_design_chance": 0.6, "migrant_designs": ["timber_cottage", "store_shed", "village_hall", "garden_patch"], "safety_reach": 12.0,
 		"traveller_berries": 5, "hamlet_stock": {"berries": 18, "stone": 12, "ore": 6, "wood": 10}
 	},
 	"faith": {

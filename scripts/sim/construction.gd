@@ -62,6 +62,32 @@ func next_entry(id: int) -> Array:
 	return site.order[site.cursor]
 
 
+## Plain stone walling that builders may raise in planks instead. Components
+## (a hearth, an altar) are never swapped, so a building keeps its function.
+static func is_walling(block: int) -> bool:
+	return Registry.block_name(block) in ["cobble", "cut_stone", "stone"]
+
+
+## Swaps the stone walling still to be placed in `order` (from `from` on) for
+## planks; returns how many blocks changed.
+static func in_timber(order: Array, from: int) -> int:
+	var changed: int = 0
+	for index in range(from, order.size()):
+		if is_walling(int(order[index][1])):
+			order[index][1] = Registry.id("planks")
+			changed += 1
+	return changed
+
+
+## Whether a design needs stone only for walling.
+static func stone_is_walling(template: RefCounted) -> bool:
+	for index in range(template.cells.size()):
+		var block: int = Registry.id(template.palette[template.cells[index]])
+		if Registry.resource(block) == "stone" and not is_walling(block):
+			return false
+	return true
+
+
 static func resource_for(block: int) -> String:
 	return Registry.resource(block) if block != 0 else ""
 

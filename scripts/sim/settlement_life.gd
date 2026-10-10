@@ -6,6 +6,8 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const Construction = preload("res://scripts/sim/construction.gd")
+const Standing = preload("res://scripts/sim/standing.gd")
 
 ## settlement id -> job board
 var boards: Dictionary = {}
@@ -58,6 +60,8 @@ func daily(sim: RefCounted) -> void:
 		_grow(sim, settlement)
 		_drift(sim, settlement)
 	samples.clear()
+	Standing.daily(sim)
+	_make_do(sim)
 	_abandon(sim)
 	_decay(sim)
 	_overgrow(sim)
@@ -100,6 +104,36 @@ func _drift(sim: RefCounted, settlement: Dictionary) -> void:
 			var example: float = low + (high - low) * float(tally.get(work, 0)) / total
 			weight += (example - weight) * Balance.number("settlements.culture_example_drift")
 		settlement.culture[work] = clampf(weight, low, high)
+
+
+## Builders who wait a day for stone nobody has or knows where to find raise
+## the rest of the walls in planks. Only plain walling changes: a hearth or
+## an altar is still stone, so the building keeps its function.
+func _make_do(sim: RefCounted) -> void:
+	var day: int = sim.calendar.ticks_per_day
+	for id in sim.construction.ids():
+		var site: Dictionary = sim.construction.get_site(id)
+		var settlement_id: int = int(site.settlement_id)
+		if not sim.construction.missing(id).has("stone") or sim.calendar.tick - int(site.last_progress_tick) < day:
+			continue
+		if sim.settlements.amount(settlement_id, "stone") > 0 or _stone_known(sim, settlement_id):
+			continue
+		if Construction.in_timber(site.order, int(site.cursor)) > 0:
+			site["made_do"] = true
+			sim.chronicle_event("site_made_do", settlement_id, {"design": sim.template_name(site.template_id)}, "cause_no_stone", [int(site.founder)])
+
+
+## Whether anyone in the settlement has stone to hand or knows a place for it.
+func _stone_known(sim: RefCounted, settlement_id: int) -> bool:
+	for item_id in sim.items:
+		var item: Dictionary = sim.items[item_id]
+		if item.resource == "stone" and sim.settlements.at_cell(item.cell) == settlement_id:
+			return true
+	for agent_id in sim.settlements.entries[settlement_id].residents:
+		var agent: RefCounted = sim.agents[agent_id]
+		if agent.is_present() and (agent.beliefs.has_site("rock") or agent.carried("stone") >= 1.0):
+			return true
+	return false
 
 
 func _abandon(sim: RefCounted) -> void:

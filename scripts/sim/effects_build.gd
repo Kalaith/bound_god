@@ -6,6 +6,7 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
+const Construction = preload("res://scripts/sim/construction.gd")
 
 
 static func apply(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
@@ -28,12 +29,21 @@ static func _mark(sim: RefCounted, agent: RefCounted, action: Dictionary) -> voi
 		if sim.construction.is_reserved(entry[0]):
 			agent.step_result = {"site": 0}
 			return
+	var order: Array = action.order
+	var timber: bool = not agent.beliefs.believes_stock("stone") and not agent.beliefs.has_site("rock") and agent.carried("stone") < 1.0
+	if timber:
+		order = order.duplicate(true)
+		timber = Construction.in_timber(order, 0) > 0
 	var id: int = sim.construction.create(action.template_id, action.origin, int(action.rotation), agent.settlement_id,
-		agent.id, action.purpose, action.order, sim.calendar.tick)
+		agent.id, action.purpose, order, sim.calendar.tick)
 	agent.step_result = {"site": id}
+	if timber:
+		sim.construction.sites[id]["made_do"] = true
 	var cause: String = _cause(sim, agent, str(action.purpose))
 	sim.construction.sites[id]["cause"] = cause
 	sim.chronicle_event("site_marked", agent.settlement_id, {"name": agent.full_name(), "design": sim.template_name(action.template_id)}, cause, [agent.id])
+	if timber:
+		sim.chronicle_event("site_made_do", agent.settlement_id, {"design": sim.template_name(action.template_id)}, "cause_no_stone", [agent.id])
 
 
 ## Why a site was started, in words the chronicle can keep.

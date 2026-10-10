@@ -10,6 +10,7 @@ const JobBoard = preload("res://scripts/sim/job_board.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")
 const FunctionRules = preload("res://scripts/building/function_rules.gd")
+const Construction = preload("res://scripts/sim/construction.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -143,6 +144,9 @@ static func known_design(sim: RefCounted, agent: RefCounted, function: String) -
 static func means_believed(sim: RefCounted, agent: RefCounted, template: RefCounted) -> bool:
 	for resource in template.bill:
 		if agent.beliefs.believes_stock(resource):
+			continue
+		# Without stone, plain stone walls can go up in planks.
+		if resource == "stone" and Construction.stone_is_walling(template) and (agent.beliefs.believes_stock("wood") or agent.beliefs.has_site("tree")):
 			continue
 		if not agent.beliefs.has_site(JobBoard.SITE_KIND.get(resource, "")):
 			return false
