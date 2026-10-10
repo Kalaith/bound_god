@@ -6,10 +6,11 @@ signal closed
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const ChronicleText = preload("res://scripts/presentation/ui/chronicle_text.gd")
-const JobBoard = preload("res://scripts/sim/job_board.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const StandingText = preload("res://scripts/presentation/ui/standing_text.gd")
+## Goods listed on the panel, food last.
+const STOCK: Array[String] = ["wood", "stone", "thatch", "ore", "seed", "berries", "grain", "meal"]
 
 var sim: RefCounted
 var settlement_id: int = -1
@@ -93,9 +94,13 @@ func _process(delta: float) -> void:
 			beds += int(entry.capacity.get("beds", 0))
 	lines.append(Text.format("settlement_people", {"count": present, "homeless": homeless, "beds": beds}))
 	var stock: Array[String] = []
-	for resource in JobBoard.RESOURCES:
+	for resource in STOCK:
 		stock.append("%s %d" % [Text.label("resource_" + resource), sim.settlements.amount(settlement_id, resource)])
 	lines.append(Text.format("settlement_stock", {"list": ", ".join(stock), "total": sim.settlements.total(settlement_id), "capacity": sim.settlements.capacity(sim, settlement_id)}))
+	lines.append(Text.format("settlement_food", {"days": "%.1f" % Standing.food_days(sim, settlement_id), "meals": sim.settlements.amount(settlement_id, "meal"),
+		"grain": sim.settlements.amount(settlement_id, "grain"), "berries": sim.settlements.amount(settlement_id, "berries")}))
+	if Standing.fear_of_winter(sim, settlement_id):
+		lines.append("[color=#%s]%s[/color]" % [Style.WARN.to_html(false), Text.label("settlement_winter_fear")])
 	lines.append("")
 	lines.append(_gold(StandingText.title(settlement)))
 	var checklist: Array = StandingText.checklist(sim, settlement_id)

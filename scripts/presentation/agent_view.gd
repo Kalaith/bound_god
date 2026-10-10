@@ -9,8 +9,12 @@ const SKINS: Array[Color] = [Color("f0c9a0"), Color("d9a77c"), Color("b98058"), 
 const GLYPHS: Dictionary = {
 	"sleeping": "z Z", "talking": "...", "fleeing": "!", "fighting": "x", "breaking": "@", "recovering": "+",
 	"praying": "^", "building": "#", "eating": "o", "working": "*", "waiting": "?", "sheltering": "~",
+	"sowing": ".:.", "reaping": "/", "tending": "%", "cooking": "&", "gardening": "*",
 }
-const RESOURCE_COLORS: Dictionary = {"wood": Color("9a6b3f"), "stone": Color("9fa6aa"), "thatch": Color("d8c27a"), "berries": Color("b8324a"), "ore": Color("6f7f9a")}
+const RESOURCE_COLORS: Dictionary = {"wood": Color("9a6b3f"), "stone": Color("9fa6aa"), "thatch": Color("d8c27a"), "berries": Color("b8324a"), "ore": Color("6f7f9a"),
+	"grain": Color("e0b84a"), "seed": Color("a88a4a"), "meal": Color("d9793a")}
+## Activities shown as work at hand: the body sways.
+const HANDWORK: Array[String] = ["working", "building", "sowing", "reaping", "tending", "cooking", "gardening"]
 
 static var _body_mesh: CapsuleMesh
 static var _head_mesh: SphereMesh
@@ -106,11 +110,11 @@ func refresh(agent: RefCounted, alpha: float, delta: float, selected: bool) -> v
 	match agent.activity:
 		"walking", "hauling", "fleeing":
 			bob = absf(sin(_phase * 9.0)) * 0.08
-		"working", "building":
+		"working", "building", "sowing", "reaping", "tending", "cooking", "gardening":
 			body.rotation.z = sin(_phase * 5.0) * 0.12
 		"sleeping":
 			bob = -0.35
-	if not agent.activity in ["working", "building"]:
+	if not agent.activity in HANDWORK:
 		body.rotation.z = 0.0
 	body.rotation.x = 1.45 if agent.activity == "sleeping" else 0.0
 	body.position.y = 0.58 + bob

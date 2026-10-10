@@ -1,8 +1,9 @@
 extends SceneTree
 ## Headless scenario runner for the simulation (kept out of the exported game).
-## Run: Godot --headless --path . --script res://tools/sim_checks.gd [-- --only=<text>]
+## Run: Godot --headless --path . --script res://tools/sim_checks.gd [-- --only=<text>] [--long]
 ## Every `check_*` method of the modules below returns "" on success or a
 ## failure message. Prints PASS/FAIL per scenario and exits non-zero on failure.
+## Long-run scenarios (`long_check_*`, minutes each) run only with --long.
 ## Checks are untyped on purpose: a runtime error then returns null, which
 ## fails, where a typed `-> String` would silently return "" and pass.
 
@@ -22,14 +23,17 @@ const MODULES: Array[String] = [
 	"res://tools/checks/checks_village.gd",
 	"res://tools/checks/checks_food.gd",
 	"res://tools/checks/checks_farming.gd",
+	"res://tools/checks/checks_campaign.gd",
 ]
 
 
 func _init() -> void:
 	var only: String = ""
+	var long: bool = false
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--only="):
 			only = argument.trim_prefix("--only=")
+		long = long or argument == "--long"
 	var failures: int = 0
 	var count: int = 0
 	var started: int = Time.get_ticks_msec()
@@ -43,7 +47,8 @@ func _init() -> void:
 		var module: RefCounted = script.new()
 		for method in module.get_method_list():
 			var name: String = method.name
-			if not name.begins_with("check_") or (not only.is_empty() and not name.contains(only)):
+			var runs: bool = name.begins_with("check_") or (long and name.begins_with("long_check_"))
+			if not runs or (not only.is_empty() and not name.contains(only)):
 				continue
 			count += 1
 			var begin: int = Time.get_ticks_msec()
