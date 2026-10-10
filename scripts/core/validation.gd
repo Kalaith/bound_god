@@ -98,7 +98,7 @@ static func check_blocks(data: Dictionary) -> Array[String]:
 			errors.append(label + ": yield must be a number")
 		if not shapes.has(entry.get("shape")):
 			errors.append(label + ": unknown shape " + str(entry.get("shape")))
-		for key in ["atlas", "atlas_top", "atlas_bottom"]:
+		for key in ["atlas", "atlas_top", "atlas_bottom", "atlas_empty"]:
 			if key == "atlas" or entry.has(key):
 				var tile: Variant = entry.get(key)
 				if not tile is Array or tile.size() != 2 or not _number(tile[0]) or not _number(tile[1]) \

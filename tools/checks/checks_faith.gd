@@ -65,6 +65,24 @@ func check_bless_growth_before_a_hungry_believer():
 	return ""
 
 
+func check_bless_growth_sprouts_bushes_when_all_are_ripe():
+	var sim: RefCounted = Sim.create(1)
+	var shrine: Dictionary = sim.faith.current(sim)
+	sim.god.avatar_cell = shrine.cell + Vector3i(3, 0, 0)
+	var before: int = 0
+	for id in sim.sites.ids_sorted():
+		before += 1 if sim.sites.get_site(id).kind == "bush" else 0
+	var result: Dictionary = sim.apply_command({"type": "cast_miracle", "miracle": "bless_growth", "cell": sim.god.avatar_cell})
+	if not result.ok:
+		return "Bless Growth among ripe bushes was refused: " + str(result.reason)
+	var after: int = 0
+	for id in sim.sites.ids_sorted():
+		after += 1 if sim.sites.get_site(id).kind == "bush" else 0
+	if after <= before:
+		return "Bless Growth among ripe bushes sprouted none (%d -> %d)" % [before, after]
+	return ""
+
+
 func check_a_whisper_reaches_the_decision_log():
 	var sim: RefCounted = _flat()
 	var agent: RefCounted = sim.agents[0]

@@ -141,6 +141,7 @@ static func build(world: RefCounted, chunk: Vector3i) -> Dictionary:
 	var solid_table: PackedByteArray = Registry.solid
 	var shape_table: PackedByteArray = Registry.shape
 	var tiles: Array = Registry.tiles
+	var empty_tiles: Dictionary = Registry.empty_tiles
 	var tile_size := Vector2(1.0 / Registry.atlas_size.x, 1.0 / Registry.atlas_size.y)
 	var inset: Vector2 = tile_size * 0.002
 	var span: Vector2 = tile_size - inset * 2.0
@@ -160,6 +161,9 @@ static func build(world: RefCounted, chunk: Vector3i) -> Dictionary:
 				var solid: bool = solid_table[block] == 1
 				var s: int = SURFACE_OPAQUE if opaque else (SURFACE_WATER if block == WATER_ID else SURFACE_CUTOUT)
 				var at := Vector3(cell)
+				var faces: Array = tiles[block]
+				if empty_tiles.has(block) and world.block_meta(cell) == 0:
+					faces = [empty_tiles[block], empty_tiles[block], empty_tiles[block]]
 				for face in range(6):
 					var neighbour: int = pad[pi + FACE_OFFSET[face]]
 					if solid and solid_table[neighbour] == 0:
@@ -169,7 +173,7 @@ static func build(world: RefCounted, chunk: Vector3i) -> Dictionary:
 						continue
 					if block == WATER_ID and solid_table[neighbour] == 1:
 						continue
-					var tile: Vector2i = tiles[block][1 if face == 2 else (2 if face == 3 else 0)]
+					var tile: Vector2i = faces[1 if face == 2 else (2 if face == 3 else 0)]
 					var base_uv := Vector2(tile.x * tile_size.x, tile.y * tile_size.y) + inset
 					var shade: float = SHADE[face] * (0.96 + float((cell.x * 7 + cell.y * 13 + cell.z * 5) % 9) * 0.01)
 					var start: int = verts[s].size()

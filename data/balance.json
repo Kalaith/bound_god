@@ -49,7 +49,7 @@
 	"world": {
 		"size": [160, 48, 160], "chunk": 16, "sea_level": 6, "water_level": 9,
 		"tree_spacing": 5.5, "bush_spacing": 7.0, "grass_spacing": 6.0, "rock_spacing": 14.0,
-		"tree_centre_clear": 7, "berry_regrow_days": 1.0, "bush_max_berries": 4, "grass_regrow_per_day": 2,
+		"tree_centre_clear": 7, "berry_regrow_days": 1.0, "bush_max_berries": 4, "bless_sprouts": 3, "grass_regrow_per_day": 2,
 		"sacred_tree": [80, 80], "ridge_ruin": [128, 128], "ridge_hamlet": [112, 134],
 		"base_height": 12, "ridge_start": 104.0, "ridge_full": 122.0, "ridge_height": 11.0, "rim_width": 14.0, "rim_height": 28.0,
 		"river_offset": 48.0, "river_half_width": 2.4, "meadow_radius": 11, "forest_threshold": 0.05,

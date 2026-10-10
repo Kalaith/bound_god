@@ -41,6 +41,8 @@ func send(command: Dictionary) -> void:
 	var result: Dictionary = sim.apply_command(command)
 	if not str(result.reason).is_empty():
 		main.hud.flash(Text.label(result.reason), not result.ok)
+		if menu.visible:
+			menu.notice(Text.label(result.reason), not result.ok)
 
 
 func close_menu() -> void:

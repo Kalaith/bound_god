@@ -46,6 +46,7 @@ func _init() -> void:
 	_leaves(Vector2i(6, 3), Color("467f35"), Color("356b28"), false)
 	_tall_grass(Vector2i(7, 3))
 	_leaves(Vector2i(0, 4), Color("7fd6b0"), Color("4fae8c"), false)
+	_leaves(Vector2i(1, 4), Color("3f7a33"), Color("2f6427"), false)
 	var error: int = image.save_png("res://assets/blocks_atlas.png")
 	print("atlas saved: ", error == OK)
 	quit(0 if error == OK else 1)

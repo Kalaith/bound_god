@@ -21,6 +21,8 @@ static var placeable := PackedByteArray()
 static var shape := PackedByteArray()
 ## Atlas tile per face group: [side, top, bottom] as Vector2i.
 static var tiles: Array = []
+## Atlas tile for a block whose meta is 0 (a picked bush), by block id.
+static var empty_tiles: Dictionary = {}
 static var components: Array = []
 static var resources: Array = []
 static var yields := PackedInt32Array()
@@ -70,6 +72,8 @@ static func build() -> void:
 		if entry.has("atlas_bottom"):
 			bottom = Vector2i(int(entry.atlas_bottom[0]), int(entry.atlas_bottom[1]))
 		tiles[id] = [side, top, bottom]
+		if entry.has("atlas_empty"):
+			empty_tiles[id] = Vector2i(int(entry.atlas_empty[0]), int(entry.atlas_empty[1]))
 
 
 static func id(name: String) -> int:

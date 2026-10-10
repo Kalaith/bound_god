@@ -18,6 +18,7 @@ var sim: RefCounted
 var avatar_cell := Vector3i.ZERO
 var _title: Label
 var _status: Label
+var _notice: Label
 var _shrines: VBoxContainer
 var _miracles: VBoxContainer
 var _refresh_left: float = 0.0
@@ -44,6 +45,8 @@ func _ready() -> void:
 	column.add_child(_title)
 	_status = Style.wrapped("", 20, Style.MUTED)
 	column.add_child(_status)
+	_notice = Style.wrapped("", 20)
+	column.add_child(_notice)
 	var row := HBoxContainer.new()
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 24)
@@ -89,7 +92,14 @@ func _add_button(parent: Node, key: String, action: Callable) -> Button:
 func open() -> void:
 	_refresh_left = 0.0
 	_key = ""
+	_notice.text = ""
 	show()
+
+
+## The outcome of the last thing tried here, kept in view under the menu's title.
+func notice(text: String, bad: bool = false) -> void:
+	_notice.text = text
+	_notice.add_theme_color_override("font_color", Style.WARN if bad else Style.WHITE)
 
 
 func _process(delta: float) -> void:

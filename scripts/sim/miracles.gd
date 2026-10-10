@@ -133,9 +133,51 @@ static func _bless_growth(sim: RefCounted, cell: Vector3i, radius: float) -> Dic
 		if Vector2(at.x - cell.x, at.z - cell.z).length() <= radius and sim.voxels.get_block(at) == bush and sim.voxels.block_meta(at) < most:
 			sim.set_block(at, bush, most, "god")
 			ripened += 1
-	if ripened == 0:
-		return {"ok": false, "reason": "miracle_nothing_to_bless"}
-	return {"ok": true, "reason": "miracle_blessed"}
+	if ripened > 0:
+		return {"ok": true, "reason": "miracle_blessed"}
+	if _sprout_bushes(sim, cell, radius, bush, most) > 0:
+		return {"ok": true, "reason": "miracle_sprouted"}
+	return {"ok": false, "reason": "miracle_nothing_to_bless"}
+
+
+## With every bush already ripe, new ones spring from open grass nearby,
+## nearest first and a few cells apart.
+static func _sprout_bushes(sim: RefCounted, cell: Vector3i, radius: float, bush: int, berries: int) -> int:
+	var grass: int = Registry.id("grass")
+	var tall_grass: int = Registry.id("tall_grass")
+	var reach: int = int(radius)
+	var candidates: Array = []
+	for dz in range(-reach, reach + 1):
+		for dx in range(-reach, reach + 1):
+			var distance: float = Vector2(dx, dz).length()
+			if distance < 2.0 or distance > radius:
+				continue
+			var x: int = cell.x + dx
+			var z: int = cell.z + dz
+			var top: int = sim.voxels.top_solid_y(x, z)
+			var at := Vector3i(x, top + 1, z)
+			if top < 0 or sim.voxels.get_block(Vector3i(x, top, z)) != grass or not sim.voxels.in_bounds(at):
+				continue
+			var current: int = sim.voxels.get_block(at)
+			if (current != 0 and current != tall_grass) or sim.is_occupied(at) or sim.is_reserved_cell(at) or not sim.in_zone(Vector3(at) + Vector3(0.5, 0, 0.5)):
+				continue
+			candidates.append([distance, at])
+	candidates.sort_custom(func(a: Array, b: Array) -> bool:
+		if a[0] != b[0]:
+			return a[0] < b[0]
+		return [a[1].x, a[1].z] < [b[1].x, b[1].z])
+	var planted: Array = []
+	for candidate in candidates:
+		if planted.size() >= Balance.integer("world.bless_sprouts"):
+			break
+		var at: Vector3i = candidate[1]
+		var crowded: bool = false
+		for other in planted:
+			crowded = crowded or Vector2(at.x - other.x, at.z - other.z).length() < 3.0
+		if not crowded:
+			sim.set_block(at, bush, berries, "god")
+			planted.append(at)
+	return planted.size()
 
 
 ## Missing blocks of remembered buildings and shrines nearby return.
