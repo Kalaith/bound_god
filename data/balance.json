@@ -40,7 +40,7 @@
 	"work": {
 		"skill_speed_per_level": 0.05, "xp_per_tick": 1.0, "xp_per_level": 420.0, "passion_xp_multiplier": 2.0,
 		"harvest_ticks_per_block": {"wood": 14, "stone": 10, "thatch": 5, "berries": 6, "ore": 14},
-		"base_work_hours": 0.42, "off_hours": 0.08
+		"base_work_hours": 0.42, "off_hours": 0.08, "hungry_food_pull": 1.5
 	},
 	"construction": {
 		"ticks_per_block": 6, "abandon_days": 5, "max_open_sites": 2, "site_search_radius": 26, "site_spacing": 2,
@@ -50,7 +50,7 @@
 	"world": {
 		"size": [160, 48, 160], "chunk": 16, "sea_level": 6, "water_level": 9,
 		"tree_spacing": 5.5, "bush_spacing": 7.0, "grass_spacing": 6.0, "rock_spacing": 14.0,
-		"tree_centre_clear": 7, "berry_regrow_days": 1.0, "bush_max_berries": 4, "bless_sprouts": 3, "garden_regrow": 2, "lantern_reach": 6.0, "grass_regrow_per_day": 2,
+		"tree_centre_clear": 7, "berry_regrow_days": 1.0, "bush_max_berries": 4, "bless_sprouts": 3, "garden_regrow": 2, "garden_pick_at": 2, "lantern_reach": 6.0, "grass_regrow_per_day": 2,
 		"sacred_tree": [80, 80], "ridge_ruin": [128, 128], "ridge_hamlet": [112, 134],
 		"base_height": 12, "ridge_start": 104.0, "ridge_full": 122.0, "ridge_height": 11.0, "rim_width": 14.0, "rim_height": 28.0,
 		"river_offset": 48.0, "river_half_width": 2.4, "meadow_radius": 11, "forest_threshold": 0.05,

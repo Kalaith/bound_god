@@ -88,15 +88,22 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 		push.call(Goals.make(Kind.BUILD, job.site), float(culture.build) * aptitude(agent, Skill.CONSTRUCTION) * build_bonus * founder, "reason_build")
 	for i in range(mini(board.repairs.size(), 2)):
 		push.call(Goals.make(Kind.REPAIR, board.repairs[i]), float(culture.build) * aptitude(agent, Skill.CONSTRUCTION) * 0.8, "reason_repair")
+	# Food short in the chests makes food work matter more than any other.
+	var hungry: float = Balance.number("work.hungry_food_pull") if Standing.food_days(sim, agent.settlement_id) < 1.0 else 1.0
 	for index in range(JobBoard.RESOURCES.size()):
 		var resource: String = JobBoard.RESOURCES[index]
-		var demand: float = float(board.gather_demand.get(resource, 0.0))
+		var demand: float = float(board.gather_demand.get(resource, 0.0)) * (hungry if resource == "berries" else 1.0)
 		if demand < 0.05 or not agent.beliefs.has_site(JobBoard.SITE_KIND[resource]):
 			continue
 		push.call(Goals.make(Kind.GATHER, index), float(culture.gather) * aptitude(agent, Skill.GATHERING) * demand, "reason_gather")
+	# Tend a garden: pick its ripe bushes into the stores, plant its empty planters.
+	var ripe: Array = board.get("ripe", [])
 	var plots: Array = board.get("plots", [])
-	if not plots.is_empty() and (agent.carried("berries") >= 1.0 or agent.beliefs.believes_stock("berries") or agent.beliefs.has_site("bush")):
-		push.call(Goals.make(Kind.GARDEN, int(plots[0][0])), float(culture.gather) * aptitude(agent, Skill.GATHERING) * minf(0.45 + plots.size() * 0.08, 0.9), "reason_garden")
+	var can_plant: bool = not plots.is_empty() and (agent.carried("berries") >= 1.0 or agent.beliefs.believes_stock("berries") or agent.beliefs.has_site("bush"))
+	if not ripe.is_empty() or can_plant:
+		var garden: int = int(ripe[0][0]) if not ripe.is_empty() else int(plots[0][0])
+		var pull: float = minf(0.45 + ripe.size() * 0.1 + (plots.size() * 0.06 if can_plant else 0.0), 1.1) * hungry
+		push.call(Goals.make(Kind.GARDEN, garden), float(culture.gather) * aptitude(agent, Skill.GATHERING) * pull, "reason_garden")
 	var unknown: int = 0
 	for resource in board.gather_demand:
 		if float(board.gather_demand[resource]) > 0.3 and not agent.beliefs.has_site(JobBoard.SITE_KIND[resource]):

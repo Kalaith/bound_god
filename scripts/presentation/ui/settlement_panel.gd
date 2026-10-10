@@ -8,6 +8,8 @@ const Text = preload("res://scripts/core/text.gd")
 const ChronicleText = preload("res://scripts/presentation/ui/chronicle_text.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
+const Standing = preload("res://scripts/sim/standing.gd")
+const StandingText = preload("res://scripts/presentation/ui/standing_text.gd")
 
 var sim: RefCounted
 var settlement_id: int = -1
@@ -94,6 +96,16 @@ func _process(delta: float) -> void:
 	for resource in JobBoard.RESOURCES:
 		stock.append("%s %d" % [Text.label("resource_" + resource), sim.settlements.amount(settlement_id, resource)])
 	lines.append(Text.format("settlement_stock", {"list": ", ".join(stock), "total": sim.settlements.total(settlement_id), "capacity": sim.settlements.capacity(sim, settlement_id)}))
+	lines.append("")
+	lines.append(_gold(StandingText.title(settlement)))
+	var checklist: Array = StandingText.checklist(sim, settlement_id)
+	if checklist.is_empty():
+		lines.append(Text.label("settlement_top"))
+	else:
+		lines.append(Text.format("settlement_toward", {"next": Text.label("standing_" + Standing.next_level(str(settlement.get("standing", "camp"))))}))
+	for item in checklist:
+		var colour: Color = Style.LEAF if item.met else Style.MUTED
+		lines.append("[color=#%s]%s %s[/color]" % [colour.to_html(false), "+" if item.met else "-", item.text])
 	lines.append("")
 	lines.append(_gold(Text.label("settlement_sites")))
 	var sites: Array = sim.construction.in_settlement(settlement_id)

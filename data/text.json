@@ -119,6 +119,16 @@
     "design_default_name": "New design",
     "design_hint": "B / D-pad left: design library",
     "design_offer": "Offer at the shrine",
-    "design_offered": "Offered"
+    "design_offered": "Offered",
+    "design_functions": "What buildings do",
+    "design_back": "Back to the design",
+    "function_help_dwelling": "Dwelling: a bed and a door, every bed under a roof. A home for as many people as it has beds.",
+    "function_help_storehouse": "Storehouse: two or more storage chests and a door under a roof. Each chest holds 40.",
+    "function_help_workshop": "Workshop: a workbench under a roof.",
+    "function_help_shrine": "Shrine: an altar near open sky or the sacred tree. Prayers there feed your Favour.",
+    "function_help_shelter": "Shelter: a hearth or a bed and at least 6 blocks of roofed floor. Cover for the night.",
+    "function_help_hall": "Hall: a table and two benches under a roof, with at least 12 blocks of roofed floor. Neighbours gather there and rest twice as fast.",
+    "function_help_garden": "Garden: four or more planters side by side. Bushes in planters ripen twice as fast and still bear in winter; people plant berries in empty planters.",
+    "function_help_lantern": "Lanterns: wolves will not walk into their light, people see far by them at night, and two in a settlement make it feel safe to newcomers."
   }
 }

@@ -47,7 +47,26 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 			board.threats.append(threat.id)
 	board["housing_deficit"] = housing_deficit(sim, id)
 	board["plots"] = plots(sim, id)
+	board["ripe"] = ripe(sim, id)
 	return board
+
+
+## Garden bushes worth picking: [garden id, bush site id], a few at most.
+static func ripe(sim: RefCounted, id: int) -> Array:
+	var result: Array = []
+	var least: int = Balance.integer("world.garden_pick_at")
+	for entry in sim.structures.built():
+		if not entry.functions.has("garden") or sim.settlements.at_cell(entry.anchor) != id:
+			continue
+		var cells: Array = entry.components.get("planter", []).duplicate()
+		cells.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return [a.y, a.z, a.x] < [b.y, b.z, b.x])
+		for planter in cells:
+			var site: int = int(sim.sites.by_cell.get(planter + Vector3i.UP, -1))
+			if site >= 0 and sim.voxels.block_meta(planter + Vector3i.UP) >= least:
+				result.append([int(entry.id), site])
+				if result.size() >= 6:
+					return result
+	return result
 
 
 ## Empty planters in the settlement's gardens: [garden id, cell above], a

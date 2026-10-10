@@ -27,6 +27,7 @@ const SettlementPanel = preload("res://scripts/presentation/ui/settlement_panel.
 const FaithController = preload("res://scripts/presentation/faith_controller.gd")
 const RequestsPanel = preload("res://scripts/presentation/ui/requests_panel.gd")
 const ThreatViews = preload("res://scripts/presentation/threat_views.gd")
+const LanternLights = preload("res://scripts/presentation/lantern_lights.gd")
 const WorldIO = preload("res://scripts/presentation/world_io.gd")
 const RestOverlay = preload("res://scripts/presentation/ui/rest_overlay.gd")
 const ChronicleScreen = preload("res://scripts/presentation/ui/chronicle_screen.gd")
@@ -148,6 +149,10 @@ func _start() -> void:
 	threat_views.sim = sim
 	threat_views.driver = driver
 	add_child(threat_views)
+	var lantern_lights: Node3D = LanternLights.new()
+	lantern_lights.sim = sim
+	lantern_lights.camera = camera_rig.camera
+	add_child(lantern_lights)
 	inspector = Inspector.new()
 	inspector.sim = sim
 	ui_layer.add_child(inspector)

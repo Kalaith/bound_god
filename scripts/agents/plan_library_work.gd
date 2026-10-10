@@ -47,18 +47,27 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 ## Plant a berry in an empty planter of the garden: one already carried,
 ## one from the stores, or one picked from a bush on the way.
 static func _garden(sim: RefCounted, agent: RefCounted, garden_id: int) -> Array:
+	var board: Dictionary = sim.settlement_life.board(agent.settlement_id)
+	var result: Array = []
+	# A basket holds about three bushes' worth; pick them, then store it all.
+	var picking: Array = []
+	for entry in board.get("ripe", []):
+		if int(entry[0]) == garden_id and picking.size() < 6:
+			var site: int = int(entry[1])
+			picking.append_array([Plans.go_to(Plans.target(T.SITE, site)), Plans.step(Op.HARVEST, {"site": site})])
+	if not picking.is_empty():
+		result.append(H.option("pick_the_garden", 1.1, H.free_hands(agent, "berries") + picking + [_store(agent), Plans.step(Op.DEPOSIT)]))
 	var plot: Vector3i = Vector3i(-1, -1, -1)
-	for entry in sim.settlement_life.board(agent.settlement_id).get("plots", []):
+	for entry in board.get("plots", []):
 		if int(entry[0]) == garden_id:
 			plot = entry[1]
 			break
 	if plot.x < 0:
-		return []
+		return result
 	var stand: Vector3i = plot_stand(sim, plot, agent.cell)
 	if stand.x < 0:
-		return []
+		return result
 	var plant: Array = [Plans.go_cell(stand), Plans.step(Op.PLANT, {"cell": plot})]
-	var result: Array = []
 	if agent.carried("berries") >= 1.0:
 		result.append(H.option("plant_a_berry", 1.2, plant))
 	if agent.beliefs.believes_stock("berries"):
@@ -71,19 +80,24 @@ static func _garden(sim: RefCounted, agent: RefCounted, garden_id: int) -> Array
 	return result
 
 
-## A walkable cell beside a planter, never on a planter, nearest `from`.
+## A walkable cell within reach of a plot, nearest `from`: off the planters
+## if possible (a fenced garden is worked from outside its fence), otherwise
+## on another planter, never on the plot itself.
 static func plot_stand(sim: RefCounted, plot: Vector3i, from: Vector3i) -> Vector3i:
+	var reach: float = Balance.number("agents.reach")
 	var best: Vector3i = Vector3i(-1, -1, -1)
-	var best_distance: float = INF
-	for side in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
-		for dy in [-1, 0]:
-			var cell: Vector3i = plot + side + Vector3i(0, dy, 0)
-			if not sim.nav.is_walkable(cell) or Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter":
-				continue
-			var d: float = Vector3(cell).distance_to(Vector3(from))
-			if d < best_distance:
-				best = cell
-				best_distance = d
+	var best_score: float = INF
+	for dz in range(-3, 4):
+		for dx in range(-3, 4):
+			for dy in [-1, 0, 1]:
+				var cell: Vector3i = plot + Vector3i(dx, dy, dz)
+				if cell == plot or not sim.nav.is_walkable(cell) or Vector3(cell).distance_to(Vector3(plot)) > reach:
+					continue
+				var on_planter: bool = Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter"
+				var score: float = Vector3(cell).distance_to(Vector3(from)) + (100.0 if on_planter else 0.0)
+				if score < best_score:
+					best = cell
+					best_score = score
 	return best
 
 

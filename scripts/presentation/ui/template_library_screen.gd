@@ -4,6 +4,7 @@ signal capture_requested
 signal offer_requested(design: RefCounted)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
+const FunctionRules = preload("res://scripts/building/function_rules.gd")
 const Library = preload("res://scripts/building/template_library.gd")
 const Preview = preload("res://scripts/presentation/ui/template_preview.gd")
 
@@ -14,6 +15,9 @@ var _panel: PanelContainer
 var _list: ItemList
 var _name: LineEdit
 var _details: Label
+var _help_button: Button
+## Showing what makes each function instead of the selected design.
+var _help: bool = false
 var _notice: Label
 var _preview: Control
 var _save: Button
@@ -73,6 +77,9 @@ func _ready() -> void:
 	_offer = _button(actions, "design_offer", func() -> void:
 		if selected != null and not draft:
 			offer_requested.emit(selected))
+	_help_button = _button(actions, "design_functions", func() -> void:
+		_help = not _help
+		_refresh())
 	_button(actions, "design_close", func() -> void: closed.emit())
 	_dialog = FileDialog.new()
 	_dialog.access = FileDialog.ACCESS_FILESYSTEM
@@ -111,6 +118,7 @@ func open(value: RefCounted = null) -> void:
 		_notice.text = "\n".join(lines)
 	selected = value
 	draft = value != null
+	_help = false
 	if value == null and not library.designs.is_empty():
 		selected = library.designs[0]
 		_list.select(0)
@@ -126,10 +134,26 @@ func open(value: RefCounted = null) -> void:
 func _select(index: int) -> void:
 	selected = library.designs[index]
 	draft = false
+	_help = false
 	_refresh()
 
 
+## What makes each function, read from the rules' own order, and lanterns.
+static func reference() -> String:
+	var lines: Array[String] = []
+	for function in FunctionRules.FUNCTIONS:
+		lines.append(Text.label("function_help_" + function))
+	lines.append(Text.label("function_help_lantern"))
+	return "
+".join(lines)
+
+
 func _refresh() -> void:
+	_help_button.text = Text.label("design_back" if _help else "design_functions")
+	_preview.visible = not _help
+	if _help:
+		_details.text = reference()
+		return
 	_save.disabled = not draft
 	_export.disabled = selected == null or draft
 	_offer.disabled = selected == null or draft or offered.has(selected.id)

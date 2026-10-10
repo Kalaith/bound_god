@@ -6,6 +6,7 @@ const FaithState = preload("res://scripts/agents/faith_state.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
+const StandingText = preload("res://scripts/presentation/ui/standing_text.gd")
 
 
 ## The guide's line for now, or "" once the god has found its way.
@@ -47,6 +48,9 @@ static func line(sim: RefCounted, library: RefCounted) -> String:
 			closest = agent
 	if believers == 0:
 		return _miracle_line(sim, closest)
+	var village: String = _village_line(sim, hollow)
+	if not village.is_empty():
+		return village
 	var ridge_active: bool = false
 	for id in sim.faith.ids():
 		if id != 1 and sim.faith.shrines[id].state == "active":
@@ -57,6 +61,33 @@ static func line(sim: RefCounted, library: RefCounted) -> String:
 		return Text.label("guide_transfer")
 	if sim.calendar.day() < 6:
 		return Text.label("guide_rest")
+	return ""
+
+
+## Grow the settlement by the tree into a village, then send settlers out
+## and give their new place a shrine. "" once all of that is under way.
+static func _village_line(sim: RefCounted, hollow: int) -> String:
+	if hollow < 0:
+		return ""
+	var advice: String = StandingText.advice(sim, hollow)
+	if not advice.is_empty():
+		return advice
+	var asked: bool = false
+	for id in sim.requests.ids():
+		var request: Dictionary = sim.requests.requests[id]
+		if request.state == "open" and request.kind in ["found_settlement", "raise_shrine"]:
+			asked = true
+	var founded: int = -1
+	for id in sim.settlements.ids():
+		if int(sim.settlements.entries[id].get("ground", -1)) >= 0:
+			founded = id
+			break
+	if asked:
+		return ""
+	if founded < 0:
+		return Text.format("guide_found", {"place": sim.settlements.entries[hollow].name})
+	if not sim.faith.settlement_has_shrine(sim, founded):
+		return Text.format("guide_found_shrine", {"place": sim.settlements.entries[founded].name})
 	return ""
 
 
