@@ -1,6 +1,6 @@
 # Fresh player sessions
 
-Use these notes to record how a new player experiences the first playable moment in GAME_DESIGN.md §14.1. The M13 target is for at least two of three fresh players to reach it in under an hour without help.
+Use these notes to record how a new player experiences the first playable moment (GAME_DESIGN.md §17.1; from M18, the cultivation slice in §17.2). The M13 target is for at least two of three fresh players to reach it in under an hour without help.
 
 ## Run a session
 

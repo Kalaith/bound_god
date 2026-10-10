@@ -1,13 +1,22 @@
 # The Bound God project guidance
 
-This repository holds The Bound God, a third-person voxel god game in Godot: `project.godot`, `scenes/`, `scripts/`, `data/`, `assets/`, `tools/`, the export preset and the design documents. Work only inside this project unless the user explicitly broadens the task. Preserve any user changes.
+This repository holds The Bound God, a third-person voxel game in Godot in which the player is the spirit of a sacred tree guarding a cultivation sect that runs itself: `project.godot`, `scenes/`, `scripts/`, `data/`, `assets/`, `tools/`, the export preset and the documents. Work only inside this project unless the user explicitly broadens the task. Preserve any user changes.
 
 Read before working:
 
-- `GAME_DESIGN.md`: what the game is. Respect its pillars and its Decision / Later / Open markings.
-- `IMPLEMENTATION_PLAN.md`: Phase 2 (vertical slice to full game): definition of done, conventions, architecture changes, milestones M13–M24 and their exit criteria. Work milestone by milestone. For what Phase 1 built, the code and `PROGRESS.md` are the reference.
-- `NPC System Implementation Guide.md`: the Final Landing BDI agent system being ported. Its formulas and values apply unless the plan says otherwise. The Rust source is in `D:\WebHatchery\RustGames\finallanding\src` (read only).
-- `bound_god_game_concept.md`: the original concept. Do not edit it.
+- `GAME_DESIGN.md`: what the game is. Respect its pillars and its Decision / Leaning / Tuning / Later / Open markings.
+- `IMPLEMENTATION_PLAN.md`: definition of done, conventions, architecture changes and milestones (the cultivation slice M15–M18 in detail, M19–M25 outlined) with exit criteria. Work milestone by milestone. For what is already built, the code and `PROGRESS.md` are the reference.
+- `PROGRESS.md`: where work stands, decisions taken while building, known issues.
+
+Reference, read when relevant:
+
+- `docs/design/sacred_tree_cultivation_design.md`: the brief for the cultivation-sect direction. The GDD carries its decisions.
+- `docs/design/bound_god_game_concept.md`: the original concept. Do not edit it.
+- `docs/design/art_direction.md`, `docs/design/font_direction.md` and `docs/art/`: the look and the type.
+- `docs/reference/npc_system_guide.md`: the Final Landing BDI agent system the people are ported from. Its formulas and values apply unless the plan or `PROGRESS.md` says otherwise. The Rust source is in `D:\WebHatchery\RustGamesinallanding\src` (read only).
+- `docs/playtests/`: how to run and record fresh-player sessions, and past findings.
+
+`docs/` carries a `.gdignore`: Godot does not import it and the export excludes it. Keep design notes, reference images and captures there, not in the project root.
 
 ## Verification and checks
 
@@ -18,14 +27,15 @@ Read before working:
 ## Product invariants
 
 - The god is bound. The avatar can never leave the presence zone of the shrine it is manifested at, and can be manifested at only one shrine at a time.
-- Influence, not obedience. No feature may command an NPC, assign jobs or set work priorities. Whispers, requests, offered templates and miracles only change what NPCs know, want or can do; the BDI cycle always decides. Scripted beats enter as messages or candidates, never by bypassing deliberation.
-- Templates are knowledge, not commands. Offering a design never queues construction.
+- Influence, not obedience. No feature may command an NPC, assign jobs, set work priorities or choose a sect's leaders. Whispers, requests, offered templates, blueprints, blessings and miracles only change what NPCs know, want or can do; the BDI cycle always decides. Scripted beats enter as messages or candidates, never by bypassing deliberation.
+- Templates are knowledge, not commands. Offering a design or laying a blueprint never queues construction.
+- The god cannot grant advancement. Blessings and miracles change odds or avert one specific failure at a cost; no feature gives a realm, and following a person gives them nothing.
 - A structure's function comes from its components, never from its name or a player label.
-- The world does not wait. Settlements keep simulating when the god is elsewhere, resting or dormant.
+- The world does not wait. Settlements and sects keep simulating when the god is elsewhere, meditating or dormant.
 - Every outcome has a reason. Every NPC change of course is written to its decision log; significant world events are written to the chronicle with their cause.
 - No game-over screen. Losing every shrine makes the god dormant and recovery depends on people.
 - Hands-on building stays immediate: block edits apply between ticks and re-mesh within a frame.
-- Keep the miracle, request and block catalogs bounded to implemented effects. Do not add fake entries.
+- Keep the miracle, request, block, realm, tribulation and tree-unlock catalogs bounded to implemented effects. Do not add fake entries.
 
 ## Engineering
 
@@ -38,8 +48,8 @@ Read before working:
 - Agents never mutate the world directly; they push into `Effects`, applied once at the end of the tick.
 - Presentation (`scripts/presentation`) reads sim state and sends commands; it never changes sim state any other way.
 - Static typing everywhere. Load dependencies with `const X = preload("res://...")`. Tabs, LF, UTF-8 (`.editorconfig`).
-- Balance numbers live in `data/balance.json`; catalogs (`blocks`, `people`, `society`, `templates`, `miracles`) live in `data/` with stable ids and `schema_version`, validated at startup. Missing or mistyped data fails fast; no silent defaults in code.
-- All player-facing text lives in JSON text catalogs under `data/`, currently `data/text.json`. Split text catalogs by responsibility (for example, UI text) when needed to stay within the file-size limit, updating the loader and validation accordingly. Do not compact formatting to avoid a split.
+- Balance numbers live in `data/balance.json`; catalogs (`blocks`, `people`, `society`, `templates`, `miracles`, `crops`, `recipes`, and the cultivation catalogs as they land) live in `data/` with stable ids and `schema_version`, validated at startup. Missing or mistyped data fails fast; no silent defaults in code.
+- All player-facing text lives in JSON text catalogs under `data/`, currently `data/text.json`, `data/text_agents.json` and `data/text_ui.json`. Split text catalogs by responsibility (for example, UI text) when needed to stay within the file-size limit, updating the loader and validation accordingly. Do not compact formatting to avoid a split.
 - Use JSON only for hand-edited data and shareable templates. Simulation saves use `var_to_bytes` on plain dictionaries and arrays.
 - Store saves and the template library under `user://` with schema validation, staged writes and backup recovery. Imported templates are untrusted: validate size, palette and shape, and recompute function and bill.
 - World collision is layer 2; the avatar is layer 1.

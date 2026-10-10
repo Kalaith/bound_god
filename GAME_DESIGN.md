@@ -1,466 +1,453 @@
 # The Bound God — Game Design Document
 
-> Version 0.2 · 2026-10-10 (Phase 2 scope added in §14) · Godot 4.2.2 (GDScript, Forward+ renderer, Windows)
+> Version 0.3 · 2026-10-10 (cultivation-sect direction) · Godot 4.2.2 (GDScript, Forward+ renderer, Windows)
 >
-> Source material: `bound_god_game_concept.md` (vision), `NPC System Implementation Guide.md` (the BDI agent system shipped in Final Landing, `RustGames/finallanding`). Implementation is planned in `IMPLEMENTATION_PLAN.md`.
+> Sources: `docs/design/sacred_tree_cultivation_design.md` (the current direction: a tree spirit guarding a cultivation sect), `docs/design/bound_god_game_concept.md` (the original bound-god vision, still the base for faith, shrines and templates), `docs/reference/npc_system_guide.md` (the Final Landing BDI agent system the people are ported from). Look and type: `docs/design/art_direction.md`, `docs/design/font_direction.md`, concept images in `docs/art/`. Implementation is planned in `IMPLEMENTATION_PLAN.md`; what is built is recorded in `PROGRESS.md`.
 >
-> In this document, **Decision** marks a call made for the first playable, **Later** marks a direction kept but deferred, and **Open** marks an unresolved question. Concept-level "agreed direction" is carried over unchanged.
+> Markings: **Decision** is a call made and built on. **Leaning** is the working answer, changeable without rework. **Tuning** is a number or threshold left to balance passes and playtests. **Later** is a direction kept but deferred. **Open** is a design question still unanswered.
 
 ## 1. Pitch
 
-You are a small god bound to a sacred tree. You can walk, dig and build only near your shrines. Everything beyond them happens through people who decide for themselves: they eat, sleep, argue, fall in love, build houses from designs you showed them, pray to you when they are hungry, and carry stories of you to places you cannot go. When believers somewhere else raise a shrine, you can step through it. When a shrine falls, you lose that place.
+You are the spirit of an ancient sacred tree, walking the land beneath it as a robed avatar. The tree breathes an unusual spiritual energy, and mortals who meditate in its shade find that cultivation comes easier. They stay, teach, build, and in time become a sect. You nurture them, whisper to them, show them designs and spend scarce Favour on blessings and the occasional miracle, but you never command them. They choose their own masters, their own buildings and their own quarrels, and they keep living while you meditate through the years.
 
-**Design promise:** Build the foundations of a civilisation, then see what people make of them.
+When a cultivator faces a heavenly tribulation beneath your branches, the tree learns from it. Over generations the sect's struggles shape what the tree becomes, and the tree's growth shapes what the sect can become.
 
-**Genre:** third-person voxel builder + autonomous colony simulation + local god game.
-**Platform:** Windows desktop (keyboard/mouse and gamepad). No web build at this stage (see §13).
-**Session shape:** 20–60 minute play sessions; a campaign spans several in-game years.
+**Design promise:** nurture a sect, witness generations rise and fall, and become a greater sacred tree through the trials of the people who live beneath it.
+
+**Genre:** third-person voxel world + autonomous cultivation-sect simulation + local god game.
+**Platform:** Windows desktop (keyboard/mouse and gamepad). No web build (see §16).
+**Session shape:** 20–60 minute sessions; a campaign spans generations of in-game years, most of them passed in meditation.
+
+**Decision (2026-10-10):** the cultivation-sect direction replaces "build the foundations of a civilisation" as the game's centre. Everything built in the vertical slice (voxel valley, templates, BDI people, faith, shrines, miracles, food) stays and becomes the ground the sect grows from.
 
 ## 2. Design pillars
 
-These are the concept's ten principles, grouped into the five that drive feature decisions. Every feature must serve at least one.
+Every feature must serve at least one.
 
-| Pillar | Means in practice | Concept principles |
-| --- | --- | --- |
-| **Tactile building** | Placing and breaking blocks around the avatar is satisfying on its own; structures have function | 3 |
-| **Designs outlive placement** | A saved template becomes architectural knowledge that villagers may choose to reuse | 4 |
-| **Influence, not obedience** | The player shapes conditions, offers designs, whispers, performs miracles; NPCs decide | 1, 2, 7 |
-| **Reach is earned through belief** | Manifestation and power exist only where people worship; shrines can be lost | 5, 6, 8 |
-| **Every outcome has a reason** | Each NPC's "why" is inspectable; the chronicle records causes | 9, 10 |
+| Pillar | Means in practice |
+| --- | --- |
+| **Influence, not obedience** | The god shapes conditions, offers designs, whispers, blesses and performs miracles. NPCs decide, including the sect master, who may disagree. |
+| **A world that continues without you** | The sect keeps living while the god is elsewhere or meditating. Years can pass; it can prosper, split, decline or change its beliefs. |
+| **Individuals across generations** | People are not interchangeable workers. A novice met today may be an elder in a century; anyone can rise, followed or not. |
+| **Mutual growth** | The tree's qi helps cultivators advance; their tribulations teach the tree, which grows new abilities for the sect. |
+| **A tangible, editable world** | A voxel world the god and the people reshape. Buildings work by their components, designs outlive their builders, and history leaves marks on the land and the tree. |
+| **Reach is earned through belief** | The avatar exists only where people worship. Shrines spread with believers and can be lost. |
+| **Divinity has an opportunity cost** | Favour is scarce: one great rescue can cost what would have nurtured ten disciples. |
+| **Every outcome has a reason** | Each person's "why" is inspectable; the chronicle records causes. |
 
-Non-goals (from the concept): not a Minecraft remake, not a survival-crafting treadmill, not a top-down city builder, not a god game where you command NPCs.
+Non-goals: not a Minecraft remake, not a survival-crafting treadmill, not a top-down sect manager, not a god game where you command NPCs, not a fixed xianxia storyline.
 
 ## 3. Player role
 
-### 3.1 The avatar
+### 3.1 The tree spirit
 
-- Third-person divine avatar (about 1.8 blocks tall, glowing, slightly translucent at the edges). Walks, sprints, jumps 1 block, climbs 1-block steps automatically.
-- **Bound:** the avatar can only exist inside the **presence zone** of the shrine it is manifested at. Walking to the edge meets a soft shimmering wall; the avatar cannot pass.
-- **Hands-on actions:** break block, place block, pick up and drop loose items, inspect an NPC, read a sign-post template, and **use** the block under the crosshair: a storage chest opens its contents, a bed offers rest, a workbench opens the design library, a hearth is kindled, a door swings open or shut (a shut door stops only the avatar; people open doors as they pass), an altar or the sacred tree opens the shrine menu.
-- **Hotbar:** nine slots that start empty. The player chooses which placeable blocks go in them and in what order on the blocks screen; nothing is added or removed by itself.
-- The avatar does not eat, sleep or die. It can be **expelled** (see §7.5).
-- NPCs can see the avatar. Seeing it is an event in their minds (awe, fear, curiosity), so where and how the player appears matters.
+- **Decision:** the player is the **guardian spirit of the sacred tree**, not the sect's founder, master or ruler. The physical avatar (a robed jade spirit, about 1.8 blocks tall) exists from the first moment.
+- **Bound:** the avatar exists only inside the **presence zone** of the shrine it is manifested at, and at one shrine at a time. The zone's edge is a soft shimmering wall. The sacred tree is the origin shrine; other shrines and branch sites come through believers (§11).
+- **Hands-on actions:** break and place blocks, pick up and drop loose items, inspect a person, and **use** the block under the crosshair (a chest opens its contents, a bed offers rest, a workbench opens the design library, a hearth is kindled, a door opens or shuts for the avatar, an altar or the tree opens the shrine menu).
+- **Hotbar:** nine slots that start empty, filled and ordered by the player on the blocks screen.
+- The avatar does not eat, sleep or die. It can be **expelled** (§10.5).
+- NPCs see the avatar, and seeing it is an event in their minds (awe, fear, curiosity), so where and how the god appears matters.
 
 ### 3.2 Camera
 
-- **Play camera:** over-the-shoulder spring-arm camera, crosshair-targeted block interaction, reach 5 blocks.
-- **Overlook camera:** hold a key (or toggle) to lift the camera to an elevated orbit around the active shrine, still clamped to the presence zone. Used for watching the settlement, selecting NPCs and planning builds. Building is still possible from the overlook at extended reach.
+- **Play camera:** over-the-shoulder spring arm, crosshair targeting, reach 5 blocks.
+- **Overlook:** an elevated orbit around the active shrine, clamped to the zone, for watching the sect, picking people and planning builds.
 
-### 3.3 What the player can and cannot do
+### 3.3 What the god can and cannot do
 
 | Can | Cannot |
 | --- | --- |
-| Build and terraform inside the presence zone | Leave the presence zone |
-| Save structures as templates and offer them at a shrine | Order anyone to build a template |
-| Whisper to a believer (a nudge, not an order) | Assign jobs, set work priorities, or move NPCs |
-| Perform miracles paid for with local Favour | Perform miracles where nobody worships |
+| Build, dig and terraform inside the presence zone | Leave the presence zone |
+| Save structures as templates, offer them, and lay out blueprints as proposals | Order anyone to build, or queue construction |
+| Whisper to a believer (a nudge) | Assign jobs, set priorities, move people, pick the sect master |
+| Bless, protect and, at great cost, defy Heaven for someone | Guarantee a breakthrough or grant a realm |
 | Post divine requests at a shrine | Force anyone to accept a request |
-| Inspect any NPC in view and read their reasoning | Read the minds of people in places they have no shrine |
+| Inspect anyone in view and read their reasoning; follow chosen disciples | Know what happens where no shrine and no report reaches |
+| Meditate through seasons and years | Pause the world while away |
 | Transfer to another active shrine | Manifest at two shrines at once |
 
-**Decision:** unlike Final Landing, there is **no per-work-type priority panel**. Labour is steered only indirectly: the materials the player makes available, the designs offered, whispers and requests. (Final Landing's `priority weight` term becomes a settlement-culture weight that the NPCs themselves shift; see §6.6.)
+**Decision:** there is no work-priority panel. Labour is steered only indirectly (materials, designs, whispers, requests, blessings); each settlement's culture weights drift by themselves (§6.6).
 
 ## 4. The world
 
 ### 4.1 Voxel scale and the first valley
 
-- 1 block = 1 metre. Chunks are 16×16×16.
-- **Prototype map:** one bounded, procedurally generated valley of 160×48×160 blocks (10×3×10 chunks), generated from a seed. Edges are mountains or sea so the boundary feels natural.
-- Contents: river through the valley floor, meadows, woods, a rocky ridge on the far side with stone and ore, berry bushes, a ruined old shrine on the ridge (≈70 blocks from the sacred tree, which stands in the middle of the valley), and a small existing mining hamlet near it.
-- **Later:** a larger world split into regions, where only the active region and its neighbours simulate in full and others advance abstractly (§11.3).
+- 1 block = 1 metre; chunks 16×16×16.
+- **The first valley:** a bounded, seeded valley of 160×48×160 blocks. The sacred tree stands at its centre; a rocky ridge with stone, ore and a ruined altar lies ≈70 blocks away, with a small mining hamlet of five people who do not know the god; three founding grounds lie on open land.
+- **Later:** a world of several regions joined by passes, where only the god's region simulates in full and the rest advance abstractly (§13.3).
 
-### 4.2 Block palette (deliberately small)
+### 4.2 Blocks
 
-Concept principle 10: interacting systems over decorative blocks. The prototype ships about 20 block types in three families:
+Interacting systems over decorative blocks. Three families:
 
-| Family | Blocks | Notes |
-| --- | --- | --- |
-| Terrain | grass, dirt, stone, sand, gravel, ore, water (static), bedrock | Generated; breakable except bedrock |
-| Material | log, planks, thatch, cut stone, cobble, glass, fence | Placed by the player and NPCs; each maps to a resource |
-| Functional | bed, door, storage chest, workbench, hearth, altar, berry bush, sacred tree, table, bench, planter, lantern | Recognised as **components** (§5.3); a structure's purpose comes from these |
+| Family | Blocks |
+| --- | --- |
+| Terrain | grass, dirt, stone, sand, gravel, ore, water, bedrock, tall grass |
+| Material | log, leaves, planks, thatch, cut stone, cobble, glass, fence, farmland, sapling |
+| Functional | bed, door, storage chest, granary bin, workbench, hearth, altar, berry bush, crop, sacred tree, table, bench, planter, lantern |
 
-**Decision (M13, playtest round 1):** players found too little to build. Four components were added, each with an implemented effect: **table** and **bench** make a hall, **planters** make a garden, and a **lantern** lights its surroundings (wolves will not enter the light; people keep their full sight at night).
-
-Breaking a block yields its resource (log → wood, stone → stone, ore → ore, berry bush → berries without destroying the bush when ripe). Placing a block consumes one unit of its resource from the avatar's divine stock.
+Breaking a block yields its resource; placing one costs a unit from the god's divine stock. Functional blocks are **components** (§5.3): a structure's purpose comes from them. New blocks enter the catalog only with an implemented effect. Cultivation adds components such as a meditation mat, a formation stone and an alchemy furnace when the systems that use them land (§7, §8).
 
 ### 4.3 Resources
 
-| Resource | Source | Used for |
+| Resource | Source | Use |
 | --- | --- | --- |
-| Wood | Trees (log blocks), dismantling | Planks, beds, doors, fences, fuel |
-| Stone | Stone and cobble blocks | Foundations, cut stone, altar |
-| Thatch | Tall grass gathering | Roofs |
-| Berries | Berry bushes (regrow) | Food (raw) |
-| Grain | Farm plots (**Later**) | Food (meals) |
-| Ore | Ridge ore blocks | Trade with the ridge hamlet; tools (**Later**) |
+| Wood | Logs (4 per log) | Planks, furniture, doors, fuel |
+| Stone | Stone, cobble | Foundations, hearths, altars, lanterns |
+| Thatch | Tall grass | Roofs |
+| Soil | Dirt-family blocks | God-only terraforming |
+| Berries | Bushes, gardens | Food; spoil in 6 days |
+| Grain, seed | Fields | Food that keeps; seed to sow |
+| Meals | Kitchens | Best food; spoil in 3 days |
+| Tree seed | Falling leaves | Saplings, replanting the woods |
+| Ore | The ridge | **Later:** tools and cultivation materials |
+| Spirit materials | The tree's growth (§9) | **Later:** pills, formations, techniques |
 
-Each settlement has a **stockpile**: the sum of the storage chests standing in its area, each chest holding its own goods (40 units). People walk to the chest that holds what they need, and store into the nearest chest with room. While no chest has room, loads are set down loose at the settlement's camp; loose goods can still be eaten, built with and hauled into a chest later, but they are never counted as stock. The god's divine stock is never the settlement's. Resources in the world are tracked as **resource sites** (a tree, a bush, an outcrop) so NPC beliefs can remember them, exactly as Final Landing's nodes.
+Each settlement's stock is what lies in the storage chests in its area. Loose goods can be used but are not counted as stock. The god's divine stock is never the settlement's; the god supplies people by filling chests.
 
 ### 4.4 Time
 
-- Calendar: 720 ticks per day (as Final Landing), 4 seasons × 10 days = **40-day year**.
-- At 1× speed one day lasts 2 real minutes (6 ticks/s). Speeds: Pause, 1×, 3×, 10×.
-- **Rest at the shrine:** the god withdraws for a chosen number of days (1, 5, 10, a season). The simulation advances as fast as the machine allows behind a progress overlay, then returns the player to a world that has moved on, with a "While you rested…" summary drawn from the chronicle.
-- Seasons affect berry regrowth (none in winter, except bushes in a garden's planters), day length, and the Shelter need (nights are harsher in winter). In autumn people want more food put by. **Later:** weather and temperature.
+- **Decision:** 720 ticks a day; 4 seasons × 10 days = a 40-day year. At 1× a day lasts 2 real minutes. Speeds: pause, 1×, 3×, 10×. People age in years (adult at 18, old age near 88 for mortals; **Tuning**).
+- The god's long life makes **decades and centuries** the meaningful units of the campaign. Days are lived through the avatar; years pass through **meditation** (§13).
+- Seasons drive berry regrowth, crop growth and frost, night length and Shelter, and the autumn wish to put food by. **Later:** weather and temperature.
 
-## 5. Building and templates (core pillar)
+## 5. Building and templates
 
-### 5.1 Direct construction
+### 5.1 The god's hands
 
-- Crosshair targets a block face; place onto it or break it. Hold to repeat. Rotate orientable blocks (door, bed, stairs later).
-- The avatar carries a divine stock of resources gathered by breaking blocks. Players can deposit into or withdraw from a storage chest by using it, which is the main way the god supplies a village with materials. The first steps teach this as the god's first build: a storage chest by the sacred tree, then filling it.
-- **Decision:** no hunger, durability or crafting for the avatar. The friction is materials and reach, not survival.
+**Decision (2026-10-10):** hands-on block placement stays as the spirit's power inside the presence zone: immediate, tactile, paid from divine stock. It is how the god shapes ground, supplies materials, builds a model to capture as a design and makes small fixes. It is **not** how the sect gets built: the sect's halls and homes are raised by its people.
+
+- Crosshair a block face; place or break; hold to repeat; orientable blocks rotate.
+- No hunger, durability or crafting for the avatar. The friction is materials and reach.
 
 ### 5.2 Capturing a template
 
-1. Open the **Design tool** and mark two corners; a wireframe box (max 16×12×16) shows the captured volume.
-2. The game reads every block inside, trims empty margins, records the origin at the box's lowest front-left corner, and detects components.
-3. The player names the design. The **detected function** and a **materials bill** (count per resource) are shown; the player cannot override the function.
-4. The template is saved to the player's library (`user://templates/<id>.json`).
+1. Open the **design tool** and mark two corners (box up to 16×12×16).
+2. The game reads the blocks, trims empty margins and detects components.
+3. The player names the design; the **detected function** and **materials bill** are shown. The player cannot override the function.
+4. It is saved to the private library (`user://templates/<id>.json`).
 
 ### 5.3 Function recognition
 
-A structure's function comes from what it contains, not from its name. Rules live in data (`data/templates.json`):
+A structure's function comes from what it contains, never from its name. Rules live in `data/templates.json`. Built:
 
-| Function | Requires | Capacity |
-| --- | --- | --- |
-| Dwelling | ≥1 bed, ≥1 door, every bed covered by a roof block within 4 above | beds |
-| Storehouse | ≥2 storage chests, ≥1 door, roofed | chests × 40 units |
-| Workshop | workbench, roofed | 1 worker |
-| Shrine | altar, and an altar is within 3 blocks of an open sky column or a sacred tree | — |
-| Shelter | roofed floor area ≥ 6, ≥1 hearth or bed | sleepers (no bed bonus) |
-| Hall | ≥1 table, ≥2 benches, table roofed, roofed floor area ≥ 12 | seats; relaxing there restores recreation twice as fast |
-| Garden | ≥4 planters joined side by side (open sky) | plots; bushes in planters ripen twice as fast and still bear in winter |
-| Unrecognised | none of the above | — |
+| Function | Requires |
+| --- | --- |
+| Dwelling | ≥1 bed, ≥1 door, every bed roofed |
+| Storehouse | ≥2 chests, ≥1 door, roofed |
+| Workshop | workbench, roofed |
+| Shrine | altar near open sky or a sacred tree |
+| Shelter | roofed floor ≥ 6, a hearth or bed |
+| Hall | table, ≥2 benches, roofed floor ≥ 12 (recreation ×2) |
+| Garden | ≥4 joined planters under open sky (bushes ×2, bear in winter) |
+| Field | ≥6 joined farmland under open sky |
+| Kitchen | roofed hearth with a workbench or chest |
+| Granary | ≥2 roofed granary bins and a door |
 
-A template can satisfy several functions (a house with an altar is also a household shrine). Built instances are re-checked when blocks change, so a ruined house stops counting as a dwelling.
+**Leaning (cultivation):** sect functions follow the same rule. A **meditation hall** (roofed, mats, in qi above a threshold), a **training ground** (open, level, a marked area), a **tribulation ground** (an open platform, formation stones, at a distance from housing: protection comes from formations and placement, not grandeur), and an **alchemy room** (furnace, roofed). Exact components: **Tuning** when each lands.
 
-### 5.4 Offering a template
+### 5.4 Offering, blueprints and spread
 
-Templates in the player's library are private. To make a design available, the player **offers** it at a shrine. It becomes known to everyone who worships at that shrine.
+Templates in the library are private. **Offering** one at a shrine makes it known to the people there who know the god. **Decision (concept):** templates are knowledge, not commands. Offering never queues construction.
 
-**Key rule (from the concept):** templates are **knowledge, not commands**. Offering a design makes it possible; it does not make anyone build it.
+**Leaning (cultivation):** the god may also lay a **blueprint**: a template placed as a ghost on a chosen site, inside the zone. A blueprint is a *proposal*. It joins the candidate sites of anyone who needs that function, with a bonus for being where the god wants it; whether anyone builds it, and when, remains the people's decision. A Whisper can urge one person to take it up.
 
-Designs also spread without the god:
-
-- **Seeing:** an NPC who perceives a completed instance of a known template's structure learns that template (adoption by imitation).
-- **Telling:** builders mention designs in small talk (like Final Landing's `InformNode`).
-- **Migration:** people moving to a new settlement bring their known templates.
-- **Later:** NPCs invent simple vernacular designs (a lean-to, a hut) so the world never depends on the player's library; NPCs vary templates (material substitution, mirroring).
+Designs also spread without the god: by seeing a finished building, by talk, and with migrants. **Later:** people devise their own vernacular designs, substitute materials, mirror and renovate (M19 in the plan), and settlements keep traditions.
 
 ### 5.5 NPC-driven construction
 
-Construction is decided by individual NPCs through the BDI cycle (§6), never by a central planner.
+Built by individuals through the BDI cycle, never by a central planner:
 
-1. **A need exists.** A homeless adult or a couple wanting a home (`FoundHome`); a settlement leader noticing a shortage (`ProposeProject`: storehouse if stores are full, shrine if none, shelter if many sleep rough).
-2. **A design is known.** The NPC knows a template whose function fits the need.
-3. **A site is feasible.** The NPC searches its believed surroundings for a spot inside the settlement area: footprint on solid ground, height variation ≤ 1 (small gaps are filled with a foundation), no overlap with structures, path access to the door side.
-4. **Means are believed available.** Materials are believed in stock or known in the world.
-5. **Priorities allow it.** The utility must beat eating, sleeping, safety and current commitments.
+1. **A need** (no home, a shortage the leaders notice, a sect that wants a training ground).
+2. **A known design** whose function fits.
+3. **A feasible site** in the settlement area (level enough, free, reachable), or a blueprint.
+4. **Means believed available** (materials in the chests or known in the world).
+5. **Priority** above eating, sleeping, safety and commitments.
 
-Adopting the goal places a **construction site**: ghost blocks visible in the world and on the settlement job board. The founder and anyone else whose work utility favours it then deliver materials and **place blocks one at a time, bottom layer first**, so construction is visible over hours. A site with no progress for 5 days is abandoned and its delivered materials stay as loose items.
-
-**Proof-of-concept moment:** the player builds one cottage, saves it, offers it, and returns days later to find a street of similar cottages.
+The founder places a construction site (ghost blocks); anyone whose work utility favours it delivers materials and places blocks one at a time, bottom up. Builders without stone raise plain walling in planks. A site with no progress for 5 days is abandoned.
 
 ### 5.6 Template sharing
 
-- Templates are versioned JSON files (format and validation in `scripts/building/template.gd` and `template_validation.gd`). The library screen has **Import** and **Export** (file dialog) on desktop.
-- Imported designs are validated (size limits, known block ids) and land in the player's private library; they still have to be offered.
-- **Later:** online sharing, moderation, and cultural traditions (settlements weighting designs they have built before).
+Templates are versioned JSON with import and export on the library screen. Imports are untrusted: validated for size, palette and shape, with function and bill recomputed. **Later:** online sharing and moderation.
 
 ## 6. The people (BDI agents)
 
-The NPC system is a port of Final Landing's BDI architecture (see `NPC System Implementation Guide.md`). This section records **what changes** for The Bound God; formulas not mentioned here keep their Final Landing form and shipped values.
+### 6.1 The agent system
 
-### 6.1 What is kept unchanged
-
-- One committed intention per NPC; deliberation every ~10 ticks staggered by id; percept interrupts.
-- Utility-scored candidate goals with a `reason` label; commitment bonus `c = 0.25` (×3 when leaving a survival goal).
-- Plan library with several ranked plans per goal and a cheap last-resort plan for every survival goal.
-- Failure learning: a failed step corrects beliefs, the plan id is added to `tried`, the next plan is tried; exhausted goals back off 120 ticks and add `frustrated`.
-- Beliefs as a partial, decaying copy of the world; perception within a sight radius; typed messages delivered at the end of the tick.
-- Needs, health, mood, thoughts, traits, skills, ambitions, relations, compatibility, gossip, courtship, help requests, mental breaks, departure.
-- Deferred `Effects`, deterministic seeded RNG, decision log of 12 entries, and the "why" inspector.
+A port of Final Landing's BDI architecture: one committed intention per person, deliberation every ~10 ticks, utility-scored candidate goals with a reason, a commitment bonus, ranked plans with a last-resort plan for survival, failure learning and backoff, decaying partial beliefs, typed messages, deferred `Effects`, a seeded RNG and a 12-entry decision log behind the "why" inspector. Needs, mood, thoughts, traits, skills, ambitions, relations, gossip, courtship, help requests, mental breaks and departure are all kept.
 
 ### 6.2 Needs
 
-| Need | Change from Final Landing |
-| --- | --- |
-| Food, Rest, Social, Recreation, Safety | Unchanged |
-| **Shelter** (replaces Warmth) | Decays outdoors at night (×2 in winter and rain); restored by sleeping or staying under a roof. Drives housing demand. |
+Food, Rest, Social, Recreation, Safety, and **Shelter** (decays outdoors at night, more in winter). **Later:** cultivation may add a need for qi or stillness for cultivators.
 
 ### 6.3 Goals
 
-| Group | Goals | Notes |
-| --- | --- | --- |
-| Survival | Eat, Sleep, Flee, SeekCare, TakeShelter | TakeShelter replaces WarmUp |
-| Leisure | Relax, Idle | Unchanged |
-| Work | Gather(kind), Haul, Build(site), Repair(structure), Defend(threat), Scout | Farm, Cook, Craft, Research: **Later** |
-| Settlement | **FoundHome(template)**, **ProposeProject(function)** | New; create construction sites (§5.5) |
-| Faith | **Pray**, **TendShrine(shrine)**, **RestoreShrine(site)**, **Preach(person)**, **Quest(request)** | New (§7) |
-| Social | Chat, Comfort, Court, Reconcile, Help | Unchanged |
-| Crisis | Break(kind) | Unchanged |
-| Movement | **Migrate(settlement)** | New: leave a failing settlement for a better known one instead of simply vanishing |
+| Group | Goals |
+| --- | --- |
+| Survival | Eat, Sleep, Flee, SeekCare, TakeShelter |
+| Leisure | Relax, Idle |
+| Work | Gather, Haul, Build, Repair, Defend, Scout, Garden, Farm, Cook, PlantTrees |
+| Settlement | FoundHome, ProposeProject |
+| Faith | Pray, TendShrine, RestoreShrine, Preach, Quest |
+| Social | Chat, Comfort, Court, Reconcile, Help |
+| Crisis | Break |
+| Movement | Migrate |
+| **Cultivation (planned)** | Cultivate, Teach, Learn, Breakthrough, Spar, Recruit, Guard the tribulation |
 
 ### 6.4 Faith inside the agent
 
-Each NPC holds a **faith state**, separate from faction or settlement membership:
+Each person has a faith state: `knows_god`, `devotion` 0–100, `aspects` (harvest, protection, travel, shadow, wrath), an attended shrine and last prayer. Stage: Unaware → Aware (< 20) → Curious → Believer (40) → Devout (70). Devotion moves with witnessed miracles, answered prayers, sightings of the avatar, stories, friends, harm and neglect, read through personality (`pious`, `sceptic`, `spiritual`; fear worship for the cautious).
 
-- `knows_god` — has heard the name.
-- `devotion` 0–100 — how much they believe and trust the god.
-- `aspects` — what they believe the god is: harvest, protection, travel, shadow, wrath (each 0–1, normalised).
-- `shrine` — the shrine they attend, if any; `last_prayer_tick`.
+**Leaning (cultivation):** respect for the tree and devotion to its spirit are the same number. A cultivator can use the tree's qi while doubting its spirit, which is a source of politics, not a bug.
 
-Belief stage is derived: **Unaware** (does not know) → **Aware** (< 20) → **Curious** (20–39) → **Believer** (40–69) → **Devout** (70+).
+### 6.5 Settlement culture
 
-Devotion and aspects change through experience, interpreted through personality:
+Each settlement holds culture weights per work type that drift toward what it needs and what its respected members do. **Leaning (cultivation):** the sect adds **doctrine** weights in the same style (for example openness to outsiders, martial pride, secrecy, mercy, ambition), drifting with its masters' choices and the tree's influence, so a sect can become benevolent, isolationist, mercantile, militant or ruthless without a hard-coded morality path.
 
-| Experience | Effect |
+### 6.6 Population and lifecycle
+
+- Start: two wanderers arrive at the tree on day 1; the ridge hamlet has five miners.
+- **Migrants** come when a settlement is attractive (beds, food, safety, shrine renown, standing; **Leaning:** and the tree's qi, which draws would-be cultivators). A hungry settlement draws nobody. Migrants bring designs and news of open land.
+- Births, childhood, ageing and death as in Final Landing. Cap 45 (**Tuning**).
+- **Settlement standing** (built): camp, hamlet or village, judged daily from residents, housing, food days, functions and a living shrine; rises and falls are chronicled. **Leaning:** a **sect** is not a fourth standing but an institution that forms inside a settlement (§7.4).
+- Long unhappiness leads to Migrate, or to leaving the valley.
+
+## 7. Cultivation
+
+The heart of the new direction. **Decision (brief):** all cultivators progress by their own choices; the player can watch some more closely, but **being followed grants no advancement**.
+
+### 7.1 Qi and the tree
+
+The sacred tree makes a **qi field**: dense under its crown, thinning with distance. Qi speeds cultivation, which is why people come, settle and compete for the best spots. **Leaning:** qi is a function of distance from the tree (and later from nurtured spots, roots and formations); it is not a resource that is spent. Exact curve: **Tuning**.
+
+### 7.2 The cultivator
+
+Added per person (simulated cheaply for most, in depth for notable and followed people):
+
+- **Spiritual root / talent** and an **affinity** (rolled at birth or arrival; most people have little).
+- **Realm** and progress within it; **foundation** quality (how sound the last breakthrough was).
+- **Techniques** known (learned from a teacher, a manual or the tree), and who taught them.
+- Lifespan extended by realm (**Tuning**).
+
+**Decision (brief):** familiar xianxia realms are the scaffold: Mortal → Qi Refining → Foundation Establishment → Golden Core → Nascent Soul → further realms later. Number of realms, durations and power curve are **Tuning**; the slice needs Mortal, Qi Refining and Foundation Establishment.
+
+### 7.3 Cultivating, teaching, learning
+
+- **Cultivate:** meditate in the best qi a person can reach and is allowed to use; progress by talent × qi × technique × foundation. Competes with work, food and rest in the normal utility contest.
+- **Teach / Learn:** a cultivator passes a technique to a student through the social layer; teaching lineages are recorded and become legacies.
+- Duties (farming, building, guarding, teaching, exploring) still matter: a sect that only meditates starves.
+
+### 7.4 How a sect forms
+
+**Decision (brief):** the player never presses "Found Sect". **Leaning:** when a settlement has a teacher with several students and a place to cultivate, its cultivators may found a sect by their own choice: they name it, recognise a master (the most respected senior), and record it in the chronicle. A sect has members (disciples, elders, master) and doctrine; non-cultivators can live alongside it. Rival groups can contest the tree before one sect holds it. Thresholds: **Tuning**.
+
+The sect then decides training, recruitment, leadership, expeditions, building priorities and defence through its members' BDI choices. Succession happens when a master dies, steps down or is displaced. Branches, alliances, refugees and guests come later (§11).
+
+### 7.5 Attention and generations
+
+The player can **follow** a few people (pinned in the inspector and highlighted in the chronicle). Followed people are simulated in full detail at all times, and their milestones interrupt meditation. Anyone else can still become legendary. A disciple met as a novice may return as an instructor, an elder, a legacy of students and a relic; the player should sometimes choose to help the next generation instead of preserving the old.
+
+## 8. Tribulations and the sanctuary
+
+### 8.1 Breakthroughs
+
+At the peak of a realm a cultivator may attempt a **breakthrough**. It is their decision, weighing readiness, preparation, foundation, fear and ambition. Some breakthroughs provoke a **heavenly tribulation**: an event of a kind (lightning first; heart-demon, fire and elemental trials later) and a severity. Which breakthroughs, and how severe: **Tuning**.
+
+### 8.2 Rules (Decision, brief)
+
+1. Cultivators may attempt tribulations anywhere.
+2. Both they and the tree **prefer the tree**: the sanctuary improves their odds and the tree learns from the event.
+3. Visitors from other sects may be welcomed for the same reasons (§11.3).
+4. The tree cannot guarantee success. Preparation, foundation, technique, surroundings and severity still decide.
+5. Tribulations carry environmental and political risk: lightning scars blocks and buildings, draws attention, changes the land, and divides leaders over whom to admit.
+
+### 8.3 Outcomes
+
+Success (new realm, sound foundation), failure (injury, a cracked foundation, or death), and the god's interventions (§10.3). A tribulation is a public event: people gather, fear, pray and remember. Sites of great tribulations keep their marks.
+
+### 8.4 The sanctuary grows with the sect
+
+At first breakthroughs happen in the clearing under the branches. Later the sect may build a **tribulation ground** (§5.3) by its own decision, with recovery rooms and watchers at a safe distance. Admission of outsiders (free, allies only, for an offering, or forbidden cultivators) is a sect decision the god can only influence.
+
+## 9. The sacred tree's growth
+
+**Decision (brief):** the tree does not level like a cultivator. It grows through what it witnesses, above all tribulations.
+
+- **Insights:** each phenomenon kind (lightning, fire, heart demon, an element, an unfamiliar path) gives the tree knowledge. A new phenomenon gives most; repeats deepen it with diminishing returns. Insights are knowledge, not a currency to spend. Outsiders with unfamiliar paths are especially valuable.
+- **Maturity:** overall growth, separate from specialised insights. Placeholder phases: Awakened Seedling → Spirit Root → Ancient Canopy → Heaven-Touched Tree → World Tree. The tree can thrive without rushing them.
+- **Unlocks** (each must add play): spirit fruits and herbs (scarce, so they create sect politics and trade), denser qi and nurtured cultivation spots, root networks to distant spots, protective formations and sanctuary effects, dream guidance and blessings, and **Later** hidden realms rooted in the tree that people can explore, exploit, fight over and be lost in.
+- **History embodied:** lightning-scarred bark, changed soil and plants, minerals, monuments and stories. The tree's look records its generations.
+
+**Decision (slice):** one tribulation insight unlocks one concrete capability (a spirit fruit or a nurtured cultivation spot). Insight-to-unlock mapping: **Tuning**.
+
+## 10. Faith, Favour, shrines and miracles
+
+### 10.1 Two kinds of divinity
+
+- **Renown** (global): how many people know the name. Unlocks miracle tiers.
+- **Favour** (local, per shrine): the spendable pool from prayers at that shrine, used for miracles cast there.
+
+**Decision (2026-10-10):** the brief's **Influence** is Favour. The name on screen stays Favour.
+
+### 10.2 Shrines
+
+| Property | Rule (values **Tuning**) |
 | --- | --- |
-| Witnessing a miracle | +devotion by miracle size × relevance (Bless Growth while hungry counts more); aspect of that miracle rises |
-| Answered prayer | A prayer about need X followed within 1 day by a god act that relieves X: large boost, `prayer_answered` thought |
-| Seeing the avatar | First sight: `saw_the_god` (awe for spiritual/curious, fear for cautious); slight devotion |
-| Stories (`Story` messages) | Unaware → Aware; Aware/Curious gain devotion weighted by trust in the speaker; aspects shift toward the speaker's |
-| Community | Daily drift toward the devotion of friends and partner |
-| Harm by the god | Destroyed home or fields: devotion drops for most, but cautious, pessimist or `hot_headed` people may *gain* devotion with a strong wrath aspect (fear worship) |
-| Neglect | Slow daily decay without reinforcement; faster after unanswered desperate prayers |
+| Support | Σ devotion of congregation members who prayed there in 3 days ÷ 100 |
+| Active | Support ≥ 1.2 |
+| Presence radius | 16 + 6 × √support, max 40 |
+| Favour | Each prayer adds devotion ÷ 25; cap 100 |
+| Condition | Decays untended; tending restores; a broken altar makes the shrine fall |
 
-New traits: `pious` (devotion gains ×1.5, Pray utility up), `sceptic` (gains ×0.5, immune to fear worship). Existing `spiritual` keeps its role.
+The **sacred tree** is always active: with no support its reach is 10 blocks, widening toward the full radius as support nears the threshold. It starts with 30 Favour. Other shrines go dormant without support.
 
-### 6.5 New plans and steps (summary)
+### 10.3 The intervention scale
 
-- **Pray:** go to attended shrine and kneel (`pray_at_shrine` 1.0) · pray at home altar (0.7) · pray where they stand (0.3). A prayer carries an **intent**: the NPC's most pressing problem (lowest need, a believed threat, a sick partner).
-- **TendShrine:** go to the shrine, repair missing blocks from its saved layout, clear debris.
-- **Preach:** go to an unaware or curious person and `Talk{topic: Story}`.
-- **FoundHome / ProposeProject:** choose template, pick site (`MarkSite` step), then the normal Build plans.
-- **Build:** fetch materials (stock or loose items), `Deliver`, then `PlaceBlock` repeatedly (one block per ~20 ticks, faster with Construction skill).
-- **Migrate:** gather belongings, travel to the target settlement, join it.
+**Decision (brief):** the tree is powerful but not all-powerful. Blessings improve odds or avert a specific failure; they never replace mortal progress. Permanent damage to the tree is not the standard price of a miracle.
 
-### 6.6 Settlement culture instead of player priorities
+| Scale | Built miracles | Planned for cultivation |
+| --- | --- | --- |
+| Whisper / inspire (very low) | **Whisper** (2): a nudge to one believer's goal for a day, logged as "felt the god urge me to…" | An omen; urging someone to take up a blueprint |
+| Bless (low) | **Bless Growth** (15), **Kindle** (5) | Bless a cultivator's training or a task |
+| Nurture (moderate) | — | Nurture a cultivation spot or spirit herb |
+| Protect (high) | **Veil of Fog** (30), **Mend** (25) | Shield a tribulation: lower its risk, no guarantee |
+| Defy Heaven (extreme) | — | Avert an otherwise fatal tribulation; the survivor's breakthrough is imperfect: a damaged foundation, reduced benefit and a harder next realm |
 
-Final Landing multiplies work utility by a player-set priority (0–3). Here each settlement holds **culture weights** per work type, starting at 1.0 and drifting slowly toward what the settlement actually needs and what its respected members do (leaders' choices count double). The player influences them only indirectly. This keeps labour spreading without central assignment and gives settlements recognisable characters.
+- Well-timed modest help may preserve a proper breakthrough; intervention does not always carry a penalty.
+- Opportunity cost is the main price: a Defy Heaven should cost what ten blessings would. Costs, the cap and whether Favour regenerates during meditation: **Tuning**.
+- Identity: the devotion-weighted aspects of believers. Matching miracles cost 25% less, contradicting ones 25% more and confuse believers.
+- **Later:** large and exceptional miracles (divert water, raise land, guardians), destructive miracles (smite, blight). **Leaning:** destructive miracles wait; the sect itself can turn ruthless without the tree becoming malevolent.
 
-### 6.7 Population and lifecycle
+### 10.4 Prayers as information
 
-- Start: two travellers arrive at the sacred tree on day 1 (concept's Year 1). The ridge hamlet starts with 5 miners who do not know the god.
-- **Migrants** arrive at a settlement's edge when it is attractive (spare beds, food stores, safety from threats nearby, renown of its shrine, its standing); one roll per 3 days. A settlement going hungry draws nobody. Migrants bring designs from where they came from (a timber cottage, a store shed, a hall, a garden) and may know open land on the way.
-- Births, children, ageing and death as Final Landing. Population cap: 45 total (Phase 2 target 60 detailed).
-- **Settlement standing** (M13): each settlement is a **camp**, **hamlet** or **village**, judged daily from what it has: people, homes for all, food in its chests, the functions standing in its area and a living shrine. A village is the self-sustaining state; rises and falls are chronicled with the reason. Builders who cannot get stone raise plain stone walling in planks (components such as a hearth stay stone), so a settlement is never stalled only by a missing quarry.
-- Departure (6 days of very low mood) becomes **Migrate** when a better settlement is known, otherwise leaving the map.
+The god's knowledge is imperfect: everything in the current zone is visible and inspectable; prayers at active shrines list the speaker and intent; followers report what they believe; the chronicle shows distant events only once someone who could know has prayed or travelled to an active shrine.
 
-## 7. Faith, shrines and miracles
+### 10.5 Losing a shrine and dormancy
 
-### 7.1 Two kinds of divinity
+A shrine under the support threshold for 3 days goes dormant; a broken altar makes it fallen. If the avatar's shrine fails it is expelled to the strongest active shrine. If none is active the god is dormant: a faint wisp that can only whisper to the Devout, until survivors restore an altar. **Decision:** no game-over screen; if every believer is gone the god fades and an epilogue tells the story, with the option to keep watching.
 
-- **Renown** (global): how many people across the world know the name. Unlocks miracle tiers and is shown on the shrine menu.
-- **Favour** (local, per shrine): spendable power accumulated from prayers at that shrine. Miracles are paid from the Favour of the shrine where the avatar stands.
+## 11. Sacred sites, branches and the wider world
 
-A famous god can be powerless in a place where nobody prays; a tiny devoted hamlet can give a strong local anchor.
+### 11.1 Expansion through people (built)
 
-### 7.2 Shrines
+Discovery (Scout, quests) → recognition (stories) → belief → a shrine (restored or raised) → manifestation (the shrine becomes a transfer destination). Divine requests at a shrine: Carry my name, Bring resources, Raise a shrine, Restore a shrine, Found a settlement. Each believer decides whether to take one, weighing devotion, nature, needs, danger and the boon.
 
-A shrine is a recognised Shrine structure (§5.3) with a **congregation**: the NPCs whose `shrine` is it.
+### 11.2 Branches
 
-| Property | Rule (prototype values, tunable in data) |
+**Decision (brief):** travelling disciples spread the spirit's name and may found **branch shrines and sects**. Belief is local: a famous main sect gives no presence elsewhere without an anchor. The avatar can transfer between sufficiently established sites (cost and cooldown **Tuning**). Branches can interpret the teachings differently (a healing school, a sword school, a forbidden-path enclave) and can be attacked, abandoned or desecrated; access is lost with them while memories and architecture survive.
+
+### 11.3 Other sects and outsiders
+
+Other sects are not just enemies: guests seeking tribulation sanctuary, trading partners for herbs and manuals, rival claimants, allies, patrons, teachers, occasional attackers, and sources of unfamiliar insights. Admitting guests is the sect's decision (§8.4). **Later:** rival sects, outlaw and demonic cultivators, factions and trade (plan M22).
+
+### 11.4 Transfer
+
+From the shrine menu, the god transfers to another active shrine. The old place carries on without the god.
+
+## 12. Threats and change
+
+- **Wildlife (built):** wolves roam, frighten, sometimes injure; lantern light keeps them out.
+- **Raiders (built):** a scripted band raids the wealthiest or least defended settlement from day 12, every 4 days, may break an altar. **Later:** replaced by outlaws and rival sects as BDI agents; tribulations draw attention.
+- **Decay (built):** untended buildings lose blocks; abandoned places overgrow; buildings are re-judged when their contents change; felled trees lose their crowns; saplings grow back.
+- **Generational change (planned):** masters die, doctrines drift, branches split, sites are lost and recovered. The world can change without the player, but always for a traceable cause.
+
+## 13. Time, meditation and the chronicle
+
+### 13.1 Scales of play
+
+- **Days and weeks:** observe, meet novices, inspire projects, prepare a tribulation, respond to threats.
+- **Years and decades:** training, breakthroughs, recruitment, politics, buildings, personal arcs.
+- **Centuries:** succession, the rise and fall of elders, doctrine, legacies, branches, lost sites, a changed land.
+
+### 13.2 Rest and meditation
+
+**Built:** rest at a shrine for 1, 5 or 10 days or a season, with a "While you rested…" summary.
+
+**Decision (brief):** **meditation** extends rest to years. The sect does not pause. Important events interrupt it: a followed person's breakthrough or danger of death, a shrine destroyed, war, an unfamiliar phenomenon, a favoured disciple's return. The player then reads a concise **chronicle** of who advanced, who died, what was built or lost, which techniques arose and why the politics changed. Favour regeneration and other limits on what meditation can skip: **Tuning**, set so that skipping a century is never free.
+
+**Leaning:** spans beyond a season run the **abstract settlement model** (plan §3.1): population, food, buildings, faith, cultivation progress and events advance in hourly steps by the same rules as the detailed sim, so years pass in seconds; the region materialises in full on return.
+
+### 13.3 The chronicle
+
+Events stored with causes ("Day 14 · Ridge Hamlet · The ridge shrine fell — raiders broke the altar"). Kinds: arrivals, departures, births, deaths, bonds, buildings, designs, shrines, miracles, requests, raids, migrations, standing, harvests and frost; planned: breakthroughs, tribulations, insights, sect founding and succession, legacies. Filterable by place and person; feeds the meditation summary and the epilogue.
+
+## 14. Core loops
+
+1. **The tree attracts cultivators** with qi and the promise of protection.
+2. **People form a sect** and recruit, build, train, gather, teach and explore by themselves.
+3. **The spirit inspires** chosen efforts (designs, blueprints, whispers) and spends scarce Favour on blessings or miracles.
+4. **Cultivators face tribulations**, preferably at the tree.
+5. **The tree gains insights** and grows new capabilities.
+6. **New capabilities create opportunities** (fruits, cultivation spots, sanctuary, branches) and conflict.
+7. **The sect changes** over generations: new talent, visitors, reputation, doctrine.
+8. **The cycle continues with consequences**, not toward a fixed victory.
+
+The **immediate loop** stays tactile: walk the zone, read who needs what, shape the ground, fill a chest, capture and offer a design, whisper, bless, and watch people respond.
+
+## 15. Interface
+
+| Element | Contents |
 | --- | --- |
-| Support | Σ devotion of congregation members who prayed there in the last 3 days, ÷ 100 |
-| Active (manifestable) | Support ≥ 1.2 (e.g. three believers at 40) |
-| Presence radius | 16 + 6 × √support blocks, max 40 |
-| Favour gain | Each prayer adds devotion ÷ 25 Favour; cap 100 per shrine |
-| Condition | 100 when built; decays 2/day untended; TendShrine restores; < 30 halves Favour gain; altar destroyed → 0 |
+| HUD | Time, speed, shrine name, Favour, renown, divine stock, crosshair with use prompt, hotbar, prayer feed |
+| Blocks screen (I) | Placeable blocks, stock, hotbar slots |
+| Chest panel | Contents beside the divine stock, give and take |
+| Shrine menu | Shrines and transfer, designs, requests, miracles, rest and meditation |
+| Design tool and library | Capture, function and bill, function reference, offer, blueprint, import/export |
+| Inspector | Mind (decision log, beliefs vs reality), Needs, Bonds, Life, Faith; planned **Cultivation** tab (realm, foundation, techniques, teacher and students, tribulation history) and a **follow** pin |
+| Settlement panel (K) | Residents, standing checklist, beds, food days, stock, sites, culture; planned sect view (master, elders, doctrine) |
+| Chronicle (J) | Filterable history with causes |
+| Planned | Tree screen (maturity, insights, unlocks, scars); world map with report ages |
 
-The **sacred tree** is the origin shrine: always considered a shrine structure and **always active**, so the god can always tend the small area around its tree. **Decision (2026-10-10):** with no support the tree's presence radius is 10 blocks; it widens toward the normal radius (16 + 6 × √support) as support approaches the active threshold, and shrinks back when prayers fade. There is no grace timer. Altars elsewhere still go dormant without support.
+Look and type follow `docs/design/art_direction.md` and `docs/design/font_direction.md`: a playable ink-and-pastel painting, woodblock serif headings on warm paper panels (see `docs/art/concept_1.png`). Presentation comes before tuning: the inspector must be usable before balance work.
 
-### 7.3 Miracles
+## 16. Technical constraints (summary)
 
-Miracles are cast where the avatar stands, cost Favour, and are visible events that NPCs perceive and interpret (§6.4). Prototype set:
+- Godot **4.2.2**, GDScript, **Forward+**; no plugins or GDExtensions without approval; built-ins first.
+- All tuning and catalogs in `data/*.json`, validated at startup, failing fast.
+- The simulation is pure `RefCounted` data, runs headless and is deterministic from one seeded RNG.
+- Saves under `user://` with staged writes, backups and schema migrations.
+- Windows only; Forward+ rules out a web export.
 
-| Tier | Miracle | Cost | Effect | Aspect |
-| --- | --- | --- | --- | --- |
-| Small | **Whisper** | 2 | Talk to one Believer+ in the zone: choose a nudge (rest, build, gather X, pray, make peace with Y, go to Z). Adds a temporary utility bonus to that goal kind of `0.4 × devotion/100` for one day. Aware/Curious only hear "a strange voice" (Safety −5, curiosity +) | — |
-| Small | **Bless Growth** | 15 | Berry bushes in a 10-block radius ripen and regrow instantly | harvest |
-| Small | **Kindle** | 5 | Lights a hearth; a sheltered area counts as roofed for one night | protection |
-| Medium (renown ≥ 15) | **Veil of Fog** | 30 | For one day, threats cannot perceive anything inside a 20-block radius | shadow |
-| Medium (renown ≥ 15) | **Mend** | 25 | Restores a structure's missing blocks from its template | protection |
+## 17. Scope
 
-Whispers are the god's voice in the agent system: they enter the inbox as a `Whisper` message and appear in the NPC's decision log as "Felt the god urge me to …", so the inspector stays truthful about why someone acted. They never bypass deliberation.
+### 17.1 Built
 
-The **identity** of the god is the devotion-weighted average of believers' aspects. A miracle whose aspect matches the dominant identity costs 25% less; one that contradicts it (e.g. wrath acts by a harvest god) costs 25% more and confuses believers (devotion −). Two communities can worship the same god in contradictory ways.
+The vertical slice (M0–M12) and Phase 2's first milestones: the voxel valley and hands-on building, templates and function recognition, BDI people with a social layer, faith, shrines, miracles and requests, wolves and raiders, rest, chronicle and saves (M0–M12); settlement standing, halls, gardens, lanterns and founding (M13); fields, kitchens, granaries and spoilage (M14); woods and saplings; the painterly look and woodblock type. Record: `PROGRESS.md`.
 
-**Later:** large and exceptional miracles (divert water, storms, guardians, reshape land), destructive miracles (smite, blight) as an explicit malevolent path.
+The slice's acceptance moment (the "first-playable moment" playtests measure, §14 in GDD v0.2) is built and checked: build a cottage, offer it, rest, and find more; carry the name to the ridge and transfer there; return after an absence to a change with a cause.
 
-### 7.4 Prayers as information
+### 17.2 Next: the cultivation slice
 
-The god does not have perfect knowledge. What reaches the player:
+**Decision (brief):** validate the unique loop before expanding into full xianxia world-building. The slice adds, to the existing valley: the tree's qi field; a few named cultivators with talent, realms, ageing and lifespans; a sect that forms by itself; Cultivate, Teach and Breakthrough; one risky tribulation kind (lightning); Favour blessings with Protect and Defy Heaven; one tree insight unlocking one capability; meditation over years with an understandable chronicle.
 
-- **Here (current shrine zone):** everything visible; any NPC can be inspected.
-- **Prayer feed:** every prayer at any active shrine is listed with the speaker and intent ("Edda prays for food — Hunger 23"). Prayers at other shrines arrive in a delayed summary when the avatar transfers there or rests.
-- **Reports:** followers returning from quests report what they believe (their beliefs, which may be stale or wrong).
-- **Chronicle:** major events everywhere (deaths, shrines raised or lost, raids) appear, but only once someone who could know about them has prayed or travelled to an active shrine.
+**The key test:** can the player grow attached to a disciple, influence their fate at a meaningful cost, meditate through years of autonomous change, and return to a visibly evolved sect whose growth also changed the tree?
 
-### 7.5 Losing a shrine and dormancy
+Do not start with hundreds of techniques, a long realm ladder, many factions or a hidden-realm generator.
 
-- A shrine whose support stays below the active threshold for 3 consecutive days goes **dormant**. An altar destroyed or desecrated (by raiders, or by NPCs who turned against the god) makes it **fallen**.
-- If the avatar is at a shrine that becomes dormant or fallen, it is **expelled** to the active shrine with the highest support.
-- If no shrine is active, the god becomes **dormant**: the avatar is a faint wisp at the last shrine, cannot build, and can only Whisper (free, but heard only by Devout). Recovery happens through people: surviving believers with the `RestoreShrine` goal rebuild the altar, or keep praying until support recovers. **Decision:** no game-over screen; the world keeps running and the chronicle tells what happened. If every believer is gone, the god fades and a "the world remembers" epilogue summarises the run with the option to continue watching.
+### 17.3 After the slice
 
-## 8. Expansion through people
+Sect architecture and living designs, seasons and weather (storms feed tribulations), herbs and alchemy, branches and regions, other sects and outsiders, the tree's wider growth (root networks, formations, hidden realms), campaign shape and epilogue, finish and release. Sequenced in `IMPLEMENTATION_PLAN.md`.
 
-The concept's five steps map directly onto systems:
+**Later (after 1.0):** online template sharing, multiplayer, rival gods, other platforms.
 
-| Step | System | Prototype content |
-| --- | --- | --- |
-| 1. Discovery | Scout goal; Quest "explore" | Followers find the ridge ruin and the hamlet; their beliefs now contain it |
-| 2. Recognition | `Story` talk topic; travellers and migrants | A follower who meets a miner tells stories; the miner becomes Aware |
-| 3. Belief | Faith state (§6.4) | Miners who hear repeated stories, see a Mend or Bless Growth at their edge (if in range later), or get help become Believers |
-| 4. Shrine | `RestoreShrine` / `ProposeProject(shrine)` | Believers restore the ruined altar on the ridge or build an offered shrine template |
-| 5. Manifestation | Shrine support ≥ threshold | The shrine menu shows the ridge shrine as a transfer destination |
+## 18. Questions
 
-### 8.1 Divine requests
+### 18.1 Tuning (left to balance passes)
 
-At an active shrine, the player can post a request:
+Settled by play and data, not by design: the qi curve; realm count, durations and lifespans; which breakthroughs provoke tribulations and their severity; insight values and the insight-to-unlock mapping; Favour sources, cap, regeneration and miracle costs (including the ten-blessings-to-one-rescue ratio); meditation spans, interrupts and what they cost; sect founding thresholds; shrine thresholds, avatar transfer cost and cooldown; population caps; migrant pull; raid pacing.
 
-| Request | Goal | Completion |
-| --- | --- | --- |
-| Carry my name to *place* | Quest(explore + preach) | The follower reaches the place and tells at least 2 stories there |
-| Bring *resource* × *n* | Quest(fetch) | Delivered to the shrine's stockpile |
-| Raise a shrine at *place* | Quest(found shrine) | A shrine is recognised there and has a congregation of ≥ 1 |
-| Restore *shrine* | RestoreShrine | Altar and condition ≥ 50 |
-| Protect *settlement* | Defend near target | No raid succeeds there for 5 days |
-
-Requests are broadcast as `DivineRequest` messages to believers at that shrine. Each NPC decides whether to take it from devotion, bravery, curiosity, current needs, believed danger and the promised **boon** (the player attaches a blessing: a Favour-paid bonus on success such as `blessed` thought, +skill, or Bless Growth at their home). A taken quest is an ordinary intention; it can fail, be abandoned, or succeed in an unexpected way, and its outcome is reported when the follower prays next.
-
-Followers also start their own expeditions: devout NPCs with the `curious` trait or the `map_the_wilds` ambition may Preach or Scout unprompted.
-
-### 8.1a Founding a settlement (M13)
-
-World generation marks three **founding grounds**: open, level land well away from the tree and the hamlet, each with a few berry bushes and a knuckle of stone. People learn of them by seeing them, from talk, or from migrants who passed them. Once the settlement at the god's shrine is a **village**, the god may post **Found a settlement at** *ground*. Up to three believers may take it: the first carries wood, sets down a chest and names the new settlement after the place; later ones bring food and join. The request is done when the settlers live there. The new settlement builds by the designs its founders know; a **Raise a shrine** request (or the founders' own wish for a shrine) gives it an altar, which makes it a transfer destination. Settlers far from any shrine pray where they live; they sleep, shelter and claim beds only in their own settlement, know how to raise a lean-to, and a place with no roof at all raises one first.
-
-### 8.2 Transfer
-
-From the shrine menu, the player transfers to another **active** shrine. The transfer takes a moment of visual effect; the avatar appears at the new altar. Only one manifestation at a time; the old place carries on without the god.
-
-## 9. Threats and change
-
-### 9.1 Wildlife
-
-Wolves roam the woods (creature system from Final Landing): they cause Flee/Defend reactions, Warn messages and Safety loss, and occasionally injure people. Their main role is to make Safety and shelter matter.
-
-### 9.2 Raiders (the prototype threat)
-
-- A **raider band** (3–5 hostile actors) forms off-map. Every 4 days the threat director rolls a raid against the wealthiest or least defended settlement, rising with stockpile wealth and falling with the number of believed defenders. **No raid before day 12.**
-- Raiders walk in, take resources from storage, may smash doors, and target the **altar** if the settlement's god is known to them (desecration). They leave when they carry enough or when defenders outnumber them.
-- Villagers react through the normal BDI cycle: Warn, Flee to shelter, Defend if brave, Help the injured. **Veil of Fog** and stone walls are the god's main counters; the player is not a fighter (the avatar cannot attack).
-- Outcomes are causal: the ridge hamlet, small and far from the god, is more likely to be raided and lose its new shrine, which is exactly the concept's "nothing is permanently secure".
-
-**Later:** raiders who stay and occupy an abandoned settlement, bandit camps adopting the faith (outlaw aspect), rival gods and religions.
-
-### 9.3 Decay and change
-
-- Unmaintained structures lose a block occasionally after 20 days without a resident or repair.
-- Abandoned settlements (no residents for 10 days) start to overgrow (grass and saplings spread onto paths).
-- Buildings are re-evaluated when their contents change: a dwelling whose bed was taken by raiders becomes a shelter; a house gets adopted by migrants.
-
-## 10. World history: the chronicle
-
-The chronicle stores events with **causes**:
-
-```
-Day 14 · Ridge hamlet · The ridge shrine fell — raiders broke the altar (raid by the Ashen band; 2 defenders, 5 raiders).
-Day 9  · Tree hollow  · Brannoc and Edda built a cottage from "Willow Cottage" (housing shortage: 5 people, 2 beds).
-```
-
-- Entry kinds: arrival, departure, birth, death, bond change, structure built/abandoned/converted, template adopted, shrine raised/dormant/fallen/restored, miracle, request taken/completed/failed, raid, migration.
-- Shown in a Chronicle screen filtered by place and person; feeds the "While you rested…" summary and the epilogue.
-- Each entry links to the NPCs and structures involved, so "why does this road exist" can be answered by looking.
-
-## 11. Core loops
-
-### 11.1 Immediate (minutes): build and nurture
-
-Manifest → look around (who is hungry, homeless, scared?) → break and place blocks → supply materials to the stockpile → small miracle or whisper → watch people respond.
-
-### 11.2 Medium (days): empower a community
-
-Design a useful building → save and offer it → watch villagers adopt it → solve the problems they cannot (materials out of reach, threats, terrain) → grow devotion → unlock stronger miracles.
-
-### 11.3 Long (seasons and years): spread and defend the faith
-
-Post requests → followers travel and preach → a remote shrine rises → transfer and nurture that place → the first village keeps changing without you → raids, migrations, schisms → recover lost shrines through survivors.
-
-**Later (beyond prototype):** region-based world, low-fidelity simulation of distant regions (population, stock, belief and scheduled projects advanced in daily steps, materialised into voxels on return), rival religions, bandit settlements, endgame options.
-
-## 12. Interface
-
-| Screen / element | Contents |
-| --- | --- |
-| HUD (small) | Time and speed, current shrine name, Favour, renown, divine stock (top materials), crosshair with a use prompt for the block under it, hotbar, prayer toast feed (last 3) |
-| Blocks screen (I) | Every placeable block with its material and how much the god holds; the nine hotbar slots to fill, reorder and empty |
-| Chest panel (use a chest) | What the chest holds beside the divine stock, give and take, and which settlement uses it |
-| Shrine menu (interact with altar) | Shrines list with status and transfer, offer template, post request, miracle list with costs, rest |
-| Design tool | Corner marking, capture preview, function, materials bill, name, save |
-| Template library | Private and offered designs, adoption counts per settlement, import/export |
-| NPC inspector | Final Landing's four tabs (Mind with decision log and beliefs vs reality, Needs, Bonds, Life) + **Faith** tab (stage, devotion, aspects, attended shrine, last prayer and intent, heard stories) |
-| Settlement panel | Residents, beds, stock, construction sites, culture weights, known templates, recent events |
-| Chronicle | Filterable history with causes |
-| Overlays | Presence boundary, construction ghosts, NPC activity glyphs and mood rings, selected NPC's path and strong relations |
-
-Final Landing's rule is kept: **presentation comes before tuning**. The inspector must be usable before balance work starts.
-
-## 13. Technical constraints (summary)
-
-Taken from the `small_following` Godot baseline; details in `IMPLEMENTATION_PLAN.md`.
-
-- Godot **4.2.2**, GDScript, **Forward+** renderer (a deliberate change from `small_following`'s Compatibility renderer, for 3D lighting, fog and ambient occlusion); no plugins or GDExtensions without approval; built-in features first (ArrayMesh, AStar3D, FastNoiseLite, RandomNumberGenerator).
-- All tuning in `data/*.json`, loaded once and validated, failing fast on missing keys.
-- Simulation is pure data (RefCounted) and runs headless; scenes only present it.
-- Deterministic: one seeded RNG; same seed and inputs → same world.
-- Saves under `user://` with staged writes and backup recovery.
-- Windows only at this stage. Forward+ rules out an HTML5 export; revisiting the web means switching to Compatibility and is not planned.
-- Visual style: simple procedural shapes for people and creatures, a small 16 px block texture atlas.
-
-## 14. From first playable to full game
-
-### 14.1 First playable (complete)
-
-The vertical slice (milestones M0–M12) proved that building a design, empowering autonomous residents and leaving them alone works: one 160×48×160 valley, the sacred tree and the ridge, the design tool and offered templates, the BDI people with their social layer and faith, Whisper and four small and medium miracles, three request kinds, wolves and one raider band, rest, chronicle and saves. Its acceptance moment (build a cottage, offer it, rest, find more; carry the name to the ridge; transfer; a later absence changes something with a cause) is built and checked. Record: `PROGRESS.md`.
-
-### 14.2 Full game (Phase 2)
-
-**Goal:** a complete game that a new player can learn unaided and play for years of in-game time across several regions, with a god whose identity is shaped by how it is worshipped. Planned in `IMPLEMENTATION_PLAN.md` (milestones M13–M24, with the definition of "fully playable" in its §1).
-
-These **Later** items from this document are promoted into Phase 2:
-
-| Item | Section | Milestone |
-| --- | --- | --- |
-| Grain, farm plots, Farm and Cook goals | §4.3, §6.3 | M14 |
-| Weather and temperature | §4.4 | M15 |
-| Craft goal, tools from ore | §4.3, §6.3 | M16 |
-| NPC-devised vernacular designs, material substitution, mirroring, traditions | §5.4, §5.6, §15 | M17 |
-| Region-based world with low-fidelity distant regions | §4.1, §11.3 | M18 |
-| Raiders as BDI agents, occupation, bandit settlements adopting the faith | §9.2 | M19, M20 |
-| Large and exceptional miracles, the malevolent path | §7.3 | M20 |
-| Formal endgame (epilogue, ages, optional deeds) | §15 | M22 |
-
-Still **Later** (after 1.0): online template sharing and moderation, rival gods and religions as separate faiths, multiplayer, platforms other than Windows. Research and ore trade with off-map peoples stay out; trade happens between settlements in the world (M19).
-
-**Acceptance for 1.0:** a fresh player reaches the first-playable moment in under two hours unaided; a world plays for at least three in-game years across three regions and five settlements, producing caused change (prosperity, famine, raids, occupation, schism, recovery); nurturing, protective, feared and outlaw gods each develop a distinct identity and reach an epilogue.
-
-## 15. Open questions
-
-Carried from the concept, with current leanings:
+### 18.2 Open (design)
 
 | Question | Leaning |
 | --- | --- |
-| Size of influence zones; overlapping and rival religions | Radius from support (§7.2); schisms within the god's own faith in M20; rival religions Later |
-| How many believers enable manifestation | Support ≥ 1.2 for the prototype; tune by playtest |
-| Avatar capabilities vs miracles | Avatar builds and carries; anything affecting people or many blocks is a miracle |
-| Can NPCs create original templates | Yes, from M17: vernacular designs from a small parametric generator, validated by the function rules |
-| Template substitution, renovation, destruction | M17: material substitution groups, mirroring, adoption of empty buildings, salvage of ruins |
-| Worship vs faction vs culture | Separate fields: faith state per NPC, settlement membership, settlement culture weights |
-| Quest UI without excess | Shrine menu only; outcomes arrive as prayers and chronicle entries |
-| World time and fast-forward limits | Speeds up to 10×; rest up to one season; distant regions advance at low fidelity (M18) |
-| Remote destruction: consequential not exhausting | Raid cooldowns, warnings via prayers, survivors and dormancy instead of hard loss |
-| Formal endgame | Open-ended, with named ages, optional saga deeds and an epilogue on fading or when the player closes the book (M22) |
+| Does a remote anchor need a root connection to the tree? | No; belief and a working altar are enough |
+| Optional player-set rules for automatic emergency intervention during meditation? | Yes, as a per-person "protect if…" with a Favour limit; never a guarantee |
+| How explicitly can the god pick an architect? | Through Whisper and blueprints only |
+| How much do people invent designs at launch? | Vernacular homes and sect basics (plan M19) |
+| How are special ingredients and hidden realms generated, discovered and managed? | Ingredients in the slice's follow-up; hidden realms Later |
+| How does the sect choose guests? | Doctrine weights and the master's judgement, influenced by the tree |
+| How do legacies and tree memories show without overwhelming the UI? | The chronicle, the tree screen and followed people only |
+| What happens when the sect collapses or the last shrine is lost? | Dormancy and recovery through survivors (§10.5); the tree is never destroyed |
+| How do good, ruthless, forbidden and mixed traditions emerge? | Doctrine drift from leaders' choices (§6.5); no morality paths |
 
-*Status: v0.2. The first playable is complete; Phase 2 scope is in §14.2. Agreed concept direction is preserved; prototype decisions are marked and expected to change after playtests.*
+*Status: v0.3. The vertical slice and village economy are built; the cultivation slice is next. Agreed direction from the brief is marked Decision; everything numeric is Tuning.*

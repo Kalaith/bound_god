@@ -2,7 +2,7 @@ extends SceneTree
 ## Paints assets/blocks_atlas.png: 32 px procedural tiles in an 8 x 7 grid,
 ## laid out as data/blocks.json expects. The look is a soft painted wash:
 ## seamless low-frequency colour drift plus a few brush strokes per tile, in a
-## muted palette of sage, cream, earth and faded blue (see art_direction.md).
+## muted palette of sage, cream, earth and faded blue (see docs/design/art_direction.md).
 ## Tiles are painted in order from one seed, so new tiles go at the end.
 ## Run once after changing a tile:
 ## Godot --headless --path . --script res://tools/make_atlas.gd

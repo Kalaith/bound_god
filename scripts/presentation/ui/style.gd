@@ -1,9 +1,9 @@
 extends RefCounted
 ## One palette and a few builders so every screen reads the same. Sizes are
 ## authored at 1080p; the canvas_items stretch scales them for smaller windows.
-## The look follows art_direction.md: warm ink-wash panels ruled with a thin
+## The look follows docs/design/art_direction.md: warm ink-wash panels ruled with a thin
 ## line of aged gold, cream text, and jade kept for the sacred.
-## Type (font_direction.md): a woodblock-flavoured Mincho serif for titles,
+## Type (docs/design/font_direction.md): a woodblock-flavoured Mincho serif for titles,
 ## shrine names and headings; a clean humanist sans for body text (the project
 ## theme default, assets/ui_theme.tres) and, in bold, for numbers and counters.
 ## Both are OFL, subset to Latin in assets/fonts.
