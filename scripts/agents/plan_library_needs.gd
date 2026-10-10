@@ -94,10 +94,15 @@ static func shelter(sim: RefCounted, agent: RefCounted) -> Array:
 
 
 ## The nearest walkable cell under a known tree's canopy, or (-1,-1,-1).
+## Cover under a canopy within the person's own settlement: the sacred tree
+## for those who live by it, or a tree they know nearby.
 static func covered_cell(sim: RefCounted, agent: RefCounted) -> Vector3i:
 	var bases: Array = []
 	var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))
-	if tree.x >= 0 and H.distance(tree, agent.cell) < 40.0:
+	var settlement: Dictionary = sim.settlements.get_settlement(agent.settlement_id)
+	var home: Vector3i = settlement.get("center", agent.cell)
+	var area: float = float(settlement.get("radius", 30.0)) + 6.0
+	if tree.x >= 0 and H.distance(tree, agent.cell) < 40.0 and H.distance(tree, home) <= area:
 		bases.append(tree + Vector3i(-1, 0, 2))
 	for id in agent.beliefs.known_sites("tree", agent.cell):
 		bases.append(agent.beliefs.sites[id].cell + Vector3i(1, 0, 1))
@@ -107,7 +112,7 @@ static func covered_cell(sim: RefCounted, agent: RefCounted) -> Vector3i:
 	var best_distance: float = INF
 	for base in bases:
 		var cell: Vector3i = sim.nav.nearest_walkable(base, 2)
-		if cell.x < 0 or not sim.is_under_canopy(cell):
+		if cell.x < 0 or not sim.is_under_canopy(cell) or H.distance(cell, home) > area:
 			continue
 		var d: float = H.distance(cell, agent.cell)
 		if d < best_distance:

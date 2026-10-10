@@ -55,7 +55,7 @@
 		"base_height": 12, "ridge_start": 104.0, "ridge_full": 122.0, "ridge_height": 11.0, "rim_width": 14.0, "rim_height": 28.0,
 		"river_offset": 48.0, "river_half_width": 2.4, "meadow_radius": 11, "forest_threshold": 0.05,
 		"home_trees": 5, "home_outcrops": 3, "home_reach": [13.0, 17.0],
-		"ground_count": 3, "ground_distance": [42.0, 64.0], "ground_spacing": 36.0, "ground_radius": 5, "ground_flatness": 2
+		"ground_count": 3, "ground_distance": [42.0, 64.0], "ground_spacing": 36.0, "ground_radius": 5, "ground_flatness": 2, "ground_bushes": 7, "ground_bush_ring": 7
 	},
 	"settlements": {
 		"start_radius": 22, "radius_per_structure": 1.0, "max_radius": 40, "chest_capacity": 40,
@@ -63,7 +63,7 @@
 		"berries_per_person_day": 2.5, "autumn_season": 2, "autumn_berries_per_person": 10,
 		"standing": {
 			"hamlet": {"residents": 4, "housed": 0.5, "food_days": 0.0, "functions": {"dwelling": 2}, "shrine": false},
-			"village": {"residents": 10, "housed": 1.0, "food_days": 3.0, "functions": {"dwelling": 4, "storehouse": 1, "hall": 1, "garden": 1}, "shrine": true}
+			"village": {"residents": 10, "housed": 1.0, "food_days": 1.0, "functions": {"dwelling": 4, "storehouse": 1, "hall": 1, "garden": 1}, "shrine": true}
 		}
 	},
 	"population": {
@@ -77,7 +77,7 @@
 		"story_gain": 40.0, "story_aspect_lerp": 0.1, "drift_per_day": 0.05, "decay_per_day": 0.6,
 		"unheard_decay": 1.5, "first_sight_devotion": 6.0, "miracle_devotion": 14.0, "answered_bonus": 18.0,
 		"harm_loss": 20.0, "pious_factor": 1.5, "sceptic_factor": 0.5, "request_accept": 0.75,
-		"whisper_factor": 0.4, "prayer_ticks": 30, "stages": [20, 40, 70], "carry_name_listeners": 3
+		"whisper_factor": 0.4, "prayer_ticks": 30, "shrine_walk": 35.0, "stages": [20, 40, 70], "carry_name_listeners": 3
 	},
 	"shrines": {
 		"support_window_days": 3, "active_support": 1.2, "radius_base": 16.0, "radius_per_sqrt_support": 6.0,

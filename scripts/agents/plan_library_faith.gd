@@ -20,7 +20,9 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 		Kind.PRAY:
 			var result: Array = []
 			var shrine: int = DeliberationFaith.attended_shrine(sim, agent)
-			if shrine >= 0:
+			# Settlers far from the shrine they know pray where they live.
+			var home: Vector3i = sim.settlements.get_settlement(agent.settlement_id).get("center", agent.cell)
+			if shrine >= 0 and H.distance(sim.faith.get_shrine(shrine).cell, home) <= Balance.number("faith.shrine_walk"):
 				result.append(H.option("pray_at_shrine", 1.0, [Plans.go_to(Plans.target(T.SHRINE, shrine)), Plans.step(Op.PRAY, {"shrine": shrine, "ticks": ticks})]))
 			result.append(H.option("pray_here", 0.3, [Plans.step(Op.PRAY, {"shrine": -1, "ticks": ticks})]))
 			return result

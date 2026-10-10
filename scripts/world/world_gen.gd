@@ -552,7 +552,22 @@ func _founding_grounds() -> void:
 			continue
 		taken[direction] = true
 		grounds.append({"name": "place_ground_" + names[direction], "center": Vector3i(int(at.x), _top(int(at.x), int(at.y)) + 1, int(at.y))})
+		_ground_larder(int(at.x), int(at.y))
 	features["grounds"] = grounds
+
+
+## What lets a few settlers live on new land: a ring of berry bushes and a
+## knuckle of stone a short walk from where they will camp.
+func _ground_larder(x: int, z: int) -> void:
+	var count: int = int(_b.ground_bushes)
+	for index in range(count):
+		var at: Vector2 = Vector2(x, z) + Vector2.from_angle(index * TAU / count + 0.4) * float(_b.ground_bush_ring)
+		if _bush_ok(int(at.x), int(at.y)) and not reserved.has(Vector2i(int(at.x), int(at.y))):
+			_bush(int(at.x), int(at.y))
+	for attempt in range(8):
+		var at: Vector2 = Vector2(x, z) + Vector2.from_angle(attempt * TAU / 8.0 + 1.1) * float(_b.ground_bush_ring + 4)
+		if _outcrop(int(at.x), int(at.y)):
+			return
 
 
 ## How uneven the land is within `radius` of a column, or -1 where it is not

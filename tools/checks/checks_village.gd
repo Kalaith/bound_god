@@ -20,6 +20,7 @@ const ExecuteLife = preload("res://scripts/sim/execute_life.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Daily = preload("res://scripts/sim/daily.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
+const Perception = preload("res://scripts/sim/perception.gd")
 
 const Need = Personality.Need
 
@@ -229,4 +230,48 @@ func check_lanterns_keep_wolves_away():
 				return "a wolf walked into lantern light"
 		if hunted != not lit:
 			return "a wolf %s someone %s" % ["hunted" if hunted else "ignored", "in lantern light" if lit else "in the dark"]
+	return ""
+
+
+## From a village, believers asked to found a settlement on open land they
+## know carry wood there, set down a chest, live there, and the chronicle
+## says who founded it; a camp cannot be asked.
+func check_a_village_founds_a_second_settlement():
+	var sim: RefCounted = Sim.create(11)
+	var camp: Vector3i = sim.settlements.entries[1].camp
+	for i in range(4):
+		Population.arrive(sim, Generation.adult(sim.rng, sim.agents.size()), sim.nav.nearest_walkable(camp + Vector3i(i, 0, 2), 4), 1, "")
+	for agent in sim.agents:
+		if agent.settlement_id == 1:
+			agent.faith.knows = true
+			agent.faith.devotion = 85.0
+			Perception.note_ground(sim, agent, 0)
+	sim.faith.shrines[1].favour = 60.0
+	sim.run_ticks(12)
+	Stores.fill(sim, 1, {"wood": 40, "berries": 40})
+	sim.run_ticks(sim.calendar.ticks_per_day / 2)
+	var refused: Dictionary = sim.apply_command({"type": "post_request", "kind": "found_settlement", "target": 0, "boon": 10, "slots": 3})
+	if refused.ok or refused.reason != "request_not_village":
+		return "a camp was asked to found a settlement: " + str(refused)
+	sim.settlements.entries[1].standing = "village"
+	var posted: Dictionary = sim.apply_command({"type": "post_request", "kind": "found_settlement", "target": 0, "boon": 10, "slots": 3, "days": 15.0})
+	if not posted.ok:
+		return "the request was refused: " + str(posted)
+	var founded: int = -1
+	for day in range(10):
+		sim.run_ticks(sim.calendar.ticks_per_day)
+		founded = sim.settlements.on_ground(0)
+		var request: Dictionary = sim.requests.get_request(int(posted.id))
+		if request.state == "done":
+			break
+	if founded < 0:
+		return "nobody founded a settlement on %s in ten days" % sim.features.grounds[0].name
+	var request: Dictionary = sim.requests.get_request(int(posted.id))
+	if request.state != "done":
+		return "the founding request is %s with %d living there" % [request.state, Standing.present(sim, founded)]
+	if sim.settlements.chest_cells(sim, founded).is_empty():
+		return "the new settlement has no chest"
+	if not _chronicled(sim, "settlement_founded"):
+		return "the founding was not chronicled"
+	print("      %s founded on day %d with %d people" % [sim.settlements.entries[founded].name, sim.calendar.day(), Standing.present(sim, founded)])
 	return ""
