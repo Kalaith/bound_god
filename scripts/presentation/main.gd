@@ -36,7 +36,7 @@ const AudioDirector = preload("res://scripts/presentation/audio_director.gd")
 const PauseMenu = preload("res://scripts/presentation/ui/pause_menu.gd")
 const SettingsScreen = preload("res://scripts/presentation/ui/settings_screen.gd")
 const SettingsStore = preload("res://scripts/core/settings_store.gd")
-const Guide = preload("res://scripts/presentation/ui/guide.gd")
+const Prompts = preload("res://scripts/presentation/ui/prompts.gd")
 const TITLE_SCENE: String = "res://scenes/title.tscn"
 
 var rig: Node3D
@@ -64,7 +64,8 @@ var rest_overlay: Control
 var chronicle_screen: Control
 var pause_menu: Control
 var settings_screen: Control
-var _guide_text: String = ""
+## The prompt shown now: {id, text} or {}.
+var _prompt_now: Dictionary = {}
 var _show_guide: bool = true
 var _guide_left: float = 0.0
 var ui_layer := CanvasLayer.new()
@@ -272,7 +273,7 @@ func _process(_delta: float) -> void:
 	_guide_left -= _delta
 	if _guide_left <= 0.0:
 		_guide_left = 1.0
-		_guide_text = Guide.line(sim, library_screen.library) if _show_guide else ""
+		_prompt_now = Prompts.current(sim, library_screen.library, _show_guide)
 	hud.refresh(_hud_state())
 
 
@@ -295,7 +296,7 @@ func _hud_state() -> Dictionary:
 		"prayers": faith.prayer_lines(),
 		"hint": design_tool.hint() if design_tool.active else Text.label("hud_controls"),
 		"prompt": _prompt() if accepts_world_input() else "",
-		"guide": _guide_text,
+		"guide": _prompt_now.get("text", ""),
 		"hotbar_visible": not design_tool.active and not library_screen.visible,
 		"crosshair": Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not capture_request.is_empty(),
 	}
@@ -335,6 +336,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		inventory.open(builder.selected)
 	elif event.is_action_pressed("quick_save"):
 		world_io.save()
+	elif event.is_action_pressed("dismiss_prompt") and not _prompt_now.is_empty():
+		sim.apply_command({"type": "dismiss_prompt", "prompt": str(_prompt_now.id)})
+		_prompt_now = {}
+		_guide_left = 0.0
 	elif event.is_action_pressed("toggle_chronicle"):
 		builder.enabled = false
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE

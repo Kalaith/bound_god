@@ -52,7 +52,7 @@ static func apply(sim: RefCounted, command: Dictionary) -> Dictionary:
 				result = {"ok": false, "reason": "command_unknown"}
 	# The avatar's footsteps and the hotbar are state, not decisions; they are
 	# not replayed.
-	if result.ok and not command.get("type", "") in ["avatar_moved", "set_hotbar"]:
+	if result.ok and not command.get("type", "") in ["avatar_moved", "set_hotbar", "dismiss_prompt"]:
 		sim.command_log.append({"tick": sim.calendar.tick, "command": command.duplicate(true)})
 	return result
 

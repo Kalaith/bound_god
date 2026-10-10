@@ -17,6 +17,7 @@ const CaptureFood = preload("res://scripts/presentation/capture_food.gd")
 const CaptureInput = preload("res://scripts/presentation/capture_input.gd")
 const CaptureWoods = preload("res://scripts/presentation/capture_woods.gd")
 const CaptureFigures = preload("res://scripts/presentation/capture_figures.gd")
+const CaptureOnboarding = preload("res://scripts/presentation/capture_onboarding.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -58,6 +59,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 		return
 	if scenario.begins_with("figures_"):
 		CaptureFigures.arrange(main, shot, scenario)
+		return
+	if scenario.begins_with("onboarding_"):
+		CaptureOnboarding.arrange(main, shot, scenario)
 		return
 	match scenario:
 		"design_library", "design_box", "design_invalid":

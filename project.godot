@@ -170,6 +170,10 @@ toggle_settings={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":4194305), Object(InputEventJoypadButton,"button_index":6)]
 }
+dismiss_prompt={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":72)]
+}
 toggle_fullscreen={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":4194342)]

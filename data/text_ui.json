@@ -308,6 +308,13 @@
 		"guide_lack_shrine": "Its shrine must be alive: believers who pray there keep it so.",
 		"guide_found": "{place} is a village. At its shrine press E, Requests, and ask its people to found a new settlement on land they know.",
 		"guide_found_shrine": "{place} has been founded. Ask its people to raise a shrine there, so you can step through to them.",
-		"guide_dormant": "The god sleeps. People who still believe may pray a shrine awake again."
+		"guide_dormant": "The god sleeps. People who still believe may pray a shrine awake again.",
+		"prompt_dismiss": "{key} · put this note away",
+		"prompt_threat_wolf": "Wolves prowl inside your presence. Lanterns keep wolves away from a place, and brave people gather to drive them off.",
+		"prompt_threat_raider": "Raiders have come. Veil of Fog (press E at the tree) hides a place from them; enough people who stand and fight turn them back.",
+		"prompt_hungry": "{name} is hungry and the chests are nearly empty. Fill a chest with berries (look at it and press E), or work Bless Growth on the bushes.",
+		"prompt_cold": "{name} has no home and the night is cold. Offer a home design at the tree; people build what they know.",
+		"prompt_prayer": "{name} prays for {intent}. A miracle near them answers the prayer and deepens their belief (press E at the tree).",
+		"prompt_no_favour": "Your Favour is too low for any miracle. It comes back as believers pray; spend it where it answers a prayer."
 	}
 }

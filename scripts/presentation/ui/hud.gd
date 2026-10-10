@@ -13,6 +13,7 @@ var _stock: Label
 var _message: Label
 var _hint: Label
 var _guide: Label
+var _guide_hint: Label
 var _prayers: VBoxContainer
 var _slots: Array = []
 var _slot_labels: Array = []
@@ -43,6 +44,8 @@ func _ready() -> void:
 	_guide = Style.wrapped("", 19, Style.FAITH)
 	_guide.custom_minimum_size.x = 520
 	left_box.add_child(_guide)
+	_guide_hint = Style.label("", 15, Style.MUTED)
+	left_box.add_child(_guide_hint)
 	var top_center := Style.panel(0.72)
 	top_center.name = "ShrinePanel"
 	add_child(top_center)
@@ -173,6 +176,9 @@ func refresh(state: Dictionary) -> void:
 	_prompt.text = state.get("prompt", "")
 	_guide.text = state.get("guide", "")
 	_guide.visible = not _guide.text.is_empty()
+	_guide_hint.visible = _guide.visible
+	if _guide_hint.visible:
+		_guide_hint.text = Text.format("prompt_dismiss", {"key": _key_name("dismiss_prompt")})
 	var hotbar: Array = state.get("hotbar", [])
 	var selected: int = int(state.get("selected", 0))
 	for slot in range(_slots.size()):
@@ -210,3 +216,11 @@ func _set_prayers(lines: Array) -> void:
 		text.custom_minimum_size.x = 460
 		card.add_child(text)
 		_prayers.add_child(card)
+
+
+## The first key bound to an action, as the player sees it.
+static func _key_name(action: String) -> String:
+	for event in InputMap.action_get_events(action):
+		if event is InputEventKey:
+			return OS.get_keycode_string((event as InputEventKey).physical_keycode)
+	return "?"

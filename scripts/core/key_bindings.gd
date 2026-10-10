@@ -11,7 +11,7 @@ const ACTIONS: Dictionary = {
 	"zoom_in": "Zoom in", "zoom_out": "Zoom out",
 	"toggle_chronicle": "Chronicle", "toggle_settlement": "Settlement",
 	"speed_pause": "Pause time", "speed_up": "Faster time", "speed_down": "Slower time",
-	"quick_save": "Quick save", "toggle_fullscreen": "Fullscreen",
+	"quick_save": "Quick save", "toggle_fullscreen": "Fullscreen", "dismiss_prompt": "Dismiss prompt",
 }
 
 

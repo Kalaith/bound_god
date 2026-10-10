@@ -9,10 +9,10 @@ const Data = preload("res://scripts/core/data.gd")
 const StandingText = preload("res://scripts/presentation/ui/standing_text.gd")
 
 
-## The guide's line for now, or "" once the god has found its way.
-static func line(sim: RefCounted, library: RefCounted) -> String:
+## The guide's step for now as {id, text}, or {} once the god has found its way.
+static func step(sim: RefCounted, library: RefCounted) -> Dictionary:
 	if sim.god.dormant:
-		return Text.label("guide_dormant")
+		return _say("guide_dormant")
 	var gathered: bool = false
 	var supplied: bool = false
 	for entry in sim.command_log:
@@ -22,21 +22,21 @@ static func line(sim: RefCounted, library: RefCounted) -> String:
 		elif type == "transfer" and int(entry.command.get("amount", 0)) > 0:
 			supplied = true
 	if not gathered:
-		return Text.label("guide_gather")
+		return _say("guide_gather")
 	# The first build is a chest by the tree, where the people keep their goods.
 	var hollow: int = sim.settlements.at_cell(sim.features.sacred_tree)
 	if hollow >= 0 and sim.settlements.chest_cells(sim, hollow).is_empty():
 		if not sim.god.hotbar.has(Registry.id("storage_chest")):
-			return Text.label("guide_hotbar")
-		return Text.label("guide_chest")
+			return _say("guide_hotbar")
+		return _say("guide_chest")
 	if not supplied:
-		return Text.label("guide_fill_chest")
+		return _say("guide_fill_chest")
 	if not _home_near(sim, hollow):
-		return Text.label("guide_build")
+		return _say("guide_build")
 	if library.designs.is_empty():
-		return Text.label("guide_capture")
+		return _say("guide_capture")
 	if sim.god.offered.is_empty():
-		return Text.label("guide_offer")
+		return _say("guide_offer")
 	var believers: int = 0
 	var closest: RefCounted = null
 	for agent in sim.agents:
@@ -48,7 +48,7 @@ static func line(sim: RefCounted, library: RefCounted) -> String:
 			closest = agent
 	if believers == 0:
 		return _miracle_line(sim, closest)
-	var village: String = _village_line(sim, hollow)
+	var village: Dictionary = _village_line(sim, hollow)
 	if not village.is_empty():
 		return village
 	var ridge_active: bool = false
@@ -56,22 +56,22 @@ static func line(sim: RefCounted, library: RefCounted) -> String:
 		if id != 1 and sim.faith.shrines[id].state == "active":
 			ridge_active = true
 	if sim.requests.requests.is_empty() and not ridge_active:
-		return Text.label("guide_request")
+		return _say("guide_request")
 	if ridge_active and sim.god.active_shrine_id == 1:
-		return Text.label("guide_transfer")
+		return _say("guide_transfer")
 	if sim.calendar.day() < 6:
-		return Text.label("guide_rest")
-	return ""
+		return _say("guide_rest")
+	return {}
 
 
 ## Grow the settlement by the tree into a village, then send settlers out
 ## and give their new place a shrine. "" once all of that is under way.
-static func _village_line(sim: RefCounted, hollow: int) -> String:
+static func _village_line(sim: RefCounted, hollow: int) -> Dictionary:
 	if hollow < 0:
-		return ""
+		return {}
 	var advice: String = StandingText.advice(sim, hollow)
 	if not advice.is_empty():
-		return advice
+		return {"id": "guide_standing", "text": advice}
 	var asked: bool = false
 	for id in sim.requests.ids():
 		var request: Dictionary = sim.requests.requests[id]
@@ -83,24 +83,29 @@ static func _village_line(sim: RefCounted, hollow: int) -> String:
 			founded = id
 			break
 	if asked:
-		return ""
+		return {}
 	if founded < 0:
-		return Text.format("guide_found", {"place": sim.settlements.entries[hollow].name})
+		return _say("guide_found", {"place": sim.settlements.entries[hollow].name})
 	if not sim.faith.settlement_has_shrine(sim, founded):
-		return Text.format("guide_found_shrine", {"place": sim.settlements.entries[founded].name})
-	return ""
+		return _say("guide_found_shrine", {"place": sim.settlements.entries[founded].name})
+	return {}
 
 
 ## How near the first believer is, so the god sees its miracles count.
-static func _miracle_line(sim: RefCounted, closest: RefCounted) -> String:
+static func _miracle_line(sim: RefCounted, closest: RefCounted) -> Dictionary:
 	var shrine: Dictionary = sim.faith.current(sim)
 	var favour: float = float(shrine.get("favour", 0.0))
 	if favour < float(Data.miracle("kindle").cost):
-		return Text.format("guide_miracle_favour", {"favour": floori(favour)})
+		return _say("guide_miracle_favour", {"favour": floori(favour)})
 	if closest == null or float(closest.faith.devotion) <= 0.0:
-		return Text.label("guide_miracle")
-	return Text.format("guide_miracle_progress", {"name": closest.given_name,
+		return _say("guide_miracle")
+	return _say("guide_miracle_progress", {"name": closest.given_name,
 		"devotion": floori(float(closest.faith.devotion)), "needed": int(Balance.list("faith.stages")[1])})
+
+
+## A step: its label key is its id, so dismissing it hides it for good.
+static func _say(key: String, args: Dictionary = {}) -> Dictionary:
+	return {"id": key, "text": Text.format(key, args) if not args.is_empty() else Text.label(key)}
 
 
 ## Whether a home stands in the settlement by the tree, built by anyone.

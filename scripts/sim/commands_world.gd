@@ -17,6 +17,13 @@ static func apply(sim: RefCounted, command: Dictionary) -> Dictionary:
 			return _toggle_door(sim, command)
 		"set_hotbar":
 			return _set_hotbar(sim, command)
+		"dismiss_prompt":
+			var id: String = str(command.get("prompt", ""))
+			if id.is_empty():
+				return {"ok": false, "reason": "command_unknown"}
+			if not sim.god.prompts_dismissed.has(id):
+				sim.god.prompts_dismissed.append(id)
+			return {"ok": true, "reason": ""}
 	if sim.faith != null:
 		return sim.faith.apply_command(sim, command)
 	return {"ok": false, "reason": "command_unknown"}
