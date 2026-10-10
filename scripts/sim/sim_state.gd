@@ -7,9 +7,9 @@ extends RefCounted
 const Agent = preload("res://scripts/agents/agent.gd")
 const Migration = preload("res://scripts/sim/save_migration.gd")
 
-const SCHEMA: int = 2
+const SCHEMA: int = 3
 ## Older schemas that still load, migrated on the way in.
-const MIGRATES: Array[int] = [1]
+const MIGRATES: Array[int] = [1, 2]
 
 
 ## {"sim": Dictionary, "chunks": Dictionary} for a running sim.
@@ -33,6 +33,7 @@ static func capture(sim: RefCounted) -> Dictionary:
 		"god": sim.god.to_dict(), "chronicle": sim.chronicle.to_dict(), "faith": sim.faith.to_dict(),
 		"requests": sim.requests.to_dict(), "threats": sim.threats.to_dict(), "raids": sim.raids.to_dict(),
 		"command_log": sim.command_log.duplicate(true), "kindled": sim.kindled.duplicate(true), "veils": sim.veils.duplicate(true),
+		"lanterns": sim.lanterns.duplicate(),
 	}
 	return {"sim": state, "chunks": chunks}
 
@@ -49,6 +50,8 @@ static func problem(state: Variant, chunks: Variant) -> String:
 			"threats", "raids", "command_log", "kindled", "veils"]:
 		if not state.has(key):
 			return "save_damaged"
+	if version >= 3 and not state.get("lanterns") is Dictionary:
+		return "save_damaged"
 	for chunk in chunks:
 		if not chunk is Vector3i or not chunks[chunk] is PackedByteArray:
 			return "save_damaged"
@@ -94,6 +97,7 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	sim.command_log = state.command_log
 	sim.kindled = state.kindled
 	sim.veils = state.veils
+	sim.lanterns = Migration.lanterns(state)
 	sim.nav.build()
 	Migration.store_old_stock(sim, old_stock)
 	sim.rng.seed = int(state.rng_seed)

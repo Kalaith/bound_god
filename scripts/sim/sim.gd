@@ -70,6 +70,8 @@ var construction: RefCounted = null
 var kindled: Array = []
 ## Veils of fog (miracle): Array of {cell, radius, until}.
 var veils: Array = []
+## Vector3i -> true for every lantern standing in the world.
+var lanterns: Dictionary = {}
 ## Template id -> Template, built on demand from offered copies or starters.
 var _templates: Dictionary = {}
 var _sites_version: int = -1
@@ -162,6 +164,10 @@ func set_block(cell: Vector3i, block: int, meta: int = 0, source: String = "") -
 	sites.on_block_changed(cell, old, block, voxels)
 	if old != block:
 		settlements.on_block(self, cell, old, block)
+		if Registry.component(block) == "lantern":
+			lanterns[cell] = true
+		elif lanterns.has(cell):
+			lanterns.erase(cell)
 	if not source.is_empty():
 		edit_sources[cell] = source
 	if old != block:
@@ -235,6 +241,15 @@ func is_kindled(cell: Vector3i) -> bool:
 func is_veiled(cell: Vector3i, _watcher: Vector3i) -> bool:
 	for entry in veils:
 		if int(entry.until) > calendar.tick and Vector2(cell.x - entry.cell.x, cell.z - entry.cell.z).length() <= float(entry.radius):
+			return true
+	return false
+
+
+## Whether a lantern's light reaches a cell.
+func is_lit(cell: Vector3i) -> bool:
+	var reach: float = Balance.number("world.lantern_reach")
+	for lantern in lanterns:
+		if absi(lantern.y - cell.y) <= 4 and Vector2(cell.x - lantern.x, cell.z - lantern.z).length() <= reach:
 			return true
 	return false
 

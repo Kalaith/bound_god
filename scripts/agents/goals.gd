@@ -11,6 +11,7 @@ enum Kind {
 	PRAY, TEND_SHRINE, RESTORE_SHRINE, PREACH, QUEST,
 	CHAT, COMFORT, COURT, RECONCILE, HELP,
 	BREAK, MIGRATE,
+	GARDEN,
 }
 
 const NAMES: Array[String] = [
@@ -21,6 +22,7 @@ const NAMES: Array[String] = [
 	"pray", "tend_shrine", "restore_shrine", "preach", "quest",
 	"chat", "comfort", "court", "reconcile", "help",
 	"break", "migrate",
+	"garden",
 ]
 
 const SURVIVAL: Array[int] = [Kind.EAT, Kind.SLEEP, Kind.TAKE_SHELTER, Kind.FLEE, Kind.SEEK_CARE]
@@ -29,6 +31,7 @@ const SOCIAL: Array[int] = [Kind.CHAT, Kind.COMFORT, Kind.COURT, Kind.RECONCILE]
 const WORK_TYPE: Dictionary = {
 	Kind.GATHER: "gather", Kind.HAUL: "haul", Kind.BUILD: "build", Kind.REPAIR: "build",
 	Kind.FOUND_HOME: "build", Kind.PROPOSE_PROJECT: "build", Kind.DEFEND: "defend", Kind.SCOUT: "scout",
+	Kind.GARDEN: "gather",
 }
 const WORK_TYPES: Array[String] = ["build", "gather", "haul", "defend", "scout"]
 ## Goals whose target is another person.

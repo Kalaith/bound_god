@@ -41,6 +41,7 @@
 		{"id": "quest_done", "text": "Did what the god asked", "mood": 10, "days": 5.0, "max_stack": 1},
 		{"id": "blessed", "text": "Blessed by the god", "mood": 10, "days": 6.0, "max_stack": 1},
 		{"id": "mourned_shrine", "text": "Prayed at a broken altar", "mood": -4, "days": 2.0, "max_stack": 1},
+		{"id": "gathered_in_hall", "text": "Spent time in the hall with neighbours", "mood": 4, "days": 1.0, "max_stack": 1},
 		{"id": "strangers_watching", "text": "Saw strangers watching the settlement", "mood": -3, "days": 1.0, "max_stack": 1}
 	]
 }

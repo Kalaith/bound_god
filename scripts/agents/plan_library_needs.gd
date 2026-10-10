@@ -158,6 +158,9 @@ static func care(sim: RefCounted, agent: RefCounted) -> Array:
 
 static func relax(sim: RefCounted, agent: RefCounted) -> Array:
 	var plans: Array = []
+	var hall: int = H.nearest_structure(sim, agent, func(s: Dictionary) -> bool: return s.functions.has("hall"))
+	if hall >= 0 and H.distance(sim.structures.entries[hall].anchor, agent.cell) < 40.0:
+		plans.append(H.option("gather_in_the_hall", 0.8, [_structure(hall), Plans.step(Op.RELAX, {"ticks": 60})]))
 	var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))
 	if tree.x >= 0 and H.distance(tree, agent.cell) < 30.0:
 		var spot: Vector3i = sim.nav.nearest_walkable(tree + Vector3i(2, 0, -1), 3)

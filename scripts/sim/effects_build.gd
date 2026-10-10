@@ -62,6 +62,10 @@ static func _cause(sim: RefCounted, agent: RefCounted, purpose: String) -> Strin
 			return "cause_many_homeless"
 		"shrine":
 			return "cause_no_shrine"
+		"hall":
+			return "cause_no_hall"
+		"garden":
+			return "cause_food_low"
 	return "cause_npc"
 
 

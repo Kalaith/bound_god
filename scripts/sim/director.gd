@@ -42,11 +42,18 @@ static func attractiveness(sim: RefCounted, id: int) -> Array:
 	return [score, spare, food_days]
 
 
-## A threat near the settlement, not a wolf somewhere in the valley.
+## A threat near the settlement, not a wolf somewhere in the valley. Wolves
+## do not count against a settlement lit by lanterns.
 static func threatened(sim: RefCounted, id: int) -> bool:
 	var settlement: Dictionary = sim.settlements.entries[id]
 	var reach: float = float(settlement.radius) + Balance.number("population.safety_reach")
+	var lit: int = 0
+	for cell in sim.lanterns:
+		if sim.settlements.at_cell(cell) == id:
+			lit += 1
 	for threat in sim.threats_list():
+		if threat.kind == "wolf" and lit >= Balance.integer("population.lit_lanterns"):
+			continue
 		if Vector2(threat.cell.x - settlement.center.x, threat.cell.z - settlement.center.z).length() <= reach:
 			return true
 	return false

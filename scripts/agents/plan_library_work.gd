@@ -34,12 +34,57 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 			return [H.option("drive_off", 1.0, [Plans.step(Op.ATTACK, {"threat": int(goal.target)})])]
 		Kind.SCOUT:
 			return [H.option("look_around", 1.0, [Plans.go_cell(frontier_cell(sim, agent)), Plans.step(Op.SCOUT, {"ticks": 12})])]
+		Kind.GARDEN:
+			return _garden(sim, agent, int(goal.target))
 		Kind.FOUND_HOME:
 			return [H.option("mark_home", 1.0, [Plans.step(Op.MARK_SITE, {"function": "dwelling", "purpose": "home"})])]
 		Kind.PROPOSE_PROJECT:
 			var function: String = FUNCTIONS[int(goal.target)]
 			return [H.option("mark_project", 1.0, [Plans.step(Op.MARK_SITE, {"function": function, "purpose": function})])]
 	return []
+
+
+## Plant a berry in an empty planter of the garden: one already carried,
+## one from the stores, or one picked from a bush on the way.
+static func _garden(sim: RefCounted, agent: RefCounted, garden_id: int) -> Array:
+	var plot: Vector3i = Vector3i(-1, -1, -1)
+	for entry in sim.settlement_life.board(agent.settlement_id).get("plots", []):
+		if int(entry[0]) == garden_id:
+			plot = entry[1]
+			break
+	if plot.x < 0:
+		return []
+	var stand: Vector3i = plot_stand(sim, plot, agent.cell)
+	if stand.x < 0:
+		return []
+	var plant: Array = [Plans.go_cell(stand), Plans.step(Op.PLANT, {"cell": plot})]
+	var result: Array = []
+	if agent.carried("berries") >= 1.0:
+		result.append(H.option("plant_a_berry", 1.2, plant))
+	if agent.beliefs.believes_stock("berries"):
+		result.append(H.option("fetch_a_berry_to_plant", 1.0, H.free_hands(agent, "berries") + [_store(agent),
+			Plans.step(Op.TAKE_STOCK, {"resource": "berries", "amount": 1})] + plant))
+	var bushes: Array = H.known_sites(sim, agent, "bush")
+	if not bushes.is_empty():
+		result.append(H.option("pick_a_berry_to_plant", 0.7, H.free_hands(agent, "berries") + [Plans.go_to(Plans.target(T.SITE, bushes[0])),
+			Plans.step(Op.HARVEST, {"site": bushes[0], "once": 1})] + plant))
+	return result
+
+
+## A walkable cell beside a planter, never on a planter, nearest `from`.
+static func plot_stand(sim: RefCounted, plot: Vector3i, from: Vector3i) -> Vector3i:
+	var best: Vector3i = Vector3i(-1, -1, -1)
+	var best_distance: float = INF
+	for side in [Vector3i(1, 0, 0), Vector3i(-1, 0, 0), Vector3i(0, 0, 1), Vector3i(0, 0, -1)]:
+		for dy in [-1, 0]:
+			var cell: Vector3i = plot + side + Vector3i(0, dy, 0)
+			if not sim.nav.is_walkable(cell) or Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter":
+				continue
+			var d: float = Vector3(cell).distance_to(Vector3(from))
+			if d < best_distance:
+				best = cell
+				best_distance = d
+	return best
 
 
 ## Somewhere toward the edge of what the settlement knows, turning with

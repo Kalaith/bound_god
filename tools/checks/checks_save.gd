@@ -60,3 +60,32 @@ func check_a_season_of_rest_fits_in_a_minute():
 	if seconds >= 60.0:
 		return "resting a season took %.1fs" % seconds
 	return ""
+
+
+## A save made by the vertical slice (schema 2, before lanterns) loads through
+## the migration path and plays on for a day; a save from a newer version is
+## refused rather than half-loaded.
+func check_the_slice_save_loads_through_migration():
+	var file := FileAccess.open_compressed("res://tools/fixtures/save_v2_slice.zst", FileAccess.READ, FileAccess.COMPRESSION_ZSTD)
+	if file == null:
+		return "the slice fixture save is missing"
+	var saved: Variant = bytes_to_var(file.get_buffer(file.get_length()))
+	if not saved is Dictionary or int(saved.sim.get("schema_version", -1)) != 2:
+		return "the fixture is not a schema 2 save"
+	var problem: String = SimState.problem(saved.sim, saved.chunks)
+	if not problem.is_empty():
+		return "the slice save is refused: " + problem
+	var sim: RefCounted = SimState.restore(saved.sim, saved.chunks)
+	if sim.present_count() != 8 or sim.calendar.day() != 4:
+		return "the slice save restored the wrong world: %d people on day %d" % [sim.present_count(), sim.calendar.day()]
+	sim.run_ticks(sim.calendar.ticks_per_day)
+	if sim.present_count() < 6:
+		return "the migrated world lost its people within a day"
+	var again: Dictionary = SimState.capture(sim)
+	if int(again.sim.schema_version) != SimState.SCHEMA or not again.sim.lanterns is Dictionary:
+		return "the migrated world does not save in the current schema"
+	var newer: Dictionary = again.sim.duplicate()
+	newer.schema_version = SimState.SCHEMA + 1
+	if SimState.problem(newer, again.chunks) != "save_version":
+		return "a save from a newer version was not refused"
+	return ""

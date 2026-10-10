@@ -11,6 +11,7 @@ const H = preload("res://scripts/agents/plan_helpers.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")
 const FunctionRules = preload("res://scripts/building/function_rules.gd")
 const Construction = preload("res://scripts/sim/construction.gd")
+const Standing = preload("res://scripts/sim/standing.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -93,6 +94,9 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 		if demand < 0.05 or not agent.beliefs.has_site(JobBoard.SITE_KIND[resource]):
 			continue
 		push.call(Goals.make(Kind.GATHER, index), float(culture.gather) * aptitude(agent, Skill.GATHERING) * demand, "reason_gather")
+	var plots: Array = board.get("plots", [])
+	if not plots.is_empty() and (agent.carried("berries") >= 1.0 or agent.beliefs.believes_stock("berries") or agent.beliefs.has_site("bush")):
+		push.call(Goals.make(Kind.GARDEN, int(plots[0][0])), float(culture.gather) * aptitude(agent, Skill.GATHERING) * minf(0.45 + plots.size() * 0.08, 0.9), "reason_garden")
 	var unknown: int = 0
 	for resource in board.gather_demand:
 		if float(board.gather_demand[resource]) > 0.3 and not agent.beliefs.has_site(JobBoard.SITE_KIND[resource]):
@@ -186,6 +190,16 @@ static func _found_home(sim: RefCounted, agent: RefCounted, out: Array, base: fl
 	out.append(_candidate(Kind.FOUND_HOME, utility, "reason_homeless"))
 
 
+## How many standing structures in a settlement have each function.
+static func _functions_in(sim: RefCounted, id: int) -> Dictionary:
+	var counts: Dictionary = {}
+	for entry in sim.structures.built():
+		if sim.settlements.at_cell(entry.anchor) == id:
+			for function in entry.functions:
+				counts[function] = int(counts.get(function, 0)) + 1
+	return counts
+
+
 ## Respected people notice what the whole settlement lacks.
 static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float, board: Dictionary) -> void:
 	if agent.personality.leadership <= 0.2 and agent.personality.diligence <= 0.3:
@@ -201,6 +215,13 @@ static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float
 		wants.append(["shelter", "reason_many_homeless", 0.8])
 	if sim.faith != null and sim.faith.wants_shrine(sim, agent):
 		wants.append(["shrine", "reason_no_shrine", 0.85])
+	var people: int = Standing.present(sim, id)
+	var have: Dictionary = _functions_in(sim, id)
+	if people >= Balance.integer("construction.hall_residents") and int(have.get("hall", 0)) == 0:
+		wants.append(["hall", "reason_no_hall", 0.75])
+	var gardens_wanted: int = ceili(float(people) / Balance.number("construction.people_per_garden"))
+	if Standing.food_days(sim, id) < Balance.number("construction.garden_food_days") and int(have.get("garden", 0)) < gardens_wanted:
+		wants.append(["garden", "reason_food_low", 0.8])
 	for want in wants:
 		var design: RefCounted = known_design(sim, agent, want[0])
 		if design == null or not means_believed(sim, agent, design):

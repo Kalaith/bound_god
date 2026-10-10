@@ -6,3 +6,4 @@
 *.wav binary
 *.zip binary
 *.exe binary
+*.zst binary

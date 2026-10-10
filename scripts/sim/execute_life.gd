@@ -76,9 +76,16 @@ static func _shelter(sim: RefCounted, agent: RefCounted, ticks: int, step_ticks:
 
 
 static func _relax(sim: RefCounted, agent: RefCounted, ticks: int, step_ticks: int) -> int:
+	enter_here(sim, agent)
 	agent.activity = "relaxing"
-	agent.change_need(Need.RECREATION, sim.calendar.per_tick(Balance.number("needs.recreation_gain_per_day") * 0.8))
+	# Time in a hall, among neighbours, does more good than a stroll.
+	var hall: bool = sim.structures.entries.get(agent.inside, {}).get("functions", []).has("hall")
+	var factor: float = Balance.number("needs.hall_recreation_factor") if hall else 1.0
+	agent.change_need(Need.RECREATION, sim.calendar.per_tick(Balance.number("needs.recreation_gain_per_day") * 0.8 * factor))
 	if step_ticks >= ticks or agent.need(Need.RECREATION) >= 96.0:
+		if hall:
+			Mind.add(agent, "gathered_in_hall", sim.calendar.ticks_per_day)
+		agent.inside = -1
 		return Plans.DONE
 	return Plans.RUNNING
 

@@ -43,7 +43,26 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 		if _distance(threat.cell, settlement.center) <= float(settlement.radius) + 8.0:
 			board.threats.append(threat.id)
 	board["housing_deficit"] = housing_deficit(sim, id)
+	board["plots"] = plots(sim, id)
 	return board
+
+
+## Empty planters in the settlement's gardens: [garden id, cell above], a
+## few at most, in a stable order.
+static func plots(sim: RefCounted, id: int) -> Array:
+	var result: Array = []
+	for entry in sim.structures.built():
+		if not entry.functions.has("garden") or sim.settlements.at_cell(entry.anchor) != id:
+			continue
+		var cells: Array = entry.components.get("planter", []).duplicate()
+		cells.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return [a.y, a.z, a.x] < [b.y, b.z, b.x])
+		for planter in cells:
+			var above: Vector3i = planter + Vector3i.UP
+			if sim.voxels.get_block(above) == 0 and not sim.is_reserved_cell(above):
+				result.append([int(entry.id), above])
+				if result.size() >= 6:
+					return result
+	return result
 
 
 ## People in the settlement without a bed of their own.

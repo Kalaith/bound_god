@@ -49,6 +49,8 @@ static func apply(sim: RefCounted) -> void:
 					shrine.condition = minf(float(shrine.condition) + float(action.amount), 100.0)
 			"leave":
 				_leave(sim, agent)
+			"plant":
+				_plant(sim, agent, action.cell)
 			_:
 				EffectsBuild.apply(sim, agent, action)
 	for entry in effects.interactions:
@@ -146,6 +148,19 @@ static func _harvest(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 				sim.set_block(leaf, 0, 0, source)
 	agent.carrying = {"resource": resource, "amount": agent.carried(resource) + gained}
 	agent.step_result = {"got": gained}
+
+
+## A berry pressed into an empty planter becomes a bare bush that ripens.
+static func _plant(sim: RefCounted, agent: RefCounted, cell: Vector3i) -> void:
+	var open: bool = sim.voxels.get_block(cell) == 0 and Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter"
+	if not open or agent.carried("berries") < 1.0 or sim.is_occupied(cell):
+		agent.step_result = {"planted": 0}
+		return
+	agent.carrying.amount = float(agent.carrying.amount) - 1.0
+	if float(agent.carrying.amount) < 0.05:
+		agent.carrying = {}
+	sim.set_block(cell, Registry.id("berry_bush"), 0, "npc:%d" % agent.id)
+	agent.step_result = {"planted": 1}
 
 
 static func _pick_up(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:

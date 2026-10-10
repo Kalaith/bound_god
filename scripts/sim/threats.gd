@@ -105,7 +105,8 @@ func _move(sim: RefCounted, entry: Dictionary) -> void:
 	entry.budget = float(entry.budget) + Balance.number("threats.%s.speed" % entry.kind)
 	while not entry.path.is_empty() and float(entry.budget) >= 1.0:
 		var next: Vector3i = entry.path[0]
-		if not sim.nav.is_walkable(next):
+		# Wolves will not walk into lantern light.
+		if not sim.nav.is_walkable(next) or (entry.kind == "wolf" and sim.is_lit(next)):
 			entry.path.clear()
 			break
 		entry.budget = float(entry.budget) - 1.0
@@ -143,7 +144,15 @@ func _wolf(sim: RefCounted, entry: Dictionary) -> void:
 	entry.next_think = sim.calendar.tick + 6
 	if sim.is_veiled(entry.cell, entry.cell):
 		entry.target = -1
-	var near: Array = _people_near(sim, entry.cell, sight)
+	if sim.is_lit(entry.cell):
+		entry.state = "flee"
+		entry.target = -1
+		_path_to(sim, entry, entry.home)
+		return
+	var near: Array = []
+	for agent in _people_near(sim, entry.cell, sight):
+		if not sim.is_lit(agent.cell):
+			near.append(agent)
 	var close: int = 0
 	for agent in near:
 		if Vector2(agent.cell.x - entry.cell.x, agent.cell.z - entry.cell.z).length() <= 4.0:

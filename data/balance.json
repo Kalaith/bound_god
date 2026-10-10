@@ -10,7 +10,7 @@
 		"decay_per_day": {"food": 95.0, "rest": 80.0, "shelter": 0.0, "social": 40.0, "recreation": 22.0, "safety": 0.0},
 		"shelter_loss_per_night_hour": 6.0, "shelter_winter_factor": 2.0, "shelter_gain_per_day": 140.0,
 		"raw_food_restore": 38.0, "forage_restore": 30.0,
-		"bed_rest_per_day": 220.0, "ground_rest_per_day": 170.0, "recreation_gain_per_day": 180.0,
+		"bed_rest_per_day": 220.0, "ground_rest_per_day": 170.0, "recreation_gain_per_day": 180.0, "hall_recreation_factor": 2.0,
 		"safety_recovery_per_day": 60.0, "safety_loss_on_threat": 35.0, "urgent_threshold": 25.0
 	},
 	"agents": {
@@ -44,12 +44,13 @@
 	},
 	"construction": {
 		"ticks_per_block": 6, "abandon_days": 5, "max_open_sites": 2, "site_search_radius": 26, "site_spacing": 2,
-		"max_height_variation": 1, "builds_offered": 4, "found_home_base": 0.55
+		"max_height_variation": 1, "builds_offered": 4, "found_home_base": 0.55,
+		"hall_residents": 6, "garden_food_days": 2.0, "people_per_garden": 8
 	},
 	"world": {
 		"size": [160, 48, 160], "chunk": 16, "sea_level": 6, "water_level": 9,
 		"tree_spacing": 5.5, "bush_spacing": 7.0, "grass_spacing": 6.0, "rock_spacing": 14.0,
-		"tree_centre_clear": 7, "berry_regrow_days": 1.0, "bush_max_berries": 4, "bless_sprouts": 3, "grass_regrow_per_day": 2,
+		"tree_centre_clear": 7, "berry_regrow_days": 1.0, "bush_max_berries": 4, "bless_sprouts": 3, "garden_regrow": 2, "lantern_reach": 6.0, "grass_regrow_per_day": 2,
 		"sacred_tree": [80, 80], "ridge_ruin": [128, 128], "ridge_hamlet": [112, 134],
 		"base_height": 12, "ridge_start": 104.0, "ridge_full": 122.0, "ridge_height": 11.0, "rim_width": 14.0, "rim_height": 28.0,
 		"river_offset": 48.0, "river_half_width": 2.4, "meadow_radius": 11, "forest_threshold": 0.05,
@@ -67,7 +68,7 @@
 	"population": {
 		"travellers": 2, "miners": 5, "cap": 45, "migrant_roll_days": 3, "migrant_threshold": 0.35,
 		"migrant_group": [1, 3], "first_migrant_day": 3, "migrant_standing_group": [0, 1, 1], "migrant_standing_pull": [0.0, 0.08, 0.15],
-		"migrant_design_chance": 0.6, "migrant_designs": ["timber_cottage", "store_shed", "village_hall", "garden_patch"], "safety_reach": 12.0,
+		"migrant_design_chance": 0.6, "migrant_designs": ["timber_cottage", "store_shed", "village_hall", "garden_patch"], "safety_reach": 12.0, "lit_lanterns": 2,
 		"traveller_berries": 5, "hamlet_stock": {"berries": 18, "stone": 12, "ore": 6, "wood": 10}
 	},
 	"faith": {

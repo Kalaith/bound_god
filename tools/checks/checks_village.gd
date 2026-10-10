@@ -13,6 +13,15 @@ const Construction = preload("res://scripts/sim/construction.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const Generation = preload("res://scripts/agents/generation.gd")
 const Population = preload("res://scripts/sim/population.gd")
+const PlansNeeds = preload("res://scripts/agents/plan_library_needs.gd")
+const Plans = preload("res://scripts/agents/plans.gd")
+const Places = preload("res://scripts/sim/places.gd")
+const ExecuteLife = preload("res://scripts/sim/execute_life.gd")
+const Personality = preload("res://scripts/agents/personality.gd")
+const Daily = preload("res://scripts/sim/daily.gd")
+const JobBoard = preload("res://scripts/sim/job_board.gd")
+
+const Need = Personality.Need
 
 
 ## Each valley design is recognised for the function it was made for, both as
@@ -123,3 +132,101 @@ static func _chronicled(sim: RefCounted, kind: String) -> bool:
 		if entry.kind == kind:
 			return true
 	return false
+
+
+static func _flat(size: int = 64) -> RefCounted:
+	return Sim.create(21, {"world": "flat", "size": Vector3i(size, 16, size), "ground": 4})
+
+
+static func _structure_with(sim: RefCounted, function: String) -> Dictionary:
+	for entry in sim.structures.built():
+		if entry.functions.has(function):
+			return entry
+	return {}
+
+
+## Time in a hall restores recreation twice as fast as a stroll, and someone
+## who knows a hall chooses to gather there.
+func check_a_hall_is_where_people_gather():
+	var sim: RefCounted = _flat()
+	var camp: Vector3i = sim.settlements.entries[1].camp
+	_raise(sim, "village_hall", Vector3i(camp.x - 3, 5, camp.z + 5))
+	var hall: Dictionary = _structure_with(sim, "hall")
+	if hall.is_empty():
+		return "the raised hall is not a hall"
+	var agent: RefCounted = sim.agents[0]
+	agent.beliefs.structures[hall.id] = {"functions": hall.functions.duplicate(), "cell": hall.anchor, "template_id": "", "seen_tick": 0}
+	var ids: Array = []
+	for option in PlansNeeds.relax(sim, agent):
+		ids.append(option.id)
+	if not ids.has("gather_in_the_hall"):
+		return "someone who knows the hall does not think to gather there: " + str(ids)
+	var gain: Array = []
+	for inside in [-1, int(hall.id)]:
+		agent.inside = inside
+		agent.cell = Places.structure_access(sim, int(hall.id), agent.cell) if inside >= 0 else camp
+		agent.needs[Need.RECREATION] = 20.0
+		ExecuteLife.run(sim, agent, Plans.step(Plans.Op.RELAX, {"ticks": 60}), 1)
+		gain.append(agent.need(Need.RECREATION) - 20.0)
+	if gain[1] < gain[0] * 1.9:
+		return "relaxing in the hall is not faster: %s" % str(gain)
+	return ""
+
+
+## Bushes in planters ripen twice as fast, and people plant berries in empty
+## planters of their own accord.
+func check_a_garden_is_planted_and_ripens_faster():
+	var sim: RefCounted = _flat()
+	var camp: Vector3i = sim.settlements.entries[1].camp
+	_raise(sim, "garden_patch", Vector3i(camp.x + 4, 5, camp.z + 4))
+	var garden: Dictionary = _structure_with(sim, "garden")
+	if garden.is_empty():
+		return "the raised garden is not a garden"
+	var wild: Vector3i = sim.nav.surface(camp.x - 8, camp.z - 8)
+	sim.set_block(wild, Registry.id("berry_bush"), 0, "test")
+	var tended: Vector3i = Vector3i(-1, -1, -1)
+	for planter in garden.components.planter:
+		if sim.voxels.get_block(planter + Vector3i.UP) == Registry.id("berry_bush"):
+			tended = planter + Vector3i.UP
+			sim.set_block(tended, Registry.id("berry_bush"), 0, "test")
+			break
+	Daily._regrow(sim)
+	if sim.voxels.block_meta(tended) != 2 or sim.voxels.block_meta(wild) != 1:
+		return "garden bush ripened %d, wild bush %d" % [sim.voxels.block_meta(tended), sim.voxels.block_meta(wild)]
+	Stores.fill(sim, 1, {"berries": 40})
+	var empty: int = JobBoard.plots(sim, 1).size()
+	sim.run_ticks(sim.calendar.ticks_per_day * 2)
+	var left: int = JobBoard.plots(sim, 1).size()
+	if empty == 0 or left >= empty:
+		return "nobody planted the %d empty planters in two days" % empty
+	print("      garden: %d empty planters, %d left after two days" % [empty, left])
+	return ""
+
+
+## Wolves will not walk into lantern light, nor hunt someone standing in it;
+## the same person in the dark is hunted.
+func check_lanterns_keep_wolves_away():
+	for lit in [false, true]:
+		var sim: RefCounted = _flat()
+		var agent: RefCounted = sim.agents[0]
+		var spot: Vector3i = agent.cell
+		var lantern: Vector3i = spot + Vector3i(1, 0, 1)
+		if lit:
+			sim.set_block(lantern, Registry.id("lantern"), 0, "test")
+			if not sim.is_lit(spot):
+				return "a lantern beside someone does not light them"
+		var wolf: int = sim.threats.spawn("wolf", sim.nav.nearest_walkable(spot + Vector3i(-9, 0, 0), 2))
+		sim.calendar.tick = sim.calendar.ticks_per_day - 60
+		var hunted: bool = false
+		for _i in range(240):
+			sim.step()
+			agent.cell = spot
+			agent.intention = {}
+			if not sim.threats.exists(wolf):
+				break
+			hunted = hunted or int(sim.threats.entries[wolf].target) == agent.id
+			if lit and sim.is_lit(sim.threats.entries[wolf].cell):
+				return "a wolf walked into lantern light"
+		if hunted != not lit:
+			return "a wolf %s someone %s" % ["hunted" if hunted else "ignored", "in lantern light" if lit else "in the dark"]
+	return ""

@@ -48,3 +48,10 @@ static func store_old_stock(sim: RefCounted, stocks: Dictionary) -> void:
 				left -= sim.settlements.chest_add(chest, resource, left)
 			if left > 0:
 				sim.drop_item(sim.settlements.entries[id].camp, resource, float(left))
+
+
+## Before schema 3 there were no lanterns, so an older world has none lit.
+static func lanterns(state: Dictionary) -> Dictionary:
+	if int(state.schema_version) < 3:
+		return {}
+	return state.lanterns

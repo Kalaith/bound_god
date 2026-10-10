@@ -8,9 +8,10 @@ const Goals = preload("res://scripts/agents/goals.gd")
 const Beliefs = preload("res://scripts/agents/beliefs.gd")
 
 
-static func sight_radius(sim: RefCounted) -> float:
+## How far a person sees: less at night, unless a lantern lights their way.
+static func sight_radius(sim: RefCounted, cell: Vector3i = Vector3i(-1, -1, -1)) -> float:
 	var radius: float = Balance.number("agents.sight_radius")
-	if not sim.calendar.is_daylight():
+	if not sim.calendar.is_daylight() and (cell.x < 0 or not sim.is_lit(cell)):
 		radius *= Balance.number("agents.night_sight_factor")
 	return radius
 
@@ -123,7 +124,7 @@ static func perceive(sim: RefCounted, agent: RefCounted) -> bool:
 	var interval: int = Balance.integer("agents.perception_interval")
 	if (sim.calendar.tick + agent.id) % interval != 0:
 		return false
-	var radius: float = sight_radius(sim)
+	var radius: float = sight_radius(sim, agent.cell)
 	_sites(sim, agent, radius)
 	_people(sim, agent, radius)
 	_structures(sim, agent, radius)

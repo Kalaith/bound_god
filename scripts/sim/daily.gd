@@ -47,6 +47,7 @@ static func _regrow(sim: RefCounted) -> void:
 		return
 	var bush: int = Registry.id("berry_bush")
 	var most: int = Balance.integer("world.bush_max_berries")
+	var tended: int = Balance.integer("world.garden_regrow")
 	for id in sim.sites.ids_sorted():
 		var site: Dictionary = sim.sites.get_site(id)
 		if site.kind != "bush" or site.cells.is_empty():
@@ -54,4 +55,6 @@ static func _regrow(sim: RefCounted) -> void:
 		var cell: Vector3i = site.cells[0]
 		var berries: int = sim.voxels.block_meta(cell)
 		if sim.voxels.get_block(cell) == bush and berries < most:
-			sim.set_block(cell, bush, berries + 1, "growth")
+			# A bush in a planter is tended soil and ripens faster.
+			var grow: int = tended if Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter" else 1
+			sim.set_block(cell, bush, mini(berries + grow, most), "growth")

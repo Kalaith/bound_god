@@ -8,12 +8,14 @@ enum Op {
 	EAT, SLEEP, SHELTER, RELAX, RECOVER, HIDE, WAIT,
 	TALK, SEND, WAIT_FOR_HELP, GIVE, ATTACK, SCOUT, BREAK,
 	PRAY, TEND, JOIN, REPAIR_BLOCK, LEAVE, TREAT,
+	PLANT,
 }
 const OP_NAMES: Array[String] = [
 	"go_to", "take_stock", "deposit", "deliver", "place_block", "mark_site", "harvest", "forage", "pick_up",
 	"eat", "sleep", "shelter", "relax", "recover", "hide", "wait",
 	"talk", "send", "wait_for_help", "give", "attack", "scout", "break",
 	"pray", "tend", "join", "repair_block", "leave", "treat",
+	"plant",
 ]
 
 enum Fail { NO_PATH, TARGET_GONE, STOCK_EMPTY, DEPLETED, OCCUPIED, REFUSED, TIMED_OUT, INTERRUPTED, TOO_DANGEROUS, NO_SITE }
