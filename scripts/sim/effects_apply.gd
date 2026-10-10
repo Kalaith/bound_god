@@ -176,7 +176,8 @@ static func _pick_up(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 	if item.is_empty() or (not agent.carrying.is_empty() and agent.carrying.resource != item.resource):
 		agent.step_result = {"picked": 0}
 		return
-	var room: float = Balance.number("agents.carry_capacity") - agent.carried(item.resource)
+	# Someone already carrying a full load (or more) takes nothing more.
+	var room: float = maxf(Balance.number("agents.carry_capacity") - agent.carried(item.resource), 0.0)
 	var taken: float = minf(room, float(item.amount))
 	item.amount = float(item.amount) - taken
 	if item.amount <= 0.05:

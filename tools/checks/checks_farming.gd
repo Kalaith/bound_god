@@ -15,6 +15,7 @@ const Population = preload("res://scripts/sim/population.gd")
 const DeliberationFood = preload("res://scripts/agents/deliberation_food.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Balance = preload("res://scripts/core/balance.gd")
+const ExecuteFaith = preload("res://scripts/sim/execute_faith.gd")
 
 
 func _flat() -> RefCounted:
@@ -170,8 +171,8 @@ func check_wild_grass_gives_seed():
 	return ""
 
 
-## In autumn with little put by, leaders who know a field and a granary
-## want both, and say it is fear of winter.
+## In autumn with little put by, leaders want a granary and say it is fear
+## of winter, and prayers carry the same fear.
 func check_fear_of_winter_drives_fields_and_granaries():
 	var sim: RefCounted = _flat()
 	sim.calendar.tick = 21 * sim.calendar.ticks_per_day
@@ -182,6 +183,12 @@ func check_fear_of_winter_drives_fields_and_granaries():
 		reasons[want[0]] = want[1]
 	if reasons.get("granary", "") != "reason_fear_of_winter":
 		return "fear of winter does not make a granary wanted: %s" % str(wants)
+	var agent: RefCounted = sim.agents[0]
+	for need in range(agent.needs.size()):
+		agent.needs[need] = 90.0
+	agent.beliefs.threats.clear()
+	if str(ExecuteFaith.intent(sim, agent).kind) != "winter":
+		return "a contented believer in a hungry autumn prays for %s, not the winter" % str(ExecuteFaith.intent(sim, agent))
 	sim.calendar.tick = 2 * sim.calendar.ticks_per_day
 	if not DeliberationFood.wants(sim, 1, 6, {"field": 1}).filter(func(w: Array) -> bool: return w[0] == "granary").is_empty():
 		return "a granary is wanted in spring with nothing to keep"

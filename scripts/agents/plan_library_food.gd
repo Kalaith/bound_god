@@ -56,8 +56,9 @@ static func _farm(sim: RefCounted, agent: RefCounted, field_id: int) -> Array:
 		return []
 	var result: Array = []
 	var crop: Dictionary = Crops.staple()
-	# An armful of sheaves: about as much grain as one can carry.
-	var per_trip: int = maxi(1, ceili(Balance.number("agents.carry_capacity") / float(crop.yield)))
+	# An armful of sheaves: about as much grain as one has room to carry.
+	var room: float = Balance.number("agents.carry_capacity") - agent.carried(crop.harvest)
+	var per_trip: int = maxi(1, ceili(room / float(crop.yield)))
 	var reap: Array = _rounds(sim, agent, field.ripe.slice(0, per_trip), Op.REAP)
 	if not reap.is_empty():
 		result.append(H.option("reap_the_field", 1.3, H.free_hands(agent, crop.harvest) + reap + [_store(agent), Plans.step(Op.DEPOSIT)]))

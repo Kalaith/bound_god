@@ -111,7 +111,8 @@ static func answer_prayers(sim: RefCounted, miracle: String, cell: Vector3i, rad
 			if prayer.answered or sim.calendar.tick - int(prayer.tick) > window:
 				continue
 			var kind: String = str(prayer.intent.get("kind", ""))
-			if kind != relief and not (relief == "safety" and kind == "threat"):
+			# Growth blessed against hunger also answers the fear of winter.
+			if kind != relief and not (relief == "safety" and kind == "threat") and not (relief == "food" and kind == "winter"):
 				continue
 			var agent: RefCounted = sim.agents[int(prayer.agent)]
 			if not agent.is_present() or Vector2(agent.cell.x - cell.x, agent.cell.z - cell.z).length() > radius + 16.0:

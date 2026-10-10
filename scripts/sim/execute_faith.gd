@@ -5,13 +5,14 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
+const Standing = preload("res://scripts/sim/standing.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail
 
 
 ## What a prayer asks for: the lowest need if it is pressing, else a believed
-## danger, a hurt partner, or thanks.
+## danger, a hurt partner, fear of a winter with too little put by, or thanks.
 static func intent(sim: RefCounted, agent: RefCounted) -> Dictionary:
 	var lowest: int = agent.lowest_need()
 	if agent.need(lowest) < 50.0:
@@ -20,6 +21,8 @@ static func intent(sim: RefCounted, agent: RefCounted) -> Dictionary:
 		return {"kind": "threat", "level": 30.0}
 	if agent.partner >= 0 and sim.agents[agent.partner].needs_care(Balance.number("health.care_threshold")):
 		return {"kind": "partner", "level": 40.0}
+	if agent.settlement_id >= 0 and Standing.fear_of_winter(sim, agent.settlement_id):
+		return {"kind": "winter", "level": 45.0}
 	return {"kind": "thanks", "level": 100.0}
 
 
