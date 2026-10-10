@@ -4,6 +4,12 @@ extends CharacterBody3D
 ## zone of its shrine (`zone_center`, `zone_radius`). Movement never waits on
 ## the simulation or the UI, except for modal screens that take focus.
 const Balance = preload("res://scripts/core/balance.gd")
+const FigureRig = preload("res://scripts/presentation/figure_rig.gd")
+## A spirit in pale robes: jade-white silk bordered in jade, a gold sash,
+## ink-black hair and a faint gold halo.
+const COLOURS: Dictionary = {"jacket": Color("dbe8df"), "trim": Color("6fa594"), "sash": Color("c9a24a"), "trousers": Color("dbe8df"),
+	"skin": Color("f3e6d6"), "hair": Color("26221f"), "accent": Color("e8c66a"), "straw": Color("e8c66a")}
+const GLOW: float = 0.06
 
 var zone_center := Vector3.ZERO
 var zone_radius: float = 1000.0
@@ -14,11 +20,11 @@ var autopilot := Vector2.ZERO
 var autopilot_jump: bool = false
 ## A faint wisp while the god is dormant: it may not build.
 var dormant: bool = false
-var _body: MeshInstance3D
-var _head: MeshInstance3D
+var _figure := FigureRig.new()
 var _glow: OmniLight3D
-var _material := StandardMaterial3D.new()
 var _bob: float = 0.0
+var _time: float = 0.0
+var _speed: float = 0.0
 var _walk: float
 var _sprint: float
 var _jump: float
@@ -41,27 +47,12 @@ func _ready() -> void:
 	collider.shape = shape
 	collider.position.y = 0.85
 	add_child(collider)
-	_material.albedo_color = Color(0.86, 0.95, 0.91, 0.78)
-	_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_material.emission_enabled = true
-	_material.emission = Color("6fc4ae")
-	_material.emission_energy_multiplier = 0.25
-	var body_mesh := CapsuleMesh.new()
-	body_mesh.radius = 0.3
-	body_mesh.height = 1.25
-	_body = MeshInstance3D.new()
-	_body.mesh = body_mesh
-	_body.material_override = _material
-	_body.position.y = 0.68
-	add_child(_body)
-	var head_mesh := SphereMesh.new()
-	head_mesh.radius = 0.22
-	head_mesh.height = 0.44
-	_head = MeshInstance3D.new()
-	_head.mesh = head_mesh
-	_head.material_override = _material
-	_head.position.y = 1.5
-	add_child(_head)
+	# The rig faces +Z; the avatar walks toward -Z.
+	_figure.rotation.y = PI
+	_figure.scale = Vector3.ONE * 1.08
+	_figure.build(COLOURS, 0, true)
+	_figure.set_glow(GLOW)
+	add_child(_figure)
 	_glow = OmniLight3D.new()
 	_glow.light_color = Color("cfeee2")
 	_glow.light_energy = 0.5
@@ -72,7 +63,8 @@ func _ready() -> void:
 
 func set_dormant(value: bool) -> void:
 	dormant = value
-	_material.albedo_color.a = 0.3 if value else 0.78
+	_figure.set_fade(0.35 if value else 1.0)
+	_figure.set_glow(0.05 if value else GLOW)
 	_glow.light_energy = 0.3 if value else 0.9
 
 
@@ -97,9 +89,13 @@ func _physics_process(delta: float) -> void:
 		rotation.y = lerp_angle(rotation.y, atan2(-direction.x, -direction.z), minf(delta * 12.0, 1.0))
 	move_and_slide()
 	_stay_bound()
-	_bob += delta * (8.0 if direction.length() > 0.1 and is_on_floor() else 1.5)
-	_body.position.y = 0.68 + sin(_bob) * 0.03
-	_head.position.y = 1.5 + sin(_bob) * 0.035
+	# The god hovers a hand's breadth above the ground, breathing slowly.
+	_bob += delta * 1.5
+	_time += delta
+	_figure.position.y = 0.08 + sin(_bob) * 0.03
+	var ground := Vector2(velocity.x, velocity.z).length()
+	_speed = lerpf(_speed, ground, minf(delta * 8.0, 1.0))
+	_figure.pose("walking" if _speed > 0.2 else "idle", _time, _speed, delta)
 	if global_position.y < -10.0:
 		global_position = zone_center + Vector3(0, 4, 0)
 		velocity = Vector3.ZERO
