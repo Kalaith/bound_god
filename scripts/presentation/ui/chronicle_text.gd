@@ -24,7 +24,8 @@ static func word(value: Variant) -> Variant:
 		var parts: PackedStringArray = value.split("|")
 		return Text.format("sect_name", {"adjective": Text.label(parts[1]), "noun": Text.label(parts[2])}) if parts.size() == 3 else value
 	if value is String and (value.begins_with("cause_") or value.begins_with("standing_") or value.begins_with("realm_")
-			or value.begins_with("technique_") or value.begins_with("rank_")) and Text.has(value):
+			or value.begins_with("technique_") or value.begins_with("rank_") or value.begins_with("insight_")
+			or value.begins_with("unlock_") or value.begins_with("phase_")) and Text.has(value):
 		return Text.label(value)
 	if value is String and value.begins_with("resource_") and Text.has(value):
 		return Text.label(value).to_lower()

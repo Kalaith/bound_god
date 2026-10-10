@@ -105,6 +105,9 @@ static func cast(sim: RefCounted, id: String, cell: Vector3i, args: Dictionary) 
 			result = MiraclesCultivation.bless(sim, args)
 		"shield_trial", "defy_heaven":
 			result = MiraclesCultivation.trial(sim, str(definition.effect), cell, float(definition.radius))
+		"nurture":
+			sim.tree_growth.nurture(sim, cell)
+			result = {"ok": true, "reason": "miracle_nurtured"}
 		_:
 			result = {"ok": false, "reason": "miracle_unknown"}
 	if not result.ok:

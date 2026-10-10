@@ -104,6 +104,10 @@ static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks
 			return _proclaim(sim, agent, step, step_ticks)
 		Op.FACE_HEAVEN:
 			return _face_heaven(sim, agent, step_ticks)
+		Op.PICK_FRUIT:
+			return _pick_fruit(sim, agent, step, step_ticks)
+		Op.HAND_FRUIT:
+			return _hand_fruit(sim, agent, step, step_ticks)
 	return Fail.INTERRUPTED
 
 
@@ -118,3 +122,30 @@ static func _face_heaven(sim: RefCounted, agent: RefCounted, step_ticks: int) ->
 			return Plans.RUNNING
 		return Plans.DONE if agent.step_result.has("trial") else Plans.RUNNING
 	return Plans.RUNNING
+
+
+## Reach up into the crown for a fruit: for themselves it is theirs at once,
+## for someone else it is carried to them.
+static func _pick_fruit(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:
+	agent.activity = "picking_fruit"
+	if step_ticks < 8:
+		return Plans.RUNNING
+	if step_ticks == 8:
+		sim.effects.action("pick_fruit", agent.id, {"for": int(step.with)})
+		return Plans.RUNNING
+	if not agent.step_result.has("picked"):
+		return Plans.RUNNING
+	return Plans.DONE if int(agent.step_result.picked) > 0 else Fail.TARGET_GONE
+
+
+static func _hand_fruit(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:
+	var id: int = int(step.to)
+	if agent.carrying.is_empty() or str(agent.carrying.resource) != "spirit_fruit":
+		return Fail.STOCK_EMPTY
+	if id < 0 or id >= sim.agents.size() or not sim.agents[id].is_present():
+		return Fail.TARGET_GONE
+	if id != agent.id and not _near(agent.cell, sim.agents[id].cell):
+		return Fail.TARGET_GONE if step_ticks > 60 else Plans.RUNNING
+	sim.effects.action("hand_fruit", agent.id, {"to": id})
+	agent.carrying = {}
+	return Plans.DONE

@@ -151,3 +151,54 @@ static func check_tribulations(data: Dictionary, realms: int, blocks: Dictionary
 			if not labels.has("block_" + str(name)):
 				errors.append("tribulations: block " + str(name) + " has no label")
 	return errors
+
+
+## Unlock effects sim/tree_growth.gd implements; the catalog may not name others.
+const UNLOCK_EFFECTS: Array[String] = ["spirit_fruit"]
+
+
+## The tree: maturity phases in order with labels, unlocks gated on an
+## insight a tribulation can give, numbers where numbers belong.
+static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	if not _number(data.get("schema_version")) or int(data.schema_version) != 1:
+		errors.append("tree: schema_version must be 1")
+	var kinds: Array = []
+	for kind in tribulations.get("kinds", []):
+		kinds.append(kind.get("id"))
+		if not labels.has("insight_" + str(kind.get("id"))):
+			errors.append("tree: insight " + str(kind.get("id")) + " has no label")
+	for section in ["insight", "fruit", "nurture", "scars"]:
+		var values: Variant = data.get(section)
+		if not values is Dictionary or values.is_empty():
+			errors.append("tree: " + section + " is missing")
+			continue
+		for key in values:
+			if not _number(values[key]):
+				errors.append("tree: " + section + "." + str(key) + " must be a number")
+	var maturity: Variant = data.get("maturity")
+	if not maturity is Dictionary or not _number(maturity.get("per_day")) or not maturity.get("phases") is Array or maturity.phases.is_empty():
+		errors.append("tree: maturity needs per_day and phases")
+	else:
+		var last: float = -1.0
+		for entry in maturity.phases:
+			if not entry is Dictionary or not entry.get("id") is String or not _number(entry.get("at")) or not _number(entry.get("crown")) or float(entry.at) <= last:
+				errors.append("tree: maturity phases need ids, rising thresholds and a crown size")
+				break
+			last = float(entry.at)
+			if not labels.has("phase_" + entry.id):
+				errors.append("tree: phase " + entry.id + " has no label")
+	var unlocks: Variant = data.get("unlocks")
+	if not unlocks is Array:
+		errors.append("tree: unlocks are missing")
+	else:
+		for entry in unlocks:
+			if not entry is Dictionary or not entry.get("id") is String or not UNLOCK_EFFECTS.has(entry.get("effect")):
+				errors.append("tree: an unlock needs an id and an implemented effect")
+				continue
+			var needs: Variant = entry.get("requires")
+			if not needs is Dictionary or not kinds.has(needs.get("insight")) or not _number(needs.get("amount")):
+				errors.append("tree: unlock " + entry.id + " must require an insight a trial can give")
+			if not labels.has("unlock_" + entry.id):
+				errors.append("tree: unlock " + entry.id + " has no label")
+	return errors

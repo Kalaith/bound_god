@@ -14,6 +14,7 @@ const FILES: Dictionary = {
 	"recipes": "res://data/recipes.json",
 	"cultivation": "res://data/cultivation.json",
 	"tribulations": "res://data/tribulations.json",
+	"tree": "res://data/tree.json",
 	"text": "res://data/text.json",
 	"text_agents": "res://data/text_agents.json",
 	"text_ui": "res://data/text_ui.json",
@@ -222,3 +223,7 @@ static func affinity(id: String) -> Dictionary:
 
 static func tribulations() -> Dictionary:
 	return file("tribulations")
+
+
+static func tree_growth() -> Dictionary:
+	return file("tree")

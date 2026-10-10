@@ -1,0 +1,203 @@
+extends RefCounted
+## The sacred tree learns (M17). A tribulation faced in its sanctuary gives it
+## insight of that kind: most the first time, less each time after. Insights
+## are knowledge, not something spent. Maturity grows by itself, day by day,
+## and with what the tree learns; its phases widen the crown. An insight
+## deep enough unlocks a capability: lightning lets the tree bear spirit
+## fruit, a few a season, which strengthens a breakthrough's preparation.
+## Lightning leaves scars on the bark; the god can nurture a spot into
+## dense qi for a season. Everything is chronicled with its cause.
+const Data = preload("res://scripts/core/data.gd")
+const Registry = preload("res://scripts/world/block_registry.gd")
+
+## kind -> amount of insight
+var insights: Dictionary = {}
+## kind -> how many trials of it the tree has witnessed
+var witnessed: Dictionary = {}
+## Where each insight came from: Array of {tick, day, kind, name, outcome, gain}
+var history: Array = []
+var maturity: float = 0.0
+## Index of the maturity phase the crown has grown to.
+var phase: int = 0
+## Unlock ids, in the order they came.
+var unlocks: Array = []
+## Spirit fruit hanging on the tree now, and how many grew this season.
+var fruit: int = 0
+var fruit_season: int = -1
+var fruit_grown: int = 0
+## Lightning scars on the bark: Array of {cell, side: Vector3i, tick}
+var scars: Array = []
+## Nurtured spots of dense qi: Array of {cell, radius, qi, until}
+var nurtured: Array = []
+
+
+static func data() -> Dictionary:
+	return Data.tree_growth()
+
+
+func has_unlock(id: String) -> bool:
+	return unlocks.has(id)
+
+
+## How much a trial of `kind` would teach the tree now.
+func gain_for(kind: String, severity: float) -> float:
+	var insight: Dictionary = data().insight
+	var times: int = int(witnessed.get(kind, 0))
+	var kind_weight: float = 1.0
+	for entry in Data.tribulations().kinds:
+		if entry.id == kind:
+			kind_weight = float(entry.insight)
+	return float(insight.first) * kind_weight * pow(float(insight.repeat_factor), times) * (float(insight.severity_base) + severity)
+
+
+## A trial has ended. Only those faced in the sanctuary teach the tree.
+func on_trial(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
+	if not bool(trial.sanctuary):
+		return
+	var kind: String = str(trial.kind)
+	var gain: float = gain_for(kind, float(trial.severity))
+	var first: bool = int(witnessed.get(kind, 0)) == 0
+	witnessed[kind] = int(witnessed.get(kind, 0)) + 1
+	insights[kind] = float(insights.get(kind, 0.0)) + gain
+	history.append({"tick": sim.calendar.tick, "day": sim.calendar.day(), "kind": kind, "name": agent.full_name(), "outcome": trial.outcome, "gain": gain})
+	_grow(sim, gain * float(data().insight.maturity_share))
+	sim.chronicle_event("tree_insight", int(agent.settlement_id), {"name": agent.full_name(), "kind": "insight_" + kind},
+		"cause_first_insight" if first else "cause_deeper_insight", [agent.id])
+	_scar(sim, trial)
+	_check_unlocks(sim)
+
+
+func daily(sim: RefCounted) -> void:
+	_grow(sim, float(data().maturity.per_day))
+	var season: int = (sim.calendar.day() - 1) / sim.calendar.days_per_season
+	if season != fruit_season:
+		fruit_season = season
+		fruit_grown = 0
+	_bear_fruit(sim)
+	var kept: Array = []
+	for spot in nurtured:
+		if int(spot.until) > sim.calendar.tick:
+			kept.append(spot)
+	if kept.size() != nurtured.size():
+		nurtured = kept
+		sim.qi.clear_cache()
+
+
+func _check_unlocks(sim: RefCounted) -> void:
+	for unlock in data().unlocks:
+		if unlocks.has(unlock.id):
+			continue
+		var needs: Dictionary = unlock.requires
+		if float(insights.get(str(needs.insight), 0.0)) < float(needs.amount):
+			continue
+		unlocks.append(unlock.id)
+		sim.chronicle_event("tree_unlock", _tree_place(sim), {"unlock": "unlock_" + str(unlock.id)}, "cause_insight_%s" % str(needs.insight), [])
+
+
+## Spirit fruit ripens a few at a time through the season (none in winter),
+## spaced so a season brings `per_season` and no more than `most` hang at once.
+func _bear_fruit(sim: RefCounted) -> void:
+	if not has_unlock("spirit_fruit") or sim.calendar.is_winter():
+		return
+	var settings: Dictionary = data().fruit
+	var per_season: int = int(settings.per_season)
+	if fruit_grown >= per_season or fruit >= int(settings.most):
+		return
+	var every: int = maxi(1, sim.calendar.days_per_season / per_season)
+	if (sim.calendar.day_of_season() - 1) % every != 0:
+		return
+	fruit += 1
+	fruit_grown += 1
+	sim.chronicle_event("fruit_ripened", _tree_place(sim), {"count": fruit}, "cause_insight_lightning", [])
+
+
+## Someone picks a fruit from the tree. Returns whether there was one.
+func pick(sim: RefCounted) -> bool:
+	if fruit <= 0:
+		return false
+	fruit -= 1
+	return true
+
+
+static func _tree_place(sim: RefCounted) -> int:
+	return sim.settlements.at_cell(sim.features.get("sacred_tree", Vector3i.ZERO))
+
+
+func _grow(sim: RefCounted, amount: float) -> void:
+	maturity += amount
+	var phases: Array = data().maturity.phases
+	while phase + 1 < phases.size() and maturity >= float(phases[phase + 1].at):
+		phase += 1
+		_widen_crown(sim, float(phases[phase].crown))
+		sim.chronicle_event("tree_grew", _tree_place(sim), {"phase": "phase_" + str(phases[phase].id)}, "cause_maturity", [])
+
+
+## The crown spreads: sacred leaves fill the air just beyond it, as the
+## world made it, a little wider each phase.
+static func _widen_crown(sim: RefCounted, extra: float) -> void:
+	var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))
+	if tree.x < 0:
+		return
+	var crown: int = Registry.id("sacred_leaves")
+	var top: int = tree.y - 1
+	var middle := Vector3(tree.x + 0.5, top + 11, tree.z + 0.5)
+	var reach: int = 6 + ceili(extra)
+	for y in range(top + 6, top + 16):
+		for z in range(tree.z - reach, tree.z + reach + 2):
+			for x in range(tree.x - reach, tree.x + reach + 2):
+				var cell := Vector3i(x, y, z)
+				var offset := Vector3(x + 0.5, y + 0.5, z + 0.5) - middle
+				offset.y *= 1.5
+				var length: float = offset.length()
+				if length >= 5.6 and length < 5.6 + extra and sim.voxels.get_block(cell) == 0 and not sim.is_occupied(cell):
+					sim.set_block(cell, crown, 0, "growth")
+
+
+## Lightning in the sanctuary marks the bark on the side it fell.
+func _scar(sim: RefCounted, trial: Dictionary) -> void:
+	var cells: Array = sim.features.get("sacred_tree_cells", [])
+	if cells.is_empty():
+		return
+	var settings: Dictionary = data().scars
+	var site: Vector3i = trial.site
+	var trunk: Vector3i = cells[0]
+	var side := Vector3i(signi(site.x - trunk.x), 0, signi(site.z - trunk.z))
+	if side == Vector3i.ZERO:
+		side = Vector3i(1, 0, 0)
+	for i in range(int(settings.per_trial)):
+		var base: Vector3i = cells[(int(trial.id) + i) % cells.size()]
+		scars.append({"cell": base + Vector3i(0, 1 + (int(trial.id) * 3 + i * 2) % 7, 0), "side": side, "tick": sim.calendar.tick})
+	while scars.size() > int(settings.most):
+		scars.pop_front()
+
+
+## The god deepens qi round a spot for a season.
+func nurture(sim: RefCounted, cell: Vector3i) -> void:
+	var settings: Dictionary = data().nurture
+	nurtured.append({"cell": cell, "radius": float(settings.radius), "qi": float(settings.qi),
+		"until": sim.calendar.tick + sim.calendar.ticks_for_days(float(settings.days))})
+	sim.qi.clear_cache()
+
+
+func phase_id() -> String:
+	return str(data().maturity.phases[phase].id)
+
+
+func to_dict() -> Dictionary:
+	return {"insights": insights.duplicate(), "witnessed": witnessed.duplicate(), "history": history.duplicate(true),
+		"maturity": maturity, "phase": phase, "unlocks": unlocks.duplicate(), "fruit": fruit, "fruit_season": fruit_season,
+		"fruit_grown": fruit_grown, "scars": scars.duplicate(true), "nurtured": nurtured.duplicate(true)}
+
+
+func from_dict(state: Dictionary) -> void:
+	insights = state.insights
+	witnessed = state.witnessed
+	history = state.history
+	maturity = float(state.maturity)
+	phase = int(state.phase)
+	unlocks = state.unlocks
+	fruit = int(state.fruit)
+	fruit_season = int(state.fruit_season)
+	fruit_grown = int(state.fruit_grown)
+	scars = state.scars
+	nurtured = state.nurtured

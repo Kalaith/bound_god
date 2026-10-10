@@ -68,7 +68,8 @@ static func preparation(sim: RefCounted, agent: RefCounted) -> float:
 		if other_id != agent.id and other.is_present() and (other_id == int(agent.cultivation.teacher) \
 				or (int(agent.cultivation.sect_id) >= 0 and int(other.cultivation.sect_id) == int(agent.cultivation.sect_id))):
 			helped = maxf(helped, 0.7)
-	return clampf(0.35 * agent.need(Personality.Need.REST) / 100.0 + 0.35 * agent.need(Personality.Need.FOOD) / 100.0 + 0.3 * helped, 0.0, 1.0)
+	var fruit: float = float(Data.tree_growth().fruit.preparation) if bool(agent.cultivation.get("fruit", false)) else 0.0
+	return clampf(0.35 * agent.need(Personality.Need.REST) / 100.0 + 0.35 * agent.need(Personality.Need.FOOD) / 100.0 + 0.3 * helped + fruit, 0.0, 1.0)
 
 
 ## The decision is made: Heaven will answer after the warning.
@@ -143,6 +144,11 @@ func _begin(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 	trial.site = agent.cell
 	trial.sanctuary = in_sanctuary(sim, agent.cell)
 	trial.preparation = preparation(sim, agent)
+	# A spirit fruit kept for this moment is eaten now.
+	if bool(agent.cultivation.get("fruit", false)):
+		agent.cultivation.fruit = false
+		trial["fruit"] = true
+		sim.chronicle_event("fruit_eaten", agent.settlement_id, {"name": agent.full_name()}, "cause_before_trial", [agent.id])
 	events.append({"kind": "storm", "trial": trial.id, "cell": agent.cell, "tick": sim.calendar.tick})
 	var sight: float = Balance.number("agents.sight_radius") * 1.5
 	for other_id in sim.spatial.near("agents", agent.cell, sight):
@@ -257,8 +263,8 @@ func _resolve(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 			Lifecycle.die(sim, agent, "cause_tribulation")
 	if int(trial.scorched) > 0:
 		sim.chronicle_event("trial_scorched", agent.settlement_id, {"name": agent.given_name, "count": trial.scorched}, "cause_heaven_lightning", [agent.id])
-	if sim.has_method("on_trial_done"):
-		sim.on_trial_done(trial)
+	if sim.tree_growth != null:
+		sim.tree_growth.on_trial(sim, trial, agent)
 
 
 static func _realm_key(agent: RefCounted) -> String:

@@ -6,6 +6,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
+const FruitChoice = preload("res://scripts/agents/fruit_choice.gd")
 
 
 ## Returns true when the action was a cultivation effect.
@@ -17,6 +18,10 @@ static func apply(sim: RefCounted, agent: RefCounted, action: Dictionary) -> boo
 			_teach(sim, agent, int(action.to), str(action.technique))
 		"announce_trial":
 			agent.step_result = {"trial": sim.tribulations.announce(sim, agent, action.site)}
+		"pick_fruit":
+			_pick_fruit(sim, agent, int(action.get("for", agent.id)))
+		"hand_fruit":
+			_hand_fruit(sim, agent, int(action.to))
 		"found_sect":
 			var id: int = sim.sects.found(sim, agent)
 			agent.step_result = {"sect": id}
@@ -82,3 +87,35 @@ static func _teach(sim: RefCounted, teacher: RefCounted, id: int, technique: Str
 		"cause_asked_to_learn|%s" % student.given_name, [teacher.id, id])
 	if sim.sects != null:
 		sim.sects.on_taught(sim, teacher, student)
+
+
+## A fruit from the tree: kept for the picker's own trial, or carried for the
+## one their master chose (the choice and its reason go in the chronicle).
+static func _pick_fruit(sim: RefCounted, agent: RefCounted, recipient: int) -> void:
+	if sim.tree_growth == null or not sim.tree_growth.pick(sim):
+		agent.step_result = {"picked": 0}
+		return
+	agent.step_result = {"picked": 1}
+	var sect: Dictionary = sim.sects.in_settlement(agent.settlement_id)
+	var choice: Array = FruitChoice.choose(sim, sect, agent) if not sect.is_empty() else [recipient, "cause_fruit_readiest"]
+	var reason: String = str(choice[1]) if int(choice[0]) == recipient else "cause_fruit_readiest"
+	if recipient == agent.id:
+		agent.cultivation.fruit = true
+		if sect.is_empty():
+			sim.chronicle_event("fruit_taken", agent.settlement_id, {"name": agent.full_name()}, "cause_no_sect", [agent.id])
+		else:
+			sim.chronicle_event("fruit_kept", agent.settlement_id, {"name": agent.full_name()}, "%s|%s" % [reason, agent.given_name], [agent.id])
+		return
+	agent.carrying = {"resource": "spirit_fruit", "amount": 1.0}
+	var other: RefCounted = sim.agents[recipient]
+	sim.chronicle_event("fruit_given", agent.settlement_id, {"giver": agent.full_name(), "name": other.full_name()},
+		"%s|%s" % [reason, agent.given_name], [agent.id, recipient])
+
+
+static func _hand_fruit(sim: RefCounted, agent: RefCounted, recipient: int) -> void:
+	var other: RefCounted = sim.agents[recipient]
+	if not other.is_present():
+		sim.tree_growth.fruit += 1
+		return
+	other.cultivation.fruit = true
+	Mind.add(other, "given_fruit", sim.calendar.ticks_per_day, agent.id)

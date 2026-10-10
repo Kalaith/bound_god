@@ -44,6 +44,22 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 			var steps: Array = [Plans.go_cell(site)] if site.x >= 0 else []
 			steps.append(Plans.step(Op.FACE_HEAVEN, {}))
 			return [H.option("face_heaven", 1.0, steps)]
+		Kind.SHARE_FRUIT:
+			var recipient: int = int(goal.target)
+			var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))
+			var below: Vector3i = H.ring_cell(sim, Vector3(tree.x + 1.0, tree.y, tree.z + 1.0), agent.id, 2.0, 3.0)
+			var carrying: bool = not agent.carrying.is_empty() and str(agent.carrying.resource) == "spirit_fruit"
+			var steps: Array = []
+			if not carrying:
+				steps = H.free_hands(agent)
+				steps.append(Plans.go_cell(below))
+				steps.append(Plans.step(Op.PICK_FRUIT, {"with": recipient}))
+			elif recipient == agent.id:
+				steps.append(Plans.step(Op.HAND_FRUIT, {"to": recipient}))
+			if recipient != agent.id:
+				steps.append(Plans.go_to(Plans.target(T.AGENT, recipient)))
+				steps.append(Plans.step(Op.HAND_FRUIT, {"to": recipient}))
+			return [H.option("share_fruit" if recipient != agent.id else "take_fruit", 1.0, steps)]
 		Kind.FOUND_SECT:
 			var spot: Vector3i = DeliberationCultivation.spot(sim, agent)
 			var steps: Array = [Plans.go_cell(spot)] if spot.x >= 0 else []

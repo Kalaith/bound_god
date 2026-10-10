@@ -87,6 +87,12 @@ static func _deposit(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 		agent.step_result = {"stored": 0}
 		return
 	var resource: String = agent.carrying.resource
+	# Spirit fruit is not stores: one set aside goes back to the tree's keeping.
+	if resource == "spirit_fruit" and sim.tree_growth != null:
+		sim.tree_growth.fruit += int(round(float(agent.carrying.amount)))
+		agent.carrying = {}
+		agent.step_result = {"stored": 1}
+		return
 	var whole: int = int(floor(float(agent.carrying.amount)))
 	var stored: int = sim.settlements.add(sim, int(action.settlement), resource, whole, agent.cell)
 	var left: float = float(agent.carrying.amount) - stored

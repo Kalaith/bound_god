@@ -143,7 +143,8 @@ func _rebuild_miracles() -> void:
 	for child in _miracles.get_children():
 		child.queue_free()
 	for definition in Data.miracles():
-		if definition.effect == "whisper":
+		# Worked on one person, from the inspector.
+		if definition.effect in ["whisper", "bless_cultivation"]:
 			continue
 		var line := HBoxContainer.new()
 		var cost: float = float(Miracles.cost_of(sim, definition)[0])

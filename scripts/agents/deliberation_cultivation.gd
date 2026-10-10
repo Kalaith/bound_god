@@ -9,6 +9,7 @@ const Personality = preload("res://scripts/agents/personality.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
+const FruitChoice = preload("res://scripts/agents/fruit_choice.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -28,6 +29,7 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	_found_sect(sim, agent, out)
 	_breakthrough(sim, agent, out)
 	_witness(sim, agent, out)
+	_share_fruit(sim, agent, out)
 
 
 ## The densest spot round the tree this person can sit in that nobody else
@@ -39,8 +41,15 @@ static func spot(sim: RefCounted, agent: RefCounted) -> Vector3i:
 	var center := Vector3(tree.x + 1.0, tree.y, tree.z + 1.0)
 	var best: Vector3i = NONE
 	var best_qi: float = -1.0
+	var cells: Array = []
 	for k in range(4):
-		var cell: Vector3i = H.ring_cell(sim, center, agent.id + k * 97, Balance.number("cultivation.spot_inner"), Balance.number("cultivation.spot_outer"))
+		cells.append(H.ring_cell(sim, center, agent.id + k * 97, Balance.number("cultivation.spot_inner"), Balance.number("cultivation.spot_outer")))
+	# Spots the god has nurtured are cultivation places too.
+	if sim.tree_growth != null:
+		for nurtured in sim.tree_growth.nurtured:
+			var at: Vector3i = nurtured.cell
+			cells.append(H.ring_cell(sim, Vector3(at.x + 0.5, at.y, at.z + 0.5), agent.id, 0.5, float(nurtured.radius) * 0.7))
+	for cell in cells:
 		if cell.x < 0 or _taken(sim, agent, cell):
 			continue
 		var qi: float = sim.qi.density(sim, cell)
@@ -206,3 +215,31 @@ static func _witness(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 		if trial.state == "storm" and int(trial.agent) != agent.id and H.distance(trial.site, agent.cell) <= sight:
 			out.append(_candidate(Kind.PRAY, Balance.number("cultivation.witness_prayer") * (0.5 + float(agent.faith.devotion) / 100.0), "reason_trial"))
 			return
+
+
+## Spirit fruit on the tree: a sect's master decides who should have it; where
+## there is no sect, a cultivator near their peak takes one for themselves.
+static func _share_fruit(sim: RefCounted, agent: RefCounted, out: Array) -> void:
+	if sim.tree_growth == null:
+		return
+	# A fruit in hand is carried on to the one it was picked for.
+	if not agent.carrying.is_empty() and str(agent.carrying.resource) == "spirit_fruit":
+		var goal: Dictionary = agent.current_goal()
+		var target: int = int(goal.target) if not goal.is_empty() and int(goal.kind) == Kind.SHARE_FRUIT else agent.id
+		if target != agent.id and not sim.agents[target].is_present():
+			target = agent.id
+		out.append(_candidate(Kind.SHARE_FRUIT, 0.9, "reason_share_fruit", target))
+		return
+	if int(sim.tree_growth.fruit) <= 0 or Schedule.is_sleep_time(sim, agent):
+		return
+	var sect: Dictionary = sim.sects.in_settlement(agent.settlement_id) if sim.sects != null else {}
+	if not sect.is_empty():
+		if int(sect.master) != agent.id:
+			return
+		var choice: Array = FruitChoice.choose(sim, sect, agent)
+		if int(choice[0]) < 0:
+			return
+		out.append(_candidate(Kind.SHARE_FRUIT, 0.6 + 0.2 * maxf(agent.personality.leadership, 0.0), "reason_share_fruit", int(choice[0])))
+		return
+	if FruitChoice.wants_fruit(sim, agent):
+		out.append(_candidate(Kind.SHARE_FRUIT, 0.45 + 0.2 * float(agent.cultivation.drive), "reason_take_fruit", agent.id))

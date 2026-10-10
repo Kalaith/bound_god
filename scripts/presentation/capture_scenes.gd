@@ -20,6 +20,7 @@ const CaptureFigures = preload("res://scripts/presentation/capture_figures.gd")
 const CaptureOnboarding = preload("res://scripts/presentation/capture_onboarding.gd")
 const CaptureCultivation = preload("res://scripts/presentation/capture_cultivation.gd")
 const CaptureTrials = preload("res://scripts/presentation/capture_trials.gd")
+const CaptureTree = preload("res://scripts/presentation/capture_tree.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -61,6 +62,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 		return
 	if scenario.begins_with("figures_"):
 		CaptureFigures.arrange(main, shot, scenario)
+		return
+	if scenario.begins_with("tree_"):
+		CaptureTree.arrange(main, shot, scenario)
 		return
 	if scenario.begins_with("trial_"):
 		CaptureTrials.arrange(main, shot, scenario)

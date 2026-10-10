@@ -37,6 +37,12 @@ func density(sim: RefCounted, cell: Vector3i) -> float:
 	var value: float = float(Data.cultivation().qi.floor)
 	if tree.x >= 0:
 		value = maxf(curve_at(Vector2(cell.x + 0.5, cell.z + 0.5).distance_to(source(sim))), value)
+	# Spots the god has nurtured hold dense qi for a season.
+	if sim.tree_growth != null:
+		for spot in sim.tree_growth.nurtured:
+			var d: float = Vector2(cell.x - spot.cell.x, cell.z - spot.cell.z).length()
+			if d <= float(spot.radius):
+				value = maxf(value, float(spot.qi) * (1.0 - 0.3 * d / maxf(float(spot.radius), 0.1)))
 	_cache[column] = value
 	return value
 

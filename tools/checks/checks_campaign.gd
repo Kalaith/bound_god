@@ -136,3 +136,66 @@ func long_check_breakthroughs_at_the_tree_and_elsewhere():
 	if scorched == 0:
 		return "no scorching was chronicled"
 	return ""
+
+
+## M17 exit: after a lightning tribulation at the tree, spirit fruit
+## appears within a season and a cultivator eats it before a breakthrough;
+## the chronicle records who got it and why.
+func long_check_the_tree_bears_fruit_for_a_trial():
+	var sim: RefCounted = Sim.create(11)
+	var camp: Vector3i = sim.settlements.entries[1].camp
+	for i in range(5):
+		Population.arrive(sim, Generation.adult(sim.rng, sim.agents.size()), sim.nav.nearest_walkable(camp + Vector3i(i % 3, 0, 2), 4), 1, "")
+	sim.run_ticks(12)
+	Stores.place_chest(sim, 1)
+	Stores.fill(sim, 1, {"berries": 90, "wood": 20})
+	var hollow: Array = []
+	for agent in sim.agents:
+		if agent.settlement_id == 1:
+			hollow.append(agent)
+	var master: RefCounted = hollow[0]
+	master.cultivation = CultivationState.fresh(0.6, "none", 0.8)
+	master.cultivation.realm = 2
+	master.cultivation.techniques = ["tree_breath"]
+	for i in range(1, hollow.size()):
+		var disciple: RefCounted = hollow[i]
+		disciple.cultivation = CultivationState.fresh(0.5, "none", 0.85)
+		disciple.cultivation.realm = 1
+		disciple.cultivation.techniques = ["tree_breath"]
+		disciple.cultivation.teacher = master.id
+		disciple.cultivation.progress = CultivationState.needed(disciple.cultivation) if i == 1 else 140.0 + i * 15.0
+		master.cultivation.students.append(disciple.id)
+	sim.sects.found(sim, master)
+	var first_trial: int = -1
+	var ripened: int = -1
+	var given: Dictionary = {}
+	var eaten: Dictionary = {}
+	for _day in range(sim.calendar.days_per_season * 2):
+		sim.run_ticks(sim.calendar.ticks_per_day)
+		for entry in sim.chronicle.entries:
+			match str(entry.kind):
+				"tree_insight":
+					first_trial = int(entry.day) if first_trial < 0 else first_trial
+				"fruit_ripened":
+					ripened = int(entry.day) if ripened < 0 else ripened
+				"fruit_given", "fruit_kept", "fruit_taken":
+					given = entry if given.is_empty() else given
+				"fruit_eaten":
+					eaten = entry if eaten.is_empty() else eaten
+		if not eaten.is_empty():
+			break
+	print("      first insight day %d, fruit ripened day %d, %s, eaten: %s" % [first_trial, ripened,
+		"%s day %d (%s)" % [given.get("kind", "none"), int(given.get("day", -1)), str(given.get("cause", ""))], str(eaten.get("args", {}))])
+	if first_trial < 0:
+		return "no trial in the sanctuary taught the tree"
+	if ripened < 0 or ripened - first_trial > sim.calendar.days_per_season:
+		return "no fruit within a season of the first insight"
+	if given.is_empty() or str(given.cause).is_empty():
+		return "nobody was given the fruit with a reason"
+	if eaten.is_empty():
+		return "no fruit was eaten before a trial"
+	var trial_after: bool = false
+	for entry in sim.chronicle.entries:
+		if str(entry.kind).begins_with("trial_") and entry.kind != "trial_announced" and entry.agents == eaten.agents and int(entry.tick) >= int(eaten.tick):
+			trial_after = true
+	return "" if trial_after else "the one who ate the fruit did not face Heaven after"

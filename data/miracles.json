@@ -1,6 +1,6 @@
 {
 	"schema_version": 1,
-	"effects": ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend", "bless_cultivation", "shield_trial", "defy_heaven"],
+	"effects": ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend", "bless_cultivation", "shield_trial", "defy_heaven", "nurture"],
 	"aspects": ["harvest", "protection", "travel", "shadow", "wrath"],
 	"miracles": [
 		{"id": "whisper", "tier": "small", "cost": 2, "radius": 0, "aspect": "", "renown_required": 0, "effect": "whisper"},
@@ -10,6 +10,7 @@
 		{"id": "mend", "tier": "medium", "cost": 25, "radius": 12, "aspect": "protection", "renown_required": 15, "effect": "mend"},
 		{"id": "bless_cultivation", "tier": "small", "cost": 10, "radius": 0, "aspect": "harvest", "renown_required": 0, "effect": "bless_cultivation"},
 		{"id": "shield_trial", "tier": "medium", "cost": 35, "radius": 16, "aspect": "protection", "renown_required": 0, "effect": "shield_trial"},
-		{"id": "defy_heaven", "tier": "large", "cost": 100, "radius": 16, "aspect": "protection", "renown_required": 0, "effect": "defy_heaven"}
+		{"id": "defy_heaven", "tier": "large", "cost": 100, "radius": 16, "aspect": "protection", "renown_required": 0, "effect": "defy_heaven"},
+		{"id": "nurture", "tier": "medium", "cost": 25, "radius": 4, "aspect": "harvest", "renown_required": 0, "effect": "nurture"}
 	]
 }

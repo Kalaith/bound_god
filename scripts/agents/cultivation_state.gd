@@ -6,7 +6,8 @@ extends RefCounted
 ##  teacher: int, students: Array[int], sect_id: int, hours: float,
 ##  peak_tick: int (when they reached the peak, -1), blessed_until: int (tick),
 ##  flawed: bool (a breakthrough Heaven meant to end), next_factor: float (harder next realm),
-##  trials: Array of {tick, kind, outcome, sanctuary, severity, shield}}
+##  trials: Array of {tick, kind, outcome, sanctuary, severity, shield},
+##  fruit: bool (holds a spirit fruit for their next trial)}
 ## Most people have little talent; would-be cultivators drawn by the tree's
 ## qi arrive with more of it and a stronger drive.
 const Balance = preload("res://scripts/core/balance.gd")
@@ -39,7 +40,7 @@ static func roll(rng: RandomNumberGenerator, seeker: bool = false) -> Dictionary
 static func fresh(talent: float, affinity: String, drive: float) -> Dictionary:
 	return {"talent": talent, "affinity": affinity, "drive": drive, "realm": 0, "progress": 0.0,
 		"foundation": Balance.number("cultivation.start_foundation"), "techniques": [], "teacher": -1, "students": [],
-		"sect_id": -1, "hours": 0.0, "peak_tick": -1, "blessed_until": -1, "flawed": false, "next_factor": 1.0, "trials": []}
+		"sect_id": -1, "hours": 0.0, "peak_tick": -1, "blessed_until": -1, "flawed": false, "next_factor": 1.0, "trials": [], "fruit": false}
 
 
 ## For people from saves made before cultivation: a sub-stream seeded from

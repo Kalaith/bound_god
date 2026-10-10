@@ -1,6 +1,6 @@
 {
 	"schema_version": 1,
-	"resources": ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal", "tree_seed"],
+	"resources": ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal", "tree_seed", "spirit_fruit"],
 	"divine_only": ["soil"],
 	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree", "table", "bench", "planter", "lantern", "farmland", "granary_bin"],
 	"shapes": ["cube", "cross", "panel", "slab", "post"],

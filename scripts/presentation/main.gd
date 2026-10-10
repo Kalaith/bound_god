@@ -29,6 +29,8 @@ const FaithController = preload("res://scripts/presentation/faith_controller.gd"
 const RequestsPanel = preload("res://scripts/presentation/ui/requests_panel.gd")
 const ThreatViews = preload("res://scripts/presentation/threat_views.gd")
 const TribulationViews = preload("res://scripts/presentation/tribulation_views.gd")
+const TreeMarks = preload("res://scripts/presentation/tree_marks.gd")
+const TreeScreen = preload("res://scripts/presentation/ui/tree_screen.gd")
 const LanternLights = preload("res://scripts/presentation/lantern_lights.gd")
 const SacredAura = preload("res://scripts/presentation/sacred_aura.gd")
 const WorldIO = preload("res://scripts/presentation/world_io.gd")
@@ -49,6 +51,7 @@ var camera_rig: Node3D
 var builder: Node3D
 var overlays: Node3D
 var qi_overlay: MeshInstance3D
+var tree_screen: Control
 var hud: Control
 var design_tool: Node3D
 var library_screen: Control
@@ -166,6 +169,9 @@ func _start() -> void:
 	trial_views.driver = driver
 	trial_views.hud = hud
 	add_child(trial_views)
+	var marks: Node3D = TreeMarks.new()
+	marks.sim = sim
+	add_child(marks)
 	var lantern_lights: Node3D = LanternLights.new()
 	lantern_lights.sim = sim
 	lantern_lights.camera = camera_rig.camera
@@ -233,6 +239,13 @@ func _start() -> void:
 	ui_layer.add_child(chronicle_screen)
 	chronicle_screen.closed.connect(func() -> void:
 		chronicle_screen.hide()
+		builder.enabled = true
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+	tree_screen = TreeScreen.new()
+	tree_screen.sim = sim
+	ui_layer.add_child(tree_screen)
+	tree_screen.closed.connect(func() -> void:
+		tree_screen.hide()
 		builder.enabled = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
 	if sim.god.dormant:
@@ -347,6 +360,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		inventory.open(builder.selected)
 	elif event.is_action_pressed("quick_save"):
 		world_io.save()
+	elif event.is_action_pressed("toggle_tree"):
+		builder.enabled = false
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		tree_screen.open()
 	elif event.is_action_pressed("toggle_qi"):
 		qi_overlay.toggle()
 		if qi_overlay.visible:
@@ -416,7 +433,7 @@ func modal_open() -> bool:
 		return true
 	if interaction.is_open() or inventory.visible:
 		return true
-	for screen in [library_screen, faith.menu, requests_panel, rest_overlay, chronicle_screen, pause_menu, settlement_panel]:
+	for screen in [library_screen, faith.menu, requests_panel, rest_overlay, chronicle_screen, pause_menu, settlement_panel, tree_screen]:
 		if screen.visible:
 			return true
 	return false

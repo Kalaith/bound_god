@@ -66,6 +66,10 @@ static func contextual(sim: RefCounted) -> Array:
 		result.append(_say("prompt_no_favour", {}))
 	if sitting != null:
 		result.append(_say("prompt_cultivator", {"name": sitting.given_name}))
+	if sim.tree_growth != null and not sim.tree_growth.history.is_empty():
+		result.append(_say("prompt_tree", {}))
+	if sim.tree_growth != null and int(sim.tree_growth.fruit) > 0:
+		result.append(_say("prompt_fruit", {}))
 	if sim.sects != null and not sim.sects.entries.is_empty():
 		result.append(_say("prompt_sect", {"sect": Sects.name_of(sim.sects.entries[sim.sects.ids()[0]])}))
 	return result
