@@ -12,6 +12,7 @@ const Schedule = preload("res://scripts/agents/schedule.gd")
 const FunctionRules = preload("res://scripts/building/function_rules.gd")
 const Construction = preload("res://scripts/sim/construction.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
+const DeliberationFood = preload("res://scripts/agents/deliberation_food.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -104,6 +105,7 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 		var garden: int = int(ripe[0][0]) if not ripe.is_empty() else int(plots[0][0])
 		var pull: float = minf(0.45 + ripe.size() * 0.1 + (plots.size() * 0.06 if can_plant else 0.0), 1.1) * hungry
 		push.call(Goals.make(Kind.GARDEN, garden), float(culture.gather) * aptitude(agent, Skill.GATHERING) * pull, "reason_garden")
+	DeliberationFood.add(sim, agent, board, culture, aptitude(agent, Skill.GATHERING), aptitude(agent, Skill.CRAFTING), hungry, push)
 	var unknown: int = 0
 	for resource in board.gather_demand:
 		if float(board.gather_demand[resource]) > 0.3 and not agent.beliefs.has_site(JobBoard.SITE_KIND[resource]):
@@ -164,8 +166,23 @@ static func means_believed(sim: RefCounted, agent: RefCounted, template: RefCoun
 	return true
 
 
+## Open sites that need materials brought: a field is tilled from the ground
+## where it lies, so it never keeps builders from a home.
 static func _open_sites(sim: RefCounted, settlement_id: int) -> int:
-	return sim.construction.in_settlement(settlement_id).size()
+	var count: int = 0
+	for id in sim.construction.in_settlement(settlement_id):
+		var template: RefCounted = sim.template(sim.construction.get_site(id).template_id)
+		if template == null or not template.bill.is_empty():
+			count += 1
+	return count
+
+
+## Whether a site for `purpose` is already open in the settlement.
+static func _site_open_for(sim: RefCounted, settlement_id: int, purpose: String) -> bool:
+	for id in sim.construction.in_settlement(settlement_id):
+		if str(sim.construction.get_site(id).purpose) == purpose:
+			return true
+	return false
 
 
 static func _founding(sim: RefCounted, agent: RefCounted) -> bool:
@@ -211,12 +228,14 @@ static func _functions_in(sim: RefCounted, id: int) -> Dictionary:
 static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float, board: Dictionary) -> void:
 	if agent.personality.leadership <= 0.2 and agent.personality.diligence <= 0.3:
 		return
-	if _founding(sim, agent) or _open_sites(sim, agent.settlement_id) >= Balance.integer("construction.max_open_sites"):
+	if _founding(sim, agent):
 		return
+	var busy: bool = _open_sites(sim, agent.settlement_id) >= Balance.integer("construction.max_open_sites")
 	var id: int = agent.settlement_id
 	var wants: Array = []
-	var capacity: int = sim.settlements.capacity(sim, id)
-	if capacity > 0 and sim.settlements.total(id) >= int(capacity * 0.85):
+	# Full chests, not bins: a granary has no room for wood or berries.
+	var capacity: int = sim.settlements.capacity_for(sim, id, "wood")
+	if capacity > 0 and sim.settlements.room_for(sim, id, "wood") <= int(capacity * 0.15):
 		wants.append(["storehouse", "reason_stores_full", 0.9])
 	var have: Dictionary = _functions_in(sim, id)
 	# A new place with no roof at all wants one before anything else.
@@ -230,9 +249,12 @@ static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float
 	var gardens_wanted: int = ceili(float(people) / Balance.number("construction.people_per_garden"))
 	if Standing.food_days(sim, id) < Balance.number("construction.garden_food_days") and int(have.get("garden", 0)) < gardens_wanted:
 		wants.append(["garden", "reason_food_low", 0.8])
+	wants.append_array(DeliberationFood.wants(sim, id, people, have))
 	for want in wants:
 		var design: RefCounted = known_design(sim, agent, want[0])
-		if design == null or not means_believed(sim, agent, design):
+		if design == null or not means_believed(sim, agent, design) or (busy and not design.bill.is_empty()):
+			continue
+		if _site_open_for(sim, id, want[0]):
 			continue
 		var weight: float = 0.5 + maxf(agent.personality.leadership, 0.0)
 		out.append(_candidate(Kind.PROPOSE_PROJECT, base * weight * float(want[2]) / 0.42 * 0.6, want[1], FUNCTIONS.find(want[0])))

@@ -6,11 +6,13 @@ const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Food = preload("res://scripts/sim/food.gd")
+const Standing = preload("res://scripts/sim/standing.gd")
 
 const Op = Plans.Op
 const T = Plans.T
 ## The best food a person believes is in the stores comes first: a meal,
-## then grain, then berries.
+## then grain, then berries; but while grain is being put by for the
+## winter, berries (which rot) are eaten before it.
 const STORE_PLANS: Dictionary = {"meal": ["meal_stores", 0.9], "grain": ["grain_stores", 0.8], "berries": ["raw_stores", 0.7]}
 
 
@@ -26,9 +28,11 @@ static func eat(sim: RefCounted, agent: RefCounted) -> Array:
 	var plans: Array = []
 	if Food.is_food(str(agent.carrying.get("resource", ""))) and agent.carried(agent.carrying.resource) >= 1.0:
 		plans.append(H.option("eat_carried", 1.3, [Plans.step(Op.EAT)]))
+	var keep_grain: bool = Food.putting_by(sim, agent.settlement_id, Standing.present(sim, agent.settlement_id)) if agent.settlement_id >= 0 else false
 	for food in Food.eat_order():
 		if agent.settlement_id >= 0 and agent.beliefs.believes_stock(food, 1):
-			plans.append(H.option(STORE_PLANS[food][0], STORE_PLANS[food][1], H.free_hands(agent, food) + [
+			var preference: float = 0.6 if food == "grain" and keep_grain else float(STORE_PLANS[food][1])
+			plans.append(H.option(STORE_PLANS[food][0], preference, H.free_hands(agent, food) + [
 				Plans.go_to(_store(agent)),
 				Plans.step(Op.TAKE_STOCK, {"resource": food, "amount": 1}),
 				Plans.step(Op.EAT),

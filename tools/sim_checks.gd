@@ -21,6 +21,7 @@ const MODULES: Array[String] = [
 	"res://tools/checks/checks_stores.gd",
 	"res://tools/checks/checks_village.gd",
 	"res://tools/checks/checks_food.gd",
+	"res://tools/checks/checks_farming.gd",
 ]
 
 

@@ -1,7 +1,7 @@
 extends RefCounted
 ## M14 food: berries and meals spoil in the stores, granary bins hold grain,
-## people eat the best food they believe is stored, and older saves load
-## with their food dated.
+## people eat the best food they believe is stored, kitchens make meals, and
+## older saves load with their food dated.
 const Sim = preload("res://scripts/sim/sim.gd")
 const SimState = preload("res://scripts/sim/sim_state.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
@@ -11,6 +11,8 @@ const Spoilage = preload("res://scripts/sim/spoilage.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const Stores = preload("res://tools/checks/stores.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
+const Template = preload("res://scripts/building/template.gd")
+const Data = preload("res://scripts/core/data.gd")
 
 const Need = Personality.Need
 
@@ -152,3 +154,26 @@ func check_the_village_save_loads_through_migration():
 	if int(again.sim.schema_version) != SimState.SCHEMA:
 		return "the migrated world does not save in the current schema"
 	return ""
+
+
+## With a kitchen and grain and berries in the stores, someone fills the pot,
+## cooks, and puts meals in the stores; the first meal is chronicled.
+func check_a_kitchen_turns_grain_and_berries_into_meals():
+	var sim: RefCounted = _flat()
+	var camp: Vector3i = sim.settlements.entries[1].camp
+	var origin := Vector3i(camp.x + 4, 5, camp.z + 4)
+	for block in Template.from_starter(Data.starter("cookhouse")).placement(0):
+		sim.set_block(origin + block[0], block[1], block[2], "test")
+	Stores.fill(sim, 1, {"grain": 6, "berries": 30})
+	for agent in sim.agents:
+		agent.beliefs.stock = sim.settlements.stock_of(1).duplicate()
+	for _i in range(sim.calendar.ticks_per_day):
+		sim.step()
+		if sim.settlements.amount(1, "meal") > 0:
+			break
+	if sim.settlements.amount(1, "meal") <= 0:
+		return "no meals were cooked in a day: %s" % str(sim.agents[0].decisions.slice(0, 6))
+	for entry in sim.chronicle.entries:
+		if entry.kind == "first_meal" and entry.place == sim.settlements.entries[1].name:
+			return ""
+	return "the first meal was not chronicled for the settlement"

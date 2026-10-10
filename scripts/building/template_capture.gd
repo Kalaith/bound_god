@@ -4,6 +4,13 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const Template = preload("res://scripts/building/template.gd")
 
 
+## What a cell holds as part of a design: a crop is what grows in a field,
+## not part of its layout, so it is captured as open air.
+static func _design_block(world: RefCounted, cell: Vector3i) -> int:
+	var block: int = world.get_block(cell)
+	return 0 if Registry.stage_tiles.has(block) else block
+
+
 static func capture(world: RefCounted, a: Vector3i, b: Vector3i, title: String) -> Array:
 	var low: Vector3i = Vector3i(mini(a.x, b.x), mini(a.y, b.y), mini(a.z, b.z))
 	var high: Vector3i = Vector3i(maxi(a.x, b.x), maxi(a.y, b.y), maxi(a.z, b.z))
@@ -21,7 +28,7 @@ static func capture(world: RefCounted, a: Vector3i, b: Vector3i, title: String) 
 		for z in range(low.z, high.z + 1):
 			for x in range(low.x, high.x + 1):
 				var cell := Vector3i(x, y, z)
-				var block: int = world.get_block(cell)
+				var block: int = _design_block(world, cell)
 				if block == 0:
 					continue
 				if Registry.placeable[block] == 0:
@@ -40,7 +47,7 @@ static func capture(world: RefCounted, a: Vector3i, b: Vector3i, title: String) 
 			for x in range(design.size.x):
 				var local := Vector3i(x, y, z)
 				var cell: Vector3i = trimmed_low + local
-				var block_name: String = Registry.block_name(world.get_block(cell))
+				var block_name: String = Registry.block_name(_design_block(world, cell))
 				if not design.palette.has(block_name):
 					design.palette.append(block_name)
 				var index: int = design.index_of(local)

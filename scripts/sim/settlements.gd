@@ -220,6 +220,23 @@ func capacity(sim: RefCounted, id: int) -> int:
 	return sum
 
 
+## Room for `resource` across a settlement's containers (bins only for grain).
+func room_for(sim: RefCounted, id: int, resource: String) -> int:
+	var sum: int = 0
+	for cell in chest_cells(sim, id):
+		sum += chest_room(cell, resource)
+	return sum
+
+
+## What a settlement's containers could hold of `resource` if empty.
+func capacity_for(sim: RefCounted, id: int, resource: String) -> int:
+	var sum: int = 0
+	for cell in chest_cells(sim, id):
+		if not bins.has(cell) or Balance.list("settlements.bin_holds").has(resource):
+			sum += container_capacity(cell)
+	return sum
+
+
 ## Stores into the settlement's chests within reach of `near`, nearest first.
 func add(sim: RefCounted, id: int, resource: String, count: int, near: Vector3i) -> int:
 	if not entries.has(id) or count <= 0:

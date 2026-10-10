@@ -8,7 +8,10 @@
 		{"id": "shrine", "requires": {"altar": 1}, "requires_any": [], "roofed": [], "roof_reach": 4, "sky_or_tree_within": 3, "capacity": {}},
 		{"id": "shelter", "requires": {}, "requires_any": ["hearth", "bed"], "roofed": [], "roof_reach": 4, "min_roofed_floor": 6, "capacity": {"sleepers": "roofed_floor"}},
 		{"id": "hall", "requires": {"table": 1, "bench": 2}, "requires_any": [], "roofed": ["table"], "roof_reach": 4, "min_roofed_floor": 12, "capacity": {"seats": "bench"}},
-		{"id": "garden", "requires": {"planter": 4}, "requires_any": [], "roofed": [], "roof_reach": 4, "capacity": {"plots": "planter"}}
+		{"id": "garden", "requires": {"planter": 4}, "requires_any": [], "roofed": [], "roof_reach": 4, "capacity": {"plots": "planter"}},
+		{"id": "field", "requires": {"farmland": 6}, "requires_any": [], "roofed": [], "open_sky": ["farmland"], "roof_reach": 4, "capacity": {"furrows": "farmland"}},
+		{"id": "kitchen", "requires": {"hearth": 1}, "requires_any": ["workbench", "chest"], "roofed": ["hearth"], "roof_reach": 4, "capacity": {"cooks": "hearth"}},
+		{"id": "granary", "requires": {"granary_bin": 2, "door": 1}, "requires_any": [], "roofed": ["granary_bin"], "roof_reach": 4, "capacity": {"grain": "granary_bin"}}
 	],
 	"starters": [
 		{
@@ -86,6 +89,43 @@
 			"layers": [
 				["FF.FFF", "FRRRRF", "FRRRRF", "FFFFFF"],
 				["......", ".Y..Y.", "..YY..", "......"]
+			]
+		},
+		{
+			"id": "field_plot",
+			"name": "Field Plot",
+			"author": "valley folk",
+			"legend": {".": "air", "F": "farmland"},
+			"entrance": [0, 0, 0],
+			"meta": {},
+			"layers": [
+				["FFFFFF", "FFFFFF", "FFFFFF", "FFFFFF"]
+			]
+		},
+		{
+			"id": "granary",
+			"name": "Granary",
+			"author": "valley folk",
+			"legend": {".": "air", "P": "planks", "L": "log", "D": "door", "G": "granary_bin", "T": "thatch"},
+			"entrance": [2, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPDPL", "P...P", "PG.GP", "LPPPL"],
+				["LPDPL", "P...P", "P...P", "LPPPL"],
+				["TTTTT", "TTTTT", "TTTTT", "TTTTT"]
+			]
+		},
+		{
+			"id": "cookhouse",
+			"name": "Cookhouse",
+			"author": "valley folk",
+			"legend": {".": "air", "P": "planks", "L": "log", "H": "hearth", "W": "workbench", "T": "thatch"},
+			"entrance": [1, 0, 3],
+			"meta": {},
+			"layers": [
+				["LPPL", "PHWP", "P..P", "L..L"],
+				["LPPL", "P..P", "P..P", "L..L"],
+				["TTTT", "TTTT", "TTTT", "TTTT"]
 			]
 		},
 		{

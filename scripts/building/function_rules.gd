@@ -7,7 +7,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 
 ## Every function a structure can have, in a fixed order: goal targets and
 ## saved proposals refer to a function by its index here, so only append.
-const FUNCTIONS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden"]
+const FUNCTIONS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary"]
 
 
 static func evaluate(world: RefCounted, cells: Dictionary) -> Dictionary:
@@ -33,6 +33,10 @@ static func evaluate(world: RefCounted, cells: Dictionary) -> Dictionary:
 		for kind in rule.roofed:
 			for cell in components.get(kind, []):
 				valid = valid and world.is_roofed(cell, int(rule.roof_reach))
+		# A field grows under the open sky: nothing solid over any of its ground.
+		for kind in rule.get("open_sky", []):
+			for cell in components.get(kind, []):
+				valid = valid and world.sees_sky(cell)
 		var floor_count: int = 0
 		if rule.has("min_roofed_floor"):
 			for cell in cells:
@@ -54,6 +58,8 @@ static func evaluate(world: RefCounted, cells: Dictionary) -> Dictionary:
 			var count: int = floor_count if source == "roofed_floor" else components.get(source, []).size()
 			if key == "stock":
 				count *= int(Balance.number("settlements.chest_capacity"))
+			if key == "grain":
+				count *= int(Balance.number("settlements.bin_capacity"))
 			if key == "workers":
 				count = mini(count, 1)
 			capacity[key] = count

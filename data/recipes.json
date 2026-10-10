@@ -1,0 +1,13 @@
+{
+	"schema_version": 1,
+	"recipes": [
+		{
+			"id": "meal",
+			"station": "kitchen",
+			"inputs": {"grain": 1, "berries": 1},
+			"outputs": {"meal": 2},
+			"ticks": 12,
+			"skill": "crafting"
+		}
+	]
+}

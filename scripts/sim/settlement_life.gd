@@ -90,6 +90,7 @@ func _drift(sim: RefCounted, settlement: Dictionary) -> void:
 		"haul": 0.8 + minf(board_now.get("items", []).size() / 4.0, 1.0) * 0.5,
 		"defend": 0.8 + (0.6 if not board_now.get("threats", []).is_empty() else 0.0),
 		"scout": 0.9,
+		"farm": 0.8 + (0.4 if not board_now.get("fields", []).is_empty() else 0.0) + (0.5 if Standing.fear_of_winter(sim, settlement.id) else 0.0),
 	}
 	var tally: Dictionary = samples.get(settlement.id, {})
 	var total: int = 0

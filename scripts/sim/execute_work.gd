@@ -6,6 +6,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const ExecuteBuild = preload("res://scripts/sim/execute_build.gd")
+const ExecuteFood = preload("res://scripts/sim/execute_food.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail
@@ -63,7 +64,8 @@ static func _harvest(sim: RefCounted, agent: RefCounted, step: Dictionary, step_
 	var site: Dictionary = sim.sites.get_site(int(step.site))
 	if site.is_empty():
 		return Fail.DEPLETED
-	var resource: String = sim.sites.resource_of(int(step.site))
+	# Wild grass can be shaken for its seed instead of cut for thatch.
+	var resource: String = str(step.get("as", sim.sites.resource_of(int(step.site))))
 	agent.activity = "working"
 	if agent.step_result.has("got"):
 		var got: int = int(agent.step_result.got)
@@ -76,12 +78,13 @@ static func _harvest(sim: RefCounted, agent: RefCounted, step: Dictionary, step_
 	if agent.step_result.get("pending", false):
 		return Plans.RUNNING
 	var skill: int = Skill.GATHERING
-	var base: float = float(Balance.dict("work.harvest_ticks_per_block")[resource])
+	# Work goes at the pace of the site's own yield (seed is shaken from grass).
+	var base: float = float(Balance.dict("work.harvest_ticks_per_block")[sim.sites.resource_of(int(step.site))])
 	var work: int = maxi(2, int(base / Personality.speed(agent, skill)))
 	Personality.practise(agent, skill)
 	if step_ticks % (work + 1) == work:
 		agent.step_result["pending"] = true
-		sim.effects.action("harvest", agent.id, {"site": int(step.site)})
+		sim.effects.action("harvest", agent.id, {"site": int(step.site), "as": str(step.get("as", ""))})
 	return Plans.RUNNING
 
 
@@ -124,4 +127,6 @@ static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks
 			return _pick_up(sim, agent, step, step_ticks)
 		Op.PLANT:
 			return _plant(sim, agent, step, step_ticks)
+		Op.SOW, Op.REAP, Op.TEND_CROPS, Op.ADD_TO_POT, Op.COOK:
+			return ExecuteFood.run(sim, agent, step, step_ticks)
 	return ExecuteBuild.run(sim, agent, step, step_ticks)

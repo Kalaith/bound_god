@@ -73,6 +73,23 @@ static func food_from_3(state: Dictionary, settlements: Dictionary) -> Dictionar
 				lots[cell] = held
 	result["bins"] = {}
 	result["lots"] = lots
+	# Farming became a kind of work people's culture weighs.
+	for id in result.entries:
+		result.entries[id].culture["farm"] = 1.0
 	for id in state.items:
 		state.items[id]["day"] = day
 	return result
+
+
+## Before schema 4 nothing was sown.
+static func crops(state: Dictionary) -> Dictionary:
+	if int(state.schema_version) < 4:
+		return {"plots": {}}
+	return state.crops
+
+
+## Before schema 4 nobody cooked.
+static func kitchens(state: Dictionary) -> Dictionary:
+	if int(state.schema_version) < 4:
+		return {"pots": {}, "places": {}}
+	return state.kitchens

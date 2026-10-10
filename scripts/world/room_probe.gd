@@ -6,8 +6,11 @@ const DIRECTIONS: Array[Vector3i] = [Vector3i.LEFT, Vector3i.RIGHT, Vector3i.UP,
 ## Furniture: components a room holds and the probe passes through.
 const FURNITURE: Array[String] = ["bed", "chest", "hearth", "workbench", "altar", "table", "bench", "lantern", "granary_bin"]
 ## Components a structure is found from: furniture that gives a room its use,
-## and planters, whose connected beds make a garden under the open sky.
-const ANCHORS: Array[String] = ["bed", "chest", "altar", "hearth", "workbench", "table", "planter"]
+## and planters and farmland, whose connected beds make a garden or a field
+## under the open sky.
+const ANCHORS: Array[String] = ["bed", "chest", "altar", "hearth", "workbench", "table", "planter", "farmland", "granary_bin"]
+## Bed components: probed as connected beds, not as rooms.
+const BEDS: Array[String] = ["planter", "farmland"]
 
 
 static func permeable(world: RefCounted, cell: Vector3i) -> bool:
@@ -17,7 +20,7 @@ static func permeable(world: RefCounted, cell: Vector3i) -> bool:
 
 
 static func probe(world: RefCounted, seed: Vector3i) -> Dictionary:
-	if Registry.component(world.get_block(seed)) == "planter":
+	if Registry.component(world.get_block(seed)) in BEDS:
 		return beds(world, seed)
 	var limits: Array = Data.template_limits().max_size
 	var limit := Vector3i(int(limits[0]), int(limits[1]), int(limits[2]))
@@ -73,10 +76,11 @@ static func probe(world: RefCounted, seed: Vector3i) -> Dictionary:
 	return {"closed": closed, "inside": inside, "cells": cells}
 
 
-## A garden: the planters joined side by side (or a step up or down) to the
-## seed. Its inside is the planters and the cell above each, where a bush
-## grows, so no planter of it seeds a second garden.
+## A garden or a field: the planters (or farmland) joined side by side (or a
+## step up or down) to the seed. Its inside is the beds and the cell above
+## each, where a bush or a crop grows, so no bed of it seeds a second one.
 static func beds(world: RefCounted, seed: Vector3i) -> Dictionary:
+	var kind: String = Registry.component(world.get_block(seed))
 	var limits: Array = Data.template_limits().max_size
 	var limit := Vector3i(int(limits[0]), int(limits[1]), int(limits[2]))
 	var planters: Dictionary = {seed: true}
@@ -88,7 +92,7 @@ static func beds(world: RefCounted, seed: Vector3i) -> Dictionary:
 		for direction in [Vector3i.LEFT, Vector3i.RIGHT, Vector3i.FORWARD, Vector3i.BACK]:
 			for dy in [0, 1, -1]:
 				var other: Vector3i = cell + direction + Vector3i(0, dy, 0)
-				if planters.has(other) or Registry.component(world.get_block(other)) != "planter":
+				if planters.has(other) or Registry.component(world.get_block(other)) != kind:
 					continue
 				if absi(other.x - seed.x) >= limit.x or absi(other.z - seed.z) >= limit.z:
 					continue

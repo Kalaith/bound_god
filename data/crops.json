@@ -1,0 +1,17 @@
+{
+	"schema_version": 1,
+	"crops": [
+		{
+			"id": "grain",
+			"block": "crop",
+			"stages": 4,
+			"days_per_stage": 3,
+			"seasons": ["spring", "summer", "autumn"],
+			"sow_seasons": ["spring", "summer"],
+			"harvest": "grain",
+			"yield": 5,
+			"seed": "seed",
+			"seed_return": 1
+		}
+	]
+}

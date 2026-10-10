@@ -125,7 +125,8 @@ static func _repair(sim: RefCounted, agent: RefCounted, step: Dictionary, step_t
 	var missing: Array = sim.settlement_life.missing_blocks(sim, structure)
 	var usable: Array = []
 	for entry in missing:
-		if agent.carried(Registry.resource(entry[1])) >= 1.0:
+		var resource: String = Registry.build_resource(entry[1])
+		if resource.is_empty() or agent.carried(resource) >= 1.0:
 			usable = entry
 			break
 	if usable.is_empty():

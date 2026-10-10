@@ -90,7 +90,7 @@ func compute_bill() -> void:
 	bill = {}
 	for index in range(cells.size()):
 		var block: int = Registry.id(palette[cells[index]])
-		var resource: String = Registry.resource(block)
+		var resource: String = Registry.build_resource(block)
 		if block == 0 or resource.is_empty():
 			continue
 		bill[resource] = int(bill.get(resource, 0)) + 1

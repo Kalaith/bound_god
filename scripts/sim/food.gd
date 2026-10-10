@@ -30,3 +30,20 @@ static func worth(goods: Dictionary) -> float:
 ## What one person eats in a day, in units of the Food need.
 static func daily_need() -> float:
 	return float(Balance.dict("needs.decay_per_day").food)
+
+
+
+## Whether a settlement is still putting grain by for the winter: outside
+## winter, while its grain would not feed everyone for some days. Grain
+## keeps and berries do not, so until then people eat the berries first.
+static func putting_by(sim: RefCounted, id: int, people: int) -> bool:
+	if id < 0 or sim.calendar.is_winter():
+		return false
+	var reserve: float = people * Balance.number("food.grain_reserve_days") * daily_need() / value("grain")
+	return sim.settlements.amount(id, "grain") < reserve
+
+
+## Meals a settlement wants in its stores: about a day's worth, since they
+## keep only a few days.
+static func meals_wanted(people: int) -> int:
+	return ceili(people * Balance.number("food.meals_per_person"))

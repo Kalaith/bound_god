@@ -4,6 +4,7 @@ extends RefCounted
 ## haul and threats near home. Nothing on it is assigned; people read it.
 const Balance = preload("res://scripts/core/balance.gd")
 const Food = preload("res://scripts/sim/food.gd")
+const Crops = preload("res://scripts/sim/crops.gd")
 
 const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore"]
 const SITE_KIND: Dictionary = {"wood": "tree", "stone": "rock", "thatch": "grass", "berries": "bush", "ore": "ore"}
@@ -22,13 +23,16 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 		for resource in missing:
 			site_need[resource] = int(site_need.get(resource, 0)) + int(missing[resource])
 	var loose: Dictionary = {}
-	# Loose goods are worth hauling only when a chest has room for them.
-	var room: bool = sim.settlements.capacity(sim, id) > sim.settlements.total(id)
+	# Loose goods are worth hauling only when a chest has room for them (a
+	# granary bin has room only for grain).
+	var room: Dictionary = {}
 	for item_id in _sorted(sim.items.keys()):
 		var item: Dictionary = sim.items[item_id]
 		if _distance(item.cell, settlement.center) <= float(settlement.radius):
 			board.loose.append(item_id)
-			if room:
+			if not room.has(item.resource):
+				room[item.resource] = sim.settlements.room_for(sim, id, item.resource) > 0
+			if room[item.resource]:
 				board.items.append(item_id)
 			loose[item.resource] = float(loose.get(item.resource, 0.0)) + float(item.amount)
 	var residents: int = settlement.residents.size()
@@ -52,7 +56,46 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 	board["housing_deficit"] = housing_deficit(sim, id)
 	board["plots"] = plots(sim, id)
 	board["ripe"] = ripe(sim, id)
+	board["fields"] = fields(sim, id)
+	board["kitchens"] = kitchens(sim, id)
 	return board
+
+
+## The settlement's kitchens by structure id, in id order.
+static func kitchens(sim: RefCounted, id: int) -> Array:
+	var result: Array = []
+	for entry in sim.structures.built():
+		if entry.functions.has("kitchen") and sim.settlements.at_cell(entry.anchor) == id:
+			result.append(int(entry.id))
+	return result
+
+
+## Fields with work in them, by structure id: {id, ripe, tend, sow}, each a
+## few crop cells in a stable order. Sowing is listed only while a crop sown
+## now would ripen before winter.
+static func fields(sim: RefCounted, id: int) -> Array:
+	var result: Array = []
+	var most: int = Balance.integer("farming.board_cells")
+	var sowing: bool = Crops.can_sow(sim, Crops.staple())
+	for entry in sim.structures.built():
+		if not entry.functions.has("field") or sim.settlements.at_cell(entry.anchor) != id:
+			continue
+		var cells: Array = entry.components.get("farmland", []).duplicate()
+		cells.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return [a.y, a.z, a.x] < [b.y, b.z, b.x])
+		var work: Dictionary = {"id": int(entry.id), "ripe": [], "tend": [], "sow": [], "size": cells.size()}
+		for ground in cells:
+			var cell: Vector3i = ground + Vector3i.UP
+			if sim.crops.is_ripe(sim, cell):
+				if work.ripe.size() < most:
+					work.ripe.append(cell)
+			elif sim.crops.needs_tending(sim, cell):
+				if work.tend.size() < most:
+					work.tend.append(cell)
+			elif sowing and work.sow.size() < most and Crops.open_plot(sim, cell):
+				work.sow.append(cell)
+		if not work.ripe.is_empty() or not work.tend.is_empty() or not work.sow.is_empty():
+			result.append(work)
+	return result
 
 
 ## Garden bushes worth picking: [garden id, bush site id], a few at most.

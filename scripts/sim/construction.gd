@@ -103,7 +103,7 @@ static func stone_is_walling(template: RefCounted) -> bool:
 
 
 static func resource_for(block: int) -> String:
-	return Registry.resource(block) if block != 0 else ""
+	return Registry.build_resource(block) if block != 0 else ""
 
 
 ## Materials still needed beyond what has been delivered: resource -> int.

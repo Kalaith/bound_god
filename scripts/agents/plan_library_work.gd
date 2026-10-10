@@ -81,8 +81,8 @@ static func _garden(sim: RefCounted, agent: RefCounted, garden_id: int) -> Array
 
 
 ## A walkable cell within reach of a plot, nearest `from`: off the planters
-## if possible (a fenced garden is worked from outside its fence), otherwise
-## on another planter, never on the plot itself.
+## and farmland if possible (a fenced garden is worked from outside its
+## fence), otherwise on another bed, never on the plot itself.
 static func plot_stand(sim: RefCounted, plot: Vector3i, from: Vector3i) -> Vector3i:
 	var reach: float = Balance.number("agents.reach")
 	var best: Vector3i = Vector3i(-1, -1, -1)
@@ -93,7 +93,7 @@ static func plot_stand(sim: RefCounted, plot: Vector3i, from: Vector3i) -> Vecto
 				var cell: Vector3i = plot + Vector3i(dx, dy, dz)
 				if cell == plot or not sim.nav.is_walkable(cell) or Vector3(cell).distance_to(Vector3(plot)) > reach:
 					continue
-				var on_planter: bool = Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter"
+				var on_planter: bool = Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) in ["planter", "farmland"]
 				var score: float = Vector3(cell).distance_to(Vector3(from)) + (100.0 if on_planter else 0.0)
 				if score < best_score:
 					best = cell
@@ -186,10 +186,13 @@ static func _repair(sim: RefCounted, agent: RefCounted, structure_id: int) -> Ar
 	var missing: Array = sim.settlement_life.missing_blocks(sim, structure_id)
 	if missing.is_empty():
 		return []
-	var resource: String = Registry.resource(missing[0][1])
+	var resource: String = Registry.build_resource(missing[0][1])
 	var go := Plans.go_to(Plans.target(T.STRUCTURE, structure_id))
 	var mend := Plans.step(Op.REPAIR_BLOCK, {"structure": structure_id})
 	var result: Array = []
+	# Tilled ground is mended by hand, with nothing to fetch.
+	if resource.is_empty():
+		return [H.option("repair_by_hand", 1.2, [go, mend])]
 	if agent.carried(resource) >= 1.0:
 		result.append(H.option("repair_carried", 1.1, [go, mend]))
 	if agent.beliefs.believes_stock(resource):

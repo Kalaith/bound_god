@@ -103,7 +103,7 @@ static func _place(sim: RefCounted, agent: RefCounted, action: Dictionary) -> vo
 		agent.step_result = {"placed": 0, "blocked": true, "waits": work}
 		return
 	var current: int = sim.voxels.get_block(cell)
-	var resource: String = Registry.resource(block) if block != 0 else ""
+	var resource: String = Registry.build_resource(block) if block != 0 else ""
 	var clearable: bool = current == 0 or current == Registry.id("tall_grass") or current == block
 	if not clearable:
 		# Something else took the cell; skip it and say so.
@@ -161,15 +161,16 @@ static func _complete(sim: RefCounted, site: Dictionary) -> void:
 static func _repair(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
 	var cell: Vector3i = action.cell
 	var block: int = int(action.block)
-	var resource: String = Registry.resource(block)
+	var resource: String = Registry.build_resource(block)
 	var current: int = sim.voxels.get_block(cell)
 	var clear: bool = current == 0 or (bool(action.get("rubble", false)) and (current == Registry.id("cobble") or current == Registry.id("tall_grass")))
-	if not clear or agent.carried(resource) < 1.0 or sim.is_occupied(cell):
+	if not clear or (not resource.is_empty() and agent.carried(resource) < 1.0) or sim.is_occupied(cell):
 		agent.step_result = {"repaired": 0}
 		return
 	sim.set_block(cell, block, int(action.meta), "npc:%d" % agent.id)
-	var left: float = float(agent.carrying.amount) - 1.0
-	agent.carrying = {"resource": resource, "amount": left} if left > 0.05 else {}
+	if not resource.is_empty():
+		var left: float = float(agent.carrying.amount) - 1.0
+		agent.carrying = {"resource": resource, "amount": left} if left > 0.05 else {}
 	agent.stats.blocks_placed += 1
 	Personality.practise(agent, Personality.Skill.CONSTRUCTION, 4.0)
 	agent.step_result = {"repaired": 1}

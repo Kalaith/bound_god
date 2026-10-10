@@ -1,8 +1,8 @@
 extends RefCounted
 ## Every hand-edited catalog, read once from data/*.json into a static cache.
 ## Balance numbers stay in balance.gd; this file owns blocks, people, society,
-## templates, miracles and text. Catalog shape is checked by validation.gd at
-## startup; lookups by an unknown id return an empty Dictionary.
+## templates, miracles, crops, recipes and text. Catalog shape is checked by
+## validation.gd at startup; lookups by an unknown id return an empty Dictionary.
 
 const FILES: Dictionary = {
 	"blocks": "res://data/blocks.json",
@@ -10,6 +10,8 @@ const FILES: Dictionary = {
 	"society": "res://data/society.json",
 	"templates": "res://data/templates.json",
 	"miracles": "res://data/miracles.json",
+	"crops": "res://data/crops.json",
+	"recipes": "res://data/recipes.json",
 	"text": "res://data/text.json",
 	"text_agents": "res://data/text_agents.json",
 	"text_ui": "res://data/text_ui.json",
@@ -164,6 +166,21 @@ static func miracle(id: String) -> Dictionary:
 		for entry in miracles():
 			_miracles[entry.id] = entry
 	return _miracles.get(id, {})
+
+
+static func crops() -> Array:
+	return file("crops").get("crops", [])
+
+
+static func crop(id: String) -> Dictionary:
+	for entry in crops():
+		if entry.get("id") == id:
+			return entry
+	return {}
+
+
+static func recipes() -> Array:
+	return file("recipes").get("recipes", [])
 
 
 static func aspects() -> Array:

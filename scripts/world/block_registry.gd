@@ -113,6 +113,15 @@ static func resource(block: int) -> String:
 	return resources[block]
 
 
+## What a builder must bring to lay a block. Farmland is tilled from the
+## ground it stands on, so it costs a builder nothing (the god still spends
+## soil placing it by hand).
+static func build_resource(block: int) -> String:
+	if components[block] == "farmland":
+		return ""
+	return resources[block]
+
+
 static func block_name(block: int) -> String:
 	return names[block]
 

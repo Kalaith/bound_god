@@ -4,6 +4,7 @@ extends RefCounted
 ## shipped files. An empty result means the data is sound.
 const Data = preload("res://scripts/core/data.gd")
 const Balance = preload("res://scripts/core/balance.gd")
+const ValidationFood = preload("res://scripts/core/validation_food.gd")
 
 ## Code records these thoughts by id, so the catalog must hold them.
 const REQUIRED_THOUGHTS: Array[String] = [
@@ -26,10 +27,10 @@ const AMBITION_KINDS: Array[String] = [
 ## Miracle effects that sim/miracles.gd implements; the catalog may not name others.
 const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend"]
 ## Kept in step with FunctionRules.FUNCTIONS (not preloaded: the rules load data).
-const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden"]
+const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary"]
 const BALANCE_SECTIONS: Array[String] = [
 	"time", "needs", "agents", "social", "mood", "health", "work", "construction", "world",
-	"settlements", "food", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
+	"settlements", "food", "farming", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
 ]
 
 
@@ -43,6 +44,8 @@ static func run() -> Array[String]:
 	errors.append_array(check_society(Data.file("society")))
 	errors.append_array(check_templates(Data.file("templates"), Data.file("blocks")))
 	errors.append_array(check_miracles(Data.file("miracles")))
+	errors.append_array(ValidationFood.check_crops(Data.file("crops"), Data.file("blocks")))
+	errors.append_array(ValidationFood.check_recipes(Data.file("recipes"), Data.file("blocks"), Data.file("people").get("skills", []), FUNCTION_IDS))
 	errors.append_array(check_balance(Balance.data()))
 	var seen: Dictionary = {}
 	for name in Data.TEXT_FILES:
@@ -213,11 +216,11 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 				errors.append("templates: component count must be positive")
 			if not components.has(key):
 				errors.append("templates: " + rule.id + " requires unknown component " + key)
-		for key in rule.get("requires_any", []) + rule.get("roofed", []):
+		for key in rule.get("requires_any", []) + rule.get("roofed", []) + rule.get("open_sky", []):
 			if not components.has(key):
 				errors.append("templates: " + rule.id + " names unknown component " + str(key))
 		for key in rule.capacity:
-			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
+			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots", "furrows", "cooks", "grain"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
 				errors.append("templates: unknown capacity mapping")
 		for key in ["sky_or_tree_within", "min_roofed_floor"]:
 			if rule.has(key) and (not _number(rule[key]) or float(rule[key]) < 0):

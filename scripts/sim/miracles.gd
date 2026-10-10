@@ -133,6 +133,7 @@ static func _bless_growth(sim: RefCounted, cell: Vector3i, radius: float) -> Dic
 		if Vector2(at.x - cell.x, at.z - cell.z).length() <= radius and sim.voxels.get_block(at) == bush and sim.voxels.block_meta(at) < most:
 			sim.set_block(at, bush, most, "god")
 			ripened += 1
+	ripened += sim.crops.bless(sim, cell, radius)
 	if ripened > 0:
 		return {"ok": true, "reason": "miracle_blessed"}
 	if _sprout_bushes(sim, cell, radius, bush, most) > 0:

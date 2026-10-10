@@ -9,6 +9,7 @@ const Beliefs = preload("res://scripts/agents/beliefs.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Social = preload("res://scripts/sim/social.gd")
 const EffectsBuild = preload("res://scripts/sim/effects_build.gd")
+const EffectsFood = preload("res://scripts/sim/effects_food.gd")
 const Text = preload("res://scripts/core/text.gd")
 
 const Need = Personality.Need
@@ -55,7 +56,8 @@ static func apply(sim: RefCounted) -> void:
 			"settle":
 				_settle(sim, agent, int(action.ground))
 			_:
-				EffectsBuild.apply(sim, agent, action)
+				if not EffectsFood.apply(sim, agent, action):
+					EffectsBuild.apply(sim, agent, action)
 	for entry in effects.interactions:
 		Social.resolve(sim, entry)
 	for message in effects.messages:
@@ -122,6 +124,9 @@ static func _harvest(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 		agent.step_result = {"got": 0}
 		return
 	var resource: String = sim.sites.resource_of(id)
+	# Grass shaken for its seed gives seed, as much as it would give thatch.
+	if site.kind == "grass" and not str(action.get("as", "")).is_empty():
+		resource = str(action.as)
 	if not agent.carrying.is_empty() and agent.carrying.resource != resource:
 		agent.step_result = {"got": 0}
 		return

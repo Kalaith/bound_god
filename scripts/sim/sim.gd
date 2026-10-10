@@ -31,6 +31,8 @@ const Faith = preload("res://scripts/sim/faith.gd")
 const Requests = preload("res://scripts/sim/requests.gd")
 const Threats = preload("res://scripts/sim/threats.gd")
 const Raids = preload("res://scripts/sim/raids.gd")
+const Crops = preload("res://scripts/sim/crops.gd")
+const Kitchens = preload("res://scripts/sim/kitchens.gd")
 
 var world_seed: int = 1
 ## How this world was made (world kind, size); saved so a load regenerates it.
@@ -66,6 +68,8 @@ var threats: RefCounted = null
 var raids: RefCounted = null
 var settlement_life: RefCounted = null
 var construction: RefCounted = null
+var crops: RefCounted = null
+var kitchens: RefCounted = null
 ## Kindled cells (miracle): Array of {cell, radius, until}.
 var kindled: Array = []
 ## Veils of fog (miracle): Array of {cell, radius, until}.
@@ -121,6 +125,8 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	settlements.today = calendar.day()
 	chronicle = Chronicle.new()
 	construction = Construction.new()
+	crops = Crops.new()
+	kitchens = Kitchens.new()
 	settlement_life = SettlementLife.new()
 	director = Director.new()
 	_events_seen = structures.events.size()
@@ -165,6 +171,7 @@ func set_block(cell: Vector3i, block: int, meta: int = 0, source: String = "") -
 	sites.on_block_changed(cell, old, block, voxels)
 	if old != block:
 		settlements.on_block(self, cell, old, block)
+		crops.on_block(cell, block)
 		if Registry.component(block) == "lantern":
 			lanterns[cell] = true
 		elif lanterns.has(cell):
@@ -370,7 +377,7 @@ func state_hash() -> int:
 	var people: Array = []
 	for agent in agents:
 		people.append(agent.to_dict())
-	var state: Array = [calendar.tick, rng.state, people, settlements.to_dict(), sites.to_dict(), items,
+	var state: Array = [calendar.tick, rng.state, people, settlements.to_dict(), sites.to_dict(), items, crops.to_dict(), kitchens.to_dict(),
 		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state()]
 	return hash(var_to_bytes(state))
 

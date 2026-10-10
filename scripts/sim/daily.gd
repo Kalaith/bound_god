@@ -12,6 +12,8 @@ static func new_day(sim: RefCounted) -> void:
 	var now: int = sim.calendar.tick
 	var day_ticks: int = sim.calendar.ticks_per_day
 	Spoilage.daily(sim)
+	sim.crops.daily(sim)
+	sim.kitchens.daily(sim)
 	var decay: float = Balance.number("social.opinion_decay_per_day")
 	for agent in sim.agents:
 		if not agent.is_present():

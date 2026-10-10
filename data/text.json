@@ -99,6 +99,9 @@
     "function_shelter": "Shelter",
     "function_hall": "Hall",
     "function_garden": "Garden",
+    "function_field": "Field",
+    "function_kitchen": "Kitchen",
+    "function_granary": "Granary",
     "function_unrecognised": "Unrecognised",
     "capacity_beds": "beds",
     "capacity_stock": "storage units",
@@ -135,6 +138,9 @@
     "function_help_shelter": "Shelter: a hearth or a bed and at least 6 blocks of roofed floor. Cover for the night.",
     "function_help_hall": "Hall: a table and two benches under a roof, with at least 12 blocks of roofed floor. Neighbours gather there and rest twice as fast.",
     "function_help_garden": "Garden: four or more planters side by side. Bushes in planters ripen twice as fast and still bear in winter; people plant berries in empty planters.",
+    "function_help_field": "Field: six or more farmland blocks side by side under the open sky. People sow seed in spring and summer, weed it, and reap the grain when it ripens; frost kills what is left standing in winter.",
+    "function_help_kitchen": "Kitchen: a hearth under a roof, with a workbench or a chest as a worktop. People cook grain and berries into meals, which feed best but keep only three days.",
+    "function_help_granary": "Granary: two or more granary bins under a roof, with a door. Each bin holds 80 grain and nothing else.",
     "function_help_lantern": "Lanterns: wolves will not walk into their light, people see far by them at night, and two in a settlement make it feel safe to newcomers."
   }
 }
