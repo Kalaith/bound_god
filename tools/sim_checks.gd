@@ -24,6 +24,7 @@ const MODULES: Array[String] = [
 	"res://tools/checks/checks_food.gd",
 	"res://tools/checks/checks_farming.gd",
 	"res://tools/checks/checks_woods.gd",
+	"res://tools/checks/checks_abstract.gd",
 	"res://tools/checks/checks_campaign.gd",
 ]
 
