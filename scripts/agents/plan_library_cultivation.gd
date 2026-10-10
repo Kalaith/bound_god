@@ -1,0 +1,44 @@
+extends RefCounted
+## Cultivation plans: sit in the densest qi to hand (or where one stands),
+## ask a teacher and wait to be taught, go and teach a student who asked,
+## and gather one's students under the tree to found a sect.
+const Balance = preload("res://scripts/core/balance.gd")
+const Goals = preload("res://scripts/agents/goals.gd")
+const Plans = preload("res://scripts/agents/plans.gd")
+const H = preload("res://scripts/agents/plan_helpers.gd")
+const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
+
+const Kind = Goals.Kind
+const Op = Plans.Op
+const T = Plans.T
+
+
+static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array:
+	var sit: int = Balance.integer("cultivation.sit_ticks")
+	match int(goal.kind):
+		Kind.CULTIVATE:
+			var result: Array = []
+			var spot: Vector3i = DeliberationCultivation.spot(sim, agent)
+			if spot.x >= 0:
+				result.append(H.option("meditate_in_qi", 1.0, [Plans.go_cell(spot), Plans.step(Op.CULTIVATE, {"ticks": sit})]))
+			result.append(H.option("meditate_here", 0.2, [Plans.step(Op.CULTIVATE, {"ticks": sit / 2})]))
+			return result
+		Kind.LEARN:
+			var teacher: int = int(goal.target)
+			return [H.option("ask_to_learn", 1.0, [
+				Plans.go_to(Plans.target(T.AGENT, teacher)),
+				Plans.step(Op.SEND, {"to": teacher, "kind": "request_help", "need": Goals.HelpNeed.TEACHING}),
+				Plans.step(Op.WAIT_TO_LEARN, {"with": teacher, "ticks": Balance.integer("agents.help_wait_ticks") + Balance.integer("cultivation.teach_ticks") * 2}),
+			])]
+		Kind.TEACH:
+			var student: int = int(goal.target)
+			return [H.option("teach_student", 1.0, [
+				Plans.go_to(Plans.target(T.AGENT, student)),
+				Plans.step(Op.TEACH, {"to": student, "ticks": Balance.integer("cultivation.teach_ticks")}),
+			])]
+		Kind.FOUND_SECT:
+			var spot: Vector3i = DeliberationCultivation.spot(sim, agent)
+			var steps: Array = [Plans.go_cell(spot)] if spot.x >= 0 else []
+			steps.append(Plans.step(Op.PROCLAIM, {"ticks": Balance.integer("cultivation.proclaim_ticks")}))
+			return [H.option("proclaim_sect", 1.0, steps)]
+	return []

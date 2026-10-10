@@ -45,9 +45,24 @@ static func receive(sim: RefCounted, agent: RefCounted, message: Dictionary) -> 
 	return false
 
 
-static func _willing(agent: RefCounted, from: int, need: int) -> bool:
+static func _willing(agent: RefCounted, from: int, need: int, asker: RefCounted = null) -> bool:
+	# A student asking again renews a promise to teach not yet kept.
+	if need == Goals.HelpNeed.TEACHING and int(agent.help_task.get("requester", -1)) == from and int(agent.help_task.get("need", -1)) == need:
+		return true
 	if not agent.help_task.is_empty() or agent.is_child:
 		return false
+	# Only someone who knows a technique the asker lacks can teach.
+	if need == Goals.HelpNeed.TEACHING:
+		if asker == null or int(agent.cultivation.get("realm", 0)) < 1:
+			return false
+		var lacks: bool = false
+		for id in agent.cultivation.techniques:
+			lacks = lacks or not asker.cultivation.techniques.has(id)
+		if not lacks:
+			return false
+		# The Way is passed on more freely than bread: a stranger who asks is
+		# taught unless the teacher dislikes them or is unkind.
+		return agent.beliefs.opinion_of(from) + 20.0 + agent.personality.kindness * 20.0 > 0.0
 	if agent.need(Personality.Need.FOOD) < 30.0 or agent.needs_care(Balance.number("health.care_threshold")):
 		return false
 	var bonus: float = 0.0
@@ -62,7 +77,7 @@ static func _willing(agent: RefCounted, from: int, need: int) -> bool:
 static func _request(sim: RefCounted, agent: RefCounted, message: Dictionary) -> void:
 	var from: int = int(message.from)
 	var need: int = int(message.get("need", 0))
-	if _willing(agent, from, need):
+	if _willing(agent, from, need, sim.agents[from]):
 		agent.help_task = {"requester": from, "need": need}
 		agent.next_deliberation = sim.calendar.tick
 		sim.effects.message(agent.id, from, "accept_help", sim.calendar.tick, {"need": need})

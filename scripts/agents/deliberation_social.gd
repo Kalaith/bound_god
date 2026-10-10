@@ -106,6 +106,9 @@ static func _help(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 		agent.help_task = {}
 		return
 	var need: int = int(agent.help_task.need)
+	# Being asked to teach is weighed with cultivation (deliberation_cultivation.gd).
+	if need == Goals.HelpNeed.TEACHING:
+		return
 	var utility: float = 1.0 if need != Goals.HelpNeed.DEFENCE else 0.9 * (0.5 + agent.personality.bravery)
 	out.append(_candidate(Kind.HELP, utility, "reason_asked", requester, NAN, need))
 

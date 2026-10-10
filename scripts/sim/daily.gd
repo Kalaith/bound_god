@@ -29,6 +29,8 @@ static func new_day(sim: RefCounted) -> void:
 	Lifecycle.daily(sim)
 	if sim.settlement_life != null:
 		sim.settlement_life.daily(sim)
+	if sim.sects != null:
+		sim.sects.daily(sim)
 	if sim.faith != null:
 		sim.faith.daily(sim)
 	if sim.requests != null:

@@ -10,6 +10,7 @@ enum Op {
 	PRAY, TEND, JOIN, REPAIR_BLOCK, LEAVE, TREAT,
 	PLANT, SETTLE,
 	SOW, REAP, TEND_CROPS, ADD_TO_POT, COOK,
+	CULTIVATE, TEACH, WAIT_TO_LEARN, PROCLAIM,
 }
 const OP_NAMES: Array[String] = [
 	"go_to", "take_stock", "deposit", "deliver", "place_block", "mark_site", "harvest", "forage", "pick_up",
@@ -18,6 +19,7 @@ const OP_NAMES: Array[String] = [
 	"pray", "tend", "join", "repair_block", "leave", "treat",
 	"plant", "settle",
 	"sow", "reap", "tend_crops", "add_to_pot", "cook",
+	"cultivate", "teach", "wait_to_learn", "proclaim",
 ]
 
 enum Fail { NO_PATH, TARGET_GONE, STOCK_EMPTY, DEPLETED, OCCUPIED, REFUSED, TIMED_OUT, INTERRUPTED, TOO_DANGEROUS, NO_SITE }

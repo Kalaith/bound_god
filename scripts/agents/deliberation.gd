@@ -9,6 +9,7 @@ const Schedule = preload("res://scripts/agents/schedule.gd")
 const DeliberationSocial = preload("res://scripts/agents/deliberation_social.gd")
 const DeliberationWork = preload("res://scripts/agents/deliberation_work.gd")
 const DeliberationFaith = preload("res://scripts/agents/deliberation_faith.gd")
+const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
 
 const Need = Personality.Need
 const Kind = Goals.Kind
@@ -123,6 +124,7 @@ static func candidates(sim: RefCounted, agent: RefCounted) -> Array:
 	DeliberationSocial.add(sim, agent, out)
 	DeliberationWork.add(sim, agent, out)
 	DeliberationFaith.add(sim, agent, out)
+	DeliberationCultivation.add(sim, agent, out)
 	out.append(candidate(Kind.IDLE, 0.04, ""))
 	var now: int = sim.calendar.tick
 	var kept: Array = []

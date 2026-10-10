@@ -43,6 +43,10 @@
 		{"id": "blessed", "text": "Blessed by the god", "mood": 10, "days": 6.0, "max_stack": 1},
 		{"id": "mourned_shrine", "text": "Prayed at a broken altar", "mood": -4, "days": 2.0, "max_stack": 1},
 		{"id": "gathered_in_hall", "text": "Spent time in the hall with neighbours", "mood": 4, "days": 1.0, "max_stack": 1},
-		{"id": "strangers_watching", "text": "Saw strangers watching the settlement", "mood": -3, "days": 1.0, "max_stack": 1}
+		{"id": "strangers_watching", "text": "Saw strangers watching the settlement", "mood": -3, "days": 1.0, "max_stack": 1},
+		{"id": "advanced_realm", "text": "Stepped into a new realm of cultivation", "mood": 14, "days": 4.0, "max_stack": 1},
+		{"id": "learned_technique", "text": "Was taught a technique", "mood": 6, "days": 2.0, "max_stack": 1},
+		{"id": "taught_student", "text": "Passed a technique on to a student", "mood": 6, "days": 2.0, "max_stack": 2},
+		{"id": "sect_founded", "text": "Stood under the tree as a sect was founded", "mood": 10, "days": 3.0, "max_stack": 1}
 	]
 }

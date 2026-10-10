@@ -102,7 +102,7 @@ static func give_up(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> voi
 	agent.back_off(Goals.key(goal), tick + Balance.integer("agents.goal_backoff_ticks"))
 	if Goals.is_survival(goal) or Goals.is_social(goal):
 		Mind.add(agent, "frustrated", sim.calendar.ticks_per_day)
-	if int(goal.kind) == Kind.HELP:
+	if int(goal.kind) in [Kind.HELP, Kind.TEACH]:
 		agent.help_task = {}
 	if int(goal.kind) == Kind.QUEST and sim.requests != null:
 		sim.requests.abandon(sim, agent)

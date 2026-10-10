@@ -104,7 +104,7 @@
 	"cultivation": {
 		"per_hour": 3.0, "talent_base": 0.2, "foundation_base": 0.6, "foundation_weight": 0.8, "start_foundation": 0.5, "qi_foundation": 0.3,
 		"sit_ticks": 90, "utility_base": 0.15, "utility_drive": 0.45, "realm_bonus": 0.3, "dawn_dusk_bonus": 0.1, "spot_inner": 2.5, "spot_outer": 6.0,
-		"comprehend_qi": 0.8, "teach_ticks": 60, "teach_progress": 15.0, "teach_utility": 0.5, "learn_base": 0.25, "learn_drive": 0.35,
+		"comprehend_qi": 0.8, "teach_ticks": 60, "teach_progress": 15.0, "teach_utility": 0.85, "learn_base": 0.4, "learn_drive": 0.35,
 		"sect_students": 2, "sect_place_qi": 0.5, "found_sect_base": 0.3, "proclaim_ticks": 30, "doctrine_drift": 0.03,
 		"seeker_chance": 0.4, "qi_pull": 0.15, "followed_most": 3
 	},

@@ -10,6 +10,7 @@ const ExecuteLife = preload("res://scripts/sim/execute_life.gd")
 const ExecuteWork = preload("res://scripts/sim/execute_work.gd")
 const ExecuteSocial = preload("res://scripts/sim/execute_social.gd")
 const ExecuteFaith = preload("res://scripts/sim/execute_faith.gd")
+const ExecuteCultivation = preload("res://scripts/sim/execute_cultivation.gd")
 
 const Op = Plans.Op
 const T = Plans.T
@@ -19,6 +20,7 @@ const WORK_OPS: Array[int] = [Op.TAKE_STOCK, Op.DEPOSIT, Op.DELIVER, Op.PLACE_BL
 	Op.FORAGE, Op.PICK_UP, Op.REPAIR_BLOCK, Op.PLANT, Op.SOW, Op.REAP, Op.TEND_CROPS, Op.ADD_TO_POT, Op.COOK]
 const SOCIAL_OPS: Array[int] = [Op.TALK, Op.SEND, Op.GIVE, Op.WAIT_FOR_HELP, Op.JOIN, Op.LEAVE, Op.TREAT, Op.SETTLE]
 const FAITH_OPS: Array[int] = [Op.PRAY, Op.TEND]
+const CULTIVATION_OPS: Array[int] = [Op.CULTIVATE, Op.TEACH, Op.WAIT_TO_LEARN, Op.PROCLAIM]
 
 
 ## Where a movement target currently is, as a cell to stand on.
@@ -108,6 +110,8 @@ static func _dispatch(sim: RefCounted, agent: RefCounted, step: Dictionary, step
 		return ExecuteSocial.run(sim, agent, step, step_ticks)
 	if op in FAITH_OPS:
 		return ExecuteFaith.run(sim, agent, step, step_ticks)
+	if op in CULTIVATION_OPS:
+		return ExecuteCultivation.run(sim, agent, step, step_ticks)
 	return ExecuteLife.run(sim, agent, step, step_ticks)
 
 
@@ -156,7 +160,7 @@ static func _achieve(sim: RefCounted, agent: RefCounted) -> void:
 	sim.goal_version += 1
 	if not intention.tried.is_empty():
 		agent.stats.plans_recovered += 1
-	if int(intention.goal.kind) == Goals.Kind.HELP:
+	if int(intention.goal.kind) in [Goals.Kind.HELP, Goals.Kind.TEACH]:
 		agent.help_task = {}
 		agent.stats.helped_others += 1
 	agent.record(sim.calendar.tick, "achieved", {"goal": intention.goal})

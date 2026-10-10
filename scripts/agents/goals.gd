@@ -13,6 +13,7 @@ enum Kind {
 	BREAK, MIGRATE,
 	GARDEN, FARM, COOK,
 	PLANT_TREES,
+	CULTIVATE, TEACH, LEARN, FOUND_SECT,
 }
 
 const NAMES: Array[String] = [
@@ -25,6 +26,7 @@ const NAMES: Array[String] = [
 	"break", "migrate",
 	"garden", "farm", "cook",
 	"plant_trees",
+	"cultivate", "teach", "learn", "found_sect",
 ]
 
 const SURVIVAL: Array[int] = [Kind.EAT, Kind.SLEEP, Kind.TAKE_SHELTER, Kind.FLEE, Kind.SEEK_CARE]
@@ -37,11 +39,11 @@ const WORK_TYPE: Dictionary = {
 }
 const WORK_TYPES: Array[String] = ["build", "gather", "haul", "defend", "scout", "farm"]
 ## Goals whose target is another person.
-const TARGETS_AGENT: Array[int] = [Kind.CHAT, Kind.COMFORT, Kind.COURT, Kind.RECONCILE, Kind.HELP, Kind.PREACH]
+const TARGETS_AGENT: Array[int] = [Kind.CHAT, Kind.COMFORT, Kind.COURT, Kind.RECONCILE, Kind.HELP, Kind.PREACH, Kind.TEACH, Kind.LEARN]
 
 ## Help needs carried in a HELP goal's `extra`.
-enum HelpNeed { FOOD, CARE, DEFENCE }
-const HELP_NAMES: Array[String] = ["food", "care", "defence"]
+enum HelpNeed { FOOD, CARE, DEFENCE, TEACHING }
+const HELP_NAMES: Array[String] = ["food", "care", "defence", "teaching"]
 
 ## Mental breaks carried in a BREAK goal's `target`.
 enum BreakKind { LASH_OUT, BINGE, SULK, WANDER }

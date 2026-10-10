@@ -6,6 +6,7 @@ const Generation = preload("res://scripts/agents/generation.gd")
 const Population = preload("res://scripts/sim/population.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const Perception = preload("res://scripts/sim/perception.gd")
+const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 
 var raid_hooks: RefCounted = null
 
@@ -39,7 +40,9 @@ static func attractiveness(sim: RefCounted, id: int) -> Array:
 	var safety: float = 0.05 if threatened(sim, id) else 0.2
 	var renown: float = sim.faith.settlement_renown(sim, id) if sim.faith != null else 0.0
 	var standing: float = float(Balance.list("population.migrant_standing_pull")[Standing.rank(str(settlement.get("standing", "camp")))])
-	var score: float = spare * 0.08 + minf(food_days, 2.0) * 0.12 + safety + renown + standing - homeless * 0.03
+	# The tree's qi draws those who would cultivate.
+	var qi: float = sim.qi.density(sim, settlement.center) * Balance.number("cultivation.qi_pull") if sim.qi != null else 0.0
+	var score: float = spare * 0.08 + minf(food_days, 2.0) * 0.12 + safety + renown + standing + qi - homeless * 0.03
 	# Word travels that a place is going hungry.
 	if food_days < Balance.number("population.hungry_food_days") and Standing.present(sim, id) > Balance.integer("population.hungry_people"):
 		score -= Balance.number("population.hungry_penalty")
@@ -78,8 +81,13 @@ func _migrants(sim: RefCounted) -> void:
 		var angle: float = sim.rng.randf() * TAU
 		var edge: Vector3i = settlement.center + Vector3i(roundi(cos(angle) * (float(settlement.radius) - 3.0)), 0, roundi(sin(angle) * (float(settlement.radius) - 3.0)))
 		var names: Array = []
+		var seekers: Array = []
+		var seek_chance: float = Balance.number("cultivation.seeker_chance") * (sim.qi.density(sim, settlement.center) if sim.qi != null else 0.0)
 		for i in range(count):
 			var agent: RefCounted = Generation.adult(sim.rng, sim.agents.size())
+			if sim.rng.randf() < seek_chance:
+				agent.cultivation = CultivationState.roll(sim.rng, true)
+				seekers.append(agent.full_name())
 			if sim.rng.randf() < 0.5:
 				agent.beliefs.known_templates.append("lean_to")
 			# Newcomers bring the ways of building where they came from.
@@ -99,3 +107,5 @@ func _migrants(sim: RefCounted) -> void:
 			names.append(agent.full_name())
 		var cause: String = "cause_attractive|%d|%d" % [int(reason[1]), floori(float(reason[2]))]
 		sim.chronicle_event("arrival_migrants", id, {"names": ", ".join(names), "count": count}, cause, [])
+		if not seekers.is_empty():
+			sim.chronicle_event("arrival_seekers", id, {"names": ", ".join(seekers)}, "cause_drawn_by_qi", [])
