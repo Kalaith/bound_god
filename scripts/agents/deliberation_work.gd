@@ -9,11 +9,12 @@ const Personality = preload("res://scripts/agents/personality.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")
+const FunctionRules = preload("res://scripts/building/function_rules.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
 const Skill = Personality.Skill
-const FUNCTIONS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter"]
+const FUNCTIONS: Array[String] = FunctionRules.FUNCTIONS
 
 
 static func _candidate(kind: int, utility: float, reason: String, target: int = -1, value: float = NAN) -> Dictionary:

@@ -5,6 +5,10 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const RoomProbe = preload("res://scripts/world/room_probe.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 
+## Every function a structure can have, in a fixed order: goal targets and
+## saved proposals refer to a function by its index here, so only append.
+const FUNCTIONS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden"]
+
 
 static func evaluate(world: RefCounted, cells: Dictionary) -> Dictionary:
 	var components: Dictionary = {}

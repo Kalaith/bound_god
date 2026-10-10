@@ -6,6 +6,7 @@ const Text = preload("res://scripts/core/text.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
+const FunctionRules = preload("res://scripts/building/function_rules.gd")
 
 
 static func name_of(sim: RefCounted, id: int) -> String:
@@ -39,7 +40,7 @@ static func sim_resource(index: int) -> String:
 
 
 static func function_name(index: int) -> String:
-	const FUNCTIONS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter"]
+	const FUNCTIONS: Array[String] = FunctionRules.FUNCTIONS
 	return FUNCTIONS[index] if index >= 0 and index < FUNCTIONS.size() else "unrecognised"
 
 

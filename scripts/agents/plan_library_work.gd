@@ -7,12 +7,13 @@ const Plans = preload("res://scripts/agents/plans.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const FunctionRules = preload("res://scripts/building/function_rules.gd")
 
 const Kind = Goals.Kind
 const Op = Plans.Op
 const T = Plans.T
 const GATHER_IDS: Array[String] = ["gather_nearest", "gather_next", "gather_farther"]
-const FUNCTIONS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter"]
+const FUNCTIONS: Array[String] = FunctionRules.FUNCTIONS
 
 
 static func _store(agent: RefCounted) -> Dictionary:

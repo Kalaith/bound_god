@@ -2,9 +2,9 @@
 	"schema_version": 1,
 	"resources": ["wood", "stone", "thatch", "berries", "ore"],
 	"divine_only": ["soil"],
-	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree"],
+	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree", "table", "bench", "planter", "lantern"],
 	"shapes": ["cube", "cross", "panel", "slab", "post"],
-	"atlas_size": [8, 5],
+	"atlas_size": [8, 6],
 	"blocks": [
 		{"id": 0, "name": "air", "resource": "", "yield": 0, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [0, 0], "shape": "cube", "breakable": false, "placeable": false},
 		{"id": 1, "name": "grass", "resource": "soil", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [1, 0], "atlas_top": [0, 0], "atlas_bottom": [2, 0], "shape": "cube", "breakable": true, "placeable": true},
@@ -32,6 +32,10 @@
 		{"id": 23, "name": "sacred_tree", "resource": "", "yield": 0, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [5, 3], "atlas_top": [2, 1], "atlas_bottom": [2, 1], "shape": "cube", "component": "sacred_tree", "breakable": false, "placeable": false},
 		{"id": 24, "name": "leaves", "resource": "", "yield": 0, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [6, 3], "shape": "cube", "breakable": true, "placeable": false},
 		{"id": 25, "name": "tall_grass", "resource": "thatch", "yield": 2, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [7, 3], "shape": "cross", "breakable": true, "placeable": false},
-		{"id": 26, "name": "sacred_leaves", "resource": "", "yield": 0, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [0, 4], "shape": "cube", "breakable": false, "placeable": false}
+		{"id": 26, "name": "sacred_leaves", "resource": "", "yield": 0, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [0, 4], "shape": "cube", "breakable": false, "placeable": false},
+		{"id": 27, "name": "table", "resource": "wood", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": false, "atlas": [1, 5], "atlas_top": [0, 5], "atlas_bottom": [3, 1], "shape": "cube", "component": "table", "breakable": true, "placeable": true},
+		{"id": 28, "name": "bench", "resource": "wood", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": false, "atlas": [2, 5], "atlas_top": [3, 1], "atlas_bottom": [3, 1], "shape": "slab", "component": "bench", "breakable": true, "placeable": true},
+		{"id": 29, "name": "planter", "resource": "wood", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [4, 5], "atlas_top": [3, 5], "atlas_bottom": [3, 1], "shape": "cube", "component": "planter", "breakable": true, "placeable": true},
+		{"id": 30, "name": "lantern", "resource": "stone", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [5, 5], "shape": "post", "component": "lantern", "breakable": true, "placeable": true}
 	]
 }

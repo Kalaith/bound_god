@@ -7,7 +7,7 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const RoomProbe = preload("res://scripts/world/room_probe.gd")
 const Rules = preload("res://scripts/building/function_rules.gd")
 const Data = preload("res://scripts/core/data.gd")
-const ANCHORS: Array[String] = ["bed", "chest", "altar", "hearth", "workbench"]
+const ANCHORS: Array[String] = RoomProbe.ANCHORS
 
 var entries: Dictionary = {} # int -> structure dictionary
 var components: Dictionary = {} # Vector3i -> true

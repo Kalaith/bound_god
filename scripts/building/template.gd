@@ -178,7 +178,7 @@ func recompute() -> void:
 		if kind == "door" and not found_door:
 			entrance = cell
 			found_door = true
-		if not kind in ["bed", "chest", "hearth", "workbench", "altar"] or seen.has(cell):
+		if not kind in RoomProbe.ANCHORS or seen.has(cell):
 			continue
 		var room: Dictionary = RoomProbe.probe(world, cell)
 		seen.merge(room.inside)

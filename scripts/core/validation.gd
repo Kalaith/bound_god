@@ -25,7 +25,8 @@ const AMBITION_KINDS: Array[String] = [
 ]
 ## Miracle effects that sim/miracles.gd implements; the catalog may not name others.
 const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend"]
-const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter"]
+## Kept in step with FunctionRules.FUNCTIONS (not preloaded: the rules load data).
+const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden"]
 const BALANCE_SECTIONS: Array[String] = [
 	"time", "needs", "agents", "social", "mood", "health", "work", "construction", "world",
 	"settlements", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
@@ -213,7 +214,7 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 			if not components.has(key):
 				errors.append("templates: " + rule.id + " names unknown component " + str(key))
 		for key in rule.capacity:
-			if not key in ["beds", "stock", "workers", "sleepers"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
+			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
 				errors.append("templates: unknown capacity mapping")
 		for key in ["sky_or_tree_within", "min_roofed_floor"]:
 			if rule.has(key) and (not _number(rule[key]) or float(rule[key]) < 0):

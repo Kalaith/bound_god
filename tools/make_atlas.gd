@@ -1,6 +1,6 @@
 extends SceneTree
-## Paints assets/blocks_atlas.png: 16 px procedural tiles in an 8 x 5 grid,
-## laid out as data/blocks.json expects. Run once after changing a tile:
+## Paints assets/blocks_atlas.png: 16 px procedural tiles in an 8 x 6 grid,
+## laid out as data/blocks.json expects (8 x 6 since the village blocks). Run once after changing a tile:
 ## Godot --headless --path . --script res://tools/make_atlas.gd
 
 const TILE: int = 16
@@ -10,7 +10,7 @@ var image: Image
 
 func _init() -> void:
 	rng.seed = 1717
-	image = Image.create(TILE * 8, TILE * 5, false, Image.FORMAT_RGBA8)
+	image = Image.create(TILE * 8, TILE * 6, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
 	_noise(Vector2i(0, 0), Color("5a9138"), Color("4a7f2e"), Color("6ea648"))
 	_grass_side(Vector2i(1, 0))
@@ -47,6 +47,12 @@ func _init() -> void:
 	_tall_grass(Vector2i(7, 3))
 	_leaves(Vector2i(0, 4), Color("7fd6b0"), Color("4fae8c"), false)
 	_leaves(Vector2i(1, 4), Color("3f7a33"), Color("2f6427"), false)
+	_table_top(Vector2i(0, 5))
+	_table_side(Vector2i(1, 5))
+	_bench(Vector2i(2, 5))
+	_tilled(Vector2i(3, 5))
+	_planter_side(Vector2i(4, 5))
+	_lantern(Vector2i(5, 5))
 	var error: int = image.save_png("res://assets/blocks_atlas.png")
 	print("atlas saved: ", error == OK)
 	quit(0 if error == OK else 1)
@@ -271,3 +277,55 @@ func _tall_grass(tile: Vector2i) -> void:
 		var height: int = rng.randi_range(8, 15)
 		for y in range(TILE - height, TILE):
 			_px(tile, x + (1 if y < 6 and blade % 2 == 0 else 0), y, Color("7fb04a").darkened(rng.randf() * 0.2))
+
+
+func _table_top(tile: Vector2i) -> void:
+	_planks(tile, Color("c49a64"), Color("9a7446"))
+	for i in range(TILE):
+		_px(tile, i, 0, Color("6e4c28"))
+		_px(tile, i, 15, Color("6e4c28"))
+
+
+func _table_side(tile: Vector2i) -> void:
+	for y in range(TILE):
+		for x in range(TILE):
+			var leg: bool = (x < 3 or x > 12) and y > 3
+			if y <= 3 or leg:
+				_px(tile, x, y, Color("9a7446").darkened(rng.randf() * 0.12))
+
+
+func _bench(tile: Vector2i) -> void:
+	for y in range(TILE):
+		for x in range(TILE):
+			var seat: bool = y >= 6 and y <= 9
+			var leg: bool = (x < 2 or x > 13) and y > 9
+			if seat or leg:
+				_px(tile, x, y, Color("8d6a3e").darkened(rng.randf() * 0.12))
+
+
+func _tilled(tile: Vector2i) -> void:
+	_noise(tile, Color("5e3f27"), Color("4a301d"), Color("70503a"))
+	for y in range(TILE):
+		if y % 4 == 1:
+			for x in range(1, 15):
+				_px(tile, x, y, Color("3d2818"))
+	for i in range(TILE):
+		_px(tile, i, 0, Color("8d6a3e"))
+		_px(tile, i, 15, Color("8d6a3e"))
+		_px(tile, 0, i, Color("8d6a3e"))
+		_px(tile, 15, i, Color("8d6a3e"))
+
+
+func _planter_side(tile: Vector2i) -> void:
+	_planks(tile, Color("9a7446"), Color("6e4c28"))
+	for x in range(TILE):
+		_px(tile, x, 0, Color("5e3f27"))
+		_px(tile, x, 1, Color("5e3f27"))
+
+
+func _lantern(tile: Vector2i) -> void:
+	for y in range(TILE):
+		for x in range(TILE):
+			var frame: bool = y < 2 or y > 13 or x < 2 or x > 13
+			var glow: Color = Color("ffd27a").lerp(Color("fff1c4"), rng.randf() * 0.5)
+			_px(tile, x, y, Color("3a3a3e") if frame else glow)
