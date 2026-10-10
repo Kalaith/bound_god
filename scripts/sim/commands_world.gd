@@ -17,6 +17,8 @@ static func apply(sim: RefCounted, command: Dictionary) -> Dictionary:
 			return _toggle_door(sim, command)
 		"set_hotbar":
 			return _set_hotbar(sim, command)
+		"follow":
+			return _follow(sim, command)
 		"dismiss_prompt":
 			var id: String = str(command.get("prompt", ""))
 			if id.is_empty():
@@ -117,3 +119,17 @@ static func _transfer(sim: RefCounted, command: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "transfer_nothing"}
 	sim.god.add_stock(resource, taken)
 	return {"ok": true, "reason": "transfer_taken", "amount": taken}
+
+
+## Pins or unpins a person. A pin changes only what the god watches.
+static func _follow(sim: RefCounted, command: Dictionary) -> Dictionary:
+	var id: int = int(command.get("agent", -1))
+	if id < 0 or id >= sim.agents.size():
+		return {"ok": false, "reason": "whisper_nobody"}
+	if sim.god.followed.has(id):
+		sim.god.followed.erase(id)
+		return {"ok": true, "reason": ""}
+	if sim.god.followed.size() >= Balance.integer("cultivation.followed_most"):
+		return {"ok": false, "reason": "pin_full"}
+	sim.god.followed.append(id)
+	return {"ok": true, "reason": ""}

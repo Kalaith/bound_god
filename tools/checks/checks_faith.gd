@@ -90,12 +90,16 @@ func check_a_whisper_reaches_the_decision_log():
 	var result: Dictionary = sim.apply_command({"type": "cast_miracle", "miracle": "whisper", "cell": agent.cell, "agent": agent.id, "nudge": "pray"})
 	if not result.ok:
 		return "the whisper was refused: " + str(result.reason)
-	sim.run_ticks(20)
+	# A whisper lasts a day; whoever is in the middle of something may finish it first.
 	var heard: bool = false
 	var urged: bool = false
-	for entry in agent.decisions:
-		heard = heard or (entry.kind == "message" and entry.text == "log_whispered")
-		urged = urged or (entry.kind == "adopted" and entry.get("urged", false))
+	for _i in range(24):
+		sim.run_ticks(10)
+		for entry in agent.decisions:
+			heard = heard or (entry.kind == "message" and entry.text == "log_whispered")
+			urged = urged or (entry.kind == "adopted" and entry.get("urged", false))
+		if heard and urged:
+			break
 	if not heard:
 		return "the whisper never reached the decision log: %s" % str(agent.decisions)
 	if not urged:

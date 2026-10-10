@@ -12,12 +12,14 @@ const FILES: Dictionary = {
 	"miracles": "res://data/miracles.json",
 	"crops": "res://data/crops.json",
 	"recipes": "res://data/recipes.json",
+	"cultivation": "res://data/cultivation.json",
 	"text": "res://data/text.json",
 	"text_agents": "res://data/text_agents.json",
 	"text_ui": "res://data/text_ui.json",
+	"text_cultivation": "res://data/text_cultivation.json",
 }
 ## Text catalogs, split by responsibility; their labels share one namespace.
-const TEXT_FILES: Array[String] = ["text", "text_agents", "text_ui"]
+const TEXT_FILES: Array[String] = ["text", "text_agents", "text_ui", "text_cultivation"]
 
 static var _files: Dictionary = {}
 static var _blocks_by_id: Array = []
@@ -185,3 +187,33 @@ static func recipes() -> Array:
 
 static func aspects() -> Array:
 	return file("miracles").get("aspects", [])
+
+
+# --- Cultivation ----------------------------------------------------------------
+
+static func cultivation() -> Dictionary:
+	return file("cultivation")
+
+
+## Realms in order; index == the realm's order.
+static func realms() -> Array:
+	return file("cultivation").get("realms", [])
+
+
+static func realm(order: int) -> Dictionary:
+	var list: Array = realms()
+	return list[order] if order >= 0 and order < list.size() else {}
+
+
+static func technique(id: String) -> Dictionary:
+	for entry in file("cultivation").get("techniques", []):
+		if entry.get("id") == id:
+			return entry
+	return {}
+
+
+static func affinity(id: String) -> Dictionary:
+	for entry in file("cultivation").get("affinities", []):
+		if entry.get("id") == id:
+			return entry
+	return {}

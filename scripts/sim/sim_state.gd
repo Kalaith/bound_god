@@ -7,9 +7,9 @@ extends RefCounted
 const Agent = preload("res://scripts/agents/agent.gd")
 const Migration = preload("res://scripts/sim/save_migration.gd")
 
-const SCHEMA: int = 4
+const SCHEMA: int = 5
 ## Older schemas that still load, migrated on the way in.
-const MIGRATES: Array[int] = [1, 2, 3]
+const MIGRATES: Array[int] = [1, 2, 3, 4]
 
 
 ## {"sim": Dictionary, "chunks": Dictionary} for a running sim.
@@ -34,7 +34,7 @@ static func capture(sim: RefCounted) -> Dictionary:
 		"requests": sim.requests.to_dict(), "threats": sim.threats.to_dict(), "raids": sim.raids.to_dict(),
 		"command_log": sim.command_log.duplicate(true), "kindled": sim.kindled.duplicate(true), "veils": sim.veils.duplicate(true),
 		"lanterns": sim.lanterns.duplicate(), "crops": sim.crops.to_dict(), "kitchens": sim.kitchens.to_dict(),
-		"woods": sim.woods.to_dict(),
+		"woods": sim.woods.to_dict(), "sects": sim.sects.to_dict(),
 	}
 	return {"sim": state, "chunks": chunks}
 
@@ -52,6 +52,8 @@ static func problem(state: Variant, chunks: Variant) -> String:
 		if not state.has(key):
 			return "save_damaged"
 	if version >= 3 and not state.get("lanterns") is Dictionary:
+		return "save_damaged"
+	if version >= 5 and not state.get("sects") is Dictionary:
 		return "save_damaged"
 	if version >= 4 and (not state.settlements.get("lots") is Dictionary or not state.settlements.get("bins") is Dictionary or not state.get("crops") is Dictionary or not state.get("kitchens") is Dictionary):
 		return "save_damaged"
@@ -89,7 +91,7 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	sim.next_item_id = int(state.next_item_id)
 	sim.agents = []
 	for data in state.agents:
-		sim.agents.append(Agent.from_dict(data))
+		sim.agents.append(Agent.from_dict(Migration.cultivation(state, data)))
 	if int(state.schema_version) == 1:
 		state.god["hotbar"] = Migration.empty_hotbar()
 	sim.god.from_dict(state.god)
@@ -106,6 +108,7 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	sim.kitchens.from_dict(Migration.kitchens(state))
 	# Saplings and falling leaves came after schema 4; older worlds have none.
 	sim.woods.from_dict(state.get("woods", {}))
+	sim.sects.from_dict(Migration.sects(state))
 	sim.nav.build()
 	Migration.store_old_stock(sim, old_stock)
 	sim.rng.seed = int(state.rng_seed)

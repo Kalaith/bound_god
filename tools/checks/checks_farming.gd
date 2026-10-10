@@ -144,10 +144,13 @@ func check_people_sow_weed_and_reap_a_field():
 	sim.run_ticks(sim.calendar.ticks_per_day)
 	if sim.crops.plots.size() < 4:
 		return "only %d crops were sown in a day: %s" % [sim.crops.plots.size(), str(sim.agents[0].decisions.slice(0, 4))]
+	# Grain is food: newcomers may eat it, so what counts is that it was reaped into the stores.
+	var stored: int = 0
 	for _day in range(int(Crops.staple().days_per_stage) * 3 + 3):
 		sim.run_ticks(sim.calendar.ticks_per_day)
+		stored = maxi(stored, sim.settlements.amount(1, "grain"))
 		Stores.fill(sim, 1, {"berries": 20, "grain": mini(sim.settlements.amount(1, "grain"), 12), "seed": mini(sim.settlements.amount(1, "seed"), 6)})
-	if sim.settlements.amount(1, "grain") <= 0:
+	if stored <= 0:
 		var stages: Array = []
 		for cell in sim.crops.plots:
 			stages.append([sim.voxels.block_meta(cell), sim.crops.plots[cell].weedy])

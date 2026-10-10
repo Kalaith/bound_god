@@ -4,6 +4,7 @@ extends RefCounted
 const Data = preload("res://scripts/core/data.gd")
 const Agent = preload("res://scripts/agents/agent.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
+const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 
 
 static func _pick(rng: RandomNumberGenerator, list: Array) -> Variant:
@@ -60,6 +61,7 @@ static func adult(rng: RandomNumberGenerator, id: int, role_list: String = "form
 	agent.needs[Personality.Need.SAFETY] = 90.0
 	agent.mood = 50.0
 	agent.faith = new_faith()
+	agent.cultivation = CultivationState.roll(rng)
 	return agent
 
 

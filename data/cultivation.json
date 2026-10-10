@@ -1,0 +1,42 @@
+{
+	"schema_version": 1,
+	"realms": [
+		{"id": "mortal", "order": 0, "progress_needed": 100, "lifespan_bonus": 0},
+		{"id": "qi_refining", "order": 1, "progress_needed": 300, "lifespan_bonus": 30},
+		{"id": "foundation_establishment", "order": 2, "progress_needed": 900, "lifespan_bonus": 90}
+	],
+	"talent": [
+		{"weight": 45, "range": [0.0, 0.15]},
+		{"weight": 30, "range": [0.15, 0.4]},
+		{"weight": 18, "range": [0.4, 0.7]},
+		{"weight": 7, "range": [0.7, 1.0]}
+	],
+	"seeker_talent": [
+		{"weight": 50, "range": [0.35, 0.6]},
+		{"weight": 35, "range": [0.6, 0.85]},
+		{"weight": 15, "range": [0.85, 1.0]}
+	],
+	"drive": {"ordinary": [0.0, 0.45], "seeker": [0.6, 1.0]},
+	"affinities": [
+		{"id": "wood", "weight": 20, "qi_bonus": 0.2, "foundation_bonus": 0.0},
+		{"id": "earth", "weight": 20, "qi_bonus": 0.0, "foundation_bonus": 0.1},
+		{"id": "none", "weight": 60, "qi_bonus": 0.0, "foundation_bonus": 0.0}
+	],
+	"qi": {
+		"curve": [[0.0, 1.0], [5.0, 0.95], [12.0, 0.7], [25.0, 0.35], [45.0, 0.1], [70.0, 0.03]],
+		"floor": 0.02
+	},
+	"techniques": [
+		{"id": "tree_breath", "progress": 1.5, "source": "tree"}
+	],
+	"sect_names": {
+		"pattern": "sect_name",
+		"adjectives": {
+			"kind": "sect_adj_gentle", "brave": "sect_adj_iron", "diligent": "sect_adj_patient", "curious": "sect_adj_seeking",
+			"spiritual": "sect_adj_still", "pious": "sect_adj_devoted", "leader": "sect_adj_rising", "hot_headed": "sect_adj_thunder",
+			"stubborn": "sect_adj_unbending", "loner": "sect_adj_hidden", "social": "sect_adj_open", "optimist": "sect_adj_bright"
+		},
+		"default_adjective": "sect_adj_quiet",
+		"nouns": ["sect_noun_canopy", "sect_noun_root", "sect_noun_leaf", "sect_noun_bough", "sect_noun_grove", "sect_noun_bark"]
+	}
+}

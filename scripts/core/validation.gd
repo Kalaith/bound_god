@@ -5,6 +5,7 @@ extends RefCounted
 const Data = preload("res://scripts/core/data.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const ValidationFood = preload("res://scripts/core/validation_food.gd")
+const ValidationCultivation = preload("res://scripts/core/validation_cultivation.gd")
 
 ## Code records these thoughts by id, so the catalog must hold them.
 const REQUIRED_THOUGHTS: Array[String] = [
@@ -31,6 +32,7 @@ const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shri
 const BALANCE_SECTIONS: Array[String] = [
 	"time", "needs", "agents", "social", "mood", "health", "work", "construction", "world",
 	"settlements", "food", "farming", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
+	"cultivation",
 ]
 
 
@@ -47,6 +49,10 @@ static func run() -> Array[String]:
 	errors.append_array(ValidationFood.check_crops(Data.file("crops"), Data.file("blocks")))
 	errors.append_array(ValidationFood.check_recipes(Data.file("recipes"), Data.file("blocks"), Data.file("people").get("skills", []), FUNCTION_IDS))
 	errors.append_array(check_balance(Balance.data()))
+	var trait_ids: Array = []
+	for entry in Data.traits():
+		trait_ids.append(entry.get("id"))
+	errors.append_array(ValidationCultivation.check(Data.file("cultivation"), Data.labels(), trait_ids))
 	var seen: Dictionary = {}
 	for name in Data.TEXT_FILES:
 		errors.append_array(check_text(Data.file(name)))

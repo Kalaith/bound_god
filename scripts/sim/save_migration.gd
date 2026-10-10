@@ -2,6 +2,7 @@ extends RefCounted
 ## Brings saves from older schemas up to the current one before they load.
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Balance = preload("res://scripts/core/balance.gd")
+const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 
 
 ## Schema 1 kept each settlement's stock as one pooled count in a pile. From
@@ -93,3 +94,21 @@ static func kitchens(state: Dictionary) -> Dictionary:
 	if int(state.schema_version) < 4:
 		return {"pots": {}, "places": {}}
 	return state.kitchens
+
+
+## Before schema 5 nobody cultivated: each person gets the spiritual root
+## they were born with, rolled from the world and their id so every load
+## agrees, and starts as a mortal.
+static func cultivation(state: Dictionary, agent: Dictionary) -> Dictionary:
+	if int(state.schema_version) >= 5:
+		return agent
+	var result: Dictionary = agent.duplicate()
+	result["cultivation"] = CultivationState.for_old_save(int(state.seed), int(agent.id))
+	return result
+
+
+## Before schema 5 there were no sects.
+static func sects(state: Dictionary) -> Dictionary:
+	if int(state.schema_version) < 5:
+		return {"entries": {}, "next_id": 1}
+	return state.sects

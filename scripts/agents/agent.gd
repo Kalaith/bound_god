@@ -69,6 +69,8 @@ var faith: Dictionary = {}
 var quest_id: int = -1
 ## Array of {kind, target, bonus, until}
 var whispers: Array = []
+# Cultivation (agents/cultivation_state.gd)
+var cultivation: Dictionary = {}
 # Record
 var joined_day: int = 1
 var stats: Dictionary = {"plans_recovered": 0, "helped_others": 0, "blocks_placed": 0, "prayers": 0, "stories_told": 0}
@@ -163,7 +165,7 @@ const SAVED: Array[String] = [
 	"backoff", "next_deliberation", "cell", "previous_position", "position", "path", "move_budget", "inside",
 	"carrying", "activity", "home", "life", "life_day", "life_cause", "settlement_id", "partner", "help_task",
 	"mental_break", "low_mood_ticks", "faith", "quest_id", "whispers", "joined_day", "stats", "step_result",
-	"interrupted_by",
+	"interrupted_by", "cultivation",
 ]
 
 
