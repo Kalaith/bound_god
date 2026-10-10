@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) planned in `IMPLEMENTATION_PLAN.md`. Next: **M13 — Playtest, balance and foundations**.
+Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) planned in `IMPLEMENTATION_PLAN.md`. In progress: **M13 — Playtest, balance and foundations**. The village track from playtest round 1 is built (see below); onboarding prompts, profiling at 60 people, the region spike and timed playtests remain.
 
 ## Done
 
@@ -40,9 +40,11 @@ Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) plan
 
 - Stores in chests and things to use (user request, 2026-10-10): settlement stock is only what lies in storage chests in its area, each chest holding its own goods (`settlements.chests`, save schema 2 with a schema 1 migration that puts the old pooled stock into chests and the overflow loose at the camp). The invisible pile is gone; its cell is now the settlement's **camp**. A walk to the stores reads the next plan step: taking leads to the nearest chest holding the resource, storing to the nearest with room (or the camp, where the load is set down loose). Loose goods feed the hungry (`eat_loose`) and builders but are hauled only when a chest has room. A broken chest spills its goods. The travellers start with berries in their packs; the hamlet keeps its goods in two chests on its square. Interact uses the block under the crosshair (chest panel, bed rest, workbench designs, hearth kindle, door open/shut with a prompt under the crosshair); a shut door collides with the avatar only. The hotbar starts empty and is filled and ordered on the blocks screen (I), kept in the god's state by an unlogged `set_hotbar` command. The first steps now begin: gather, put a chest in the hotbar, place it by the tree, fill it, then build a home. Checks: six scenarios in `checks_stores.gd`. Captures: `stores_*_1080.png`, `stores_blocks_720.png`, `stores_chest_720.png`.
 
+- M13 village track (playtest round 1, 2026-10-10; findings in `docs/playtests/2026-10-10-round1-summary.md`): settlement standing (camp, hamlet, village; `sim/standing.gd`, criteria in `balance.json` `settlements.standing`, a 2-day grace before a fall, chronicled with the reason); timber make-do when no stone is known; table, bench, planter and lantern blocks (atlas 8×6); Hall and Garden functions; valley designs (timber cottage, store shed, village hall, garden patch) brought by migrants; Garden goal (pick ripe garden bushes into the chests, plant empty planters from within reach); gardens bear in winter; autumn food reserve; food pull and a hungry-settlement migrant penalty; migrant safety by threats near home and two lanterns; lanterns (wolves avoid the light, full night sight, glow in the presentation); founding grounds (three per valley, each with bushes and a stone knuckle) and the Found a settlement request from a village; settlers sleep, pray and shelter near their own camp; scramble out of enclosed cells; a 10-day settle period before migrating again; save schema 3 (lanterns) with a slice fixture `tools/fixtures/save_v2_slice.zst`; settlement panel checklist, guide lines for what a settlement lacks, a function reference in the design library, founding offers in the requests panel. Checks: `checks_village.gd` (designs and functions, timber make-do, standing, hall, garden, lanterns, founding) and the slice-save migration. Captures: `m13_village_day_1080.png`, `m13_village_night_1080.png`, `m13_village_panel_1080.png`, `m13_village_panel_720.png`, `m13_village_library_1080.png`, `m13_village_requests_1080.png`.
+
 ## Next
 
-- M13 (see `IMPLEMENTATION_PLAN.md` §4): fresh-player playtests of the GDD §14.1 moment and balance from what they find; contextual onboarding; profiling at 60 detailed people; the region feasibility spike; save schema migrations with fixture saves.
+- M13 (see `IMPLEMENTATION_PLAN.md` §4): timed fresh-player playtests on the new build (one record per player, including the village steps); contextual onboarding prompts; profiling at 60 detailed people; the region feasibility spike.
 
 ## Decisions
 
@@ -76,6 +78,10 @@ Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) plan
 - Key bindings saved before an action existed still load: the new action takes its default key, or the first free one.
 - Valley layout: sacred tree at the valley centre (80,80), ridge ruin at (128,128) (~68 blocks), hamlet at (112,134). The tree's first circle (20 blocks) always holds a few trees, stone outcrops and berry bushes. The river runs beside the tree-ridge axis so nobody must cross water.
 
+- A settlement's area belongs to the nearest centre where two overlap (`settlements.at_cell`), so a founded settlement keeps its ground when Tree Hollow grows toward it.
+- Village criteria (decided for M13, tune from play): 10 people, all housed, a day of food in the chests, 4 homes, a storehouse, a hall, a garden and a living shrine. The hall needs no hearth so it can be built without stone.
+- Gardens bear in winter (the wild bushes do not) so a village can be self-sustaining before M14's fields.
+
 ## Questions for the user (decided, revisit if you disagree)
 
 - Who learns an offered design? Decided: residents of the shrine's settlement who know the god. Alternative: only worshippers (Believer+) of that shrine, as GDD §5.4 literally says; that would delay the cottage moment until the player has won believers.
@@ -88,6 +94,10 @@ Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) plan
 - Raids start on day 12 and can strike a shrine the player has just helped raise. Kept per GDD; confirm it does not feel unfair in play.
 
 ## Known issues
+
+- Not verified in play: the whole village path (garden, hall, village standing, founding) has been checked headlessly and in captures, not yet played through by hand at 1×.
+- Ridge Hamlet and Tree Hollow still draw raids every 4 days from day 12; with more people and goods they are raided often (8 raids in a 45-day probe). Left at the GDD values for the next playtest.
+- Mental breaks run high in large settlements (over 100 in 45 days in one probe), mostly from hunger and insults; the Ridge Hamlet hostility question below still stands.
 
 - Not verified by eye: the hamlet's two chests (placed and filled, confirmed by data); a capture cannot leave the presence zone of the tree.
 - People do not yet build storage chests themselves; a storehouse design offered to them still adds chests.
