@@ -112,3 +112,10 @@ static func sects(state: Dictionary) -> Dictionary:
 	if int(state.schema_version) < 5:
 		return {"entries": {}, "next_id": 1}
 	return state.sects
+
+
+## Before schema 5 nobody faced Heaven.
+static func tribulations(state: Dictionary) -> Dictionary:
+	if int(state.schema_version) < 5:
+		return {"entries": {}, "next_id": 1}
+	return state.tribulations

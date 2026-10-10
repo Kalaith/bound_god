@@ -14,6 +14,7 @@ enum Kind {
 	GARDEN, FARM, COOK,
 	PLANT_TREES,
 	CULTIVATE, TEACH, LEARN, FOUND_SECT,
+	BREAKTHROUGH,
 }
 
 const NAMES: Array[String] = [
@@ -27,6 +28,7 @@ const NAMES: Array[String] = [
 	"garden", "farm", "cook",
 	"plant_trees",
 	"cultivate", "teach", "learn", "found_sect",
+	"breakthrough",
 ]
 
 const SURVIVAL: Array[int] = [Kind.EAT, Kind.SLEEP, Kind.TAKE_SHELTER, Kind.FLEE, Kind.SEEK_CARE]

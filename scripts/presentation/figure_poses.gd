@@ -14,7 +14,7 @@ static func target(activity: String, time: float, stride: float, speed: float, s
 		return {"lie": -PI * 0.5, "root": Vector3(0, 0.17, 0.75), "arm_l_z": 0.05, "arm_r_z": 0.05, "head_y": 0.3}
 	if activity == "relaxing" and speed < 0.2:
 		return _sitting(pose, time)
-	if activity in ["cultivating", "learning"] and speed < 0.2:
+	if activity in ["cultivating", "learning", "facing_heaven"] and speed < 0.2:
 		return _meditating(pose, time, activity == "learning")
 	if speed > 0.2:
 		return _walking(pose, activity, stride, speed, spirit, carrying)

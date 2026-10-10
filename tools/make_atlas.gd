@@ -64,6 +64,11 @@ func _init() -> void:
 	for stage in range(4):
 		_crop(Vector2i(1 + stage, 6), stage)
 	_sapling(Vector2i(5, 6))
+	# Marks of heavenly lightning (M16): wood burnt black, earth scorched.
+	_bark(Vector2i(6, 6), Color("3b302a"), Color("1f1915"))
+	_strokes(Vector2i(6, 6), Color("8a4a2a"), 3, 3, 0.25)
+	_earth(Vector2i(7, 6), Color("4b4038"))
+	_strokes(Vector2i(7, 6), Color("2a2420"), 8, 5, 0.45)
 	var error: int = image.save_png("res://assets/blocks_atlas.png")
 	print("atlas saved: ", error == OK)
 	quit(0 if error == OK else 1)

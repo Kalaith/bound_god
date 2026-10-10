@@ -7,6 +7,7 @@ signal follow_toggled(on: bool)
 signal person_chosen(id: int)
 signal whisper(id: int, nudge: String)
 signal pin_toggled(id: int)
+signal miracle(id: int, miracle: String)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const AgentText = preload("res://scripts/presentation/ui/agent_text.gd")
@@ -37,6 +38,10 @@ var _health: RichTextLabel
 var _texts: Dictionary = {}
 var _follow: Button
 var _pin: Button
+## Miracle buttons for cultivators, shown when they apply.
+var _bless: Button
+var _shield: Button
+var _defy: Button
 var _refresh_left: float = 0.0
 
 
@@ -109,6 +114,8 @@ func _ready() -> void:
 	_build_needs(stack)
 	for tab in ["bonds", "life", "faith", "cultivation"]:
 		var page := VBoxContainer.new()
+		if tab == "cultivation":
+			page.add_child(_cultivation_actions())
 		var text: RichTextLabel = _rich(19)
 		text.meta_clicked.connect(func(meta: Variant) -> void: person_chosen.emit(int(str(meta))))
 		page.add_child(text)
@@ -208,6 +215,11 @@ func _process(delta: float) -> void:
 		"cultivation":
 			_texts.cultivation.text = InspectorCultivation.text(sim, agent)
 	_pin.text = Text.label("inspect_pinned" if sim.god.followed.has(agent_id) else "inspect_pin")
+	var cultivating: bool = not agent.cultivation.is_empty() and (int(agent.cultivation.realm) >= 1 or float(agent.cultivation.drive) >= 0.05)
+	var trial: Dictionary = sim.tribulations.of(agent_id) if sim.tribulations != null else {}
+	_bless.visible = cultivating
+	_shield.visible = not trial.is_empty()
+	_defy.visible = not trial.is_empty()
 
 
 func _refresh_mind(agent: RefCounted) -> void:
@@ -255,3 +267,18 @@ func _refresh_needs(agent: RefCounted) -> void:
 		var color: Color = Style.GOOD if mood > 0.0 else Style.WARN
 		lines.append("%s  [color=#%s]%+d[/color]" % [str(Data.thought(thought.id).get("text", thought.id)), color.to_html(false), roundi(mood)])
 	_health.text = "\n".join(lines)
+
+
+## Bless a cultivator's training; shield or defy a trial they have called.
+func _cultivation_actions() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	_bless = Style.button(Text.label("inspect_bless"))
+	_bless.pressed.connect(func() -> void: miracle.emit(agent_id, "bless_cultivation"))
+	_shield = Style.button(Text.label("inspect_shield"))
+	_shield.pressed.connect(func() -> void: miracle.emit(agent_id, "shield_trial"))
+	_defy = Style.button(Text.label("inspect_defy"))
+	_defy.pressed.connect(func() -> void: miracle.emit(agent_id, "defy_heaven"))
+	for button in [_bless, _shield, _defy]:
+		row.add_child(button)
+	return row

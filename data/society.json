@@ -47,6 +47,8 @@
 		{"id": "advanced_realm", "text": "Stepped into a new realm of cultivation", "mood": 14, "days": 4.0, "max_stack": 1},
 		{"id": "learned_technique", "text": "Was taught a technique", "mood": 6, "days": 2.0, "max_stack": 1},
 		{"id": "taught_student", "text": "Passed a technique on to a student", "mood": 6, "days": 2.0, "max_stack": 2},
-		{"id": "sect_founded", "text": "Stood under the tree as a sect was founded", "mood": 10, "days": 3.0, "max_stack": 1}
+		{"id": "sect_founded", "text": "Stood under the tree as a sect was founded", "mood": 10, "days": 3.0, "max_stack": 1},
+		{"id": "witnessed_trial", "text": "Saw Heaven's lightning fall on a cultivator", "mood": -2, "days": 2.0, "max_stack": 1},
+		{"id": "failed_trial", "text": "Was thrown down by Heaven", "mood": -14, "days": 4.0, "max_stack": 1}
 	]
 }

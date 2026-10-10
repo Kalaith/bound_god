@@ -12,6 +12,7 @@ const Personality = preload("res://scripts/agents/personality.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const Guide = preload("res://scripts/presentation/ui/guide.gd")
 const Sects = preload("res://scripts/sim/sects.gd")
+const Tribulations = preload("res://scripts/sim/tribulations.gd")
 
 const Need = Personality.Need
 
@@ -47,6 +48,9 @@ static func contextual(sim: RefCounted) -> Array:
 			cold = agent
 		if sitting == null and agent.activity == "cultivating":
 			sitting = agent
+	var trial: Dictionary = _called_trial(sim)
+	if not trial.is_empty():
+		result.append(_say("prompt_trial", {"name": sim.agents[int(trial.agent)].given_name, "clock": Tribulations._clock(sim, int(trial.start_tick))}))
 	var threat: Dictionary = _threat(sim)
 	if not threat.is_empty():
 		result.append(_say("prompt_threat_" + str(threat.kind), {}))
@@ -65,6 +69,17 @@ static func contextual(sim: RefCounted) -> Array:
 	if sim.sects != null and not sim.sects.entries.is_empty():
 		result.append(_say("prompt_sect", {"sect": Sects.name_of(sim.sects.entries[sim.sects.ids()[0]])}))
 	return result
+
+
+## A trial someone in the presence has called and not yet faced.
+static func _called_trial(sim: RefCounted) -> Dictionary:
+	if sim.tribulations == null:
+		return {}
+	for id in sim.tribulations.entries:
+		var trial: Dictionary = sim.tribulations.entries[id]
+		if trial.state == "warning" and sim.in_zone(sim.agents[int(trial.agent)].position):
+			return trial
+	return {}
 
 
 ## A wolf or raider inside the presence.

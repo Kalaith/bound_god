@@ -15,6 +15,8 @@ static func apply(sim: RefCounted, agent: RefCounted, action: Dictionary) -> boo
 			_advance(sim, agent, float(action.qi))
 		"teach":
 			_teach(sim, agent, int(action.to), str(action.technique))
+		"announce_trial":
+			agent.step_result = {"trial": sim.tribulations.announce(sim, agent, action.site)}
 		"found_sect":
 			var id: int = sim.sects.found(sim, agent)
 			agent.step_result = {"sect": id}

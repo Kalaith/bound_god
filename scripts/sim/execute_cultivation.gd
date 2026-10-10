@@ -29,7 +29,12 @@ static func _cultivate(sim: RefCounted, agent: RefCounted, step: Dictionary, ste
 	var per_hour: float = float(sim.calendar.ticks_per_hour())
 	var needed: float = CultivationState.needed(cultivation)
 	var qi: float = sim.qi.density(sim, agent.cell)
-	cultivation.progress = minf(float(cultivation.progress) + CultivationState.rate(cultivation, qi) / per_hour, needed)
+	var rate: float = CultivationState.rate(cultivation, qi)
+	if int(cultivation.blessed_until) > sim.calendar.tick:
+		rate *= Balance.number("cultivation.bless_factor")
+	cultivation.progress = minf(float(cultivation.progress) + rate / per_hour, needed)
+	if int(cultivation.realm) >= 1 and float(cultivation.progress) >= needed and int(cultivation.peak_tick) < 0:
+		cultivation.peak_tick = sim.calendar.tick
 	cultivation.hours = float(cultivation.hours) + 1.0 / per_hour
 	# A mortal who reaches the threshold steps into Qi Refining; beyond it
 	# only a breakthrough leads on.
@@ -97,4 +102,19 @@ static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks
 			return _wait_to_learn(sim, agent, step, step_ticks)
 		Op.PROCLAIM:
 			return _proclaim(sim, agent, step, step_ticks)
+		Op.FACE_HEAVEN:
+			return _face_heaven(sim, agent, step_ticks)
 	return Fail.INTERRUPTED
+
+
+## Announce the attempt, then sit and wait for Heaven; done when the storm
+## has passed.
+static func _face_heaven(sim: RefCounted, agent: RefCounted, step_ticks: int) -> int:
+	agent.activity = "facing_heaven"
+	var trial: Dictionary = sim.tribulations.of(agent.id)
+	if trial.is_empty():
+		if step_ticks == 0:
+			sim.effects.action("announce_trial", agent.id, {"site": agent.cell})
+			return Plans.RUNNING
+		return Plans.DONE if agent.step_result.has("trial") else Plans.RUNNING
+	return Plans.RUNNING

@@ -22,7 +22,7 @@ const GLYPHS: Dictionary = {
 	"sleeping": "z Z", "talking": "...", "fleeing": "!", "fighting": "x", "breaking": "@", "recovering": "+",
 	"praying": "^", "building": "#", "eating": "o", "working": "*", "waiting": "?", "sheltering": "~",
 	"sowing": ".:.", "reaping": "/", "tending": "%", "cooking": "&", "gardening": "*",
-	"cultivating": "( )", "teaching": ">>", "learning": "<<", "proclaiming": "!!",
+	"cultivating": "( )", "teaching": ">>", "learning": "<<", "proclaiming": "!!", "facing_heaven": "/|\\",
 }
 ## Jade motes that rise round someone cultivating.
 const QI_MOTE := Color(0.62, 0.9, 0.78, 0.85)

@@ -9,6 +9,7 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const FaithState = preload("res://scripts/agents/faith_state.gd")
 const FaithPeople = preload("res://scripts/sim/faith_people.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
+const MiraclesCultivation = preload("res://scripts/sim/miracles_cultivation.gd")
 
 ## The nudges a whisper can carry, as goal kinds.
 const NUDGES: Dictionary = {
@@ -100,6 +101,10 @@ static func cast(sim: RefCounted, id: String, cell: Vector3i, args: Dictionary) 
 			result = {"ok": true, "reason": "miracle_veiled"}
 		"mend":
 			result = _mend(sim, cell, float(definition.radius))
+		"bless_cultivation":
+			result = MiraclesCultivation.bless(sim, args)
+		"shield_trial", "defy_heaven":
+			result = MiraclesCultivation.trial(sim, str(definition.effect), cell, float(definition.radius))
 		_:
 			result = {"ok": false, "reason": "miracle_unknown"}
 	if not result.ok:

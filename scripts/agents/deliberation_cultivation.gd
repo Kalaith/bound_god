@@ -26,6 +26,8 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	_learn(sim, agent, out)
 	_teach(sim, agent, out)
 	_found_sect(sim, agent, out)
+	_breakthrough(sim, agent, out)
+	_witness(sim, agent, out)
 
 
 ## The densest spot round the tree this person can sit in that nobody else
@@ -152,3 +154,55 @@ static func _found_sect(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 		return
 	var utility: float = Balance.number("cultivation.found_sect_base") + 0.3 * maxf(agent.personality.leadership, 0.0) + 0.2 * float(agent.cultivation.drive)
 	out.append(_candidate(Kind.FOUND_SECT, utility, "reason_found_sect"))
+
+
+## At a realm's peak a cultivator weighs facing Heaven: impatience grows
+## the longer they wait, preparation (rest, food, help) makes it look less
+## like folly, courage and ambition push, a cracked foundation holds back.
+## Once announced there is no turning back.
+static func _breakthrough(sim: RefCounted, agent: RefCounted, out: Array) -> void:
+	var c: Dictionary = agent.cultivation
+	if sim.tribulations == null or int(c.realm) < 1 or not CultivationState.has_next(c) or not CultivationState.at_peak(c):
+		return
+	if not sim.tribulations.of(agent.id).is_empty():
+		out.append(_candidate(Kind.BREAKTHROUGH, Balance.number("cultivation.trial_committed"), "reason_facing_heaven"))
+		return
+	if Schedule.is_sleep_time(sim, agent):
+		return
+	var days: float = float(sim.calendar.tick - int(c.peak_tick)) / sim.calendar.ticks_per_day if int(c.peak_tick) >= 0 else 0.0
+	var impatience: float = clampf(days / Balance.number("cultivation.peak_days"), 0.0, 1.0)
+	var prep: float = sim.tribulations.preparation(sim, agent)
+	var courage: float = clampf(0.5 + 0.3 * float(agent.personality.bravery) + 0.3 * float(c.drive) - (0.3 if float(c.foundation) < 0.35 else 0.0), 0.1, 1.2)
+	var utility: float = (Balance.number("cultivation.peak_base") + Balance.number("cultivation.peak_impatience") * impatience) * courage * (0.4 + 0.6 * prep)
+	out.append(_candidate(Kind.BREAKTHROUGH, utility, "reason_at_peak", -1, prep * 100.0))
+
+
+## Where to face Heaven: the tree's sanctuary when it can be reached, unless
+## a loner would rather be alone with it, near home.
+static func trial_site(sim: RefCounted, agent: RefCounted) -> Vector3i:
+	var tree: Vector3i = sim.features.get("sacred_tree", NONE)
+	var near_tree: bool = tree.x >= 0 and H.distance(tree, agent.cell) <= Balance.number("cultivation.sanctuary_reach")
+	if near_tree and not agent.has_trait("loner"):
+		var cell: Vector3i = spot(sim, agent)
+		if cell.x >= 0:
+			return cell
+	if tree.x < 0 or not near_tree:
+		return H.wander_cell(sim, agent)
+	# A quiet place beyond the sanctuary, on their own side of the tree.
+	var angle: float = float(agent.id) * 2.39996
+	var reach: float = Balance.number("cultivation.sanctuary_radius") + 8.0
+	var away := Vector3i(roundi(tree.x + cos(angle) * reach), tree.y, roundi(tree.z + sin(angle) * reach))
+	var found: Vector3i = sim.nav.nearest_walkable(away, 4)
+	return found if found.x >= 0 else H.wander_cell(sim, agent)
+
+
+## A storm seen nearby moves believers to pray for the one inside it.
+static func _witness(sim: RefCounted, agent: RefCounted, out: Array) -> void:
+	if sim.tribulations == null or sim.tribulations.entries.is_empty() or not agent.faith.get("knows", false):
+		return
+	var sight: float = Balance.number("agents.sight_radius") * 1.5
+	for id in sim.tribulations.entries:
+		var trial: Dictionary = sim.tribulations.entries[id]
+		if trial.state == "storm" and int(trial.agent) != agent.id and H.distance(trial.site, agent.cell) <= sight:
+			out.append(_candidate(Kind.PRAY, Balance.number("cultivation.witness_prayer") * (0.5 + float(agent.faith.devotion) / 100.0), "reason_trial"))
+			return

@@ -1,0 +1,44 @@
+{
+	"schema_version": 1,
+	"kinds": [
+		{
+			"id": "lightning",
+			"realm_from": 1,
+			"severity": [0.35, 0.85],
+			"talent_severity": 0.15,
+			"strikes": [4, 8],
+			"radius": 4,
+			"storm_ticks": 45,
+			"warning_ticks": 120,
+			"insight": 1.0
+		}
+	],
+	"odds": {
+		"base": 0.5,
+		"foundation": 0.4,
+		"preparation": 0.25,
+		"technique": 0.08,
+		"sanctuary": 0.2,
+		"severity": 0.55,
+		"least": 0.05,
+		"most": 0.95,
+		"death_share_base": 0.15,
+		"death_share_severity": 0.6
+	},
+	"outcomes": {
+		"success_foundation": [0.45, 0.45],
+		"injury_damage": 45.0,
+		"injury_crack": 0.25,
+		"injury_progress": 0.7,
+		"defied_foundation": 0.15,
+		"defied_lifespan": 0.5,
+		"defied_next_realm": 1.5
+	},
+	"scorch": {
+		"charred_wood": ["log", "planks", "door", "table", "bench", "fence"],
+		"burned": ["leaves", "thatch", "tall_grass", "crop", "sapling"],
+		"scorched_earth": ["grass", "dirt", "farmland"],
+		"split": ["stone", "cobble", "cut_stone"],
+		"split_into": "gravel"
+	}
+}

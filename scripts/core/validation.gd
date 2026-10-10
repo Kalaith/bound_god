@@ -26,7 +26,7 @@ const AMBITION_KINDS: Array[String] = [
 	"build_home", "lead_village",
 ]
 ## Miracle effects that sim/miracles.gd implements; the catalog may not name others.
-const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend"]
+const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend", "bless_cultivation", "shield_trial", "defy_heaven"]
 ## Kept in step with FunctionRules.FUNCTIONS (not preloaded: the rules load data).
 const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary"]
 const BALANCE_SECTIONS: Array[String] = [
@@ -53,6 +53,7 @@ static func run() -> Array[String]:
 	for entry in Data.traits():
 		trait_ids.append(entry.get("id"))
 	errors.append_array(ValidationCultivation.check(Data.file("cultivation"), Data.labels(), trait_ids))
+	errors.append_array(ValidationCultivation.check_tribulations(Data.file("tribulations"), Data.realms().size(), Data.file("blocks"), Data.labels()))
 	var seen: Dictionary = {}
 	for name in Data.TEXT_FILES:
 		errors.append_array(check_text(Data.file(name)))

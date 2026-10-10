@@ -13,6 +13,7 @@ const FILES: Dictionary = {
 	"crops": "res://data/crops.json",
 	"recipes": "res://data/recipes.json",
 	"cultivation": "res://data/cultivation.json",
+	"tribulations": "res://data/tribulations.json",
 	"text": "res://data/text.json",
 	"text_agents": "res://data/text_agents.json",
 	"text_ui": "res://data/text_ui.json",
@@ -217,3 +218,7 @@ static func affinity(id: String) -> Dictionary:
 		if entry.get("id") == id:
 			return entry
 	return {}
+
+
+static func tribulations() -> Dictionary:
+	return file("tribulations")

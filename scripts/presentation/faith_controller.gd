@@ -35,6 +35,8 @@ func _ready() -> void:
 		main.rest(days))
 	main.inspector.whisper.connect(func(id: int, nudge: String) -> void:
 		send({"type": "cast_miracle", "miracle": "whisper", "cell": sim.agents[id].cell, "agent": id, "nudge": nudge}))
+	main.inspector.miracle.connect(func(id: int, miracle: String) -> void:
+		send({"type": "cast_miracle", "miracle": miracle, "cell": sim.agents[id].cell, "agent": id}))
 
 
 func send(command: Dictionary) -> void:

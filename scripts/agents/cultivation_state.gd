@@ -3,7 +3,10 @@ extends RefCounted
 ## cultivate, realm and progress within it, foundation, techniques, teacher,
 ## students and sect. Plain data in `agent.cultivation`:
 ## {talent, affinity, drive, realm, progress, foundation, techniques: Array[String],
-##  teacher: int, students: Array[int], sect_id: int, hours: float}
+##  teacher: int, students: Array[int], sect_id: int, hours: float,
+##  peak_tick: int (when they reached the peak, -1), blessed_until: int (tick),
+##  flawed: bool (a breakthrough Heaven meant to end), next_factor: float (harder next realm),
+##  trials: Array of {tick, kind, outcome, sanctuary, severity, shield}}
 ## Most people have little talent; would-be cultivators drawn by the tree's
 ## qi arrive with more of it and a stronger drive.
 const Balance = preload("res://scripts/core/balance.gd")
@@ -36,7 +39,7 @@ static func roll(rng: RandomNumberGenerator, seeker: bool = false) -> Dictionary
 static func fresh(talent: float, affinity: String, drive: float) -> Dictionary:
 	return {"talent": talent, "affinity": affinity, "drive": drive, "realm": 0, "progress": 0.0,
 		"foundation": Balance.number("cultivation.start_foundation"), "techniques": [], "teacher": -1, "students": [],
-		"sect_id": -1, "hours": 0.0}
+		"sect_id": -1, "hours": 0.0, "peak_tick": -1, "blessed_until": -1, "flawed": false, "next_factor": 1.0, "trials": []}
 
 
 ## For people from saves made before cultivation: a sub-stream seeded from
@@ -49,11 +52,14 @@ static func for_old_save(world_seed: int, id: int) -> Dictionary:
 
 ## How long a person may live: mortal old age plus their realm's bonus.
 static func lifespan(cultivation: Dictionary) -> float:
-	return Balance.number("health.old_age_years") + float(Data.realm(int(cultivation.realm)).get("lifespan_bonus", 0.0))
+	var bonus: float = float(Data.realm(int(cultivation.realm)).get("lifespan_bonus", 0.0))
+	if bool(cultivation.flawed):
+		bonus *= float(Data.tribulations().outcomes.defied_lifespan)
+	return Balance.number("health.old_age_years") + bonus
 
 
 static func needed(cultivation: Dictionary) -> float:
-	return float(Data.realm(int(cultivation.realm)).get("progress_needed", 1.0))
+	return float(Data.realm(int(cultivation.realm)).get("progress_needed", 1.0)) * float(cultivation.next_factor)
 
 
 ## At the top of their realm: only a breakthrough takes them further.
@@ -89,3 +95,8 @@ static func rate(cultivation: Dictionary, qi: float) -> float:
 	if int(cultivation.realm) >= 1:
 		soundness = Balance.number("cultivation.foundation_base") + Balance.number("cultivation.foundation_weight") * float(cultivation.foundation)
 	return per_hour * qi * (1.0 + float(affinity.get("qi_bonus", 0.0))) * technique * soundness
+
+
+## Whether a breakthrough to the next realm exists for them.
+static func has_next(cultivation: Dictionary) -> bool:
+	return int(cultivation.realm) + 1 < Data.realms().size()

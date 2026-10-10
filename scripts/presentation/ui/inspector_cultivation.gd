@@ -7,6 +7,8 @@ const Style = preload("res://scripts/presentation/ui/style.gd")
 const Data = preload("res://scripts/core/data.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const Sects = preload("res://scripts/sim/sects.gd")
+const Tribulations = preload("res://scripts/sim/tribulations.gd")
+const AgentText = preload("res://scripts/presentation/ui/agent_text.gd")
 
 
 static func _color(color: Color, text: String) -> String:
@@ -50,7 +52,27 @@ static func text(sim: RefCounted, agent: RefCounted) -> String:
 		lines.append(_color(Style.MUTED, Text.label("cult_no_sect")))
 	else:
 		lines.append(_color(Style.FAITH, Text.format("cult_sect", {"rank": Text.label("rank_" + str(sect.members.get(agent.id, "disciple"))).capitalize(), "sect": Sects.name_of(sect)})))
+	_trials(sim, agent, lines)
 	lines.append("")
 	lines.append(Text.format("cult_qi_here", {"value": roundi(sim.qi.density(sim, agent.cell) * 100.0)}))
 	lines.append(Text.format("cult_lifespan", {"years": roundi(CultivationState.lifespan(c))}))
 	return "\n".join(lines)
+
+
+## A trial called or under way, a flawed breakthrough, and past trials.
+static func _trials(sim: RefCounted, agent: RefCounted, lines: Array[String]) -> void:
+	var c: Dictionary = agent.cultivation
+	var trial: Dictionary = sim.tribulations.of(agent.id) if sim.tribulations != null else {}
+	if not trial.is_empty():
+		var help: String = (Text.label("cult_shielded") if float(trial.shield) > 0.0 else "") + (Text.label("cult_defied") if bool(trial.defy) else "")
+		var args: Dictionary = {"severity": roundi(float(trial.severity) * 100.0), "help": help,
+			"clock": Tribulations._clock(sim, int(trial.start_tick))}
+		var key: String = "cult_trial_storm" if trial.state == "storm" else "cult_trial_pending"
+		lines.append(_color(Style.WARN, Text.format(key, args)))
+	if bool(c.get("flawed", false)):
+		lines.append(_color(Style.WARN, Text.label("cult_flawed")))
+	var past: Array[String] = []
+	for record in c.get("trials", []):
+		past.append("%s (%s)" % [AgentText.clock(sim, int(record.tick)), Text.label("cult_outcome_" + str(record.outcome))])
+	if not past.is_empty():
+		lines.append(Text.format("cult_trials", {"list": ", ".join(past)}))

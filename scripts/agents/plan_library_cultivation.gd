@@ -36,6 +36,14 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 				Plans.go_to(Plans.target(T.AGENT, student)),
 				Plans.step(Op.TEACH, {"to": student, "ticks": Balance.integer("cultivation.teach_ticks")}),
 			])]
+		Kind.BREAKTHROUGH:
+			var trial: Dictionary = sim.tribulations.of(agent.id)
+			if not trial.is_empty():
+				return [H.option("hold_through_the_storm", 1.0, [Plans.step(Op.FACE_HEAVEN, {})])]
+			var site: Vector3i = DeliberationCultivation.trial_site(sim, agent)
+			var steps: Array = [Plans.go_cell(site)] if site.x >= 0 else []
+			steps.append(Plans.step(Op.FACE_HEAVEN, {}))
+			return [H.option("face_heaven", 1.0, steps)]
 		Kind.FOUND_SECT:
 			var spot: Vector3i = DeliberationCultivation.spot(sim, agent)
 			var steps: Array = [Plans.go_cell(spot)] if spot.x >= 0 else []

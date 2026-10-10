@@ -37,6 +37,7 @@ const Woods = preload("res://scripts/sim/woods.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Qi = preload("res://scripts/sim/qi.gd")
 const Sects = preload("res://scripts/sim/sects.gd")
+const Tribulations = preload("res://scripts/sim/tribulations.gd")
 
 var world_seed: int = 1
 ## How this world was made (world kind, size); saved so a load regenerates it.
@@ -77,6 +78,7 @@ var kitchens: RefCounted = null
 var woods: RefCounted = null
 var qi: RefCounted = null
 var sects: RefCounted = null
+var tribulations: RefCounted = null
 ## Kindled cells (miracle): Array of {cell, radius, until}.
 var kindled: Array = []
 ## Veils of fog (miracle): Array of {cell, radius, until}.
@@ -142,6 +144,7 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	woods = Woods.new()
 	qi = Qi.new()
 	sects = Sects.new()
+	tribulations = Tribulations.new()
 	settlement_life = SettlementLife.new()
 	director = Director.new()
 	_events_seen = structures.events.size()
@@ -284,6 +287,8 @@ func threats_list() -> Array:
 
 
 func threat_exists(id: int) -> bool:
+	if id <= -1000:
+		return tribulations != null and tribulations.storm_active(id)
 	return threats != null and threats.exists(id)
 
 
@@ -378,6 +383,8 @@ func step() -> void:
 		settlement_life.refresh_jobs(self)
 	if threats != null:
 		threats.step(self)
+	if tribulations != null:
+		tribulations.step(self)
 	_refresh_site_buckets()
 	_refresh_agent_buckets()
 	AgentTick.update_agents(self)
@@ -396,7 +403,7 @@ func state_hash() -> int:
 	for agent in agents:
 		people.append(agent.to_dict())
 	var state: Array = [calendar.tick, rng.state, people, settlements.to_dict(), sites.to_dict(), items, crops.to_dict(), kitchens.to_dict(), woods.to_dict(),
-		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state(), sects.to_dict()]
+		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state(), sects.to_dict(), tribulations.to_dict()]
 	return hash(var_to_bytes(state))
 
 

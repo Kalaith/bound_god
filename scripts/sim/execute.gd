@@ -20,7 +20,7 @@ const WORK_OPS: Array[int] = [Op.TAKE_STOCK, Op.DEPOSIT, Op.DELIVER, Op.PLACE_BL
 	Op.FORAGE, Op.PICK_UP, Op.REPAIR_BLOCK, Op.PLANT, Op.SOW, Op.REAP, Op.TEND_CROPS, Op.ADD_TO_POT, Op.COOK]
 const SOCIAL_OPS: Array[int] = [Op.TALK, Op.SEND, Op.GIVE, Op.WAIT_FOR_HELP, Op.JOIN, Op.LEAVE, Op.TREAT, Op.SETTLE]
 const FAITH_OPS: Array[int] = [Op.PRAY, Op.TEND]
-const CULTIVATION_OPS: Array[int] = [Op.CULTIVATE, Op.TEACH, Op.WAIT_TO_LEARN, Op.PROCLAIM]
+const CULTIVATION_OPS: Array[int] = [Op.CULTIVATE, Op.TEACH, Op.WAIT_TO_LEARN, Op.PROCLAIM, Op.FACE_HEAVEN]
 
 
 ## Where a movement target currently is, as a cell to stand on.

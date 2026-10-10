@@ -98,3 +98,56 @@ static func check(data: Dictionary, labels: Dictionary, traits: Array) -> Array[
 			if not traits.has(trait_id):
 				errors.append("cultivation: sect adjective for unknown trait " + str(trait_id))
 	return errors
+
+
+## Tribulation kinds start at a real realm with a next one, with sensible
+## ranges; odds and outcomes are numbers; scorching names real blocks.
+static func check_tribulations(data: Dictionary, realms: int, blocks: Dictionary, labels: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	if not _number(data.get("schema_version")) or int(data.schema_version) != 1:
+		errors.append("tribulations: schema_version must be 1")
+	var kinds: Variant = data.get("kinds")
+	if not kinds is Array or kinds.is_empty():
+		errors.append("tribulations: the kind list is missing")
+	else:
+		for kind in kinds:
+			if not kind is Dictionary or not kind.get("id") is String:
+				errors.append("tribulations: a kind needs an id")
+				continue
+			var label: String = "tribulations[" + kind.id + "]"
+			if not _number(kind.get("realm_from")) or int(kind.realm_from) < 1 or int(kind.realm_from) + 1 >= realms:
+				errors.append(label + ": realm_from must be a realm with a next one")
+			for key in ["severity", "strikes"]:
+				var range: Variant = kind.get(key)
+				if not range is Array or range.size() != 2 or not _number(range[0]) or not _number(range[1]) or float(range[0]) > float(range[1]):
+					errors.append(label + ": " + key + " must be a [low, high] range")
+			for key in ["talent_severity", "radius", "storm_ticks", "warning_ticks", "insight"]:
+				if not _number(kind.get(key)) or float(kind[key]) < 0.0:
+					errors.append(label + ": " + key + " must be a number")
+	for section in ["odds", "outcomes"]:
+		var values: Variant = data.get(section)
+		if not values is Dictionary or values.is_empty():
+			errors.append("tribulations: " + section + " are missing")
+			continue
+		for key in values:
+			var value: Variant = values[key]
+			if not (_number(value) or (value is Array and value.size() == 2 and _number(value[0]) and _number(value[1]))):
+				errors.append("tribulations: " + section + "." + str(key) + " must be a number")
+	var names: Dictionary = {}
+	for entry in blocks.get("blocks", []):
+		names[entry.get("name")] = true
+	var scorch: Variant = data.get("scorch")
+	if not scorch is Dictionary:
+		errors.append("tribulations: scorch is missing")
+	else:
+		for key in ["charred_wood", "burned", "scorched_earth", "split"]:
+			for name in scorch.get(key, []):
+				if not names.has(name):
+					errors.append("tribulations: scorch names unknown block " + str(name))
+		for name in ["charred_wood", "scorched_earth", scorch.get("split_into", "")]:
+			if not names.has(name):
+				errors.append("tribulations: scorch turns blocks into unknown " + str(name))
+				continue
+			if not labels.has("block_" + str(name)):
+				errors.append("tribulations: block " + str(name) + " has no label")
+	return errors
