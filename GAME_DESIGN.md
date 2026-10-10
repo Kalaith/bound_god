@@ -77,7 +77,9 @@ Concept principle 10: interacting systems over decorative blocks. The prototype 
 | --- | --- | --- |
 | Terrain | grass, dirt, stone, sand, gravel, ore, water (static), bedrock | Generated; breakable except bedrock |
 | Material | log, planks, thatch, cut stone, cobble, glass, fence | Placed by the player and NPCs; each maps to a resource |
-| Functional | bed, door, storage chest, workbench, hearth, altar, berry bush, sacred tree | Recognised as **components** (§5.3); a structure's purpose comes from these |
+| Functional | bed, door, storage chest, workbench, hearth, altar, berry bush, sacred tree, table, bench, planter, lantern | Recognised as **components** (§5.3); a structure's purpose comes from these |
+
+**Decision (M13, playtest round 1):** players found too little to build. Four components were added, each with an implemented effect: **table** and **bench** make a hall, **planters** make a garden, and a **lantern** lights its surroundings (wolves will not enter the light; people keep their full sight at night).
 
 Breaking a block yields its resource (log → wood, stone → stone, ore → ore, berry bush → berries without destroying the bush when ripe). Placing a block consumes one unit of its resource from the avatar's divine stock.
 
@@ -99,7 +101,7 @@ Each settlement has a **stockpile**: the sum of the storage chests standing in i
 - Calendar: 720 ticks per day (as Final Landing), 4 seasons × 10 days = **40-day year**.
 - At 1× speed one day lasts 2 real minutes (6 ticks/s). Speeds: Pause, 1×, 3×, 10×.
 - **Rest at the shrine:** the god withdraws for a chosen number of days (1, 5, 10, a season). The simulation advances as fast as the machine allows behind a progress overlay, then returns the player to a world that has moved on, with a "While you rested…" summary drawn from the chronicle.
-- Seasons affect berry regrowth (none in winter), day length, and the Shelter need (nights are harsher in winter). **Later:** weather and temperature.
+- Seasons affect berry regrowth (none in winter, except bushes in a garden's planters), day length, and the Shelter need (nights are harsher in winter). In autumn people want more food put by. **Later:** weather and temperature.
 
 ## 5. Building and templates (core pillar)
 
@@ -127,6 +129,8 @@ A structure's function comes from what it contains, not from its name. Rules liv
 | Workshop | workbench, roofed | 1 worker |
 | Shrine | altar, and an altar is within 3 blocks of an open sky column or a sacred tree | — |
 | Shelter | roofed floor area ≥ 6, ≥1 hearth or bed | sleepers (no bed bonus) |
+| Hall | ≥1 table, ≥2 benches, table roofed, roofed floor area ≥ 12 | seats; relaxing there restores recreation twice as fast |
+| Garden | ≥4 planters joined side by side (open sky) | plots; bushes in planters ripen twice as fast and still bear in winter |
 | Unrecognised | none of the above | — |
 
 A template can satisfy several functions (a house with an altar is also a household shrine). Built instances are re-checked when blocks change, so a ruined house stops counting as a dwelling.
@@ -239,8 +243,9 @@ Final Landing multiplies work utility by a player-set priority (0–3). Here eac
 ### 6.7 Population and lifecycle
 
 - Start: two travellers arrive at the sacred tree on day 1 (concept's Year 1). The ridge hamlet starts with 5 miners who do not know the god.
-- **Migrants** arrive at a settlement's edge when it is attractive (spare beds, food stores, safety, renown of its shrine); one roll per 3 days.
-- Births, children, ageing and death as Final Landing. Prototype population cap: 30 total.
+- **Migrants** arrive at a settlement's edge when it is attractive (spare beds, food stores, safety from threats nearby, renown of its shrine, its standing); one roll per 3 days. A settlement going hungry draws nobody. Migrants bring designs from where they came from (a timber cottage, a store shed, a hall, a garden) and may know open land on the way.
+- Births, children, ageing and death as Final Landing. Population cap: 45 total (Phase 2 target 60 detailed).
+- **Settlement standing** (M13): each settlement is a **camp**, **hamlet** or **village**, judged daily from what it has: people, homes for all, food in its chests, the functions standing in its area and a living shrine. A village is the self-sustaining state; rises and falls are chronicled with the reason. Builders who cannot get stone raise plain stone walling in planks (components such as a hearth stay stone), so a settlement is never stalled only by a missing quarry.
 - Departure (6 days of very low mood) becomes **Migrate** when a better settlement is known, otherwise leaving the map.
 
 ## 7. Faith, shrines and miracles
@@ -326,6 +331,10 @@ At an active shrine, the player can post a request:
 Requests are broadcast as `DivineRequest` messages to believers at that shrine. Each NPC decides whether to take it from devotion, bravery, curiosity, current needs, believed danger and the promised **boon** (the player attaches a blessing: a Favour-paid bonus on success such as `blessed` thought, +skill, or Bless Growth at their home). A taken quest is an ordinary intention; it can fail, be abandoned, or succeed in an unexpected way, and its outcome is reported when the follower prays next.
 
 Followers also start their own expeditions: devout NPCs with the `curious` trait or the `map_the_wilds` ambition may Preach or Scout unprompted.
+
+### 8.1a Founding a settlement (M13)
+
+World generation marks three **founding grounds**: open, level land well away from the tree and the hamlet, each with a few berry bushes and a knuckle of stone. People learn of them by seeing them, from talk, or from migrants who passed them. Once the settlement at the god's shrine is a **village**, the god may post **Found a settlement at** *ground*. Up to three believers may take it: the first carries wood, sets down a chest and names the new settlement after the place; later ones bring food and join. The request is done when the settlers live there. The new settlement builds by the designs its founders know; a **Raise a shrine** request (or the founders' own wish for a shrine) gives it an altar, which makes it a transfer destination. Settlers far from any shrine pray where they live.
 
 ### 8.2 Transfer
 

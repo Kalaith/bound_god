@@ -91,12 +91,19 @@ static func rank(level: String) -> int:
 	return maxi(LEVELS.find(level), 0)
 
 
-## Daily: judge every settlement and chronicle a change with its reason.
+## Daily: judge every settlement and chronicle a change with its reason. A
+## settlement falls only after lacking its level for some days running, so a
+## night with newcomers not yet housed does not unmake a village.
 static func daily(sim: RefCounted) -> void:
 	for id in sim.settlements.ids():
 		var settlement: Dictionary = sim.settlements.entries[id]
 		var before: String = str(settlement.get("standing", LEVELS[0]))
 		var now: String = judge(sim, id)
+		if rank(now) < rank(before):
+			settlement["standing_lapse"] = int(settlement.get("standing_lapse", 0)) + 1
+			if int(settlement.standing_lapse) < Balance.integer("settlements.standing_grace_days"):
+				continue
+		settlement["standing_lapse"] = 0
 		settlement["standing"] = now
 		if now == before:
 			continue

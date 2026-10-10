@@ -31,7 +31,7 @@
 	},
 	"mood": {
 		"baseline": 50.0, "need_weight": 0.3, "break_threshold": 22.0, "extreme_threshold": 10.0,
-		"break_chance_per_day": 0.6, "break_ticks": 90, "departure_threshold": 12.0, "departure_days": 6.0
+		"break_chance_per_day": 0.6, "break_ticks": 90, "departure_threshold": 12.0, "departure_days": 6.0, "settle_days": 10
 	},
 	"health": {
 		"regen_per_day": 4.0, "starvation_damage_per_day": 14.0, "exposure_damage_per_day": 6.0,
@@ -60,7 +60,7 @@
 	"settlements": {
 		"start_radius": 22, "radius_per_structure": 1.0, "max_radius": 40, "chest_capacity": 40,
 		"culture_need_drift": 0.02, "culture_example_drift": 0.01, "culture_min": 0.4, "culture_max": 1.6,
-		"berries_per_person_day": 2.5, "autumn_season": 2, "autumn_berries_per_person": 10,
+		"berries_per_person_day": 2.5, "standing_grace_days": 2, "autumn_season": 2, "autumn_berries_per_person": 10,
 		"standing": {
 			"hamlet": {"residents": 4, "housed": 0.5, "food_days": 0.0, "functions": {"dwelling": 2}, "shrine": false},
 			"village": {"residents": 10, "housed": 1.0, "food_days": 1.0, "functions": {"dwelling": 4, "storehouse": 1, "hall": 1, "garden": 1}, "shrine": true}

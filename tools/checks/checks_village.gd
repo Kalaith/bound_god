@@ -114,8 +114,11 @@ func check_standing_follows_what_a_settlement_has():
 			for cell in entry.components.get("table", []):
 				sim.set_block(cell, 0, 0, "test")
 	Standing.daily(sim)
+	if str(sim.settlements.entries[1].standing) != "village":
+		return "a village fell on its first day without a hall"
+	Standing.daily(sim)
 	if str(sim.settlements.entries[1].standing) != "hamlet":
-		return "losing the hall did not make the village a hamlet again"
+		return "losing the hall for two days did not make the village a hamlet again"
 	var last: Dictionary = sim.chronicle.entries.back()
 	if last.kind != "standing_fell" or not str(last.cause).contains("cause_lack_hall"):
 		return "the fall was not chronicled with the missing hall: " + str(last)

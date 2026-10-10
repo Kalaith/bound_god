@@ -12,6 +12,7 @@ const CaptureStores = preload("res://scripts/presentation/capture_stores.gd")
 const CaptureSettlement = preload("res://scripts/presentation/capture_settlement.gd")
 const CaptureFaith = preload("res://scripts/presentation/capture_faith.gd")
 const CaptureTime = preload("res://scripts/presentation/capture_time.gd")
+const CaptureVillage = preload("res://scripts/presentation/capture_village.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -38,6 +39,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 		return
 	if scenario.begins_with("stores_"):
 		CaptureStores.arrange(main, shot, scenario)
+		return
+	if scenario.begins_with("village_"):
+		CaptureVillage.arrange(main, shot, scenario)
 		return
 	match scenario:
 		"design_library", "design_box", "design_invalid":

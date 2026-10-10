@@ -112,7 +112,8 @@ static func _help(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 
 ## Unhappy people who believe in a better place consider moving there.
 static func _migrate(sim: RefCounted, agent: RefCounted, out: Array) -> void:
-	if agent.is_child or agent.low_mood_ticks <= 0:
+	# Someone who has just moved gives the new place a while before moving on.
+	if agent.is_child or agent.low_mood_ticks <= 0 or sim.calendar.day() - agent.joined_day < Balance.integer("mood.settle_days"):
 		return
 	var days: float = float(agent.low_mood_ticks) / sim.calendar.ticks_per_day
 	var target: int = better_settlement(sim, agent)

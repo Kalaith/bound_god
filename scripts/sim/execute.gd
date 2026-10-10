@@ -2,6 +2,7 @@ extends RefCounted
 ## Runs one tick of the current plan step, and recovers when a step fails:
 ## failure corrects beliefs so the next plan does not repeat the mistake.
 const Balance = preload("res://scripts/core/balance.gd")
+const Movement = preload("res://scripts/sim/movement.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Cognition = preload("res://scripts/sim/cognition.gd")
@@ -80,6 +81,8 @@ static func go_to(sim: RefCounted, agent: RefCounted, where: Dictionary, step_ti
 			# Too many people asked for a route this tick; ask again next tick.
 			return Plans.RUNNING
 		var route: Array[Vector3i] = sim.nav.find_path(agent.cell, destination)
+		if route.is_empty() and Movement.scramble(sim, agent, destination):
+			return Plans.RUNNING
 		if route.is_empty():
 			return Fail.NO_PATH
 		agent.path = route

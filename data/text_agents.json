@@ -271,6 +271,7 @@
 		"plan_set_up_altar": "set up an altar",
 		"log_request_taken": "Took up the god's request",
 		"log_request_declined": "Heard the god's request and let it pass",
+		"log_scrambled_out": "Was hemmed in and clambered out",
 		"request_carry_name": "carry the god's name to {place}",
 		"request_raise_shrine": "raise a shrine at {place}",
 		"request_restore_shrine": "restore {shrine}",

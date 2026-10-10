@@ -225,6 +225,7 @@ static func _join(sim: RefCounted, agent: RefCounted, settlement_id: int) -> voi
 		if not settlement.known_templates.has(id):
 			settlement.known_templates.append(id)
 	agent.low_mood_ticks = 0
+	agent.joined_day = sim.calendar.day()
 	Mind.add(agent, "arrived", sim.calendar.ticks_per_day)
 	sim.chronicle_event("migrated", settlement_id, {"name": agent.full_name(), "from": from}, "cause_unhappy", [agent.id])
 
@@ -276,6 +277,7 @@ static func _settle(sim: RefCounted, agent: RefCounted, index: int) -> void:
 		agent.carrying = {}
 	agent.beliefs.stock = sim.settlements.stock_of(id).duplicate()
 	agent.low_mood_ticks = 0
+	agent.joined_day = sim.calendar.day()
 	Mind.add(agent, "arrived", sim.calendar.ticks_per_day)
 	agent.step_result = {"settled": 1}
 
