@@ -24,7 +24,8 @@ static func _spiral(radius: int) -> Array:
 ## {origin, rotation, order} for the best site, or {} when there is none.
 ## `enough` > 0 stops the spiral once that many candidates are found (the
 ## nearest rings hold the best of them; used where time matters more).
-static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary, enough: int = 0) -> Dictionary:
+## `most_spots` > 0 caps how many spots on the spiral are looked at.
+static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary, enough: int = 0, most_spots: int = 0) -> Dictionary:
 	var center: Vector3i = settlement.center
 	var radius: int = mini(Balance.integer("construction.site_search_radius"), int(settlement.radius))
 	# Columns other buildings or sites already hold, and ground heights, are
@@ -37,8 +38,12 @@ static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary, 
 		blocked[Vector2i(cell.x, cell.z)] = true
 	var context: Dictionary = {"blocked": blocked, "tops": {}, "footprints": {}}
 	var candidates: Array = []
+	var looked: int = 0
 	for offset in _spiral(radius):
 		if enough > 0 and candidates.size() >= enough:
+			break
+		looked += 1
+		if most_spots > 0 and looked > most_spots:
 			break
 		for rotation in range(4):
 			var scored: Dictionary = _score(sim, template, Vector2i(center.x, center.z) + offset, rotation, settlement, context)
@@ -88,7 +93,8 @@ static func _footprint(sim: RefCounted, corner: Vector2i, size: Vector3i, settle
 				return result
 			if Vector2(x - settlement.center.x, z - settlement.center.z).length() > float(settlement.radius):
 				return result
-			if Vector2(x - tree.x, z - tree.z).length() < 6.0:
+			# Clear of the sacred crown, which widens as the tree matures.
+			if Vector2(x - tree.x, z - tree.z).length() < 9.0:
 				return result
 			var top: int = _top(world, context, x, z)
 			if top < 0:

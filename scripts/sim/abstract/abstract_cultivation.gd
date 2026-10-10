@@ -22,8 +22,12 @@ const EffectsCultivation = preload("res://scripts/sim/effects_cultivation.gd")
 const Social = preload("res://scripts/sim/social.gd")
 const AbstractPeople = preload("res://scripts/sim/abstract/abstract_people.gd")
 
-## Share of each waking hour spent meditating, per point of drive (≈ 3 h a day at full drive).
-const SIT_SHARE: float = 0.18
+## Share of each waking hour spent meditating: a base for anyone who walks
+## the Way and more per point of drive (detailed cultivators of modest drive
+## sat about six hours a day in the M15 runs; these give about 4 to 7).
+const SIT_BASE: float = 0.15
+const SIT_SHARE: float = 0.35
+const SIT_MOST: float = 0.6
 ## Meditation is taken in three sittings a day (morning, midday, evening),
 ## each covering a third of the waking hours.
 const SITTINGS: Array = [7.0, 13.0, 19.0]
@@ -36,7 +40,7 @@ static func hour(sim: RefCounted, agent: RefCounted, hours: int = 1) -> int:
 	var c: Dictionary = agent.cultivation
 	if agent.is_child or c.is_empty() or (float(c.drive) < 0.05 and int(c.realm) == 0):
 		return -1
-	var share: float = minf(SIT_SHARE * float(c.drive) * (1.0 + Balance.number("cultivation.realm_bonus") * int(c.realm)), 0.35)
+	var share: float = minf((SIT_BASE + SIT_SHARE * float(c.drive)) * (1.0 + Balance.number("cultivation.realm_bonus") * int(c.realm)), SIT_MOST)
 	if agent.need(Personality.Need.FOOD) < 40.0:
 		share *= 0.5
 	share *= hours
@@ -65,8 +69,9 @@ static var _qi: Dictionary = {}
 
 
 static func _spot_qi(sim: RefCounted, agent: RefCounted) -> float:
-	if _qi_tick != sim.calendar.tick:
-		_qi_tick = sim.calendar.tick
+	var now: int = sim.calendar.tick * 1000003 + sim.get_instance_id()
+	if _qi_tick != now:
+		_qi_tick = now
 		_qi.clear()
 	if not _qi.has(agent.settlement_id):
 		_qi[agent.settlement_id] = _settlement_qi(sim, agent)

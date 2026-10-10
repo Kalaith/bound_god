@@ -28,6 +28,9 @@ const GATHER_PER_HOUR: Dictionary = {"wood": 4.0, "stone": 2.0, "thatch": 3.0}
 const PLAN_EVERY_DAYS: int = 3
 ## Candidates the site search gathers before choosing (the nearest rings).
 const SEARCH_ENOUGH: int = 16
+## Spots on the spiral looked at before giving up (0: the whole spiral;
+## a cap left homes unbuilt, so the search stays whole).
+const SEARCH_MOST: int = 0
 ## Share of free hands that build while a site waits.
 const BUILD_SHARE: float = 0.5
 
@@ -81,8 +84,23 @@ static func wants(sim: RefCounted, id: int) -> Array:
 	return result
 
 
-## The most respected resident, who would propose a common building.
+static var _leaders: Dictionary = {}
+
+
+## The most respected resident, who would propose a common building
+## (weighed again every ten days).
 static func _leader(sim: RefCounted, id: int) -> int:
+	# Keyed by world as well: several worlds may live in one run (checks).
+	var key: String = "%d:%d" % [sim.get_instance_id(), id]
+	var known: Array = _leaders.get(key, [-1, -1])
+	if int(known[0]) >= 0 and sim.calendar.tick - int(known[0]) < sim.calendar.ticks_for_days(10.0) and int(known[1]) >= 0 			and int(known[1]) < sim.agents.size() and sim.agents[int(known[1])].is_present():
+		return int(known[1])
+	var best: int = _weigh_leader(sim, id)
+	_leaders[key] = [sim.calendar.tick, best]
+	return best
+
+
+static func _weigh_leader(sim: RefCounted, id: int) -> int:
 	var best: int = -1
 	var best_score: float = -INF
 	var residents: Array = sim.settlements.entries[id].residents.duplicate()
@@ -117,14 +135,16 @@ static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
 			continue
 		if not design.bill.is_empty() and open >= Balance.integer("construction.max_open_sites"):
 			continue
-		var failed: Array = tried.get(design.id, [-1, 0])
-		if int(failed[0]) > sim.calendar.tick:
+		var failed: Array = tried.get(design.id, [-1, 0, -1, -1])
+		var ground: Array = [int(sim.structures.version), sim.construction.reserved.size()]
+		# Nothing built, fallen or reserved since it last failed: it would fail again.
+		if int(failed[0]) > sim.calendar.tick or (failed.size() > 3 and int(failed[2]) == ground[0] and int(failed[3]) == ground[1]):
 			continue
-		var choice: Dictionary = SiteFinder.find(sim, design, sim.settlements.entries[id], SEARCH_ENOUGH)
+		var choice: Dictionary = SiteFinder.find(sim, design, sim.settlements.entries[id], SEARCH_ENOUGH, SEARCH_MOST)
 		if choice.is_empty():
 			# No room yet: look again later, and later still each time it fails.
-			var days: float = minf(5.0 * pow(2.0, int(failed[1])), 40.0)
-			tried[design.id] = [sim.calendar.tick + sim.calendar.ticks_for_days(days), int(failed[1]) + 1]
+			var days: float = minf(5.0 * pow(2.0, int(failed[1])), 80.0)
+			tried[design.id] = [sim.calendar.tick + sim.calendar.ticks_for_days(days), int(failed[1]) + 1, ground[0], ground[1]]
 			record["no_site"] = tried
 			continue
 		tried.erase(design.id)
@@ -160,7 +180,8 @@ static func hour(sim: RefCounted, id: int, hands: float) -> void:
 			var resource: String = Construction.resource_for(int(entry[1]))
 			if not resource.is_empty() and int(site.delivered.get(resource, 0)) <= 0:
 				if AbstractPeople.take(sim, id, resource, 1) <= 0:
-					_gather(sim, id, resource, hands * BUILD_SHARE)
+					# Fetched from where it grows straight to the site, as builders carry it.
+					site.delivered[resource] = int(site.delivered.get(resource, 0)) + _gathered(resource, hands * BUILD_SHARE)
 					break
 				site.delivered[resource] = int(site.delivered.get(resource, 0)) + 1
 			if not resource.is_empty():
@@ -171,13 +192,11 @@ static func hour(sim: RefCounted, id: int, hands: float) -> void:
 			finish(sim, site)
 
 
-## Materials fetched from the places people know round their settlement.
-static func _gather(sim: RefCounted, id: int, resource: String, hands: float) -> void:
+## How much of a material `hands` bring in an hour from the places people
+## know round their settlement.
+static func _gathered(resource: String, hands: float) -> int:
 	var rate: float = float(GATHER_PER_HOUR.get(resource, 0.0))
-	if rate <= 0.0:
-		return
-	var made: int = maxi(1, int(round(rate * hands)))
-	AbstractPeople.store(sim, id, resource, made)
+	return maxi(1, int(round(rate * hands))) if rate > 0.0 else 0
 
 
 ## The blocks a site has earned reach the world, from where they stopped.

@@ -10,6 +10,8 @@ const Balance = preload("res://scripts/core/balance.gd")
 var sim: RefCounted
 var hud: Control
 var slot: String = "world"
+## The sim driver: no autosave while it rests or meditates.
+var driver: Node = null
 var played_seconds: float = 0.0
 var _last_dawn_day: int = -1
 
@@ -55,6 +57,9 @@ func _process(delta: float) -> void:
 		return
 	played_seconds += delta
 	var day: int = sim.calendar.day()
+	if driver != null and driver.resting:
+		_last_dawn_day = day
+		return
 	if day != _last_dawn_day and sim.calendar.hour() >= Balance.number("time.dawn_hour"):
 		if _last_dawn_day >= 0:
 			save("save_autosaved")

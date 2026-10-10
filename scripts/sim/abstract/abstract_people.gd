@@ -124,11 +124,12 @@ static func _eat(sim: RefCounted, agent: RefCounted, forage: Dictionary) -> void
 		return
 	if agent.settlement_id < 0:
 		return
+	# While grain is being put by for the winter it is eaten last, after
+	# berries from the chests and from the bushes, as the detailed eaters do.
 	var keep_grain: bool = Food.putting_by(sim, agent.settlement_id, Standing.present(sim, agent.settlement_id))
 	var order: Array = Food.eat_order().duplicate()
 	if keep_grain and order.has("grain"):
 		order.erase("grain")
-		order.append("grain")
 	for resource in order:
 		if take(sim, agent.settlement_id, resource, 1) > 0:
 			_ate(sim, agent, resource)
@@ -138,6 +139,9 @@ static func _eat(sim: RefCounted, agent: RefCounted, forage: Dictionary) -> void
 		agent.change_need(Need.FOOD, Balance.number("needs.forage_restore"))
 		Mind.add(agent, "ate_foraged", sim.calendar.ticks_per_day)
 		Mind.remove(agent, "went_hungry")
+		return
+	if keep_grain and take(sim, agent.settlement_id, "grain", 1) > 0:
+		_ate(sim, agent, "grain")
 
 
 static func _ate(sim: RefCounted, agent: RefCounted, food: String) -> void:

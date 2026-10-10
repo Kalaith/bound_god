@@ -33,6 +33,13 @@ func _ready() -> void:
 	menu.rest_requested.connect(func(days: float) -> void:
 		close_menu()
 		main.rest(days))
+	menu.meditate_requested.connect(func(years: float) -> void:
+		close_menu()
+		main.meditate(years))
+	main.inspector.protect_cycled.connect(func(id: int) -> void:
+		var rule: Dictionary = sim.god.protect.get(id, {})
+		var next: String = {"": "shield", "shield": "defy", "defy": ""}[str(rule.get("mode", ""))]
+		send({"type": "protect", "agent": id, "mode": next}))
 	main.inspector.whisper.connect(func(id: int, nudge: String) -> void:
 		send({"type": "cast_miracle", "miracle": "whisper", "cell": sim.agents[id].cell, "agent": id, "nudge": nudge}))
 	main.inspector.miracle.connect(func(id: int, miracle: String) -> void:

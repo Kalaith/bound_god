@@ -9,6 +9,7 @@ signal open_library
 signal open_stores(settlement_id: int)
 signal open_requests
 signal rest_requested(days: float)
+signal meditate_requested(years: float)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Data = preload("res://scripts/core/data.gd")
@@ -79,6 +80,13 @@ func _ready() -> void:
 		button.pressed.connect(func() -> void: rest_requested.emit(days))
 		actions.add_child(button)
 	_add_button(actions, "design_close", func() -> void: closed.emit())
+	var meditate := HBoxContainer.new()
+	meditate.add_theme_constant_override("separation", 12)
+	column.add_child(meditate)
+	for years in [1.0, 5.0, 10.0, 50.0]:
+		var button: Button = Style.button(Text.format("shrine_menu_meditate", {"years": int(years)}))
+		button.pressed.connect(func() -> void: meditate_requested.emit(years))
+		meditate.add_child(button)
 	hide()
 
 

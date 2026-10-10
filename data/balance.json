@@ -91,7 +91,7 @@
 	},
 	"shrines": {
 		"support_window_days": 3, "active_support": 1.2, "radius_base": 16.0, "radius_per_sqrt_support": 6.0,
-		"radius_max": 40.0, "favour_per_devotion": 0.04, "favour_cap": 120.0, "condition_decay_per_day": 2.0,
+		"radius_max": 40.0, "favour_per_devotion": 0.04, "favour_cap": 120.0, "meditation_favour": 0.5, "condition_decay_per_day": 2.0,
 		"low_condition": 30.0, "dormant_days": 3, "tree_min_radius": 20.0, "tend_per_tick": 0.3, "start_favour": 30.0
 	},
 	"miracle_costs": {"identity_discount": 0.25, "identity_penalty": 0.25, "dormant_whisper_cost": 0},
@@ -109,7 +109,7 @@
 		"seeker_chance": 0.4, "qi_pull": 0.15, "followed_most": 3,
 		"peak_base": 0.25, "peak_impatience": 0.55, "peak_days": 3.0, "trial_committed": 3.0, "sanctuary_radius": 8.0, "sanctuary_reach": 60.0,
 		"witness_prayer": 0.5, "bless_factor": 1.5, "bless_days": 1.0, "shield_amount": 0.4,
-		"inherit_talent": 0.5, "inherit_drive": 0.4, "manual_chance": 0.15, "relic_preparation": 0.03, "relics_most": 5
+		"inherit_talent": 0.5, "inherit_drive": 0.4, "manual_chance": 0.15, "relic_preparation": 0.03, "relics_most": 5, "join_chance": 0.1
 	},
 	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 6.4, "gravity": 16.0, "hotbar_slots": 9}
 }

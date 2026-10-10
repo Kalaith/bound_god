@@ -8,6 +8,7 @@ signal person_chosen(id: int)
 signal whisper(id: int, nudge: String)
 signal pin_toggled(id: int)
 signal miracle(id: int, miracle: String)
+signal protect_cycled(id: int)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const AgentText = preload("res://scripts/presentation/ui/agent_text.gd")
@@ -42,6 +43,8 @@ var _pin: Button
 var _bless: Button
 var _shield: Button
 var _defy: Button
+## What the god does at this pinned person's trial while meditating.
+var _protect: Button
 var _refresh_left: float = 0.0
 
 
@@ -220,6 +223,8 @@ func _process(delta: float) -> void:
 	_bless.visible = cultivating
 	_shield.visible = not trial.is_empty()
 	_defy.visible = not trial.is_empty()
+	_protect.visible = cultivating and sim.god.followed.has(agent_id)
+	_protect.text = Text.label("inspect_protect_" + str(sim.god.protect.get(agent_id, {}).get("mode", "wake")))
 
 
 func _refresh_mind(agent: RefCounted) -> void:
@@ -279,6 +284,8 @@ func _cultivation_actions() -> HBoxContainer:
 	_shield.pressed.connect(func() -> void: miracle.emit(agent_id, "shield_trial"))
 	_defy = Style.button(Text.label("inspect_defy"))
 	_defy.pressed.connect(func() -> void: miracle.emit(agent_id, "defy_heaven"))
-	for button in [_bless, _shield, _defy]:
+	_protect = Style.button("")
+	_protect.pressed.connect(func() -> void: protect_cycled.emit(agent_id))
+	for button in [_bless, _shield, _defy, _protect]:
 		row.add_child(button)
 	return row

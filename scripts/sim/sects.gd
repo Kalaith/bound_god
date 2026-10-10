@@ -147,7 +147,10 @@ func daily(sim: RefCounted) -> void:
 			if not agent.is_present() or agent.settlement_id != int(sect.settlement_id):
 				sect.members.erase(member)
 				agent.cultivation.sect_id = -1
+		_recruit(sim, sect)
 		if sect.members.is_empty():
+			entries.erase(id)
+			sim.chronicle_event("sect_ended", int(sect.settlement_id), {"sect": name_key(sect)}, "cause_nobody_left_in_sect")
 			continue
 		if not sect.members.has(int(sect.master)):
 			_succeed(sim, sect)
@@ -231,3 +234,17 @@ func _study(sim: RefCounted, sect: Dictionary) -> void:
 			sim.chronicle_event("learned_from_manual", int(sect.settlement_id), {"name": member.full_name(), "technique": "technique_" + str(technique)},
 				"cause_sect_manual", [id])
 			break
+
+
+## Cultivators living where a sect stands may choose to join it, the more
+## readily the more open it is.
+func _recruit(sim: RefCounted, sect: Dictionary) -> void:
+	var chance: float = Balance.number("cultivation.join_chance") * (0.5 + float(sect.doctrine.openness))
+	for agent_id in sim.settlements.entries.get(int(sect.settlement_id), {}).get("residents", []):
+		var agent: RefCounted = sim.agents[agent_id]
+		if not agent.is_present() or agent.cultivation.is_empty() or int(agent.cultivation.sect_id) >= 0:
+			continue
+		if not CultivationState.is_cultivator(agent.cultivation) or sim.rng.randf() >= chance:
+			continue
+		_join(sect, agent, "disciple")
+		sim.chronicle_event("joined_sect", int(sect.settlement_id), {"name": agent.full_name(), "sect": name_key(sect)}, "cause_cultivates_here", [agent.id])

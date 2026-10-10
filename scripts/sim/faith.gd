@@ -286,6 +286,8 @@ func record_prayer(sim: RefCounted, agent: RefCounted, shrine_id: int, intent: D
 		var gain: float = float(agent.faith.devotion) * Balance.number("shrines.favour_per_devotion")
 		if float(shrine.condition) < Balance.number("shrines.low_condition"):
 			gain *= 0.5
+		if sim.meditating:
+			gain *= Balance.number("shrines.meditation_favour")
 		shrine.favour = minf(float(shrine.favour) + gain, Balance.number("shrines.favour_cap"))
 		shrine.prayers.append(entry)
 		if shrine.prayers.size() > 20:

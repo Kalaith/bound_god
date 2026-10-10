@@ -72,6 +72,7 @@ static func contextual(sim: RefCounted) -> Array:
 		result.append(_say("prompt_fruit", {}))
 	if sim.sects != null and not sim.sects.entries.is_empty():
 		result.append(_say("prompt_sect", {"sect": Sects.name_of(sim.sects.entries[sim.sects.ids()[0]])}))
+		result.append(_say("prompt_meditate", {}))
 	return result
 
 

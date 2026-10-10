@@ -102,6 +102,7 @@ func step_hour(sim: RefCounted) -> Dictionary:
 		if not agent.is_child and AbstractPeople.at_work(k, agent):
 			count[0] = float(count[0]) + agent.capacity()
 		counts[agent.settlement_id] = count
+		var health: float = float(agent.health.hp)
 		AbstractPeople.hour(sim, agent, records.get(agent.settlement_id, {}), step)
 		if agent.is_present() and praying:
 			_pray(sim, agent)
@@ -111,7 +112,8 @@ func step_hour(sim: RefCounted) -> Dictionary:
 			var facing: int = AbstractCultivation.hour(sim, agent, AbstractCultivation.SITTING_HOURS)
 			if facing >= 0 and wake.is_empty():
 				wake = {"kind": "trial", "agent": facing}
-		if agent.is_present() and sim.god.followed.has(agent.id) and float(agent.health.hp) < 35.0 and wake.is_empty():
+		# Danger wakes the god once, as it begins, not every hour it lasts.
+		if agent.is_present() and sim.god.followed.has(agent.id) and float(agent.health.hp) < 35.0 and health >= 35.0 and wake.is_empty():
 			wake = {"kind": "danger", "agent": agent.id}
 	for id in sim.settlements.ids():
 		if records.has(id):
@@ -205,6 +207,7 @@ func finish(sim: RefCounted) -> void:
 			_crops(sim, records[id])
 	for site_id in sim.construction.ids():
 		AbstractBuild.stamp(sim, sim.construction.get_site(site_id))
+	sim.settlement_life.apply_pending_decay(sim)
 	for agent in sim.agents:
 		if agent.is_present():
 			thaw(sim, agent)

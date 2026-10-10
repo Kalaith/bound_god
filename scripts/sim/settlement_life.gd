@@ -17,6 +17,9 @@ var samples: Dictionary = {}
 var layouts: Dictionary = {}
 ## "settlement:template" -> tick until which a failed site search is not retried
 var no_site_until: Dictionary = {}
+## While the valley passes abstractly no block is touched: structure id ->
+## blocks decay has taken, applied when the valley materialises.
+var pending_decay: Dictionary = {}
 
 
 func board(id: int) -> Dictionary:
@@ -172,10 +175,15 @@ func _decay(sim: RefCounted) -> void:
 		for part in record.layout:
 			if part[1] != 0 and sim.voxels.get_block(part[0]) == part[1]:
 				standing.append(part)
+		# A building fallen to nothing is no longer remembered.
 		if standing.is_empty():
+			layouts.erase(id)
 			continue
-		var part: Array = standing[sim.rng.randi_range(0, standing.size() - 1)]
-		sim.set_block(part[0], 0, 0, "decay")
+		if sim.meditating:
+			pending_decay[id] = int(pending_decay.get(id, 0)) + 1
+		else:
+			var part: Array = standing[sim.rng.randi_range(0, standing.size() - 1)]
+			sim.set_block(part[0], 0, 0, "decay")
 		if not record.get("decaying", false):
 			record["decaying"] = true
 			sim.chronicle_event("structure_decaying", int(record.settlement_id), {"design": sim.template_name(record.template_id)}, "cause_unattended")
@@ -193,8 +201,33 @@ static func _common_and_kept(sim: RefCounted, entry: Dictionary) -> bool:
 	return false
 
 
+## The decay the abstract years took, all at once: blocks of each building
+## gone, chosen as the daily decay would have chosen them.
+func apply_pending_decay(sim: RefCounted) -> void:
+	var batch: Array = []
+	var ids: Array = pending_decay.keys()
+	ids.sort()
+	for id in ids:
+		var record: Dictionary = layouts.get(id, {})
+		if record.is_empty():
+			continue
+		var standing: Array = []
+		for part in record.layout:
+			if part[1] != 0 and sim.voxels.get_block(part[0]) == part[1]:
+				standing.append(part)
+		for _i in range(mini(int(pending_decay[id]), standing.size())):
+			var index: int = sim.rng.randi_range(0, standing.size() - 1)
+			batch.append([standing[index][0], 0, 0])
+			standing.remove_at(index)
+	pending_decay.clear()
+	sim.set_blocks(batch, "decay")
+
+
 ## A settlement with nobody left is taken back by the grass.
 func _overgrow(sim: RefCounted) -> void:
+	# While abstract nothing grows over; the grass waits for the valley's return.
+	if sim.meditating:
+		return
 	var grass: int = Registry.id("tall_grass")
 	var turf: int = Registry.id("grass")
 	for id in sim.settlements.ids():
@@ -249,7 +282,7 @@ func missing_blocks(sim: RefCounted, id: int) -> Array:
 
 
 func to_dict() -> Dictionary:
-	return {"layouts": layouts.duplicate(true), "samples": samples.duplicate(true), "no_site_until": no_site_until.duplicate(),
+	return {"layouts": layouts.duplicate(true), "samples": samples.duplicate(true), "no_site_until": no_site_until.duplicate(), "pending_decay": pending_decay.duplicate(),
 		"boards": boards.duplicate(true)}
 
 
@@ -257,4 +290,5 @@ func from_dict(data: Dictionary) -> void:
 	layouts = data.layouts
 	samples = data.samples
 	no_site_until = data.no_site_until
+	pending_decay = data.get("pending_decay", {})
 	boards = data.boards

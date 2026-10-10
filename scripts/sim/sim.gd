@@ -87,6 +87,9 @@ var kindled: Array = []
 var veils: Array = []
 ## Vector3i -> true for every lantern standing in the world.
 var lanterns: Dictionary = {}
+## True while the god meditates (the abstract model runs): prayers then
+## bring half the Favour, so skipping years is never free.
+var meditating: bool = false
 ## Template id -> Template, built on demand from offered copies or starters.
 var _templates: Dictionary = {}
 var _sites_version: int = -1

@@ -226,6 +226,7 @@ func _start() -> void:
 	world_io.sim = sim
 	world_io.hud = hud
 	world_io.slot = Session.slot
+	world_io.driver = driver
 	add_child(world_io)
 	rest_overlay = RestOverlay.new()
 	rest_overlay.sim = sim
@@ -478,6 +479,14 @@ func rest(days: float) -> void:
 	builder.enabled = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	rest_overlay.begin(days)
+
+
+## Years pass in meditation behind the same veil.
+func meditate(years: float) -> void:
+	world_io.save("save_autosaved")
+	builder.enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	rest_overlay.begin_meditation(years)
 
 
 func restore_overlook_center() -> void:

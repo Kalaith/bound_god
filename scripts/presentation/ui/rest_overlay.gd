@@ -6,6 +6,7 @@ signal finished
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const ChronicleText = preload("res://scripts/presentation/ui/chronicle_text.gd")
+const MeditationSummary = preload("res://scripts/presentation/ui/meditation_summary.gd")
 
 var sim: RefCounted
 var driver: Node
@@ -13,6 +14,8 @@ var _title: Label
 var _bar: ProgressBar
 var _summary: RichTextLabel
 var _continue: Button
+var _meditating: bool = false
+var _before: int = 0
 
 
 func _ready() -> void:
@@ -59,7 +62,19 @@ func _ready() -> void:
 	hide()
 
 
+func begin_meditation(years: float) -> void:
+	_meditating = true
+	_before = sim.present_count()
+	_title.text = Text.format("med_title", {"years": int(years)})
+	_summary.text = ""
+	_continue.hide()
+	_bar.show()
+	show()
+	driver.meditate(years * sim.calendar.days_per_season * 4)
+
+
 func begin(days: float) -> void:
+	_meditating = false
 	_title.text = Text.format("rest_title", {"days": int(days)})
 	_summary.text = ""
 	_continue.hide()
@@ -74,8 +89,14 @@ func _process(_delta: float) -> void:
 
 
 func _on_finished(from_tick: int) -> void:
-	_title.text = Text.label("rest_while")
 	_bar.hide()
+	if _meditating:
+		_title.text = Text.label("med_while")
+		_summary.text = MeditationSummary.text(sim, from_tick, _before, driver.wake_reason)
+		_continue.show()
+		_continue.grab_focus()
+		return
+	_title.text = Text.label("rest_while")
 	var lines: Array[String] = []
 	for entry in sim.chronicle.since(from_tick):
 		lines.append(ChronicleText.line(entry))
