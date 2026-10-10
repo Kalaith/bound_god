@@ -86,15 +86,20 @@ func _ready() -> void:
 	_prompt = Style.label("", 20, Style.GOLD)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.add_theme_constant_override("outline_size", 6)
-	_prompt.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_prompt.add_theme_color_override("font_outline_color", Color(Style.INK, 0.8))
 	add_child(_prompt)
 	_selected_name = Style.label("", 20, Style.GOLD)
 	_selected_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_selected_name.add_theme_constant_override("outline_size", 6)
+	_selected_name.add_theme_color_override("font_outline_color", Color(Style.INK, 0.75))
 	add_child(_selected_name)
 	_message = Style.label("", 21)
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_message)
-	_hint = Style.wrapped("", 16, Style.MUTED)
+	# Ink-outlined so the key hints stay legible over pale meadow.
+	_hint = Style.wrapped("", 16, Style.WHITE)
+	_hint.add_theme_constant_override("outline_size", 5)
+	_hint.add_theme_color_override("font_outline_color", Color(Style.INK, 0.7))
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	add_child(_hint)
 	resized.connect(_layout)

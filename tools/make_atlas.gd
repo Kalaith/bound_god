@@ -131,9 +131,9 @@ func _strokes(tile: Vector2i, color: Color, count: int, length: int, alpha: floa
 
 
 func _meadow(tile: Vector2i) -> void:
-	_wash(tile, Color("aaa468"), 0.06)
-	_strokes(tile, Color("c0b984"), 14, 6, 0.4, -0.5)
-	_strokes(tile, Color("8e9258"), 12, 5, 0.35, 0.4)
+	_wash(tile, Color("a3a76a"), 0.06)
+	_strokes(tile, Color("bcbb86"), 14, 6, 0.4, -0.5)
+	_strokes(tile, Color("889359"), 12, 5, 0.35, 0.4)
 
 
 func _grass_side(tile: Vector2i) -> void:

@@ -1,19 +1,21 @@
 extends RefCounted
 ## One palette and a few builders so every screen reads the same. Sizes are
 ## authored at 1080p; the canvas_items stretch scales them for smaller windows.
+## The look follows art_direction.md: warm ink-wash panels ruled with a thin
+## line of aged gold, cream text, and jade kept for the sacred.
 
-const INK := Color("0f1410")
-const PANEL := Color(0.07, 0.09, 0.08, 0.90)
-const PANEL_SOLID := Color("141b16")
-const BORDER := Color("5f7d5a")
-const LEAF := Color("a6d18f")
-const GOLD := Color("e6c27a")
-const WHITE := Color("f1efe4")
-const MUTED := Color("a8b3a2")
-const WARN := Color("f0a07a")
-const BAD := Color("e57373")
-const GOOD := Color("8fd49a")
-const FAITH := Color("d9c8ff")
+const INK := Color("1a1714")
+const PANEL := Color(0.11, 0.1, 0.085, 0.86)
+const PANEL_SOLID := Color("1e1b17")
+const BORDER := Color("a08a62")
+const LEAF := Color("bccb98")
+const GOLD := Color("e2bf7c")
+const WHITE := Color("f2ebdc")
+const MUTED := Color("b8ad99")
+const WARN := Color("eda57c")
+const BAD := Color("e07a6a")
+const GOOD := Color("a9d39a")
+const FAITH := Color("a9e2d2")
 
 
 static func label(text: String, size: int = 20, color: Color = WHITE) -> Label:
@@ -43,14 +45,16 @@ static func button(text: String, primary: bool = false, size: int = 21) -> Butto
 	result.add_theme_color_override("font_disabled_color", Color(MUTED, 0.6))
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		var box := StyleBoxFlat.new()
-		box.bg_color = Color("2f4a2e") if primary else Color("1c261d")
+		box.bg_color = Color("4a3a2a") if primary else Color("2a2520")
+		if state == "hover":
+			box.bg_color = box.bg_color.lightened(0.06)
 		if state == "pressed":
-			box.bg_color = Color("44683f")
+			box.bg_color = Color("5c4630")
 		if state == "disabled":
-			box.bg_color = Color("161c17")
-		box.border_color = LEAF if state in ["hover", "focus"] else BORDER
+			box.bg_color = Color("1e1b18")
+		box.border_color = GOLD if state in ["hover", "focus"] else Color(BORDER, 0.7)
 		box.set_border_width_all(2 if primary else 1)
-		box.set_corner_radius_all(8)
+		box.set_corner_radius_all(4)
 		box.content_margin_left = 16
 		box.content_margin_right = 16
 		box.content_margin_top = 6
@@ -62,9 +66,10 @@ static func button(text: String, primary: bool = false, size: int = 21) -> Butto
 static func panel_box(alpha: float = 0.9, radius: int = 12, margin: int = 18) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.bg_color = Color(PANEL, alpha)
-	box.border_color = Color(BORDER, 0.8)
+	box.border_color = Color(BORDER, 0.55)
 	box.set_border_width_all(1)
-	box.set_corner_radius_all(radius)
+	# Squarer corners than a modern card: closer to a mounted print.
+	box.set_corner_radius_all(mini(radius, 6))
 	box.content_margin_left = margin
 	box.content_margin_right = margin
 	box.content_margin_top = margin - 4
@@ -88,7 +93,7 @@ static func meter(value: float, maximum: float = 100.0, width: float = 160.0, co
 	fill.bg_color = color
 	fill.set_corner_radius_all(4)
 	var back := StyleBoxFlat.new()
-	back.bg_color = Color(0, 0, 0, 0.45)
+	back.bg_color = Color(INK, 0.55)
 	back.set_corner_radius_all(4)
 	bar.add_theme_stylebox_override("fill", fill)
 	bar.add_theme_stylebox_override("background", back)

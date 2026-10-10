@@ -4,7 +4,8 @@ extends Node3D
 ## activity glyph. Faded while inside a building.
 const Style = preload("res://scripts/presentation/ui/style.gd")
 
-const JACKETS: Array[Color] = [Color("8c5a3c"), Color("4f6d8a"), Color("6b7a3f"), Color("7a4a6b"), Color("9a7b3a"), Color("4d7a72")]
+## Woodblock dyes: indigo, vermilion, moss, plum, ochre and teal.
+const JACKETS: Array[Color] = [Color("a8523f"), Color("44597a"), Color("6b7a48"), Color("6e4e62"), Color("a8833f"), Color("4b7470")]
 const SKINS: Array[Color] = [Color("f0c9a0"), Color("d9a77c"), Color("b98058"), Color("8d5a3b"), Color("e8bb93"), Color("a8714a")]
 const GLYPHS: Dictionary = {
 	"sleeping": "z Z", "talking": "...", "fleeing": "!", "fighting": "x", "breaking": "@", "recovering": "+",

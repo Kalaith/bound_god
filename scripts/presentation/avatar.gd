@@ -41,10 +41,10 @@ func _ready() -> void:
 	collider.shape = shape
 	collider.position.y = 0.85
 	add_child(collider)
-	_material.albedo_color = Color(0.78, 0.72, 0.98, 0.78)
+	_material.albedo_color = Color(0.86, 0.95, 0.91, 0.78)
 	_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_material.emission_enabled = true
-	_material.emission = Color("8f78e8")
+	_material.emission = Color("6fc4ae")
 	_material.emission_energy_multiplier = 0.25
 	var body_mesh := CapsuleMesh.new()
 	body_mesh.radius = 0.3
@@ -63,7 +63,7 @@ func _ready() -> void:
 	_head.position.y = 1.5
 	add_child(_head)
 	_glow = OmniLight3D.new()
-	_glow.light_color = Color("cbb8ff")
+	_glow.light_color = Color("cfeee2")
 	_glow.light_energy = 0.5
 	_glow.omni_range = 4.0
 	_glow.position.y = 2.3

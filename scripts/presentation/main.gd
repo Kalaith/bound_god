@@ -28,6 +28,7 @@ const FaithController = preload("res://scripts/presentation/faith_controller.gd"
 const RequestsPanel = preload("res://scripts/presentation/ui/requests_panel.gd")
 const ThreatViews = preload("res://scripts/presentation/threat_views.gd")
 const LanternLights = preload("res://scripts/presentation/lantern_lights.gd")
+const SacredAura = preload("res://scripts/presentation/sacred_aura.gd")
 const WorldIO = preload("res://scripts/presentation/world_io.gd")
 const RestOverlay = preload("res://scripts/presentation/ui/rest_overlay.gd")
 const ChronicleScreen = preload("res://scripts/presentation/ui/chronicle_screen.gd")
@@ -108,6 +109,9 @@ func _start() -> void:
 	print("valley: generated in %d ms, meshed in %d ms" % [generated - started, Time.get_ticks_msec() - generated])
 	overlays = Overlays.new()
 	add_child(overlays)
+	var aura: Node3D = SacredAura.new()
+	aura.base = sim.features.sacred_tree
+	add_child(aura)
 	avatar = Avatar.new()
 	add_child(avatar)
 	var tree: Vector3i = sim.features.sacred_tree

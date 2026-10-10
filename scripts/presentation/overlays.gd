@@ -7,7 +7,7 @@ const BOUNDARY_SHADER: String = """
 shader_type spatial;
 render_mode unshaded, cull_disabled, depth_draw_never, blend_add, fog_disabled;
 uniform vec3 avatar_position;
-uniform vec4 tint : source_color = vec4(0.72, 0.62, 1.0, 1.0);
+uniform vec4 tint : source_color = vec4(0.62, 0.92, 0.82, 1.0);
 uniform float near_range = 7.0;
 varying vec3 world_position;
 void vertex() {
@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(wall)
 	_ring_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_ring_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_ring_material.albedo_color = Color(0.75, 0.65, 1.0, 0.35)
+	_ring_material.albedo_color = Color(0.66, 0.9, 0.82, 0.35)
 	_ring_material.no_depth_test = false
 	ring.material_override = _ring_material
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
