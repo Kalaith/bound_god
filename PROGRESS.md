@@ -67,7 +67,7 @@ Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) plan
 - A lash-out break spends itself on one fight, then the break is sulking: repeated insults otherwise killed both people.
 - RestoreShrine (confirmed by the user) is open to Believers (utility 0.35 × devotion) as well as the Devout (0.6 ×): with only the Devout the ridge altar was never restored by its own people.
 - `tools/scratch/` holds local diagnostic probes and is git-ignored.
-- Valley layout: sacred tree at (50,50), ridge ruin at (128,128) (~110 blocks), hamlet at (112,134). The river runs beside the tree-ridge axis so nobody must cross water.
+- Valley layout: sacred tree at the valley centre (80,80), ridge ruin at (128,128) (~68 blocks), hamlet at (112,134). The tree's first circle (20 blocks) always holds a few trees, stone outcrops and berry bushes. The river runs beside the tree-ridge axis so nobody must cross water.
 
 ## Questions for the user (decided, revisit if you disagree)
 

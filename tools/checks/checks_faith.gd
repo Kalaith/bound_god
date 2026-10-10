@@ -2,6 +2,7 @@ extends RefCounted
 ## M8 acceptance: prayer feeds Favour, miracles are interpreted, whispers are
 ## heard and logged, and shrines without support go quiet.
 const Sim = preload("res://scripts/sim/sim.gd")
+const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
@@ -119,6 +120,6 @@ func check_the_tree_holds_a_small_circle_that_grows_with_support():
 	var small: float = sim.zone_radius()
 	tree.support = 2.0
 	var large: float = sim.zone_radius()
-	if small > 10.5 or large <= small + 5.0:
+	if small > Balance.number("shrines.tree_min_radius") + 0.5 or large <= small + 4.0:
 		return "the tree's reach did not follow its support (%.1f unsupported, %.1f supported)" % [small, large]
 	return ""

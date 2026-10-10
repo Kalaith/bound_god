@@ -42,8 +42,27 @@ func check_valley_has_its_features():
 	var tree: Vector3i = result.features.sacred_tree
 	var ruin: Vector3i = result.features.ruin.altar
 	var distance: float = Vector2(ruin.x - tree.x, ruin.z - tree.z).length()
-	if distance < 95.0 or distance > 125.0:
-		return "the ruin is %.0f blocks from the tree, not about 110" % distance
+	if distance < 60.0 or distance > 80.0:
+		return "the ruin is %.0f blocks from the tree, not about 68" % distance
+	var middle: Array = Balance.list("world.size")
+	if absi(tree.x - int(middle[0]) / 2) > 2 or absi(tree.z - int(middle[2]) / 2) > 2:
+		return "the sacred tree stands at %s, not in the middle of the valley" % tree
+	return ""
+
+
+func check_first_circle_holds_wood_stone_and_berries():
+	for seed in [5, 11, 12, 31]:
+		var result: Dictionary = _valley(seed)[1]
+		var tree: Vector3i = result.features.sacred_tree
+		var reach: float = Balance.number("shrines.tree_min_radius")
+		var near: Dictionary = {"tree": 0, "rock": 0, "bush": 0}
+		for site in result.sites:
+			var cell: Vector3i = site.cells[0]
+			if near.has(site.kind) and Vector2(cell.x - tree.x - 1, cell.z - tree.z - 1).length() <= reach:
+				near[site.kind] += 1
+		for kind in near:
+			if int(near[kind]) < 2:
+				return "seed %d: only %d %s sites inside the tree's first circle: %s" % [seed, near[kind], kind, near]
 	return ""
 
 

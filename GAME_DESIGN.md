@@ -65,7 +65,7 @@ Non-goals (from the concept): not a Minecraft remake, not a survival-crafting tr
 
 - 1 block = 1 metre. Chunks are 16×16×16.
 - **Prototype map:** one bounded, procedurally generated valley of 160×48×160 blocks (10×3×10 chunks), generated from a seed. Edges are mountains or sea so the boundary feels natural.
-- Contents: river through the valley floor, meadows, woods, a rocky ridge on the far side with stone and ore, berry bushes, a ruined old shrine on the ridge (≈110 blocks from the sacred tree), and a small existing mining hamlet near it.
+- Contents: river through the valley floor, meadows, woods, a rocky ridge on the far side with stone and ore, berry bushes, a ruined old shrine on the ridge (≈70 blocks from the sacred tree, which stands in the middle of the valley), and a small existing mining hamlet near it.
 - **Later:** a larger world split into regions, where only the active region and its neighbours simulate in full and others advance abstractly (§11.3).
 
 ### 4.2 Block palette (deliberately small)

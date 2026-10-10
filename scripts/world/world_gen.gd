@@ -181,9 +181,12 @@ func _sacred_tree() -> void:
 				offset.y *= 1.5
 				if offset.length() < 5.6 + _detail_noise.get_noise_3d(x * 3.0, y * 3.0, z * 3.0) * 0.8 and world.get_block(cell) == 0:
 					world.fill(cell, crown)
+	# The meadow round the tree stays open; home trees and stone ring its edge.
+	var clear: float = float(_b.meadow_radius) + 0.5
 	for z in range(tz - 12, tz + 14):
 		for x in range(tx - 12, tx + 14):
-			reserved[Vector2i(x, z)] = true
+			if Vector2(x - tx - 0.5, z - tz - 0.5).length() <= clear:
+				reserved[Vector2i(x, z)] = true
 	features["sacred_tree"] = Vector3i(tx, top + 1, tz)
 	features["sacred_tree_cells"] = [Vector3i(tx, top + 1, tz), Vector3i(tx + 1, top + 1, tz), Vector3i(tx, top + 1, tz + 1), Vector3i(tx + 1, top + 1, tz + 1)]
 
@@ -282,6 +285,7 @@ func _vegetation() -> void:
 				break
 		if not placed:
 			continue
+	_home_grove(tree_center)
 	# Bushes in the hamlet's hollows: the miners have always picked here.
 	var hamlet := Vector2(float(_b.ridge_hamlet[0]), float(_b.ridge_hamlet[1]))
 	for index in range(10):
@@ -297,6 +301,36 @@ func _vegetation() -> void:
 	_scatter(float(_b.rock_spacing), 0.6, _ground_ok, _boulder)
 	_ore_outcrops()
 	_quarries()
+
+
+## How far from the tree the first wood and stone stand: inside the circle
+## the tree always holds, so a new god can gather from the start.
+func _home_distance() -> float:
+	return rng.randf_range(float(_b.home_reach[0]), float(_b.home_reach[1]))
+
+
+## A few trees just past the meadow, spread round the tree.
+func _home_grove(tree_center: Vector2) -> void:
+	var count: int = int(_b.home_trees)
+	for index in range(count):
+		var base: float = index * TAU / count + rng.randf() * 0.5
+		for attempt in range(8):
+			var at: Vector2 = tree_center + Vector2.from_angle(base + attempt * 0.3) * _home_distance()
+			var x: int = int(at.x)
+			var z: int = int(at.y)
+			if _ground_ok(x, z) and _clearing(x, z):
+				_tree(x, z)
+				break
+
+
+## No log, bush or stone in the 3x3 around the column.
+func _clearing(x: int, z: int) -> bool:
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			var top: int = _top(x + dx, z + dz)
+			if world.get_xyz(x + dx, top + 1, z + dz) != 0:
+				return false
+	return true
 
 
 func _bush_ok(x: int, z: int) -> bool:
@@ -414,9 +448,13 @@ func _ore_outcrops() -> void:
 ## within reach of the sacred tree, the rest wherever the ridge shows stone.
 func _quarries() -> void:
 	var tree := Vector2(float(_b.sacred_tree[0]), float(_b.sacred_tree[1]))
-	for index in range(4):
-		var at: Vector2 = tree + Vector2.from_angle(index * TAU / 4.0 + 0.6 + rng.randf() * 0.5) * (16.0 + rng.randf() * 10.0)
-		_outcrop(int(at.x), int(at.y))
+	var count: int = int(_b.home_outcrops)
+	for index in range(count):
+		var base: float = index * TAU / count + 1.0 + rng.randf() * 0.4
+		for attempt in range(8):
+			var at: Vector2 = tree + Vector2.from_angle(base + attempt * 0.35) * _home_distance()
+			if _outcrop(int(at.x), int(at.y)):
+				break
 	var placed: int = 0
 	for attempt in range(400):
 		if placed >= 14:
@@ -441,8 +479,11 @@ func _quarries() -> void:
 			placed += 1
 
 
-## A low knuckle of stone pushed up through the meadow.
-func _outcrop(x: int, z: int) -> void:
+## A low knuckle of stone pushed up through the meadow; false when the
+## ground would not take it.
+func _outcrop(x: int, z: int) -> bool:
+	if not _ground_ok(x, z):
+		return false
 	var cells: Array = []
 	for dz in range(-1, 2):
 		for dx in range(-1, 2):
@@ -461,3 +502,5 @@ func _outcrop(x: int, z: int) -> void:
 		reserved[Vector2i(cell.x, cell.z)] = true
 	if cells.size() >= 4:
 		_site("rock", cells, cells.size())
+		return true
+	return false
