@@ -100,7 +100,7 @@ Each milestone ends with a runnable game, new `sim_checks` scenarios for its sim
 | A. Hold up | M13 Playtest, balance and foundations | Built except the fresh-player playtests (need people) |
 | B. A living economy | M14 Fields and meals | Built (`PROGRESS.md`) |
 | C. The cultivation slice | M15 Qi and cultivators · M16 Breakthroughs and tribulations · M17 The tree learns · M18 Meditation and generations | Built headlessly; the key test's fresh-player sessions are open |
-| D. A living sect | M19 Sect architecture and living designs · M20 Seasons, weather and herbs | M19 built headlessly (not played; seekers do not yet bring the sect designs); M20 to be detailed |
+| D. A living sect | M19 Sect architecture and living designs · M19b The sect's halls · M20 Seasons, weather and herbs | M19 built headlessly (not played; seekers do not yet bring the sect designs); M19b in progress; M20 to be detailed |
 | E. A wider world | M21 Branches and sacred sites · M22 Regions, other sects and outsiders | |
 | F. A whole game | M23 Campaign shape · M24 Look, sound and feel · M25 Release | |
 
@@ -192,6 +192,33 @@ Detailed after M18 ahead of its fresh-player sessions (the key test's human half
 - Moved: the alchemy room comes with herbs and pills (M20); the training ground with sparring, when outsiders give fighting a purpose (M22). Neither has an effect to give it before then.
 
 **Exit:** on seed 11 with a sect, offered the meditation hall and tribulation ground designs, the sect raises both by its own proposals; cultivators in the hall progress faster than on the ring (same person, same qi); a trial on the ground scorches nothing and counts as sanctuary; a blueprint laid by the god is taken up by the next founder who wants that function, and one that conflicts with nobody's needs is not built. Checks: hall factor, ground draws lightning, blueprint preference and fading, a settlement with no dwelling design devises one, paths wear and grass over. Captures: hall, ground, blueprint ghost, paths.
+
+### M19b — The sect's halls
+
+**Goal:** a sect grows into a compound of its own: ten more kinds of building, each doing one real thing for its Way, raised by its people's judgement, and older buildings turned to new uses by adding what they lack. The god can raise or alter any of them by hand inside the zone; a function still comes only from components.
+
+- **Blocks** (atlas grows to 8 × 10, new tiles painted at the end so old ones keep their look): scripture shelf, lectern, incense burner, medicine cabinet, memorial tablet, bronze bell, tribulation array (a carved disc one sits on), thunder spire (set into a roof), spirit jade, precept stele, sect banner, and three for the look of a sect: roof tiles, lacquered pillar, paper screen. Each furniture block is a component and an anchor; spirit jade, stele and banner stand on a cut-stone platform as formation stones do.
+- **Functions** (appended to `FunctionRules.FUNCTIONS`; one new rule key `at_most`):
+
+| Function | Components | Effect |
+| --- | --- | --- |
+| Scripture library | 2+ roofed scripture shelves, a lectern, a door | the sect copies its living members' techniques into its manuals now and then, and members study the manuals `library_study_factor` times as often |
+| Meditation room | exactly one roofed mat, an incense burner, a door, tree qi 0.5+ | one cultivator of Qi Refining or beyond sitting alone progresses `seclusion_factor` faster; preferred over a hall's mat by those who may use it |
+| Tribulation chamber | a roofed tribulation array, a thunder spire under the open sky, a door, 12+ cut stone, 10 blocks from dwellings | a trial inside counts as sanctuary within the tree's reach, Heaven's severity is lowered by `chamber_severity`, the spire takes every strike that would scorch; preferred over a ground |
+| Infirmary | 2+ roofed beds and a medicine cabinet, a door | recovering inside heals `infirmary_factor` faster and mends a cracked foundation by `foundation_mend` a day up to its start; a cultivator with a cracked foundation goes there to convalesce |
+| Spirit-gathering array | 4+ spirit jade under the open sky on 5+ cut stone | qi within `array_radius` of it is at least `array_qi`: a new cultivation place |
+| Mountain gate | 2+ banners and 2+ lacquered pillars on a stone threshold | seekers among migrants `gate_seekers` times as likely; cultivators living there join `gate_join` times as readily |
+| Ancestral hall | 2+ roofed memorial tablets and an incense burner | the relics at the tree steady the sect's trials wherever its people face Heaven at home, and each tablet keeps one more relic's help |
+| Precept stele | a stele on 4+ cut stone, under the open sky | the sect's doctrine drifts at `stele_drift` of its rate |
+| Bell tower | a roofed bronze bell | a threat within `bell_reach` of it rings the bell: every resident learns of it at once (chronicled) |
+| Lecture hall | a roofed lectern, 4+ benches, 12+ roofed floor | sect members who gather there listen to the Way expounded and progress by `lecture_per_hour`; they prefer it to the common hall |
+
+- **Designs:** at least one starter for each (Scripture Pavilion, Seclusion Cell, Thunder Chamber, House of Healing, Jade Array, Mountain Gate, Hall of Ancestors, Precept Stele, Bell Tower, Lecture Hall) plus sect-style variants (a tiled meditation hall, a stone disciples' lodge), authored by "wandering cultivators" and offered like the M19 designs.
+- **Wants:** a sect's master and elders propose each when the sect has need of it (a library once it keeps a manual or has five members; a meditation room once two members reach Qi Refining; a chamber once a trial has injured or killed one of them; an infirmary once a member's foundation is cracked; an array once eight members share the ring; a gate once six members and open doctrine; an ancestral hall once a relic or a member's death; a stele once a succession or after 20 days; a bell tower once a threat has come within reach; a lecture hall once six members), chronicled with their own causes. The abstract builder uses the same wants.
+- **Renovations** (`templates.json` `renovations`, `sim/renovations.gd`): a building that has one function becomes another by adding components to free floor inside it (a storehouse takes shelves and a lectern and becomes a library too; a village hall takes a lectern and two benches; a home of two beds takes a medicine cabinet; a meditation hall takes tablets and incense). Known to anyone who knows a design with the function; preferred to a new building when a fitting building stands; raised as an ordinary site whose order is only the added blocks, chosen so every floor cell stays reachable; chronicled as a renovation. Nothing is removed.
+- **Abstract:** every effect has its counterpart in the abstract model (study, seclusion, chamber trials, mending, array qi, gate, relics, stele, lecture).
+
+**Exit:** the ten designs carry their functions; each effect holds in a check (same person, same place, with and without the building); on seed 11 a sect offered the designs raises at least five of the new buildings by its own proposals within 40 days headless, and at least one renovation; 50 years of meditation leave a sect compound with several of them. Captures: each building, a renovation before and after, the library function reference.
 
 ### Stage D–F outline (to be detailed after M19)
 

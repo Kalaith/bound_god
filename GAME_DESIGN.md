@@ -146,6 +146,8 @@ A structure's function comes from what it contains, never from its name. Rules l
 
 **Leaning (cultivation):** sect functions follow the same rule. A **meditation hall** (roofed, mats, in qi above a threshold), a **training ground** (open, level, a marked area), a **tribulation ground** (an open platform, formation stones, at a distance from housing: protection comes from formations and placement, not grandeur), and an **alchemy room** (furnace, roofed). Exact components: **Tuning** when each lands.
 
+**Leaning (M19b, the sect's halls):** a grown sect also raises a **scripture library** (shelves and a lectern: techniques copied into manuals and studied), a **meditation room** (one mat and incense: closed-door cultivation for one), a **tribulation chamber** (a sealed stone room with an array and a thunder spire: a gentler storm that scorches nothing), an **infirmary** (beds and medicine: healing and a mended foundation), a **spirit-gathering array** (spirit jade on stone: dense qi away from the trunk), a **mountain gate** (pillars and banners: seekers come and join), an **ancestral hall** (tablets and incense: the relics' help at home), a **precept stele** (steady doctrine), a **bell tower** (a warning everyone hears) and a **lecture hall** (a lectern and benches: leisure spent listening to the Way). Existing buildings can be **renovated** into these by adding what they lack. Components and effects: `IMPLEMENTATION_PLAN.md` M19b; numbers **Tuning**.
+
 ### 5.4 Offering, blueprints and spread
 
 Templates in the library are private. **Offering** one at a shrine makes it known to the people there who know the god. **Decision (concept):** templates are knowledge, not commands. Offering never queues construction.
