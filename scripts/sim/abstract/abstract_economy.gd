@@ -21,6 +21,8 @@ const AbstractPeople = preload("res://scripts/sim/abstract/abstract_people.gd")
 ## Berries a gatherer brings in an hour, walking between bushes and chests
 ## included (a pick takes 6 ticks; most of an hour is walking).
 const BERRIES_PER_HOUR: float = 4.0
+## How far beyond a settlement's edge its people walk to forage.
+const FORAGE_REACH: float = 36.0
 ## Food days in the chests above which nobody goes picking.
 const PICK_UNTIL_DAYS: float = 4.0
 
@@ -34,7 +36,7 @@ static func survey(sim: RefCounted, id: int) -> Dictionary:
 	var bush: int = Registry.id("berry_bush")
 	for site_id in sim.sites.ids_sorted():
 		var site: Dictionary = sim.sites.get_site(site_id)
-		if site.kind != "bush" or site.cells.is_empty() or sim.settlements.at_cell(site.cells[0]) != id:
+		if site.kind != "bush" or site.cells.is_empty() or _forager_of(sim, site.cells[0]) != id:
 			continue
 		var cell: Vector3i = site.cells[0]
 		if sim.voxels.get_block(cell) != bush:
@@ -57,6 +59,20 @@ static func survey(sim: RefCounted, id: int) -> Dictionary:
 		"made": {}, "kitchen": _has_function(sim, id, "kitchen")}
 
 
+## The settlement whose people would pick a bush: the nearest, if it lies
+## within a forager's walk of its edge (people forage well beyond their area).
+static func _forager_of(sim: RefCounted, cell: Vector3i) -> int:
+	var best: int = -1
+	var best_distance: float = INF
+	for id in sim.settlements.ids():
+		var settlement: Dictionary = sim.settlements.entries[id]
+		var d: float = Vector2(cell.x - settlement.center.x, cell.z - settlement.center.z).length()
+		if d <= float(settlement.radius) + FORAGE_REACH and d < best_distance:
+			best = id
+			best_distance = d
+	return best
+
+
 static func _has_function(sim: RefCounted, id: int, function: String) -> bool:
 	for entry in sim.structures.built():
 		if entry.functions.has(function) and sim.settlements.at_cell(entry.anchor) == id:
@@ -74,23 +90,40 @@ static func hands(sim: RefCounted, id: int) -> float:
 	return sum
 
 
-static func hour(sim: RefCounted, id: int, record: Dictionary) -> void:
-	var labour: float = hands(sim, id)
-	var people: int = Standing.present(sim, id)
+## Returns the hands left over for building.
+static func hour(sim: RefCounted, id: int, record: Dictionary, labour: float, people: int) -> float:
 	if labour <= 0.0 or people <= 0:
-		return
+		return 0.0
 	# Food work first while the chests run low; the rest is free for building.
 	var food_days: float = Standing.food_days(sim, id)
 	if food_days < PICK_UNTIL_DAYS and record.ripe >= 1.0:
-		var picked: float = minf(record.ripe, labour * BERRIES_PER_HOUR * minf(float(sim.settlements.entries[id].culture.gather), 1.5))
-		record.ripe -= picked
-		_make(sim, id, record, "berries", picked)
+		# Only what the stores lack and have room for: the rest keeps on the bush.
+		var wanted: float = (PICK_UNTIL_DAYS - food_days) * people * Food.daily_need() / Food.value("berries")
+		var picked: float = minf(minf(record.ripe, wanted), labour * BERRIES_PER_HOUR * minf(float(sim.settlements.entries[id].culture.gather), 1.5))
+		var stored: int = AbstractPeople.store(sim, id, "berries", int(floor(picked)))
+		record.ripe -= stored
+		labour -= stored / BERRIES_PER_HOUR
+	# Fields want hands at sowing and reaping (a quarter of a hand per bed).
+	if int(record.growth) == 0 or int(record.growth) >= (int(Crops.staple().stages) - 1) * int(Crops.staple().days_per_stage) - 1:
+		labour -= record.fields.size() * 0.02
 	if bool(record.kitchen):
 		_cook(sim, id, people)
+	return maxf(labour, 0.0)
 
 
 ## Daily: bushes ripen, fields are sown, grow, are reaped or frozen.
 static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
+	# Fields, kitchens and gardens raised while abstract join the record
+	# (looked at again when buildings change, and every ten days).
+	if int(record.get("surveyed", -1)) != int(sim.structures.version) or sim.calendar.day() % 10 == 0:
+		record["surveyed"] = int(sim.structures.version)
+		var fresh: Dictionary = survey(sim, id)
+		if fresh.fields.size() != record.fields.size():
+			record.fields = fresh.fields
+		record.kitchen = fresh.kitchen
+		if fresh.bushes.size() != record.bushes.size():
+			record.bushes = fresh.bushes
+			record.planted = fresh.planted
 	var winter: bool = sim.calendar.is_winter()
 	var bushes: int = record.bushes.size()
 	var most: float = float(bushes * Balance.integer("world.bush_max_berries"))

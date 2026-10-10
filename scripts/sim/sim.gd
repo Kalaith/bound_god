@@ -211,6 +211,44 @@ func set_block(cell: Vector3i, block: int, meta: int = 0, source: String = "") -
 	return true
 
 
+## Many block changes at once (a building finished while the valley passes
+## abstractly): the same hooks as set_block, but rooms are re-probed and the
+## navigation graph relinked once for all of them. `entries` are [cell, block, meta].
+func set_blocks(entries: Array, source: String) -> void:
+	var changed: Array = []
+	var walk: Array = []
+	var olds: Array = []
+	for entry in entries:
+		var cell: Vector3i = entry[0]
+		var block: int = int(entry[1])
+		var old: int = voxels.get_block(cell)
+		if not voxels.set_block(cell, block, int(entry[2])):
+			continue
+		sites.on_block_changed(cell, old, block, voxels)
+		edit_sources[cell] = source
+		if old == block:
+			continue
+		settlements.on_block(self, cell, old, block)
+		crops.on_block(cell, block)
+		woods.on_block(self, cell, old, block)
+		if Registry.component(block) == "lantern":
+			lanterns[cell] = true
+		elif lanterns.has(cell):
+			lanterns.erase(cell)
+		changed.append(cell)
+		olds.append([old, block])
+		if Registry.passable[old] != Registry.passable[block] or Registry.solid[old] != Registry.solid[block] \
+				or Registry.opaque[old] != Registry.opaque[block]:
+			walk.append(cell)
+	if changed.is_empty():
+		return
+	structures.on_edits(voxels, changed, calendar.tick, source)
+	if faith != null:
+		for i in range(changed.size()):
+			faith.on_block(self, changed[i], int(olds[i][0]), int(olds[i][1]), source)
+	nav.update_cells(walk)
+
+
 # --- Presence -----------------------------------------------------------------
 
 func zone_center() -> Vector3:

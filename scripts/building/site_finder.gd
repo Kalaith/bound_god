@@ -22,7 +22,9 @@ static func _spiral(radius: int) -> Array:
 
 
 ## {origin, rotation, order} for the best site, or {} when there is none.
-static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary) -> Dictionary:
+## `enough` > 0 stops the spiral once that many candidates are found (the
+## nearest rings hold the best of them; used where time matters more).
+static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary, enough: int = 0) -> Dictionary:
 	var center: Vector3i = settlement.center
 	var radius: int = mini(Balance.integer("construction.site_search_radius"), int(settlement.radius))
 	# Columns other buildings or sites already hold, and ground heights, are
@@ -36,6 +38,8 @@ static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary) 
 	var context: Dictionary = {"blocked": blocked, "tops": {}, "footprints": {}}
 	var candidates: Array = []
 	for offset in _spiral(radius):
+		if enough > 0 and candidates.size() >= enough:
+			break
 		for rotation in range(4):
 			var scored: Dictionary = _score(sim, template, Vector2i(center.x, center.z) + offset, rotation, settlement, context)
 			if not scored.is_empty():

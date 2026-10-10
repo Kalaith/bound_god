@@ -57,6 +57,45 @@ func on_edit(world: RefCounted, cell: Vector3i, tick: int, source: String) -> vo
 	_rebuild(world, anchors, touched, tick, source)
 
 
+## Many edits at once: one re-probe for every anchor any of them could affect.
+func on_edits(world: RefCounted, cells: Array, tick: int, source: String) -> void:
+	var limits: Array = Data.template_limits().max_size
+	var reach := Vector3i(int(limits[0]), int(limits[1]), int(limits[2]))
+	var edited: Dictionary = {}
+	for cell in cells:
+		edited[cell] = true
+		if Registry.component(world.get_block(cell)) in ANCHORS:
+			components[cell] = true
+		else:
+			components.erase(cell)
+			_reads.erase(cell)
+	var chosen: Dictionary = {}
+	for anchor in components:
+		for cell in cells:
+			if absi(anchor.x - cell.x) <= reach.x and absi(anchor.z - cell.z) <= reach.z and absi(anchor.y - cell.y) <= reach.y \
+					and _may_read(anchor, cell):
+				chosen[anchor] = true
+				break
+	var touched: Array = []
+	for id in entries:
+		var entry: Dictionary = entries[id]
+		var hit: bool = chosen.has(entry.anchor)
+		if not hit:
+			for cell in cells:
+				if entry.cells.has(cell):
+					hit = true
+					break
+		if hit:
+			touched.append(id)
+			for part in entry.components.values():
+				for anchor in part:
+					if components.has(anchor):
+						chosen[anchor] = true
+	if chosen.is_empty() and touched.is_empty():
+		return
+	_rebuild(world, chosen.keys(), touched, tick, source)
+
+
 ## Re-probe `anchors`, replacing the structures in `touched`; ids carry over
 ## when a new room still holds an old structure's anchor.
 func _rebuild(world: RefCounted, anchors: Array, touched: Array, tick: int, cause: String) -> void:

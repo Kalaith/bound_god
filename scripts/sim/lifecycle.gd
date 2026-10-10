@@ -6,6 +6,7 @@ const Data = preload("res://scripts/core/data.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Generation = preload("res://scripts/agents/generation.gd")
 const Movement = preload("res://scripts/sim/movement.gd")
+const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 
 
 ## Anyone at zero health dies; the chronicle and those who knew them remember.
@@ -44,6 +45,19 @@ static func die(sim: RefCounted, agent: RefCounted, cause: String) -> void:
 		elif other.beliefs.relations.has(agent.id):
 			Mind.add(other, "death_witness", day_ticks, agent.id)
 	sim.chronicle_event("death", agent.settlement_id, {"name": agent.full_name()}, cause, [agent.id])
+	_legacy(sim, agent)
+
+
+## What a cultivator leaves behind: their techniques kept as a manual by
+## their sect, and, from Foundation Establishment on, a relic at the tree.
+static func _legacy(sim: RefCounted, agent: RefCounted) -> void:
+	var c: Dictionary = agent.cultivation
+	if c.is_empty() or int(c.realm) < 1:
+		return
+	if sim.sects != null and int(c.sect_id) >= 0 and not c.techniques.is_empty():
+		sim.sects.keep_manual(sim, int(c.sect_id), agent)
+	if sim.tree_growth != null and int(c.realm) >= 2:
+		sim.tree_growth.leave_relic(sim, agent)
 
 
 ## Hourly: a person at a breaking point may lose control, in a way that
@@ -145,7 +159,21 @@ static func daily(sim: RefCounted) -> void:
 		if not agent.is_present():
 			continue
 		agent.age_years += 1.0 / year_days
+		if _old_age(sim, agent):
+			die(sim, agent, "cause_old_age")
+			continue
 		if agent.is_child and agent.age_years * year_days >= Balance.number("agents.child_growth_days"):
 			agent.is_child = false
 			agent.age_years = Balance.number("agents.adult_age_years")
 			sim.chronicle_event("grew_up", agent.settlement_id, {"name": agent.full_name()}, "", [agent.id])
+
+
+## Past the edge of their lifespan the years catch up: a small daily chance
+## that grows each year beyond it. Cultivation lengthens the lifespan.
+static func _old_age(sim: RefCounted, agent: RefCounted) -> bool:
+	if agent.is_child or agent.cultivation.is_empty():
+		return false
+	var beyond: float = agent.age_years - (CultivationState.lifespan(agent.cultivation) - Balance.number("health.old_age_spread"))
+	if beyond <= 0.0:
+		return false
+	return sim.rng.randf() < beyond * Balance.number("health.old_age_per_year") / float(sim.calendar.days_per_season * 4)

@@ -118,7 +118,9 @@ func step(sim: RefCounted) -> void:
 	ids.sort()
 	for id in ids:
 		var trial: Dictionary = entries[id]
+		# A finished trial lives on in the person's record and the chronicle.
 		if trial.state == "done":
+			entries.erase(id)
 			continue
 		var agent: RefCounted = sim.agents[int(trial.agent)]
 		if not agent.is_present():
@@ -144,6 +146,8 @@ func _begin(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 	trial.site = agent.cell
 	trial.sanctuary = in_sanctuary(sim, agent.cell)
 	trial.preparation = preparation(sim, agent)
+	if bool(trial.sanctuary) and sim.tree_growth != null:
+		trial.preparation = minf(float(trial.preparation) + sim.tree_growth.relic_preparation(), 1.0)
 	# A spirit fruit kept for this moment is eaten now.
 	if bool(agent.cultivation.get("fruit", false)):
 		agent.cultivation.fruit = false
@@ -302,3 +306,44 @@ func to_dict() -> Dictionary:
 func from_dict(data: Dictionary) -> void:
 	entries = data.entries
 	next_id = int(data.next_id)
+
+
+## A trial while the valley passes abstractly (meditation): announced,
+## faced and decided at once by the same odds and outcomes, without the
+## storm's strikes. A protect rule the god set for this person spends Favour
+## on a shield, and on Defy Heaven, within its limit, as the god would.
+func abstract_trial(sim: RefCounted, agent: RefCounted, site: Vector3i) -> String:
+	var id: int = announce(sim, agent, site)
+	if id <= 0:
+		return ""
+	var trial: Dictionary = entries[id]
+	_protect(sim, trial, agent)
+	agent.cell = site
+	_begin(sim, trial, agent)
+	_resolve(sim, trial, agent)
+	entries.erase(id)
+	return str(trial.outcome)
+
+
+func _protect(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
+	var rule: Dictionary = sim.god.protect.get(agent.id, {})
+	if rule.is_empty() or sim.faith == null:
+		return
+	var shrine: Dictionary = sim.faith.get_shrine(1)
+	if shrine.is_empty():
+		return
+	var limit: float = float(rule.get("limit", 0.0))
+	var spent: float = 0.0
+	for miracle in ["shield_trial", "defy_heaven"]:
+		if miracle == "defy_heaven" and str(rule.get("mode", "")) != "defy":
+			continue
+		var cost: float = float(Data.miracle(miracle).cost)
+		if float(shrine.favour) < cost or spent + cost > limit:
+			continue
+		shrine.favour = float(shrine.favour) - cost
+		spent += cost
+		if miracle == "shield_trial":
+			trial.shield = Balance.number("cultivation.shield_amount")
+		else:
+			trial.defy = true
+		sim.chronicle_event("miracle", int(agent.settlement_id), {"miracle": miracle}, "cause_protect_rule|%s" % agent.given_name, [agent.id])

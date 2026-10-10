@@ -22,57 +22,99 @@ const EAT_BELOW: float = 60.0
 const LEISURE_PER_HOUR: float = 9.0
 
 
-static func hour(sim: RefCounted, agent: RefCounted) -> void:
-	var per_hour: float = 1.0 / 24.0
-	var rates: Dictionary = Balance.dict("needs.decay_per_day")
-	var sleeping: bool = Schedule.is_sleep_time(sim, agent)
-	var working: bool = Schedule.is_work_hours(sim, agent)
-	agent.change_need(Need.FOOD, -float(rates.food) * agent.personality.need_decay[Need.FOOD] * per_hour)
+## `forage` is the settlement's economy record: its ripe-berry pool feeds
+## people straight from the bush when the chests are empty, as foraging does.
+static func hour(sim: RefCounted, agent: RefCounted, forage: Dictionary = {}, step: int = 1) -> void:
+	var k: Dictionary = context(sim, step)
+	var sleeping: bool = asleep(k, agent)
+	var working: bool = at_work(k, agent)
+	var decay: PackedFloat32Array = agent.personality.need_decay
+	var needs: PackedFloat32Array = agent.needs
+	needs[Need.FOOD] = clampf(needs[Need.FOOD] - float(k.food) * decay[Need.FOOD], 0.0, 100.0)
 	if sleeping:
-		var rest: String = "needs.bed_rest_per_day" if agent.home >= 0 else "needs.ground_rest_per_day"
-		agent.change_need(Need.REST, Balance.number(rest) * per_hour)
+		needs[Need.REST] = clampf(needs[Need.REST] + (float(k.bed_rest) if agent.home >= 0 else float(k.ground_rest)), 0.0, 100.0)
 		agent.activity = "sleeping"
 	else:
-		agent.change_need(Need.REST, -float(rates.rest) * agent.personality.need_decay[Need.REST] * per_hour)
+		needs[Need.REST] = clampf(needs[Need.REST] - float(k.rest) * decay[Need.REST], 0.0, 100.0)
 		agent.activity = "working" if working else "relaxing"
-	for need in [Need.SOCIAL, Need.RECREATION]:
-		agent.change_need(need, -float(rates[Personality.NEEDS[need]]) * agent.personality.need_decay[need] * per_hour)
-		if not sleeping and not working:
-			agent.change_need(need, LEISURE_PER_HOUR)
-	agent.change_need(Need.SAFETY, Balance.number("needs.safety_recovery_per_day") * per_hour)
-	_shelter(sim, agent, sleeping)
+	var leisure: float = LEISURE_PER_HOUR * int(k.step) if not sleeping and not working else 0.0
+	needs[Need.SOCIAL] = clampf(needs[Need.SOCIAL] - float(k.social) * decay[Need.SOCIAL] + leisure, 0.0, 100.0)
+	needs[Need.RECREATION] = clampf(needs[Need.RECREATION] - float(k.recreation) * decay[Need.RECREATION] + leisure, 0.0, 100.0)
+	needs[Need.SAFETY] = clampf(needs[Need.SAFETY] + float(k.safety), 0.0, 100.0)
+	agent.needs = needs
+	_shelter(k, agent, sleeping)
 	if agent.need(Need.FOOD) < EAT_BELOW:
-		_eat(sim, agent)
-	_health(sim, agent)
-	Mind.tick(agent, sim.calendar.ticks_per_hour())
+		_eat(sim, agent, forage)
+	_health(sim, k, agent)
+	var ticks: int = int(k.ticks)
+	if not agent.thoughts.is_empty():
+		Mind.tick(agent, ticks)
 	agent.mood = Body.compute_mood(agent)
-	if agent.mood < Balance.number("mood.departure_threshold"):
-		agent.low_mood_ticks += sim.calendar.ticks_per_hour()
+	if agent.mood < float(k.departure):
+		agent.low_mood_ticks += ticks
 	elif agent.low_mood_ticks > 0:
-		agent.low_mood_ticks = maxi(agent.low_mood_ticks - sim.calendar.ticks_per_hour() / 4, 0)
+		agent.low_mood_ticks = maxi(agent.low_mood_ticks - ticks / 4, 0)
 	if float(agent.health.hp) <= 0.0:
 		Lifecycle.die(sim, agent, Lifecycle._cause(agent))
 
 
+static var _context_tick: int = -1
+static var _context: Dictionary = {}
+
+
+## The hour's shared numbers, worked out once for everyone.
+## `step` is how many hours one abstract step covers (1, or 2 in long meditations).
+static func context(sim: RefCounted, step: int = 1) -> Dictionary:
+	if _context_tick == sim.calendar.tick and not _context.is_empty() and int(_context.step) == step:
+		return _context
+	_context_tick = sim.calendar.tick
+	var per_hour: float = float(step) / 24.0
+	var rates: Dictionary = Balance.dict("needs.decay_per_day")
+	var loss: float = Balance.number("needs.shelter_loss_per_night_hour")
+	if sim.calendar.is_winter():
+		loss *= Balance.number("needs.shelter_winter_factor")
+	_context = {
+		"step": step, "hour": sim.calendar.hour(), "daylight": sim.calendar.is_daylight(), "ticks": sim.calendar.ticks_per_hour() * step,
+		"food": float(rates.food) * per_hour, "rest": float(rates.rest) * per_hour, "social": float(rates.social) * per_hour,
+		"recreation": float(rates.recreation) * per_hour, "safety": Balance.number("needs.safety_recovery_per_day") * per_hour,
+		"bed_rest": Balance.number("needs.bed_rest_per_day") * per_hour, "ground_rest": Balance.number("needs.ground_rest_per_day") * per_hour,
+		"shelter_gain": Balance.number("needs.shelter_gain_per_day") * per_hour, "shelter_loss": loss,
+		"starve": Balance.number("health.starvation_damage_per_day") * per_hour, "expose": Balance.number("health.exposure_damage_per_day") * per_hour,
+		"regen": Balance.number("health.regen_per_day") * per_hour, "departure": Balance.number("mood.departure_threshold"),
+		"sleep_hour": Balance.number("time.sleep_hour"), "dawn_hour": Balance.number("time.dawn_hour"),
+		"work_start": Balance.number("time.work_start_hour"), "work_end": Balance.number("time.work_end_hour"),
+	}
+	return _context
+
+
+## Schedule.is_sleep_time and is_work_hours, from the hour's context.
+static func asleep(k: Dictionary, agent: RefCounted) -> bool:
+	var hour: float = fposmod(float(k.hour) - (3.0 if agent.personality.night_owl else 0.0), 24.0)
+	return hour >= float(k.sleep_hour) or hour < float(k.dawn_hour)
+
+
+static func at_work(k: Dictionary, agent: RefCounted) -> bool:
+	var owl: float = 2.0 if agent.personality.night_owl else 0.0
+	return float(k.hour) >= float(k.work_start) + owl and float(k.hour) < float(k.work_end) + owl
+
+
 ## A home is a roof; the homeless lose shelter by night as the detailed body
 ## does under foliage (half cover), and get it back by day.
-static func _shelter(sim: RefCounted, agent: RefCounted, sleeping: bool) -> void:
-	var gain: float = Balance.number("needs.shelter_gain_per_day") / 24.0
+static func _shelter(k: Dictionary, agent: RefCounted, sleeping: bool) -> void:
+	var gain: float = float(k.shelter_gain)
 	if agent.home >= 0:
 		agent.change_need(Need.SHELTER, gain)
-	elif sim.calendar.is_daylight():
+	elif bool(k.daylight):
 		agent.change_need(Need.SHELTER, gain * 0.25 * 1.5)
 	else:
-		var loss: float = Balance.number("needs.shelter_loss_per_night_hour")
-		if sim.calendar.is_winter():
-			loss *= Balance.number("needs.shelter_winter_factor")
+		var loss: float = float(k.shelter_loss) * int(k.step)
 		if sleeping:
 			loss *= 0.8
 		agent.change_need(Need.SHELTER, -loss * agent.personality.need_decay[Need.SHELTER] * 0.5)
 
 
 ## One portion: carried food first, then the best the chests hold.
-static func _eat(sim: RefCounted, agent: RefCounted) -> void:
+static func _eat(sim: RefCounted, agent: RefCounted, forage: Dictionary) -> void:
 	var food: String = str(agent.carrying.get("resource", ""))
 	if Food.is_food(food) and agent.carried(food) >= 1.0:
 		agent.carrying.amount = float(agent.carrying.amount) - 1.0
@@ -91,6 +133,11 @@ static func _eat(sim: RefCounted, agent: RefCounted) -> void:
 		if take(sim, agent.settlement_id, resource, 1) > 0:
 			_ate(sim, agent, resource)
 			return
+	if float(forage.get("ripe", 0.0)) >= 1.0:
+		forage.ripe = float(forage.ripe) - 1.0
+		agent.change_need(Need.FOOD, Balance.number("needs.forage_restore"))
+		Mind.add(agent, "ate_foraged", sim.calendar.ticks_per_day)
+		Mind.remove(agent, "went_hungry")
 
 
 static func _ate(sim: RefCounted, agent: RefCounted, food: String) -> void:
@@ -99,20 +146,22 @@ static func _ate(sim: RefCounted, agent: RefCounted, food: String) -> void:
 	Mind.remove(agent, "went_hungry")
 
 
-static func _health(sim: RefCounted, agent: RefCounted) -> void:
+static func _health(sim: RefCounted, k: Dictionary, agent: RefCounted) -> void:
 	var change: float = 0.0
 	var day: int = sim.calendar.ticks_per_day
 	if agent.need(Need.FOOD) <= 0.5:
-		change -= Balance.number("health.starvation_damage_per_day")
+		change -= float(k.starve)
 		if not Mind.has(agent, "went_hungry"):
 			Mind.add(agent, "went_hungry", day)
 	if agent.need(Need.SHELTER) <= 0.5:
-		change -= Balance.number("health.exposure_damage_per_day")
+		change -= float(k.expose)
 		if not Mind.has(agent, "exposed"):
 			Mind.add(agent, "exposed", day)
 	if change >= 0.0 and agent.need(Need.FOOD) > 10.0:
-		change += Balance.number("health.regen_per_day")
-	agent.health.hp = clampf(float(agent.health.hp) + change / 24.0, 0.0, 100.0)
+		if float(agent.health.hp) >= 100.0:
+			return
+		change += float(k.regen)
+	agent.health.hp = clampf(float(agent.health.hp) + change, 0.0, 100.0)
 
 
 ## Takes up to `count` of a resource from a settlement's chests, oldest lots

@@ -5,7 +5,8 @@ extends RefCounted
 ## FoundSect goal; joining from being taught by a member; succession and
 ## ranks are settled each day, and every change is chronicled with its cause.
 ## id -> {id, name: {adjective, noun} label keys, settlement_id, founded_tick, founder,
-##        master, members: {agent id: rank}, doctrine: {openness, martial, secrecy, mercy, ambition}}
+##        master, members: {agent id: rank}, doctrine: {openness, martial, secrecy, mercy, ambition},
+##        manuals: Array of technique ids its dead teachers left}
 const Balance = preload("res://scripts/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Text = preload("res://scripts/core/text.gd")
@@ -86,7 +87,7 @@ func found(sim: RefCounted, founder: RefCounted) -> int:
 	var id: int = next_id
 	next_id += 1
 	var sect: Dictionary = {"id": id, "name": {"adjective": adjective, "noun": noun}, "settlement_id": founder.settlement_id,
-		"founded_tick": sim.calendar.tick, "founder": founder.id, "master": founder.id, "members": {}, "doctrine": leaning(founder)}
+		"founded_tick": sim.calendar.tick, "founder": founder.id, "master": founder.id, "members": {}, "doctrine": leaning(founder), "manuals": []}
 	entries[id] = sect
 	_join(sect, founder, "master")
 	var queue: Array = founder.cultivation.students.duplicate()
@@ -152,6 +153,7 @@ func daily(sim: RefCounted) -> void:
 			_succeed(sim, sect)
 		_rank(sim, sect)
 		_drift(sim, sect)
+		_study(sim, sect)
 
 
 ## The most respected member becomes master.
@@ -195,3 +197,37 @@ func to_dict() -> Dictionary:
 func from_dict(data: Dictionary) -> void:
 	entries = data.entries
 	next_id = int(data.next_id)
+
+
+## A dead teacher's techniques are written down for the sect.
+func keep_manual(sim: RefCounted, sect_id: int, teacher: RefCounted) -> void:
+	var sect: Dictionary = entries.get(sect_id, {})
+	if sect.is_empty():
+		return
+	if not sect.has("manuals"):
+		sect["manuals"] = []
+	for technique in teacher.cultivation.techniques:
+		if not sect.manuals.has(technique):
+			sect.manuals.append(technique)
+			sim.chronicle_event("manual_kept", int(sect.settlement_id), {"name": teacher.full_name(), "technique": "technique_" + str(technique), "sect": name_key(sect)},
+				"cause_teacher_died", [teacher.id])
+
+
+## Members who lack a technique the sect keeps in its manuals may learn it
+## from the page, now and then, without a teacher.
+func _study(sim: RefCounted, sect: Dictionary) -> void:
+	var manuals: Array = sect.get("manuals", [])
+	if manuals.is_empty():
+		return
+	var chance: float = Balance.number("cultivation.manual_chance")
+	var members: Array = sect.members.keys()
+	members.sort()
+	for id in members:
+		var member: RefCounted = sim.agents[id]
+		for technique in manuals:
+			if member.cultivation.techniques.has(technique) or sim.rng.randf() >= chance:
+				continue
+			member.cultivation.techniques.append(technique)
+			sim.chronicle_event("learned_from_manual", int(sect.settlement_id), {"name": member.full_name(), "technique": "technique_" + str(technique)},
+				"cause_sect_manual", [id])
+			break

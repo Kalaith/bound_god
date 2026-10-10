@@ -9,6 +9,7 @@ extends RefCounted
 ## dense qi for a season. Everything is chronicled with its cause.
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const Balance = preload("res://scripts/core/balance.gd")
 
 ## kind -> amount of insight
 var insights: Dictionary = {}
@@ -29,6 +30,8 @@ var fruit_grown: int = 0
 var scars: Array = []
 ## Nurtured spots of dense qi: Array of {cell, radius, qi, until}
 var nurtured: Array = []
+## Relics great cultivators left at the tree: Array of {name, realm, tick}
+var relics: Array = []
 
 
 static func data() -> Dictionary:
@@ -142,6 +145,7 @@ static func _widen_crown(sim: RefCounted, extra: float) -> void:
 	var top: int = tree.y - 1
 	var middle := Vector3(tree.x + 0.5, top + 11, tree.z + 0.5)
 	var reach: int = 6 + ceili(extra)
+	var batch: Array = []
 	for y in range(top + 6, top + 16):
 		for z in range(tree.z - reach, tree.z + reach + 2):
 			for x in range(tree.x - reach, tree.x + reach + 2):
@@ -150,7 +154,8 @@ static func _widen_crown(sim: RefCounted, extra: float) -> void:
 				offset.y *= 1.5
 				var length: float = offset.length()
 				if length >= 5.6 and length < 5.6 + extra and sim.voxels.get_block(cell) == 0 and not sim.is_occupied(cell):
-					sim.set_block(cell, crown, 0, "growth")
+					batch.append([cell, crown, 0])
+	sim.set_blocks(batch, "growth")
 
 
 ## Lightning in the sanctuary marks the bark on the side it fell.
@@ -186,7 +191,7 @@ func phase_id() -> String:
 func to_dict() -> Dictionary:
 	return {"insights": insights.duplicate(), "witnessed": witnessed.duplicate(), "history": history.duplicate(true),
 		"maturity": maturity, "phase": phase, "unlocks": unlocks.duplicate(), "fruit": fruit, "fruit_season": fruit_season,
-		"fruit_grown": fruit_grown, "scars": scars.duplicate(true), "nurtured": nurtured.duplicate(true)}
+		"fruit_grown": fruit_grown, "scars": scars.duplicate(true), "nurtured": nurtured.duplicate(true), "relics": relics.duplicate(true)}
 
 
 func from_dict(state: Dictionary) -> void:
@@ -201,3 +206,16 @@ func from_dict(state: Dictionary) -> void:
 	fruit_grown = int(state.fruit_grown)
 	scars = state.scars
 	nurtured = state.nurtured
+	relics = state.get("relics", [])
+
+
+## A cultivator of Foundation Establishment or beyond leaves a relic at the
+## tree when they die; relics steady those who face Heaven in its sanctuary.
+func leave_relic(sim: RefCounted, agent: RefCounted) -> void:
+	relics.append({"name": agent.full_name(), "realm": int(agent.cultivation.realm), "tick": sim.calendar.tick})
+	sim.chronicle_event("relic_left", _tree_place(sim), {"name": agent.full_name()}, "cause_great_cultivator", [agent.id])
+
+
+## What the relics add to a trial's preparation in the sanctuary.
+func relic_preparation() -> float:
+	return minf(float(relics.size()), Balance.number("cultivation.relics_most")) * Balance.number("cultivation.relic_preparation")

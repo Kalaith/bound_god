@@ -23,8 +23,24 @@ const H = preload("res://scripts/agents/plan_helpers.gd")
 const Movement = preload("res://scripts/sim/movement.gd")
 const AbstractPeople = preload("res://scripts/sim/abstract/abstract_people.gd")
 const AbstractEconomy = preload("res://scripts/sim/abstract/abstract_economy.gd")
+const AbstractBuild = preload("res://scripts/sim/abstract/abstract_build.gd")
+const AbstractCultivation = preload("res://scripts/sim/abstract/abstract_cultivation.gd")
+
+## Chronicle kinds that wake a meditating god whoever they concern.
+const WAKING: Array[String] = ["shrine_fell", "tree_unlock", "sect_master", "sect_founded"]
 
 var from_tick: int = 0
+## Hours one step covers (rates scale with it): longer meditations take
+## longer steps so decades pass in seconds (see step_for).
+var step: int = 1
+
+
+## The step for a span of days: hourly within a year, two hours up to ten
+## years, three beyond.
+static func step_for(days: float, year_days: float) -> int:
+	if days <= year_days:
+		return 1
+	return 2 if days <= year_days * 10.0 else 3
 ## settlement id -> economy record (abstract_economy.gd)
 var records: Dictionary = {}
 
@@ -55,29 +71,69 @@ static func freeze(agent: RefCounted) -> void:
 	agent.help_task = {}
 
 
-func run_hours(sim: RefCounted, hours: int) -> void:
-	for _i in range(hours):
-		step_hour(sim)
+## Runs up to `hours` hours; stops early and returns the reason when
+## something wakes the god ({} when it ran them all).
+func run_hours(sim: RefCounted, hours: int) -> Dictionary:
+	for _i in range(ceili(float(hours) / step)):
+		var reason: Dictionary = step_hour(sim)
+		if not reason.is_empty():
+			return reason
+	return {}
 
 
-func step_hour(sim: RefCounted) -> void:
-	var per_hour: int = sim.calendar.ticks_per_hour()
-	sim.calendar.tick = (sim.calendar.tick / per_hour + 1) * per_hour
+## One hour. Returns why the god should wake ({kind, agent, entry}), or {}.
+func step_hour(sim: RefCounted) -> Dictionary:
+	var seen: int = sim.chronicle.entries.size()
+	var wake: Dictionary = {}
+	var per_step: int = sim.calendar.ticks_per_hour() * step
+	sim.calendar.tick = (sim.calendar.tick / per_step + 1) * per_step
 	if sim.calendar.tick % sim.calendar.ticks_per_day == 0:
 		_day(sim)
 	var praying: bool = _prayer_hour(sim)
+	var sitting: bool = _in_step(sim, AbstractCultivation.SITTINGS)
+	var k: Dictionary = AbstractPeople.context(sim, step)
+	## settlement id -> [working hands, people present], counted on the way.
+	var counts: Dictionary = {}
 	for agent in sim.agents:
 		if not agent.is_present():
 			continue
-		AbstractPeople.hour(sim, agent)
+		var count: Array = counts.get(agent.settlement_id, [0.0, 0])
+		count[1] = int(count[1]) + 1
+		if not agent.is_child and AbstractPeople.at_work(k, agent):
+			count[0] = float(count[0]) + agent.capacity()
+		counts[agent.settlement_id] = count
+		AbstractPeople.hour(sim, agent, records.get(agent.settlement_id, {}), step)
 		if agent.is_present() and praying:
 			_pray(sim, agent)
 		if agent.is_present() and _leaving(sim, agent):
 			EffectsApply._leave(sim, agent)
+		if agent.is_present() and sitting:
+			var facing: int = AbstractCultivation.hour(sim, agent, AbstractCultivation.SITTING_HOURS)
+			if facing >= 0 and wake.is_empty():
+				wake = {"kind": "trial", "agent": facing}
+		if agent.is_present() and sim.god.followed.has(agent.id) and float(agent.health.hp) < 35.0 and wake.is_empty():
+			wake = {"kind": "danger", "agent": agent.id}
 	for id in sim.settlements.ids():
 		if records.has(id):
-			AbstractEconomy.hour(sim, id, records[id])
+			var count: Array = counts.get(id, [0.0, 0])
+			AbstractBuild.hour(sim, id, AbstractEconomy.hour(sim, id, records[id], float(count[0]) * step, int(count[1])))
 	sim.faith.hourly(sim)
+	if wake.is_empty():
+		wake = _woken_by(sim, seen)
+	return wake
+
+
+## Something new in the chronicle that wakes the god: a pinned person's
+## death or new realm, a fallen shrine, a new phenomenon, a succession.
+func _woken_by(sim: RefCounted, seen: int) -> Dictionary:
+	for i in range(seen, sim.chronicle.entries.size()):
+		var entry: Dictionary = sim.chronicle.entries[i]
+		if WAKING.has(str(entry.kind)):
+			return {"kind": str(entry.kind), "agent": -1, "entry": entry}
+		for id in entry.agents:
+			if sim.god.followed.has(int(id)) and str(entry.kind) in ["death", "departed", "trial_passed", "trial_injured", "trial_died", "trial_defied", "realm_reached"]:
+				return {"kind": str(entry.kind), "agent": int(id), "entry": entry}
+	return {}
 
 
 func _day(sim: RefCounted) -> void:
@@ -86,8 +142,14 @@ func _day(sim: RefCounted) -> void:
 		if not records.has(id):
 			records[id] = AbstractEconomy.survey(sim, id)
 		AbstractEconomy.day(sim, id, records[id])
+		# A new project is weighed every few days, not every morning.
+		if (sim.calendar.day() + id) % AbstractBuild.PLAN_EVERY_DAYS == 0:
+			AbstractBuild.day(sim, id, records[id])
 	Lifecycle.daily(sim)
-	Standing.daily(sim)
+	sim.settlement_life.daily(sim)
+	sim.sects.daily(sim)
+	sim.tree_growth.daily(sim)
+	AbstractCultivation.day(sim)
 	sim.faith.daily(sim)
 	if sim.requests != null:
 		sim.requests.daily(sim)
@@ -102,9 +164,17 @@ func _day(sim: RefCounted) -> void:
 
 
 ## Believers pray at dawn and dusk, as the detailed rhythm brings them to.
-static func _prayer_hour(sim: RefCounted) -> bool:
-	var hour: int = int(sim.calendar.hour())
-	return hour == int(Balance.number("time.dawn_hour")) or hour == int(Balance.number("time.dusk_hour"))
+func _prayer_hour(sim: RefCounted) -> bool:
+	return _in_step(sim, [Balance.number("time.dawn_hour"), Balance.number("time.dusk_hour")])
+
+
+## Whether one of these hours of the day falls within this step.
+func _in_step(sim: RefCounted, hours: Array) -> bool:
+	var hour: float = sim.calendar.hour()
+	for at in hours:
+		if float(at) >= hour and float(at) < hour + step:
+			return true
+	return false
 
 
 static func _pray(sim: RefCounted, agent: RefCounted) -> void:
@@ -133,6 +203,8 @@ func finish(sim: RefCounted) -> void:
 		if records.has(id):
 			_bushes(sim, records[id])
 			_crops(sim, records[id])
+	for site_id in sim.construction.ids():
+		AbstractBuild.stamp(sim, sim.construction.get_site(site_id))
 	for agent in sim.agents:
 		if agent.is_present():
 			thaw(sim, agent)

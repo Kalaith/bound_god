@@ -22,6 +22,9 @@ var prompts_dismissed: Array = []
 ## People the player keeps pinned (ids). Following is a lens: it draws the
 ## god's attention and wakes meditation, and grants nothing.
 var followed: Array = []
+## Rules the god leaves for pinned people while meditating:
+## agent id -> {mode: "shield" | "defy", limit: Favour it may spend}.
+var protect: Dictionary = {}
 ## Events for the presentation to react to: expelled, dormant, transfer.
 var events: Array = []
 
@@ -47,7 +50,7 @@ func to_dict() -> Dictionary:
 		"divine_stock": divine_stock.duplicate(), "active_shrine_id": active_shrine_id, "dormant": dormant,
 		"renown": renown, "offered": offered.duplicate(true), "offered_at": offered_at.duplicate(),
 		"avatar_cell": avatar_cell, "hotbar": hotbar.duplicate(), "prompts_dismissed": prompts_dismissed.duplicate(),
-		"followed": followed.duplicate(),
+		"followed": followed.duplicate(), "protect": protect.duplicate(true),
 	}
 
 
@@ -63,3 +66,4 @@ func from_dict(data: Dictionary) -> void:
 	# Prompts came after schema 4; older worlds have dismissed none.
 	prompts_dismissed = data.get("prompts_dismissed", [])
 	followed = data.get("followed", [])
+	protect = data.get("protect", {})

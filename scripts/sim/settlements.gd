@@ -30,6 +30,9 @@ var lots: Dictionary = {}
 var today: int = 1
 ## Bumped whenever a chest appears, vanishes or its contents change.
 var version: int = 0
+## Bumped only when a container appears or vanishes (or settlements change),
+## so the cached list of where a settlement's chests stand survives meals.
+var places_version: int = 0
 ## settlement id -> [key, chest cells]
 var _chest_cache: Dictionary = {}
 ## settlement id -> [key, stock]
@@ -71,12 +74,14 @@ func on_block(sim: RefCounted, cell: Vector3i, old: int, block: int) -> void:
 		if Registry.component(block) == "granary_bin":
 			bins[cell] = true
 		version += 1
+		places_version += 1
 	elif was_chest and not is_chest and chests.has(cell):
 		var contents: Dictionary = chests[cell]
 		chests.erase(cell)
 		bins.erase(cell)
 		lots.erase(cell)
 		version += 1
+		places_version += 1
 		var spill: Vector3i = sim.nav.nearest_walkable(cell, 2) if sim.nav != null else cell
 		var resources: Array = contents.keys()
 		resources.sort()
@@ -170,7 +175,7 @@ func chest_owner(cell: Vector3i) -> int:
 func chest_cells(_sim: RefCounted, id: int) -> Array:
 	if not entries.has(id):
 		return []
-	var key: Array = [version, float(entries[id].radius), entries.size()]
+	var key: Array = [places_version, chests.size(), float(entries[id].radius), entries.size()]
 	var cached: Array = _chest_cache.get(id, [[], []])
 	if cached[0] == key:
 		return cached[1]

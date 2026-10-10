@@ -86,16 +86,24 @@ static func talent_word(talent: float) -> String:
 
 
 ## How much one hour of meditation in `qi` moves a person on.
+static var _technique_factor: Dictionary = {}
+static var _qi_bonus: Dictionary = {}
+
+
 static func rate(cultivation: Dictionary, qi: float) -> float:
 	var per_hour: float = Balance.number("cultivation.per_hour") * (Balance.number("cultivation.talent_base") + float(cultivation.talent))
 	var technique: float = 1.0
 	for id in cultivation.techniques:
-		technique = maxf(technique, float(Data.technique(id).get("progress", 1.0)))
-	var affinity: Dictionary = Data.affinity(str(cultivation.affinity))
+		if not _technique_factor.has(id):
+			_technique_factor[id] = float(Data.technique(id).get("progress", 1.0))
+		technique = maxf(technique, float(_technique_factor[id]))
+	var affinity: String = str(cultivation.affinity)
+	if not _qi_bonus.has(affinity):
+		_qi_bonus[affinity] = float(Data.affinity(affinity).get("qi_bonus", 0.0))
 	var soundness: float = 1.0
 	if int(cultivation.realm) >= 1:
 		soundness = Balance.number("cultivation.foundation_base") + Balance.number("cultivation.foundation_weight") * float(cultivation.foundation)
-	return per_hour * qi * (1.0 + float(affinity.get("qi_bonus", 0.0))) * technique * soundness
+	return per_hour * qi * (1.0 + float(_qi_bonus[affinity])) * technique * soundness
 
 
 ## Whether a breakthrough to the next realm exists for them.

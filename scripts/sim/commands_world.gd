@@ -19,6 +19,8 @@ static func apply(sim: RefCounted, command: Dictionary) -> Dictionary:
 			return _set_hotbar(sim, command)
 		"follow":
 			return _follow(sim, command)
+		"protect":
+			return _protect(sim, command)
 		"dismiss_prompt":
 			var id: String = str(command.get("prompt", ""))
 			if id.is_empty():
@@ -132,4 +134,18 @@ static func _follow(sim: RefCounted, command: Dictionary) -> Dictionary:
 	if sim.god.followed.size() >= Balance.integer("cultivation.followed_most"):
 		return {"ok": false, "reason": "pin_full"}
 	sim.god.followed.append(id)
+	return {"ok": true, "reason": ""}
+
+
+## Sets what the god does at a pinned person's trial while meditating:
+## mode "" (wake the god), "shield" or "defy", spending at most `limit`.
+static func _protect(sim: RefCounted, command: Dictionary) -> Dictionary:
+	var id: int = int(command.get("agent", -1))
+	var mode: String = str(command.get("mode", ""))
+	if not sim.god.followed.has(id) or not mode in ["", "shield", "defy"]:
+		return {"ok": false, "reason": "protect_unpinned"}
+	if mode.is_empty():
+		sim.god.protect.erase(id)
+	else:
+		sim.god.protect[id] = {"mode": mode, "limit": float(command.get("limit", Balance.number("shrines.favour_cap")))}
 	return {"ok": true, "reason": ""}

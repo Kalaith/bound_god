@@ -52,6 +52,9 @@ static func wants(sim: RefCounted, id: int, people: int, have: Dictionary) -> Ar
 		result.append(["granary", "reason_fear_of_winter" if fear else "reason_grain_to_keep", 0.9 if fear else 0.7])
 	if int(have.get("kitchen", 0)) == 0 and grain >= Balance.integer("food.kitchen_grain"):
 		result.append(["kitchen", "reason_no_kitchen", 0.65])
+	# A garden bears through the winter, which a lean autumn makes people think of.
+	if fear and int(have.get("garden", 0)) < ceili(float(people) / Balance.number("construction.people_per_garden")):
+		result.append(["garden", "reason_fear_of_winter", 0.85])
 	return result
 
 

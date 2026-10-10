@@ -5,6 +5,7 @@ const Data = preload("res://scripts/core/data.gd")
 const Agent = preload("res://scripts/agents/agent.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
+const Balance = preload("res://scripts/core/balance.gd")
 
 
 static func _pick(rng: RandomNumberGenerator, list: Array) -> Variant:
@@ -80,6 +81,11 @@ static func child(rng: RandomNumberGenerator, id: int, mother: RefCounted, fathe
 	agent.traits = _traits(rng, maxi(inherited.size(), 2), inherited)
 	agent.personality = Personality.from_traits(agent.traits)
 	agent.hue = lerpf(mother.hue, father.hue, 0.5)
+	# A spiritual root runs in families: half from the parents, half new.
+	var parents_talent: float = (float(mother.cultivation.get("talent", 0.0)) + float(father.cultivation.get("talent", 0.0))) * 0.5
+	agent.cultivation.talent = clampf(lerpf(float(agent.cultivation.talent), parents_talent, Balance.number("cultivation.inherit_talent")), 0.0, 1.0)
+	var parents_drive: float = maxf(float(mother.cultivation.get("drive", 0.0)), float(father.cultivation.get("drive", 0.0)))
+	agent.cultivation.drive = clampf(lerpf(float(agent.cultivation.drive), parents_drive, Balance.number("cultivation.inherit_drive")), 0.0, 1.0)
 	for skill in range(Personality.SKILLS.size()):
 		agent.skills.levels[skill] = 0
 	agent.backstory = {"origin": "", "former_role": "", "memory": ""}
