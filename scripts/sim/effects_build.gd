@@ -30,7 +30,7 @@ static func _mark(sim: RefCounted, agent: RefCounted, action: Dictionary) -> voi
 			agent.step_result = {"site": 0}
 			return
 	var order: Array = action.order
-	var timber: bool = not agent.beliefs.believes_stock("stone") and not agent.beliefs.has_site("rock") and agent.carried("stone") < 1.0
+	var timber: bool = not Construction.knows_stone_near(sim, agent)
 	if timber:
 		order = order.duplicate(true)
 		timber = Construction.in_timber(order, 0) > 0

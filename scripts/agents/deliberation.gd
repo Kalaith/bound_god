@@ -59,7 +59,7 @@ static func _survival(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	var shelter: float = agent.need(Need.SHELTER)
 	# By day, only a roof is worth going to (a canopy does little more than
 	# the open sky); settlers on open land find shelter by building a home.
-	if shelter < 60.0 and (not sim.calendar.is_daylight() or _knows_roof(agent)):
+	if shelter < 60.0 and (not sim.calendar.is_daylight() or _knows_roof(sim, agent)):
 		var utility: float = pow(deficit(shelter), 2) * 1.6 + (0.6 if shelter < 20.0 else 0.0)
 		out.append(candidate(Kind.TAKE_SHELTER, utility, "reason_exposed", shelter))
 
@@ -81,13 +81,13 @@ static func _survival(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 
 
 ## Whether the person knows a roof: a home, or a shelter or dwelling they
-## have seen nearby.
-static func _knows_roof(agent: RefCounted) -> bool:
+## have seen in their own settlement.
+static func _knows_roof(sim: RefCounted, agent: RefCounted) -> bool:
 	if agent.home >= 0:
 		return true
 	for id in agent.beliefs.structures:
 		var known: Dictionary = agent.beliefs.structures[id]
-		if (known.functions.has("shelter") or known.functions.has("dwelling")) and Vector2(known.cell.x - agent.cell.x, known.cell.z - agent.cell.z).length() < 40.0:
+		if (known.functions.has("shelter") or known.functions.has("dwelling")) and sim.settlements.at_cell(known.cell) == agent.settlement_id:
 			return true
 	return false
 

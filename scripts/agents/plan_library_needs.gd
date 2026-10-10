@@ -69,7 +69,7 @@ static func sleep(sim: RefCounted, agent: RefCounted) -> Array:
 		if bed >= 0:
 			plans.append(H.option("free_bed", 0.8, [_structure(bed), Plans.step(Op.SLEEP, {"structure": bed})]))
 	var shelter: int = H.nearest_structure(sim, agent, func(s: Dictionary) -> bool:
-		return s.functions.has("shelter") and s.closed)
+		return s.functions.has("shelter") and s.closed and sim.settlements.at_cell(s.anchor) == agent.settlement_id)
 	if shelter >= 0:
 		plans.append(H.option("sleep_in_shelter", 0.5, [_structure(shelter), Plans.step(Op.SLEEP, {"structure": -1})]))
 	var canopy: Vector3i = covered_cell(sim, agent)
@@ -85,7 +85,7 @@ static func shelter(sim: RefCounted, agent: RefCounted) -> Array:
 	if not home.is_empty():
 		plans.append(H.option("go_home", 1.0, [_structure(home.id), Plans.step(Op.SHELTER, {"ticks": 90})]))
 	var roof: int = H.nearest_structure(sim, agent, func(s: Dictionary) -> bool:
-		return (s.functions.has("shelter") or s.functions.has("dwelling")) and s.id != agent.home)
+		return (s.functions.has("shelter") or s.functions.has("dwelling")) and s.id != agent.home and sim.settlements.at_cell(s.anchor) == agent.settlement_id)
 	if roof >= 0:
 		plans.append(H.option("shelter_structure", 0.8, [_structure(roof), Plans.step(Op.SHELTER, {"ticks": 90})]))
 	var canopy: Vector3i = covered_cell(sim, agent)

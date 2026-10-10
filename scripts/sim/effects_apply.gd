@@ -267,6 +267,9 @@ static func _settle(sim: RefCounted, agent: RefCounted, index: int) -> void:
 	sim.set_home(agent, -1)
 	sim.settlements.join(agent, id)
 	var settlement: Dictionary = sim.settlements.entries[id]
+	# Anyone setting out to live on open land knows how to raise a lean-to.
+	if not agent.beliefs.known_templates.has("lean_to"):
+		agent.beliefs.known_templates.append("lean_to")
 	for design in agent.beliefs.known_templates:
 		if not settlement.known_templates.has(design):
 			settlement.known_templates.append(design)

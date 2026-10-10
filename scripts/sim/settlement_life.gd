@@ -123,7 +123,8 @@ func _make_do(sim: RefCounted) -> void:
 			sim.chronicle_event("site_made_do", settlement_id, {"design": sim.template_name(site.template_id)}, "cause_no_stone", [int(site.founder)])
 
 
-## Whether anyone in the settlement has stone to hand or knows a place for it.
+## Whether anyone in the settlement has stone to hand or knows a place for it
+## within a short walk.
 func _stone_known(sim: RefCounted, settlement_id: int) -> bool:
 	for item_id in sim.items:
 		var item: Dictionary = sim.items[item_id]
@@ -131,7 +132,7 @@ func _stone_known(sim: RefCounted, settlement_id: int) -> bool:
 			return true
 	for agent_id in sim.settlements.entries[settlement_id].residents:
 		var agent: RefCounted = sim.agents[agent_id]
-		if agent.is_present() and (agent.beliefs.has_site("rock") or agent.carried("stone") >= 1.0):
+		if agent.is_present() and Construction.knows_stone_near(sim, agent):
 			return true
 	return false
 
@@ -148,7 +149,9 @@ func _abandon(sim: RefCounted) -> void:
 		sim.construction.release(id)
 
 
-## Buildings nobody lives in or mends lose a block now and then.
+## Buildings nobody lives in or mends lose a block now and then. A hall, a
+## garden or a storehouse is nobody's home: it is kept up while people live
+## in its settlement.
 func _decay(sim: RefCounted) -> void:
 	var now: int = sim.calendar.tick
 	var limit: int = sim.calendar.ticks_for_days(Balance.number("decay.unattended_days"))
@@ -157,7 +160,7 @@ func _decay(sim: RefCounted) -> void:
 	for id in keys:
 		var record: Dictionary = layouts[id]
 		var entry: Dictionary = sim.structures.entries.get(id, {})
-		if not entry.is_empty() and not entry.residents.is_empty():
+		if not entry.is_empty() and (not entry.residents.is_empty() or _common_and_kept(sim, entry)):
 			record["attended_tick"] = now
 			continue
 		if now - int(record.get("attended_tick", record.built_tick)) < limit:
@@ -175,6 +178,18 @@ func _decay(sim: RefCounted) -> void:
 		if not record.get("decaying", false):
 			record["decaying"] = true
 			sim.chronicle_event("structure_decaying", int(record.settlement_id), {"design": sim.template_name(record.template_id)}, "cause_unattended")
+
+
+static func _common_and_kept(sim: RefCounted, entry: Dictionary) -> bool:
+	if entry.functions.has("dwelling"):
+		return false
+	var id: int = sim.settlements.at_cell(entry.anchor)
+	if id < 0:
+		return false
+	for agent_id in sim.settlements.entries[id].residents:
+		if sim.agents[agent_id].is_present():
+			return true
+	return false
 
 
 ## A settlement with nobody left is taken back by the grass.

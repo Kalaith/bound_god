@@ -304,3 +304,22 @@ func check_founders_stay_in_their_new_settlement():
 		if option.id in ["partner_bed", "free_bed", "own_bed"]:
 			return "a settler on new land would go back to sleep in the old settlement (%s)" % option.id
 	return ""
+
+
+## A hall is nobody's home, but it is kept up while people live beside it.
+func check_common_buildings_are_kept_while_people_live_there():
+	var sim: RefCounted = _flat()
+	var camp: Vector3i = sim.settlements.entries[1].camp
+	var origin := Vector3i(camp.x - 3, 5, camp.z + 5)
+	_raise(sim, "village_hall", origin)
+	var hall: Dictionary = _structure_with(sim, "hall")
+	var layout: Array = []
+	for block in Template.from_starter(Data.starter("village_hall")).placement(0):
+		layout.append([origin + block[0], block[1], block[2]])
+	sim.settlement_life.remember(sim, int(hall.id), {"template_id": "village_hall", "settlement_id": 1}, layout)
+	sim.calendar.tick += sim.calendar.ticks_per_day * 30
+	for _day in range(30):
+		sim.settlement_life._decay(sim)
+	if not sim.settlement_life.missing_blocks(sim, int(hall.id)).is_empty():
+		return "a hall in a lived-in settlement fell into decay"
+	return ""

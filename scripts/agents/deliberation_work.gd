@@ -218,12 +218,13 @@ static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float
 	var capacity: int = sim.settlements.capacity(sim, id)
 	if capacity > 0 and sim.settlements.total(id) >= int(capacity * 0.85):
 		wants.append(["storehouse", "reason_stores_full", 0.9])
-	if int(board.get("housing_deficit", 0)) >= 3:
+	var have: Dictionary = _functions_in(sim, id)
+	# A new place with no roof at all wants one before anything else.
+	if int(board.get("housing_deficit", 0)) >= 3 or (int(have.get("shelter", 0)) == 0 and int(have.get("dwelling", 0)) == 0):
 		wants.append(["shelter", "reason_many_homeless", 0.8])
 	if sim.faith != null and sim.faith.wants_shrine(sim, agent):
 		wants.append(["shrine", "reason_no_shrine", 0.85])
 	var people: int = Standing.present(sim, id)
-	var have: Dictionary = _functions_in(sim, id)
 	if people >= Balance.integer("construction.hall_residents") and int(have.get("hall", 0)) == 0:
 		wants.append(["hall", "reason_no_hall", 0.75])
 	var gardens_wanted: int = ceili(float(people) / Balance.number("construction.people_per_garden"))

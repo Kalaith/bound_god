@@ -79,6 +79,20 @@ static func in_timber(order: Array, from: int) -> int:
 	return changed
 
 
+## Whether a person knows stone to hand: carried, in their stores, or a rock
+## they believe in within a short walk of their settlement.
+static func knows_stone_near(sim: RefCounted, agent: RefCounted) -> bool:
+	if agent.carried("stone") >= 1.0 or agent.beliefs.believes_stock("stone"):
+		return true
+	var settlement: Dictionary = sim.settlements.get_settlement(agent.settlement_id)
+	var home: Vector3i = settlement.get("center", agent.cell)
+	var reach: float = float(settlement.get("radius", 22.0)) + Balance.number("construction.stone_walk")
+	for id in agent.beliefs.known_sites("rock", home):
+		var cell: Vector3i = agent.beliefs.sites[id].cell
+		return Vector2(cell.x - home.x, cell.z - home.z).length() <= reach
+	return false
+
+
 ## Whether a design needs stone only for walling.
 static func stone_is_walling(template: RefCounted) -> bool:
 	for index in range(template.cells.size()):
