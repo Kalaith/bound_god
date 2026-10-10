@@ -22,7 +22,10 @@ const GLYPHS: Dictionary = {
 	"sleeping": "z Z", "talking": "...", "fleeing": "!", "fighting": "x", "breaking": "@", "recovering": "+",
 	"praying": "^", "building": "#", "eating": "o", "working": "*", "waiting": "?", "sheltering": "~",
 	"sowing": ".:.", "reaping": "/", "tending": "%", "cooking": "&", "gardening": "*",
+	"cultivating": "( )", "teaching": ">>", "learning": "<<", "proclaiming": "!!",
 }
+## Jade motes that rise round someone cultivating.
+const QI_MOTE := Color(0.62, 0.9, 0.78, 0.85)
 const RESOURCE_COLORS: Dictionary = {"wood": Color("9a6b3f"), "stone": Color("9fa6aa"), "thatch": Color("d8c27a"), "berries": Color("b8324a"), "ore": Color("6f7f9a"),
 	"grain": Color("e0b84a"), "seed": Color("a88a4a"), "meal": Color("d9793a"),
 	"tree_seed": Color("6b8a3a")}
@@ -38,6 +41,7 @@ var _ring_material := StandardMaterial3D.new()
 var _phase: float = 0.0
 var _facing: float = 0.0
 var _speed: float = 0.0
+var _motes: CPUParticles3D
 
 
 func setup(agent: RefCounted) -> void:
@@ -88,6 +92,8 @@ func setup(agent: RefCounted) -> void:
 	name_tag.hide()
 	for child in [ring, glyph, name_tag]:
 		add_child(child)
+	_motes = _make_motes()
+	add_child(_motes)
 	scale = Vector3.ONE * (0.7 if agent.is_child else 1.0)
 	_phase = float(agent.id) * 1.7
 
@@ -117,4 +123,45 @@ func refresh(agent: RefCounted, alpha: float, delta: float, selected: bool) -> v
 		text = ".".repeat(1 + int(_phase * 3.0) % 3)
 	glyph.text = text
 	glyph.visible = not text.is_empty()
+	_motes.emitting = agent.activity == "cultivating" and _speed < 0.2
 	name_tag.visible = selected
+
+
+## A few soft jade motes drifting up and in round a seated cultivator, as if
+## the tree's qi were gathering to them.
+static func _make_motes() -> CPUParticles3D:
+	var motes := CPUParticles3D.new()
+	motes.emitting = false
+	motes.amount = 14
+	motes.lifetime = 2.6
+	motes.local_coords = true
+	motes.position.y = 0.5
+	motes.emission_shape = CPUParticles3D.EMISSION_SHAPE_RING
+	motes.emission_ring_axis = Vector3.UP
+	motes.emission_ring_radius = 0.9
+	motes.emission_ring_inner_radius = 0.5
+	motes.emission_ring_height = 0.2
+	motes.direction = Vector3.UP
+	motes.spread = 20.0
+	motes.gravity = Vector3.ZERO
+	motes.initial_velocity_min = 0.15
+	motes.initial_velocity_max = 0.35
+	motes.radial_accel_min = -0.25
+	motes.radial_accel_max = -0.12
+	motes.scale_amount_min = 0.5
+	motes.scale_amount_max = 1.0
+	var fade := Gradient.new()
+	fade.set_color(0, Color(QI_MOTE, 0.0))
+	fade.add_point(0.3, QI_MOTE)
+	fade.set_color(fade.get_point_count() - 1, Color(QI_MOTE, 0.0))
+	motes.color_ramp = fade
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.07, 0.07)
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	material.vertex_color_use_as_albedo = true
+	quad.material = material
+	motes.mesh = quad
+	return motes

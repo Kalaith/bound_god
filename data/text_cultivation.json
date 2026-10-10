@@ -96,6 +96,8 @@
 		"settle_no_sect": "No sect has formed here yet.",
 		"settle_sect_line": "{sect} · master {master} · {elders} elders, {disciples} disciples",
 		"settle_doctrine": "Doctrine: {list}",
-		"hud_qi_overlay": "Qi shown on the ground (Q to hide)"
+		"hud_qi_overlay": "Qi shown on the ground (Q to hide)",
+		"prompt_cultivator": "{name} sits in the tree's qi to cultivate. Look at them and press F, then open Cultivation; Pin keeps them in your sight. Q shows the qi on the ground.",
+		"prompt_sect": "The {sect} has formed beneath the tree. Press K to see its master, its disciples and what it holds dear."
 	}
 }

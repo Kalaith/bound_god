@@ -11,6 +11,7 @@ const Avatar = preload("res://scripts/presentation/avatar.gd")
 const CameraRig = preload("res://scripts/presentation/camera_rig.gd")
 const BuildController = preload("res://scripts/presentation/build_controller.gd")
 const Overlays = preload("res://scripts/presentation/overlays.gd")
+const QiOverlay = preload("res://scripts/presentation/qi_overlay.gd")
 const Hud = preload("res://scripts/presentation/ui/hud.gd")
 const Text = preload("res://scripts/core/text.gd")
 const CaptureScenes = preload("res://scripts/presentation/capture_scenes.gd")
@@ -46,6 +47,7 @@ var avatar: CharacterBody3D
 var camera_rig: Node3D
 var builder: Node3D
 var overlays: Node3D
+var qi_overlay: MeshInstance3D
 var hud: Control
 var design_tool: Node3D
 var library_screen: Control
@@ -110,6 +112,9 @@ func _start() -> void:
 	print("valley: generated in %d ms, meshed in %d ms" % [generated - started, Time.get_ticks_msec() - generated])
 	overlays = Overlays.new()
 	add_child(overlays)
+	qi_overlay = QiOverlay.new()
+	qi_overlay.sim = sim
+	add_child(qi_overlay)
 	var aura: Node3D = SacredAura.new()
 	aura.base = sim.features.sacred_tree
 	add_child(aura)
@@ -336,6 +341,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		inventory.open(builder.selected)
 	elif event.is_action_pressed("quick_save"):
 		world_io.save()
+	elif event.is_action_pressed("toggle_qi"):
+		qi_overlay.toggle()
+		if qi_overlay.visible:
+			hud.flash(Text.label("hud_qi_overlay"))
 	elif event.is_action_pressed("dismiss_prompt") and not _prompt_now.is_empty():
 		sim.apply_command({"type": "dismiss_prompt", "prompt": str(_prompt_now.id)})
 		_prompt_now = {}

@@ -3,6 +3,7 @@ extends Node
 ## the crosshair (or the mouse when it is free), opens the inspector, and
 ## Follow turns the overlook camera on them, still bound to the zone.
 const Text = preload("res://scripts/core/text.gd")
+const Balance = preload("res://scripts/core/balance.gd")
 
 var sim: RefCounted
 var views: Node3D
@@ -18,6 +19,10 @@ func _ready() -> void:
 	inspector.follow_toggled.connect(func(on: bool) -> void:
 		if on and not camera_rig.overlook:
 			camera_rig.toggle_overlook())
+	inspector.pin_toggled.connect(func(id: int) -> void:
+		var result: Dictionary = sim.apply_command({"type": "follow", "agent": id})
+		if not result.ok:
+			hud.flash(Text.format(str(result.reason), {"most": Balance.integer("cultivation.followed_most")}), true))
 
 
 func select(id: int) -> void:

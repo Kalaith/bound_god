@@ -11,6 +11,7 @@ const Data = preload("res://scripts/core/data.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const Guide = preload("res://scripts/presentation/ui/guide.gd")
+const Sects = preload("res://scripts/sim/sects.gd")
 
 const Need = Personality.Need
 
@@ -35,6 +36,7 @@ static func contextual(sim: RefCounted) -> Array:
 		return result
 	var hungry: RefCounted = null
 	var cold: RefCounted = null
+	var sitting: RefCounted = null
 	for agent in sim.agents:
 		if not agent.is_present() or not sim.in_zone(agent.position):
 			continue
@@ -43,6 +45,8 @@ static func contextual(sim: RefCounted) -> Array:
 			hungry = agent
 		if cold == null and agent.home < 0 and not sim.calendar.is_daylight() and agent.need(Need.SHELTER) < 30.0:
 			cold = agent
+		if sitting == null and agent.activity == "cultivating":
+			sitting = agent
 	var threat: Dictionary = _threat(sim)
 	if not threat.is_empty():
 		result.append(_say("prompt_threat_" + str(threat.kind), {}))
@@ -56,6 +60,10 @@ static func contextual(sim: RefCounted) -> Array:
 			"intent": Text.label("intent_" + str(prayer.intent.get("kind", "thanks")))}))
 	if _out_of_favour(sim):
 		result.append(_say("prompt_no_favour", {}))
+	if sitting != null:
+		result.append(_say("prompt_cultivator", {"name": sitting.given_name}))
+	if sim.sects != null and not sim.sects.entries.is_empty():
+		result.append(_say("prompt_sect", {"sect": Sects.name_of(sim.sects.entries[sim.sects.ids()[0]])}))
 	return result
 
 

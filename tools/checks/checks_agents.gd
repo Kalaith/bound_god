@@ -158,7 +158,9 @@ func check_every_label_resolves():
 	activity.compile("activity = \"([a-z_]+)\"")
 	var reason := RegEx.new()
 	reason.compile("\"(reason_[a-z_]+|interrupt_[a-z_]+|cause_[a-z_]+)\"")
-	for folder in ["res://scripts/agents", "res://scripts/sim"]:
+	var chronicle := RegEx.new()
+	chronicle.compile("chronicle_event\\(\"([a-z_]+)\"")
+	for folder in ["res://scripts/agents", "res://scripts/sim", "res://scripts/sim/abstract"]:
 		for file in DirAccess.get_files_at(folder):
 			var source: String = FileAccess.get_file_as_string(folder.path_join(file))
 			for found in pattern.search_all(source):
@@ -170,6 +172,9 @@ func check_every_label_resolves():
 			for found in reason.search_all(source):
 				if not Text.has(found.get_string(1)):
 					missing.append(found.get_string(1))
+			for found in chronicle.search_all(source):
+				if not Text.has("chronicle_" + found.get_string(1)):
+					missing.append("chronicle_" + found.get_string(1))
 	return "" if missing.is_empty() else "missing labels: " + ", ".join(missing)
 
 

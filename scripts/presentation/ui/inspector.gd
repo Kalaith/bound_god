@@ -6,15 +6,17 @@ signal closed
 signal follow_toggled(on: bool)
 signal person_chosen(id: int)
 signal whisper(id: int, nudge: String)
+signal pin_toggled(id: int)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const AgentText = preload("res://scripts/presentation/ui/agent_text.gd")
 const InspectorTabs = preload("res://scripts/presentation/ui/inspector_tabs.gd")
+const InspectorCultivation = preload("res://scripts/presentation/ui/inspector_cultivation.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Data = preload("res://scripts/core/data.gd")
 
-const TABS: Array[String] = ["mind", "needs", "bonds", "life", "faith"]
+const TABS: Array[String] = ["mind", "needs", "bonds", "life", "faith", "cultivation"]
 
 var sim: RefCounted
 var agent_id: int = -1
@@ -34,6 +36,7 @@ var _need_values: Array = []
 var _health: RichTextLabel
 var _texts: Dictionary = {}
 var _follow: Button
+var _pin: Button
 var _refresh_left: float = 0.0
 
 
@@ -62,12 +65,22 @@ func _ready() -> void:
 	titles.add_child(_name)
 	_subtitle = Style.label("", 18, Style.MUTED)
 	titles.add_child(_subtitle)
+	var close: Button = Style.button(Text.label("inspect_close"))
+	close.pressed.connect(func() -> void: closed.emit())
+	header.add_child(close)
+	# The actions sit on their own row, so names and buttons never crowd.
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	column.add_child(actions)
 	_follow = Style.button(Text.label("inspect_follow"))
 	_follow.toggle_mode = true
 	_follow.toggled.connect(func(on: bool) -> void:
 		following = on
 		follow_toggled.emit(on))
-	header.add_child(_follow)
+	actions.add_child(_follow)
+	_pin = Style.button(Text.label("inspect_pin"))
+	_pin.pressed.connect(func() -> void: pin_toggled.emit(agent_id))
+	actions.add_child(_pin)
 	var urge := MenuButton.new()
 	urge.text = Text.label("miracle_whisper")
 	urge.add_theme_font_size_override("font_size", 21)
@@ -78,10 +91,7 @@ func _ready() -> void:
 		urge.get_popup().add_item(Text.label("nudge_" + nudges[i]), i)
 	urge.get_popup().add_theme_font_size_override("font_size", 20)
 	urge.get_popup().id_pressed.connect(func(index: int) -> void: whisper.emit(agent_id, nudges[index]))
-	header.add_child(urge)
-	var close: Button = Style.button(Text.label("inspect_close"))
-	close.pressed.connect(func() -> void: closed.emit())
-	header.add_child(close)
+	actions.add_child(urge)
 	_tabs = TabBar.new()
 	_tabs.add_theme_font_size_override("font_size", 20)
 	for tab in TABS:
@@ -97,7 +107,7 @@ func _ready() -> void:
 	scroll.add_child(stack)
 	_build_mind(stack)
 	_build_needs(stack)
-	for tab in ["bonds", "life", "faith"]:
+	for tab in ["bonds", "life", "faith", "cultivation"]:
 		var page := VBoxContainer.new()
 		var text: RichTextLabel = _rich(19)
 		text.meta_clicked.connect(func(meta: Variant) -> void: person_chosen.emit(int(str(meta))))
@@ -195,6 +205,9 @@ func _process(delta: float) -> void:
 			_texts.life.text = InspectorTabs.life(sim, agent)
 		"faith":
 			_texts.faith.text = InspectorTabs.faith(sim, agent)
+		"cultivation":
+			_texts.cultivation.text = InspectorCultivation.text(sim, agent)
+	_pin.text = Text.label("inspect_pinned" if sim.god.followed.has(agent_id) else "inspect_pin")
 
 
 func _refresh_mind(agent: RefCounted) -> void:

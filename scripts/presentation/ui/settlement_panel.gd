@@ -9,6 +9,7 @@ const ChronicleText = preload("res://scripts/presentation/ui/chronicle_text.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const StandingText = preload("res://scripts/presentation/ui/standing_text.gd")
+const Sects = preload("res://scripts/sim/sects.gd")
 ## Goods listed on the panel, food last.
 const STOCK: Array[String] = ["wood", "stone", "thatch", "ore", "seed", "tree_seed", "berries", "grain", "meal"]
 
@@ -118,6 +119,8 @@ func _process(delta: float) -> void:
 		var colour: Color = Style.LEAF if item.met else Style.MUTED
 		lines.append("[color=#%s]%s %s[/color]" % [colour.to_html(false), "+" if item.met else "-", item.text])
 	lines.append("")
+	_sect(lines)
+	lines.append("")
 	lines.append(_gold(Text.label("settlement_sites")))
 	var sites: Array = sim.construction.in_settlement(settlement_id)
 	if sites.is_empty():
@@ -150,3 +153,26 @@ func _process(delta: float) -> void:
 		if shown >= 8:
 			break
 	_body.text = "\n".join(lines)
+
+
+## The sect of this place: its master, how many elders and disciples, and
+## where its doctrine leans.
+func _sect(lines: Array[String]) -> void:
+	lines.append(_gold(Text.label("settle_sect")))
+	var sect: Dictionary = sim.sects.in_settlement(settlement_id) if sim.sects != null else {}
+	if sect.is_empty():
+		lines.append(Text.label("settle_no_sect"))
+		return
+	var elders: int = 0
+	var disciples: int = 0
+	for id in sect.members:
+		match str(sect.members[id]):
+			"elder":
+				elders += 1
+			"disciple":
+				disciples += 1
+	lines.append(Text.format("settle_sect_line", {"sect": Sects.name_of(sect), "master": sim.agents[int(sect.master)].full_name(), "elders": elders, "disciples": disciples}))
+	var leanings: Array[String] = []
+	for key in Sects.DOCTRINE:
+		leanings.append("%s %d" % [Text.label("doctrine_" + key), roundi(float(sect.doctrine[key]) * 100.0)])
+	lines.append(Text.format("settle_doctrine", {"list": ", ".join(leanings)}))

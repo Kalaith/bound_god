@@ -14,6 +14,8 @@ static func target(activity: String, time: float, stride: float, speed: float, s
 		return {"lie": -PI * 0.5, "root": Vector3(0, 0.17, 0.75), "arm_l_z": 0.05, "arm_r_z": 0.05, "head_y": 0.3}
 	if activity == "relaxing" and speed < 0.2:
 		return _sitting(pose, time)
+	if activity in ["cultivating", "learning"] and speed < 0.2:
+		return _meditating(pose, time, activity == "learning")
 	if speed > 0.2:
 		return _walking(pose, activity, stride, speed, spirit, carrying)
 	if activity in HANDWORK:
@@ -36,6 +38,12 @@ static func target(activity: String, time: float, stride: float, speed: float, s
 			pose.merge({"torso_x": 0.3, "head_x": 0.35, "arm_l_x": -2.5, "arm_r_x": -2.5, "arm_l_z": -0.3, "arm_r_z": -0.3}, true)
 		"recovering":
 			pose.merge({"torso_x": 0.22, "head_x": 0.35, "head_y": 0.0, "arm_l_x": -0.3, "arm_r_x": -0.3, "arm_l_z": -0.25, "arm_r_z": -0.25}, true)
+		"teaching":
+			pose.merge({"arm_r_x": -1.1 - sin(time * 1.3) * 0.25, "arm_r_z": 0.1, "arm_l_x": -0.5, "arm_l_z": -0.35,
+				"head_x": 0.12, "head_y": sin(time * 0.5) * 0.15}, true)
+		"proclaiming":
+			var lift: float = sin(time * 0.9) * 0.2
+			pose.merge({"arm_l_x": -2.6 + lift, "arm_r_x": -2.6 - lift, "arm_l_z": 0.35, "arm_r_z": 0.35, "head_x": -0.25, "torso_x": -0.05}, true)
 		"waiting", "scouting":
 			pose.merge({"arm_l_x": 0.25, "arm_r_x": 0.25, "arm_l_z": -0.2, "arm_r_z": -0.2, "head_y": sin(time * 0.5) * 0.6}, true)
 	if carrying:
@@ -85,4 +93,16 @@ static func _handwork(pose: Dictionary, activity: String, time: float) -> Dictio
 static func _sitting(pose: Dictionary, time: float) -> Dictionary:
 	pose.merge({"root": Vector3(0, -0.5, -0.05), "leg_l": -1.45, "leg_r": -1.35, "torso_x": -0.08 + sin(time * 1.4) * 0.015,
 		"arm_l_x": 0.45, "arm_r_x": 0.45, "arm_l_z": 0.22, "arm_r_z": 0.22}, true)
+	return pose
+
+
+## Seated cross-legged, back straight, hands resting together in the lap,
+## breathing slow; a learner leans in and looks up.
+static func _meditating(pose: Dictionary, time: float, listening: bool) -> Dictionary:
+	var breath: float = sin(time * 0.9) * 0.02
+	pose.merge({"root": Vector3(0, -0.55, 0.0), "leg_l": -1.5, "leg_r": -1.5, "torso_x": breath,
+		"arm_l_x": -0.55, "arm_r_x": -0.55, "arm_l_z": -0.38, "arm_r_z": -0.38,
+		"head_x": 0.18 + breath, "head_y": 0.0}, true)
+	if listening:
+		pose.merge({"torso_x": 0.12, "head_x": -0.12, "head_y": sin(time * 0.4) * 0.1}, true)
 	return pose

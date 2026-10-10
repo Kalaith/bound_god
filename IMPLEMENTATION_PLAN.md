@@ -97,9 +97,9 @@ Each milestone ends with a runnable game, new `sim_checks` scenarios for its sim
 
 | Stage | Milestones | State |
 | --- | --- | --- |
-| A. Hold up | M13 Playtest, balance and foundations | Village track built; open items below |
+| A. Hold up | M13 Playtest, balance and foundations | Built except the fresh-player playtests (need people) |
 | B. A living economy | M14 Fields and meals | Built (`PROGRESS.md`) |
-| C. The cultivation slice | M15 Qi and cultivators · M16 Breakthroughs and tribulations · M17 The tree learns · M18 Meditation and generations | Next |
+| C. The cultivation slice | M15 Qi and cultivators · M16 Breakthroughs and tribulations · M17 The tree learns · M18 Meditation and generations | M15 built; M16 next |
 | D. A living sect | M19 Sect architecture and living designs · M20 Seasons, weather and herbs | |
 | E. A wider world | M21 Branches and sacred sites · M22 Regions, other sects and outsiders | |
 | F. A whole game | M23 Campaign shape · M24 Look, sound and feel · M25 Release | |
