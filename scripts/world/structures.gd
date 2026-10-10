@@ -16,6 +16,11 @@ var _next_id: int = 1
 ## Bumped on every rebuild so caches keyed on structures can tell.
 var version: int = 0
 var _built: Array = []
+## anchor -> [min x, min z, max x, max z, min y]: the box its last probe read
+## (open upward). Not saved; an anchor without one is always probed again.
+var _reads: Dictionary = {}
+## inside cell -> structure id, for every standing structure (rebuilt on load).
+var _owner: Dictionary = {}
 var _built_version: int = -1
 
 
@@ -31,11 +36,12 @@ func on_edit(world: RefCounted, cell: Vector3i, tick: int, source: String) -> vo
 		components[cell] = true
 	else:
 		components.erase(cell)
+		_reads.erase(cell)
 	var limits: Array = Data.template_limits().max_size
 	var reach := Vector3i(int(limits[0]), int(limits[1]), int(limits[2]))
 	var anchors: Array = []
 	for anchor in components:
-		if absi(anchor.x - cell.x) <= reach.x and absi(anchor.z - cell.z) <= reach.z and absi(anchor.y - cell.y) <= reach.y:
+		if absi(anchor.x - cell.x) <= reach.x and absi(anchor.z - cell.z) <= reach.z and absi(anchor.y - cell.y) <= reach.y 				and _may_read(anchor, cell):
 			anchors.append(anchor)
 	var touched: Array = []
 	for id in entries:
@@ -58,18 +64,19 @@ func _rebuild(world: RefCounted, anchors: Array, touched: Array, tick: int, caus
 	var previous: Dictionary = {}
 	for id in touched:
 		previous[id] = entries[id]
+		_unindex(entries[id])
 		entries.erase(id)
+	# Rooms found in this rebuild; the standing ones are in _owner.
 	var covered: Dictionary = {}
-	for id in entries:
-		covered.merge(entries[id].inside)
 	var used: Dictionary = {}
 	anchors.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return world.index_of(a) < world.index_of(b))
 	var touched_ids: Array = previous.keys()
 	touched_ids.sort()
 	for anchor in anchors:
-		if covered.has(anchor):
+		if covered.has(anchor) or _owner.has(anchor):
 			continue
 		var room: Dictionary = RoomProbe.probe(world, anchor)
+		_reads[anchor] = _padded(room.reads)
 		var result: Dictionary = Rules.evaluate(world, room.cells)
 		covered.merge(room.inside)
 		if result.functions.is_empty():
@@ -89,11 +96,40 @@ func _rebuild(world: RefCounted, anchors: Array, touched: Array, tick: int, caus
 		entries[id] = {"id": id, "anchor": anchor, "cells": room.cells, "inside": room.inside, "closed": room.closed,
 			"functions": result.functions, "capacity": result.capacity, "components": result.components,
 			"residents": residents, "template_id": previous[id].template_id if previous.has(id) else ""}
+		_index(entries[id])
 		if not previous.has(id) or previous[id].functions != result.functions or previous[id].capacity != result.capacity:
 			events.append({"tick": tick, "kind": "structure_changed", "id": id, "cause": cause, "functions": result.functions.duplicate()})
 	for id in touched_ids:
 		if not entries.has(id):
 			events.append({"tick": tick, "kind": "structure_lost", "id": id, "cause": cause, "residents": previous[id].residents.duplicate()})
+
+
+func _index(entry: Dictionary) -> void:
+	for cell in entry.inside:
+		_owner[cell] = entry.id
+
+
+func _unindex(entry: Dictionary) -> void:
+	for cell in entry.inside:
+		if int(_owner.get(cell, -1)) == int(entry.id):
+			_owner.erase(cell)
+
+
+## Whether an edit at `cell` could change what probing `anchor` finds.
+func _may_read(anchor: Vector3i, cell: Vector3i) -> bool:
+	if not _reads.has(anchor) or anchor == cell:
+		return true
+	var box: Array = _reads[anchor]
+	return cell.x >= box[0] and cell.z >= box[1] and cell.x <= box[2] and cell.z <= box[3] and cell.y >= box[4]
+
+
+## A probe's read box widened by how far the rules look round a component
+## (an altar's search for open sky).
+static func _padded(reads: Array) -> Array:
+	var pad: int = 1
+	for rule in Data.function_rules():
+		pad = maxi(pad, int(rule.get("sky_or_tree_within", 0)) + 1)
+	return [reads[0] - pad, reads[1] - pad, reads[2] + pad, reads[3] + pad, reads[4] - pad]
 
 
 ## Every structure in id order (cached until the next rebuild).
@@ -126,3 +162,9 @@ func from_dict(data: Dictionary) -> void:
 	_next_id = int(data.next_id)
 	version = int(data.version) + 1
 	events = []
+	_owner.clear()
+	_reads.clear()
+	var ids: Array = entries.keys()
+	ids.sort()
+	for id in ids:
+		_index(entries[id])

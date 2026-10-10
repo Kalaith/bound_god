@@ -50,6 +50,17 @@ Phase 1 (vertical slice, M0–M12), M13's village track and **M14 — Fields and
 
 - Type (user request, 2026-10-10; brief in `docs/design/font_direction.md`): two OFL families in `assets/fonts` (licences beside them), subset to Latin plus the punctuation the text uses (`pyftsubset`; the full files carry Japanese if it is ever needed). Shippori Mincho B1 Bold is the display face (titles, shrine names, panel and section headings, the HUD clock, the title screen), via `Style.heading()` and, inside rich text, `Style.rich_heading()` (the project theme `assets/ui_theme.tres` sets rich-text bold to the display face). Zen Kaku Gothic New Medium is the body face and the theme default for every control; its Bold is the utility face for counters, hotbar numbers, chest quantities and need values (`Style.utility()`). Label shadows are a soft warm ink instead of black. Checked at 1080p and 720p in captures.
 
+- M13 profiling at 60 detailed people (2026-10-11): `tools/profile_sim.gd` (headless; `-- --people=60 --days=1 --warm=2 --seed=11`) fills Tree Hollow with stores and the village designs, settles it for two days, then times every phase of each tick and reports mean, median, p95 and the worst tick with its phases, plus the cost per frame at 1×, 3× and 10× (6 ticks/s at 1×, 60 fps). Numbers on the dev PC, seed 11, 60 people, one in-game day (run to run they vary by about ±5% as trajectories differ):
+
+  | | before | after |
+  | --- | --- | --- |
+  | mean ms/tick | 22.3 (29.4 with the old chest helper, below) | 11.2 to 11.6 |
+  | median / p95 / worst | 15.2 / 48.4 / 294 | 9.8 / 19.5 / 174 |
+  | in-game day headless | 16.1 s | 8.1 to 8.4 s |
+  | sim per frame at 1× / 3× / 10× | 2.2 / 6.7 / 22.3 ms | 1.2 / 3.5 / 11.6 ms |
+
+  Fixed, top cost first: work deliberation scanned everyone once per candidate to count who pursues it and how the person feels about them (4.8 ms a tick; now a pursuit index on `Sim`, rebuilt only after an intention changes and once a tick); a block edit re-probed every room anchor within 16 blocks, and an anchor standing outdoors flooded a whole 16×12×16 box each time before deciding it is open (6.4 ms an edit; now each probe records the box it read and edits outside it skip it, a straight open column above an anchor settles "open" at once, and covered anchors are found from a standing cell→structure index); a walk to the stores re-chose the nearest chest every step and re-ran the route when the choice changed (now the chosen chest is kept while it still serves); a route that cannot be found is remembered so the next walk to the stores picks another chest; navigation edits that cannot change any standable point (a leaf high in a crown) are skipped; perception stopped building an unused list of everyone in sight. The check helper that places chests no longer puts one on top of the sacred tree's crown (its stand was unreachable and 3,400 failed path searches a day made the "before" 29.4 ms). The plan's budget (60 people at 3× within 4 ms a frame) is met; 10× is not (11.6 ms a frame: the driver then runs about a third of 10×, flagged "busy"). Remaining costs: perception (3.4 ms, mostly sites and people in sight), cognition (2.7), execute (1.4, routes), body (1.2). The worst tick is a site search for a new project (about 160 ms, a one-off hitch when someone proposes a building).
+
 ## Next
 
 - M15 Qi and cultivators (`IMPLEMENTATION_PLAN.md` §4): the tree's qi field, cultivator state, Cultivate / Teach / Learn, sect formation and doctrine, the Cultivation tab and follow pin.
@@ -81,6 +92,9 @@ Phase 1 (vertical slice, M0–M12), M13's village track and **M14 — Fields and
 - A lash-out break spends itself on one fight, then the break is sulking: repeated insults otherwise killed both people.
 - RestoreShrine (confirmed by the user) is open to Believers (utility 0.35 × devotion) as well as the Devout (0.6 ×): with only the Devout the ridge altar was never restored by its own people.
 - `tools/scratch/` holds local diagnostic probes and is git-ignored.
+- Who pursues a goal is read from `Sim.pursuers(goal_key)`, an index rebuilt when `goal_version` changes (every intention change bumps it, and every tick does). Code that sets `agent.intention` directly must bump `sim.goal_version`.
+- People who find no route to a chest remember its stand (`cell:<stand>` in their failure memory) and try another chest for `agents.failure_memory_ticks`.
+- `check_sleepers_sleep_the_night_through` accepts a sleeper woken by a bodily need (eating at 05:00 after going to bed hungry); it still fails anyone up for anything else before 05:00, which is what it was written to catch.
 - Someone asleep at night keeps sleeping until the sleep hours end (`deliberation.gd` keeps the night sleep utility while asleep; the step no longer wakes a rested sleeper early). Before, rest reaching ~92 dropped sleep's utility and people got up to chat around 03:00 (6.8 h of broken sleep; now they wake at dawn).
 - Faith pacing (user found it slow): a witnessed miracle gives 14 devotion (was 10), first sight 6 (was 4), so two or three miracles make a Believer within the starting Favour. The first-steps line shows the nearest person's devotion against the Believer threshold, or says when Favour is too low for any miracle.
 - The crosshair shows "F · Inspect <name>" over a person; from the overlook the pick margin is a fixed 200 px instead of shrinking with distance.
@@ -114,7 +128,7 @@ Phase 1 (vertical slice, M0–M12), M13's village track and **M14 — Fields and
 - Not verified in play by hand: M14 (fields, cooking, winter) and the village path (garden, hall, standing, founding) have been checked headlessly and in captures only. Kitchens were built only when the cookhouse design was offered or brought by migrants.
 - Not verified: the first-playable moment by a fresh player in under an hour, frame rate with 30 people at 10×, audio levels by ear (sounds are synthesised and only checked to load and play), the hamlet's two chests by eye (a capture cannot leave the tree's zone).
 - Weeds sometimes outpace weeding on large fields (up to 37 weedy crops on one day in the M14 exit run); yields then halve.
-- Sim cost grows with population (about 5 s per in-game day headless at 30 people, 12 s at 34). Profiling remains an M13 item; generational time depends on the abstract model (plan §3.1).
+- Sim cost at 60 people is 11 to 12 ms a tick after the M13 profiling pass: 3× fits the 4 ms frame budget, 10× runs at about a third of its speed and shows "the world is busy". A new building site search can take about 160 ms in one tick (a hitch). Generational time depends on the abstract model (plan §3.1).
 - Raids every 4 days from day 12 strike Ridge Hamlet and Tree Hollow often once they are rich (8 raids in a 45-day probe). Left at the GDD values for the next playtest.
 - Mental breaks run high in large settlements (over 100 in 45 days in one probe), mostly from hunger and insults.
 - People do not yet build storage chests themselves; a storehouse design offered to them still adds chests.

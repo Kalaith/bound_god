@@ -148,10 +148,14 @@ func _can_step(from: Vector3i, to: Vector3i) -> bool:
 
 ## Recompute standability around edited cells and reconnect those points.
 func update_cells(edits: Array) -> void:
-	if edits.is_empty():
+	var relevant: Array = []
+	for cell in edits:
+		if _matters(cell):
+			relevant.append(cell)
+	if relevant.is_empty():
 		return
 	var columns: Dictionary = {}
-	for cell in edits:
+	for cell in relevant:
 		for dz in range(-1, 2):
 			for dx in range(-1, 2):
 				var key := Vector2i(cell.x + dx, cell.z + dz)
@@ -181,6 +185,21 @@ func update_cells(edits: Array) -> void:
 	for key in ring:
 		if key.x >= 0 and key.y >= 0 and key.x < world.size.x and key.y < world.size.z:
 			_connect_column(key.x, key.y, ring[key].x - 4, ring[key].y + 4)
+
+
+## Whether an edit at `cell` can change the graph. Standability reads a
+## cell and the ones above and below it; a step's headroom and a diagonal's
+## sides read at most two above the lower end. So only points within one
+## column of the edit, from two below it to one above, can change: with none
+## there before or after (a leaf high in a crown), nothing does.
+func _matters(cell: Vector3i) -> bool:
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			for y in range(cell.y - 2, cell.y + 2):
+				var other := Vector3i(cell.x + dx, y, cell.z + dz)
+				if world.in_bounds(other) and (astar.has_point(world.index_of(other)) or standable(other)):
+					return true
+	return false
 
 
 ## Cells from `from` (exclusive) to `to` (inclusive), or [] when unreachable.

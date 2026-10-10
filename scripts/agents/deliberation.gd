@@ -138,15 +138,8 @@ static func candidates(sim: RefCounted, agent: RefCounted) -> Array:
 
 ## How many other people already pursue this goal.
 static func pursuing(sim: RefCounted, goal: Dictionary, me: int) -> int:
-	var count: int = 0
-	var goal_key: int = Goals.key(goal)
-	for other in sim.agents:
-		if other.id == me or not other.is_present():
-			continue
-		var theirs: Dictionary = other.current_goal()
-		if not theirs.is_empty() and Goals.key(theirs) == goal_key:
-			count += 1
-	return count
+	var ids: Array = sim.pursuers(Goals.key(goal))
+	return ids.size() - (1 if ids.has(me) else 0)
 
 
 ## The god's urging raises a goal kind for a day; it never adds a goal the

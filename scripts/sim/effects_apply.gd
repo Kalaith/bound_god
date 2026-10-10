@@ -246,6 +246,7 @@ static func _leave(sim: RefCounted, agent: RefCounted) -> void:
 	agent.life = "departed"
 	agent.life_day = sim.calendar.day()
 	agent.intention = {}
+	sim.goal_version += 1
 	agent.path.clear()
 	sim.set_home(agent, -1)
 	if sim.settlements.entries.has(agent.settlement_id):

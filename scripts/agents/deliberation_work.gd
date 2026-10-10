@@ -36,14 +36,10 @@ static func aptitude(agent: RefCounted, skill: int) -> float:
 ## How a person feels about working beside whoever already pursues a goal.
 static func company(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> float:
 	var factor: float = 1.0
-	var key: int = Goals.key(goal)
-	for other in sim.agents:
-		if other.id == agent.id or not other.is_present():
+	for other_id in sim.pursuers(Goals.key(goal)):
+		if other_id == agent.id:
 			continue
-		var theirs: Dictionary = other.current_goal()
-		if theirs.is_empty() or Goals.key(theirs) != key:
-			continue
-		match agent.beliefs.bond_with(other.id):
+		match agent.beliefs.bond_with(other_id):
 			"rival", "enemy":
 				factor *= 0.55
 			"friend", "close_friend":

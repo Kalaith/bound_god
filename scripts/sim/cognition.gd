@@ -48,6 +48,7 @@ static func adopt(sim: RefCounted, agent: RefCounted, best: Dictionary, interrup
 		"value": best.value, "urged": best.get("urged", false)})
 	agent.path.clear()
 	agent.inside = -1
+	sim.goal_version += 1
 	agent.intention = {"goal": best.goal.duplicate(), "utility": best.utility, "reason": best.reason, "value": best.value,
 		"urged": best.get("urged", false), "plan": {}, "tried": [], "started_tick": tick}
 
@@ -106,6 +107,7 @@ static func give_up(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> voi
 	if int(goal.kind) == Kind.QUEST and sim.requests != null:
 		sim.requests.abandon(sim, agent)
 	agent.intention = {}
+	sim.goal_version += 1
 	agent.activity = "idle"
 	agent.next_deliberation = tick + 1
 

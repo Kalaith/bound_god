@@ -38,7 +38,11 @@ static func resolve_target(sim: RefCounted, agent: RefCounted, where: Dictionary
 			return sim.structure_access(other.inside, agent.cell) if other.inside >= 0 else other.cell
 		T.STORE:
 			var purpose: Array = _store_purpose(agent)
-			return sim.settlements.store_access(sim, int(where.id), agent.cell, purpose[0], purpose[1])
+			# Keep walking to the chest already chosen while it still serves;
+			# picking afresh each step changed the goal and re-ran the route.
+			if not agent.path.is_empty() and sim.settlements.store_serves(sim, int(where.id), agent.path.back(), purpose[0], purpose[1]):
+				return agent.path.back()
+			return sim.settlements.store_access(sim, int(where.id), agent.cell, purpose[0], purpose[1], agent)
 		T.SHRINE:
 			return sim.faith.shrine_access(sim, int(where.id), agent.cell) if sim.faith != null else NONE
 		T.CONSTRUCTION:
@@ -121,6 +125,10 @@ static func _learn(sim: RefCounted, agent: RefCounted, step: Dictionary, reason:
 		return
 	if op == Op.TAKE_STOCK and reason == Fail.STOCK_EMPTY or op == Op.GO_TO and int(step.target.type) == T.STORE:
 		agent.beliefs.stock = sim.settlements.stock_of(agent.settlement_id).duplicate()
+		if op == Op.GO_TO and reason == Fail.NO_PATH:
+			var stand: Vector3i = resolve_target(sim, agent, step.target)
+			if stand.x >= 0:
+				agent.beliefs.note_failure("cell:%s" % str(stand), now)
 	elif op == Op.GO_TO and int(step.target.type) == T.STRUCTURE:
 		agent.beliefs.note_failure("structure:%d" % int(step.target.id), now)
 	elif op == Op.SLEEP and int(step.get("structure", -1)) >= 0:
@@ -145,6 +153,7 @@ static func _fail(sim: RefCounted, agent: RefCounted, step: Dictionary, reason: 
 static func _achieve(sim: RefCounted, agent: RefCounted) -> void:
 	var intention: Dictionary = agent.intention
 	agent.intention = {}
+	sim.goal_version += 1
 	if not intention.tried.is_empty():
 		agent.stats.plans_recovered += 1
 	if int(intention.goal.kind) == Goals.Kind.HELP:

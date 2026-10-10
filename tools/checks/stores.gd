@@ -17,6 +17,9 @@ static func place_chest(sim: RefCounted, id: int) -> Vector3i:
 				var cell: Vector3i = sim.nav.surface(camp.x + dx, camp.z + dz)
 				if cell.x < 0 or sim.is_occupied(cell) or sim.is_reserved_cell(cell) or sim.settlements.chests.has(cell):
 					continue
+				# On the ground, not up in a tree's crown where nobody can reach it.
+				if not Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)).is_empty() or sim.voxels.get_block(cell + Vector3i.DOWN) in [Registry.id("leaves"), Registry.id("sacred_leaves"), Registry.id("log")]:
+					continue
 				if sim.set_block(cell, Registry.id("storage_chest"), 0, "test"):
 					return cell
 	return Vector3i(-1, -1, -1)

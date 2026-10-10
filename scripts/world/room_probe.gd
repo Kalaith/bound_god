@@ -13,6 +13,19 @@ const ANCHORS: Array[String] = ["bed", "chest", "altar", "hearth", "workbench", 
 const BEDS: Array[String] = ["planter", "farmland"]
 
 
+## An open column straight up from the seed, as tall as a room may be: the
+## flood would climb it past the limit, so the room is open without flooding
+## the whole box around it (most anchors stand outdoors).
+static func _open_above(world: RefCounted, seed: Vector3i, height: int) -> bool:
+	for dy in range(1, height + 1):
+		var cell: Vector3i = seed + Vector3i(0, dy, 0)
+		if not world.in_bounds(cell):
+			return true
+		if not permeable(world, cell):
+			return false
+	return true
+
+
 static func permeable(world: RefCounted, cell: Vector3i) -> bool:
 	var block: int = world.get_block(cell)
 	var component: String = Registry.component(block)
@@ -31,8 +44,8 @@ static func probe(world: RefCounted, seed: Vector3i) -> Dictionary:
 	var low: Vector3i = seed
 	var high: Vector3i = seed
 	var cursor: int = 0
-	var closed: bool = true
-	while cursor < queue.size():
+	var closed: bool = not _open_above(world, seed, limit.y)
+	while closed and cursor < queue.size():
 		var cell: Vector3i = queue[cursor]
 		cursor += 1
 		for direction in DIRECTIONS:
@@ -73,7 +86,21 @@ static func probe(world: RefCounted, seed: Vector3i) -> Dictionary:
 					queue.append(other)
 	var cells: Dictionary = inside.duplicate()
 	cells.merge(shell)
-	return {"closed": closed, "inside": inside, "cells": cells}
+	# Everything the probe looked at lies in this box, and the rules look no
+	# further than the columns above it: an edit outside cannot change it.
+	var reads: Array = [low.x - 1, low.z - 1, high.x + 1, high.z + 1, low.y - 1]
+	for cell in cells:
+		_widen(reads, cell)
+	return {"closed": closed, "inside": inside, "cells": cells, "reads": reads}
+
+
+## Grow a read box [min x, min z, max x, max z, min y] to hold a cell and its neighbours.
+static func _widen(reads: Array, cell: Vector3i) -> void:
+	reads[0] = mini(reads[0], cell.x - 1)
+	reads[1] = mini(reads[1], cell.z - 1)
+	reads[2] = maxi(reads[2], cell.x + 1)
+	reads[3] = maxi(reads[3], cell.z + 1)
+	reads[4] = mini(reads[4], cell.y - 1)
 
 
 ## A garden or a field: the planters (or farmland) joined side by side (or a
@@ -99,6 +126,8 @@ static func beds(world: RefCounted, seed: Vector3i) -> Dictionary:
 				planters[other] = true
 				queue.append(other)
 	var inside: Dictionary = planters.duplicate()
+	var reads: Array = [seed.x, seed.z, seed.x, seed.z, seed.y]
 	for cell in planters:
 		inside[cell + Vector3i.UP] = true
-	return {"closed": false, "inside": inside, "cells": inside.duplicate()}
+		_widen(reads, cell + Vector3i.DOWN)
+	return {"closed": false, "inside": inside, "cells": inside.duplicate(), "reads": reads}

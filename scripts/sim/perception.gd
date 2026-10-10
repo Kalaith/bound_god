@@ -44,18 +44,17 @@ static func _people(sim: RefCounted, agent: RefCounted, radius: float) -> void:
 	var shared: float = sim.calendar.per_tick(Balance.number("social.shared_work_opinion_per_day")) * interval
 	var goal: Dictionary = agent.current_goal()
 	var my_key: int = Goals.key(goal) if not goal.is_empty() and not Goals.work_type(goal).is_empty() else -1
-	agent.beliefs.nearby.clear()
+	# Everyone at the same work: the pursuit index, not a goal per person.
+	var fellows: Array = sim.pursuers(my_key) if my_key >= 0 else []
 	for other_id in sim.spatial.near("agents", agent.cell, radius):
 		if other_id == agent.id:
 			continue
 		var other: RefCounted = sim.agents[other_id]
 		if not other.is_present() or _distance(other.cell, agent.cell) > radius:
 			continue
-		agent.beliefs.nearby.append({"id": other_id, "cell": other.cell})
 		var relation: Dictionary = agent.beliefs.relation(other_id)
 		relation.familiarity = minf(float(relation.familiarity) + familiarity, 100.0)
-		var other_goal: Dictionary = other.current_goal()
-		if my_key >= 0 and not other_goal.is_empty() and Goals.key(other_goal) == my_key:
+		if not fellows.is_empty() and fellows.has(other_id):
 			Beliefs.change_opinion(relation, shared)
 
 

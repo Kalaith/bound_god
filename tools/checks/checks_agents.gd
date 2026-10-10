@@ -185,9 +185,11 @@ func check_sleepers_sleep_the_night_through():
 	if asleep.size() < 3:
 		return "only %d people asleep at 23:00" % asleep.size()
 	sim.run_ticks(hour * 6)
+	# Hunger or cold may wake someone; getting up to chat or stroll may not.
 	var still: int = 0
 	for agent in asleep:
-		still += 1 if agent.activity == "sleeping" else 0
+		var goal: Dictionary = agent.current_goal()
+		still += 1 if agent.activity == "sleeping" or (not goal.is_empty() and Goals.is_survival(goal)) else 0
 	if still < asleep.size() - 1:
 		return "%d of %d sleepers were up before 05:00" % [asleep.size() - still, asleep.size()]
 	return ""

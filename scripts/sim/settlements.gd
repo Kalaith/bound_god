@@ -280,7 +280,7 @@ static func can_reach(chest: Vector3i, from: Vector3i) -> bool:
 ## Where to stand to use the stores. Taking a resource leads to the nearest
 ## chest holding it, storing to the nearest with room; with no such chest,
 ## storing leads to the camp (to set the load down) and taking leads nowhere.
-func store_access(sim: RefCounted, id: int, from: Vector3i, resource: String = "", storing: bool = false) -> Vector3i:
+func store_access(sim: RefCounted, id: int, from: Vector3i, resource: String = "", storing: bool = false, agent: RefCounted = null) -> Vector3i:
 	if not entries.has(id):
 		return NONE
 	var best: Vector3i = NONE
@@ -293,12 +293,32 @@ func store_access(sim: RefCounted, id: int, from: Vector3i, resource: String = "
 		if not storing and resource.is_empty() and chest_total(chest) <= 0:
 			continue
 		var cell: Vector3i = chest_stand(sim, chest, from)
+		# Someone who found no way to a chest tries another for a while.
+		if agent != null and cell.x >= 0 and agent.beliefs.recently_failed("cell:%s" % str(cell), sim.calendar.tick, Balance.integer("agents.failure_memory_ticks")):
+			continue
 		if cell.x >= 0 and _distance(cell, from) < best_distance:
 			best = cell
 			best_distance = _distance(cell, from)
 	if best.x < 0 and storing:
 		return entries[id].camp
 	return best
+
+
+## Whether a chest beside `stand` can still be used for this purpose: one
+## holding the resource to take, or with room for the load to store.
+func store_serves(sim: RefCounted, id: int, stand: Vector3i, resource: String = "", storing: bool = false) -> bool:
+	if not entries.has(id):
+		return false
+	for chest in chest_cells(sim, id):
+		if not can_reach(chest, stand):
+			continue
+		if storing and chest_room(chest, resource) > 0:
+			return true
+		if not storing and not resource.is_empty() and int(chests[chest].get(resource, 0)) > 0:
+			return true
+		if not storing and resource.is_empty() and chest_total(chest) > 0:
+			return true
+	return false
 
 
 ## A walkable cell beside a chest (not on top of it), nearest to `from`.

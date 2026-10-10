@@ -34,6 +34,7 @@ const Raids = preload("res://scripts/sim/raids.gd")
 const Crops = preload("res://scripts/sim/crops.gd")
 const Kitchens = preload("res://scripts/sim/kitchens.gd")
 const Woods = preload("res://scripts/sim/woods.gd")
+const Goals = preload("res://scripts/agents/goals.gd")
 
 var world_seed: int = 1
 ## How this world was made (world kind, size); saved so a load regenerates it.
@@ -81,6 +82,11 @@ var lanterns: Dictionary = {}
 ## Template id -> Template, built on demand from offered copies or starters.
 var _templates: Dictionary = {}
 var _sites_version: int = -1
+## Bumped whenever anyone's intention changes; the pursuit index follows it.
+var goal_version: int = 0
+var _pursuit_version: int = -1
+## Goal key -> Array of the ids of present people pursuing it, in id order.
+var _pursuit: Dictionary = {}
 var _events_seen: int = 0
 
 
@@ -155,6 +161,7 @@ func after_restore() -> void:
 	_events_seen = structures.events.size()
 	_sites_version = -1
 	_templates.clear()
+	goal_version += 1
 	director.raid_hooks = raids
 	_refresh_site_buckets()
 	_refresh_agent_buckets()
@@ -355,6 +362,7 @@ func _refresh_agent_buckets() -> void:
 
 func step() -> void:
 	calendar.tick += 1
+	goal_version += 1
 	nav.paths_this_tick = 0
 	if calendar.is_new_day():
 		Daily.new_day(self)
@@ -413,6 +421,22 @@ func template_name(id: String) -> String:
 	if god.offered.has(id):
 		return str(god.offered[id].get("name", id))
 	return str(Data.starter(id).get("name", id))
+
+
+## Ids of present people whose current goal has this key, in id order.
+## Rebuilt only after an intention changes, so deliberation never scans
+## everyone once per candidate.
+func pursuers(goal_key: int) -> Array:
+	if _pursuit_version != goal_version:
+		_pursuit_version = goal_version
+		_pursuit.clear()
+		for agent in agents:
+			if agent.is_present() and not agent.intention.is_empty():
+				var key: int = Goals.key(agent.intention.goal)
+				if not _pursuit.has(key):
+					_pursuit[key] = []
+				_pursuit[key].append(agent.id)
+	return _pursuit.get(goal_key, [])
 
 
 func present_count() -> int:

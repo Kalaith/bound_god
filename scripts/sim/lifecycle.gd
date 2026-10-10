@@ -28,6 +28,7 @@ static func die(sim: RefCounted, agent: RefCounted, cause: String) -> void:
 	agent.life_day = sim.calendar.day()
 	agent.life_cause = cause
 	agent.intention = {}
+	sim.goal_version += 1
 	agent.path.clear()
 	agent.activity = "idle"
 	sim.set_home(agent, -1)
