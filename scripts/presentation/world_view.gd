@@ -3,6 +3,10 @@ extends Node3D
 ## chunk on WorkerThreadPool tasks; afterwards dirty chunks re-mesh on the main
 ## thread, at most `per_frame` a frame, so block edits show within a frame.
 const Mesher = preload("res://scripts/world/chunk_mesher.gd")
+const Registry = preload("res://scripts/world/block_registry.gd")
+const OPAQUE_SHADER = preload("res://assets/shaders/voxel_opaque.gdshader")
+const CUTOUT_SHADER = preload("res://assets/shaders/voxel_cutout.gdshader")
+const WATER_SHADER = preload("res://assets/shaders/voxel_water.gdshader")
 
 const WORLD_LAYER: int = 2
 
@@ -18,22 +22,21 @@ var _materials: Array = []
 
 func _ready() -> void:
 	var atlas: Texture2D = load("res://assets/blocks_atlas.png")
-	var opaque := StandardMaterial3D.new()
-	opaque.albedo_texture = atlas
-	opaque.vertex_color_use_as_albedo = true
-	opaque.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	opaque.roughness = 1.0
-	var cutout: StandardMaterial3D = opaque.duplicate()
-	cutout.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-	cutout.alpha_scissor_threshold = 0.3
-	cutout.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var water: StandardMaterial3D = opaque.duplicate()
-	water.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	water.albedo_color = Color(1, 1, 1, 0.72)
-	water.roughness = 0.15
-	water.metallic_specular = 0.8
-	water.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_materials = [opaque, cutout, water]
+	Registry.build()
+	var tiles := Vector2(Registry.atlas_size)
+	var glow_leaves: Vector2i = Registry.tiles[Registry.id("sacred_leaves")][0]
+	var glow_bark: Vector2i = Registry.tiles[Registry.id("sacred_tree")][0]
+	for shader in [OPAQUE_SHADER, CUTOUT_SHADER, WATER_SHADER]:
+		var material := ShaderMaterial.new()
+		material.shader = shader
+		material.set_shader_parameter("atlas", atlas)
+		material.set_shader_parameter("atlas_tiles", tiles)
+		material.set_shader_parameter("tile_pixels", float(atlas.get_width()) / tiles.x)
+		material.set_shader_parameter("glow_tile_a", Vector2(glow_leaves))
+		material.set_shader_parameter("glow_tile_b", Vector2(glow_bark))
+		_materials.append(material)
+	# Foliage varies more from block to block, like dabs of a loaded brush.
+	_materials[1].set_shader_parameter("block_variation", 0.08)
 
 
 ## Mesh every chunk using worker threads; blocks until done.

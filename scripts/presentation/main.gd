@@ -120,6 +120,7 @@ func _start() -> void:
 	camera_rig.target = avatar
 	add_child(camera_rig)
 	camera_rig.camera.current = true
+	rig.attach_paper(camera_rig.camera)
 	builder = BuildController.new()
 	builder.sim = sim
 	builder.world_view = world_view
@@ -375,8 +376,10 @@ func _open_settings() -> void:
 	settings_screen.show()
 
 
-## Look settings reach the camera; the rest the store applies itself.
+## Look settings reach the camera and graphics the environment; the rest the
+## store applies itself.
 func _apply_settings(store: RefCounted) -> void:
+	rig.apply_graphics(store.values)
 	camera_rig.look_sensitivity = float(store.values.get("look_sensitivity", camera_rig.look_sensitivity))
 	camera_rig.invert_look = bool(store.values.get("invert_look", camera_rig.invert_look))
 	_show_guide = bool(store.values.get("show_guide", true))

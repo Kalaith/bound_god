@@ -4,6 +4,8 @@ extends RefCounted
 ## native row slices, so every neighbour and ambient-occlusion test is a local
 ## index lookup. Three surfaces: opaque, cutout (leaves, grass, glass, bushes)
 ## and water; plus collision triangles for solid faces bordering non-solid cells.
+## Vertex colour rgb is face shade and occlusion; alpha 1 marks a full cube face
+## (the voxel shader may ink its rim), alpha 0 any other shape.
 const Registry = preload("res://scripts/world/block_registry.gd")
 
 const SURFACE_OPAQUE: int = 0
@@ -232,7 +234,7 @@ static func _special(world: RefCounted, cell: Vector3i, block: int, shape: int, 
 				surface.verts.append(at + quad[index])
 				surface.normals.append(Vector3.UP)
 				surface.uvs.append(base_uv + corner_uvs[index] * tile_size)
-				surface.colors.append(Color(0.95, 0.95, 0.95))
+				surface.colors.append(Color(0.95, 0.95, 0.95, 0.0))
 			surface.indices.append_array([start, start + 1, start + 2, start, start + 2, start + 3])
 		return
 	var low := Vector3.ZERO
@@ -274,7 +276,7 @@ static func _special(world: RefCounted, cell: Vector3i, block: int, shape: int, 
 			surface.normals.append(Vector3(n))
 			surface.uvs.append(base_uv + _uv(local, face) * tile_size * 0.998)
 			var light: float = SHADE[face]
-			surface.colors.append(Color(light, light, light))
+			surface.colors.append(Color(light, light, light, 0.0))
 		surface.indices.append_array([start, start + 1, start + 2, start, start + 2, start + 3])
 	if Registry.solid[block] == 1:
 		for face in range(6):

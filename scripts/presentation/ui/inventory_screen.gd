@@ -113,7 +113,8 @@ func _icon(block: int) -> Texture2D:
 	var region := AtlasTexture.new()
 	region.atlas = _atlas
 	var tile: Vector2i = Registry.tiles[block][0]
-	region.region = Rect2(tile.x * 16, tile.y * 16, 16, 16)
+	var size: float = float(_atlas.get_width()) / Registry.atlas_size.x
+	region.region = Rect2(tile.x * size, tile.y * size, size, size)
 	return region
 
 

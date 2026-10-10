@@ -66,6 +66,14 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 			camera_rig._overlook_yaw = deg_to_rad(-135.0)
 			camera_rig.overlook_center = Vector3(80, 14, 80)
 			avatar.zone_radius = 1000.0
+		"art_overlook":
+			# The concept-art framing: the sacred tree from above the meadow.
+			camera_rig.overlook = true
+			camera_rig._overlook_distance = 42.0
+			camera_rig._overlook_pitch = -0.62
+			camera_rig._overlook_yaw = 0.0
+			camera_rig.overlook_center = Vector3(sim.features.sacred_tree) + Vector3(0.5, 4.0, 0.5)
+			avatar.zone_radius = 1000.0
 		"valley_ridge":
 			var ruin: Dictionary = sim.features.ruin
 			avatar.zone_radius = 1000.0

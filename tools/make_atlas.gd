@@ -1,11 +1,13 @@
 extends SceneTree
-## Paints assets/blocks_atlas.png: 16 px procedural tiles in an 8 x 7 grid,
-## laid out as data/blocks.json expects (8 x 7 since fields and granaries).
+## Paints assets/blocks_atlas.png: 32 px procedural tiles in an 8 x 7 grid,
+## laid out as data/blocks.json expects. The look is a soft painted wash:
+## seamless low-frequency colour drift plus a few brush strokes per tile, in a
+## muted palette of sage, cream, earth and faded blue (see art_direction.md).
 ## Tiles are painted in order from one seed, so new tiles go at the end.
 ## Run once after changing a tile:
 ## Godot --headless --path . --script res://tools/make_atlas.gd
 
-const TILE: int = 16
+const TILE: int = 32
 var rng := RandomNumberGenerator.new()
 var image: Image
 
@@ -14,41 +16,42 @@ func _init() -> void:
 	rng.seed = 1717
 	image = Image.create(TILE * 8, TILE * 7, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
-	_noise(Vector2i(0, 0), Color("5a9138"), Color("4a7f2e"), Color("6ea648"))
+	_meadow(Vector2i(0, 0))
 	_grass_side(Vector2i(1, 0))
-	_noise(Vector2i(2, 0), Color("7a5236"), Color("634129"), Color("8d6443"))
-	_noise(Vector2i(3, 0), Color("8a8c8e"), Color("767879"), Color("a0a2a4"))
-	_noise(Vector2i(4, 0), Color("d9c98f"), Color("cdb978"), Color("e6d9a6"))
-	_pebbles(Vector2i(5, 0), Color("8b8172"), Color("6e665a"), Color("a69b8a"))
+	_earth(Vector2i(2, 0), Color("8e6e50"))
+	_stone(Vector2i(3, 0), Color("aaa69c"))
+	_wash(Vector2i(4, 0), Color("dccfa8"), 0.05)
+	_strokes(Vector2i(4, 0), Color("ebe0bd"), 10, 4, 0.35)
+	_pebbles(Vector2i(5, 0))
 	_ore(Vector2i(6, 0))
 	_water(Vector2i(7, 0))
-	_noise(Vector2i(0, 1), Color("3a3a3e"), Color("2a2a2d"), Color("4b4b50"))
-	_bark(Vector2i(1, 1), Color("8a6440"), Color("6b4a2e"))
+	_stone(Vector2i(0, 1), Color("58534e"))
+	_bark(Vector2i(1, 1), Color("7d5d44"), Color("5c4232"))
 	_rings(Vector2i(2, 1))
-	_planks(Vector2i(3, 1), Color("b48a55"), Color("8d6a3e"))
+	_planks(Vector2i(3, 1), Color("bd986c"), Color("8c6c4c"))
 	_thatch(Vector2i(4, 1))
-	_bricks(Vector2i(5, 1), Color("b9b5aa"), Color("8e8a80"))
+	_bricks(Vector2i(5, 1), Color("c9c3b4"), Color("a39c8c"))
 	_cobble(Vector2i(6, 1))
 	_glass(Vector2i(7, 1))
-	_fence(Vector2i(0, 2))
+	_bark(Vector2i(0, 2), Color("957252"), Color("74563c"))
 	_bed_top(Vector2i(1, 2))
 	_bed_side(Vector2i(2, 2))
 	_door(Vector2i(3, 2))
 	_chest_side(Vector2i(4, 2))
-	_planks(Vector2i(5, 2), Color("9a6e3e"), Color("6e4c28"))
+	_planks(Vector2i(5, 2), Color("a07650"), Color("75573a"))
 	_workbench_top(Vector2i(6, 2))
 	_workbench_side(Vector2i(7, 2))
 	_hearth_side(Vector2i(0, 3))
 	_embers(Vector2i(1, 3))
 	_altar(Vector2i(2, 3), false)
 	_altar(Vector2i(3, 3), true)
-	_leaves(Vector2i(4, 3), Color("3f7a33"), Color("2f6427"), true)
-	_bark(Vector2i(5, 3), Color("d8d2c0"), Color("b7ae96"))
+	_leaves(Vector2i(4, 3), Color("405a4a"), Color("2e4438"), Color("9cb596"), true)
+	_bark(Vector2i(5, 3), Color("9d9282"), Color("756b5e"))
 	_glow_lines(Vector2i(5, 3))
-	_leaves(Vector2i(6, 3), Color("467f35"), Color("356b28"), false)
+	_leaves(Vector2i(6, 3), Color("435e4b"), Color("304638"), Color("a0b898"), false)
 	_tall_grass(Vector2i(7, 3))
-	_leaves(Vector2i(0, 4), Color("7fd6b0"), Color("4fae8c"), false)
-	_leaves(Vector2i(1, 4), Color("3f7a33"), Color("2f6427"), false)
+	_leaves(Vector2i(0, 4), Color("5f9c92"), Color("427a74"), Color("c6ecdf"), false)
+	_leaves(Vector2i(1, 4), Color("405a4a"), Color("2e4438"), Color("9cb596"), false)
 	_table_top(Vector2i(0, 5))
 	_table_side(Vector2i(1, 5))
 	_bench(Vector2i(2, 5))
@@ -71,325 +74,405 @@ func _px(tile: Vector2i, x: int, y: int, color: Color) -> void:
 		image.set_pixel(tile.x * TILE + x, tile.y * TILE + y, color)
 
 
-func _noise(tile: Vector2i, base: Color, dark: Color, light: Color) -> void:
+## Lays `color` over a pixel with some opacity; coordinates wrap so strokes
+## stay seamless across neighbouring blocks.
+func _blend(tile: Vector2i, x: int, y: int, color: Color, alpha: float) -> void:
+	var px: int = tile.x * TILE + posmod(x, TILE)
+	var py: int = tile.y * TILE + posmod(y, TILE)
+	var under: Color = image.get_pixel(px, py)
+	if under.a == 0.0:
+		return
+	var mixed: Color = under.lerp(color, clampf(alpha, 0.0, 1.0))
+	mixed.a = under.a
+	image.set_pixel(px, py, mixed)
+
+
+## A seamless soft field in -1..1: a few sine waves with whole periods per tile.
+func _field() -> Array:
+	var waves: Array = []
+	for _i in range(4):
+		var fx: int = rng.randi_range(-2, 2)
+		var fy: int = rng.randi_range(-2, 2)
+		if fx == 0 and fy == 0:
+			fx = 1
+		waves.append([fx, fy, rng.randf() * TAU, rng.randf_range(0.5, 1.0)])
+	return waves
+
+
+func _sample(waves: Array, x: int, y: int) -> float:
+	var total: float = 0.0
+	var weight: float = 0.0
+	for wave in waves:
+		total += wave[3] * sin(TAU * (wave[0] * x + wave[1] * y) / float(TILE) + wave[2])
+		weight += wave[3]
+	return total / weight
+
+
+## The base of every painted tile: one colour drifting gently lighter and darker.
+func _wash(tile: Vector2i, base: Color, depth: float) -> void:
+	var waves: Array = _field()
 	for y in range(TILE):
 		for x in range(TILE):
-			var roll: float = rng.randf()
-			_px(tile, x, y, dark if roll < 0.18 else light if roll > 0.86 else base)
+			var v: float = _sample(waves, x, y) * depth + (rng.randf() - 0.5) * depth * 0.25
+			_px(tile, x, y, base.lightened(v) if v > 0.0 else base.darkened(-v))
+
+
+## Short soft brush marks laid along `angle` (radians), wrapping at the edges.
+func _strokes(tile: Vector2i, color: Color, count: int, length: int, alpha: float, angle: float = 0.0) -> void:
+	for _i in range(count):
+		var start := Vector2(rng.randf() * TILE, rng.randf() * TILE)
+		var direction := Vector2.from_angle(angle + rng.randf_range(-0.35, 0.35))
+		var reach: int = rng.randi_range(maxi(length / 2, 1), length)
+		for step in range(reach):
+			var at: Vector2 = start + direction * step
+			var fade: float = sin(PI * (step + 0.5) / reach)
+			_blend(tile, int(at.x), int(at.y), color, alpha * fade)
+			_blend(tile, int(at.x), int(at.y) + 1, color, alpha * fade * 0.4)
+
+
+func _meadow(tile: Vector2i) -> void:
+	_wash(tile, Color("aaa468"), 0.06)
+	_strokes(tile, Color("c0b984"), 14, 6, 0.4, -0.5)
+	_strokes(tile, Color("8e9258"), 12, 5, 0.35, 0.4)
 
 
 func _grass_side(tile: Vector2i) -> void:
-	_noise(tile, Color("7a5236"), Color("634129"), Color("8d6443"))
+	_earth(tile, Color("8e6e50"))
+	var waves: Array = _field()
 	for x in range(TILE):
-		var depth: int = 3 + rng.randi_range(0, 2)
+		var depth: int = 6 + int(round(_sample(waves, x, 0) * 2.5))
 		for y in range(depth):
-			_px(tile, x, y, Color("5f9e3c") if rng.randf() > 0.2 else Color("4d8a31"))
+			var color: Color = Color("a9a46c") if y < depth - 2 else Color("90925c")
+			_px(tile, x, y, color.darkened(rng.randf() * 0.04))
 
 
-func _pebbles(tile: Vector2i, base: Color, dark: Color, light: Color) -> void:
-	_noise(tile, base, dark, base)
-	for _i in range(14):
-		var x: int = rng.randi_range(0, 14)
-		var y: int = rng.randi_range(0, 14)
-		_px(tile, x, y, light)
-		_px(tile, x + 1, y, light)
-		_px(tile, x, y + 1, dark)
+func _earth(tile: Vector2i, base: Color) -> void:
+	_wash(tile, base, 0.06)
+	_strokes(tile, base.darkened(0.15), 8, 5, 0.35)
+	_strokes(tile, base.lightened(0.12), 6, 4, 0.3)
+
+
+func _stone(tile: Vector2i, base: Color) -> void:
+	_wash(tile, base, 0.07)
+	_strokes(tile, base.darkened(0.14), 6, 9, 0.35, 0.25)
+	_strokes(tile, base.lightened(0.12), 6, 6, 0.3, -0.2)
+
+
+func _pebbles(tile: Vector2i) -> void:
+	_wash(tile, Color("a59c8c"), 0.05)
+	for _i in range(16):
+		var center := Vector2(rng.randf() * TILE, rng.randf() * TILE)
+		var shade: Color = Color("bdb3a2") if rng.randf() > 0.5 else Color("8c8374")
+		_dab(tile, center, rng.randf_range(1.2, 2.2), shade, 0.75)
+
+
+## A soft round dab of paint.
+func _dab(tile: Vector2i, center: Vector2, radius: float, color: Color, alpha: float) -> void:
+	for y in range(int(center.y - radius) - 1, int(center.y + radius) + 2):
+		for x in range(int(center.x - radius) - 1, int(center.x + radius) + 2):
+			var d: float = Vector2(x + 0.5, y + 0.5).distance_to(center)
+			if d <= radius:
+				_blend(tile, x, y, color, alpha * (1.0 - smoothstep(radius * 0.6, radius, d)))
 
 
 func _ore(tile: Vector2i) -> void:
-	_noise(tile, Color("8a8c8e"), Color("767879"), Color("a0a2a4"))
+	_stone(tile, Color("aaa69c"))
 	for _i in range(6):
-		var x: int = rng.randi_range(1, 13)
-		var y: int = rng.randi_range(1, 13)
-		for d in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
-			_px(tile, x + d.x, y + d.y, Color("d9823b") if rng.randf() > 0.3 else Color("f2b35e"))
+		_dab(tile, Vector2(rng.randf() * TILE, rng.randf() * TILE), rng.randf_range(1.5, 2.6), Color("c98c4f"), 0.9)
 
 
 func _water(tile: Vector2i) -> void:
-	for y in range(TILE):
+	_wash(tile, Color("86a3ad"), 0.05)
+	for row in range(4):
+		var y0: float = row * 8.0 + 3.0
 		for x in range(TILE):
-			var wave: float = sin((x + y * 0.5) * 0.8) * 0.5 + 0.5
-			_px(tile, x, y, Color("3b6fa8").lerp(Color("5d92c9"), wave * 0.5 + rng.randf() * 0.15))
+			var y: int = int(y0 + sin(TAU * x / float(TILE) * 2.0 + row) * 1.5)
+			_blend(tile, x, y, Color("c8d6d0"), 0.35)
 
 
 func _bark(tile: Vector2i, base: Color, dark: Color) -> void:
-	for x in range(TILE):
-		var stripe: bool = x % 4 == 0 or rng.randf() < 0.1
-		for y in range(TILE):
-			_px(tile, x, y, dark if stripe or rng.randf() < 0.08 else base)
+	_wash(tile, base, 0.05)
+	_strokes(tile, dark, 12, 16, 0.6, PI * 0.5)
+	_strokes(tile, base.lightened(0.12), 6, 10, 0.35, PI * 0.5)
 
 
 func _rings(tile: Vector2i) -> void:
 	for y in range(TILE):
 		for x in range(TILE):
-			var d: float = Vector2(x - 7.5, y - 7.5).length()
-			var ring: bool = int(d) % 3 == 0
-			_px(tile, x, y, Color("6b4a2e") if d > 7.0 else (Color("a37b4c") if ring else Color("c19a63")))
+			var d: float = Vector2(x - 15.5, y - 15.5).length()
+			var ring: float = 0.5 + 0.5 * cos(d * 1.1)
+			var color: Color = Color("c2a27c").lerp(Color("a8865e"), ring * 0.6)
+			_px(tile, x, y, Color("6a4e3a") if d > 14.5 else color)
 
 
 func _planks(tile: Vector2i, base: Color, seam: Color) -> void:
+	_wash(tile, base, 0.04)
+	_strokes(tile, base.darkened(0.1), 10, 12, 0.35)
 	for y in range(TILE):
+		var board: int = y / 8
 		for x in range(TILE):
-			var color: Color = base.darkened(rng.randf() * 0.08)
-			if y % 4 == 3 or (x == (y / 4 * 5 + 3) % TILE):
-				color = seam
-			_px(tile, x, y, color)
+			if y % 8 == 7 or (x == (board * 11 + 5) % TILE and y % 8 != 0):
+				_blend(tile, x, y, seam, 0.8)
 
 
 func _thatch(tile: Vector2i) -> void:
-	for y in range(TILE):
-		for x in range(TILE):
-			var stroke: bool = (x + y * 2) % 5 == 0
-			_px(tile, x, y, Color("a8863a") if stroke else Color("d8b65a").darkened(rng.randf() * 0.12))
+	_wash(tile, Color("d6b97c"), 0.05)
+	_strokes(tile, Color("ae8f55"), 26, 10, 0.55, PI * 0.42)
+	_strokes(tile, Color("ead39a"), 12, 8, 0.45, PI * 0.42)
 
 
 func _bricks(tile: Vector2i, base: Color, mortar: Color) -> void:
+	_wash(tile, base, 0.04)
 	for y in range(TILE):
 		for x in range(TILE):
-			var offset: int = 4 if (y / 4) % 2 == 1 else 0
-			var edge: bool = y % 4 == 3 or (x + offset) % 8 == 7
-			_px(tile, x, y, mortar if edge else base.darkened(rng.randf() * 0.07))
+			var offset: int = 8 if (y / 8) % 2 == 1 else 0
+			if y % 8 == 7 or (x + offset) % 16 == 15:
+				_blend(tile, x, y, mortar, 0.85)
 
 
 func _cobble(tile: Vector2i) -> void:
-	_noise(tile, Color("6f6f6f"), Color("595959"), Color("6f6f6f"))
-	for _i in range(9):
-		var cx: int = rng.randi_range(1, 14)
-		var cy: int = rng.randi_range(1, 14)
-		var r: int = rng.randi_range(2, 3)
-		var shade: Color = Color("8f8f8f").darkened(rng.randf() * 0.2)
-		for y in range(-r, r + 1):
-			for x in range(-r, r + 1):
-				if x * x + y * y <= r * r:
-					_px(tile, cx + x, cy + y, shade)
+	_wash(tile, Color("8f8c84"), 0.04)
+	for _i in range(12):
+		var center := Vector2(rng.randf() * TILE, rng.randf() * TILE)
+		_dab(tile, center, rng.randf_range(3.5, 5.0), Color("aaa69c").darkened(rng.randf() * 0.12), 0.85)
 
 
 func _glass(tile: Vector2i) -> void:
 	for y in range(TILE):
 		for x in range(TILE):
-			var frame: bool = x == 0 or y == 0 or x == 15 or y == 15
-			_px(tile, x, y, Color("cfe8f0") if frame else Color(0.75, 0.9, 1.0, 0.22 if (x + y) % 7 else 0.5))
-
-
-func _fence(tile: Vector2i) -> void:
-	_bark(tile, Color("9c7447"), Color("7a5832"))
+			var frame: bool = x < 2 or y < 2 or x > 29 or y > 29
+			var streak: bool = (x + y) % 13 < 2
+			_px(tile, x, y, Color("d8e2dc") if frame else Color(0.82, 0.9, 0.92, 0.45 if streak else 0.2))
 
 
 func _bed_top(tile: Vector2i) -> void:
+	_wash(tile, Color("b4574a"), 0.05)
 	for y in range(TILE):
 		for x in range(TILE):
-			var color: Color = Color("b23b3b").darkened(rng.randf() * 0.08)
-			if y < 5:
-				color = Color("eeeadf")
-			if x == 0 or x == 15:
-				color = Color("8d6a3e")
-			_px(tile, x, y, color)
+			if y < 10:
+				_px(tile, x, y, Color("ece4d2"))
+			if x < 2 or x > 29:
+				_px(tile, x, y, Color("8c6c4c"))
 
 
 func _bed_side(tile: Vector2i) -> void:
-	for y in range(TILE):
+	_wash(tile, Color("8c6c4c"), 0.05)
+	for y in range(18):
 		for x in range(TILE):
-			_px(tile, x, y, Color("b23b3b") if y < 9 else Color("8d6a3e").darkened(rng.randf() * 0.1))
+			_px(tile, x, y, Color("b4574a").darkened(rng.randf() * 0.04))
 
 
 func _door(tile: Vector2i) -> void:
+	_planks(tile, Color("93694a"), Color("6a4a32"))
 	for y in range(TILE):
 		for x in range(TILE):
-			var color: Color = Color("8a5f33").darkened(rng.randf() * 0.08)
-			if x % 5 == 0 or y == 0 or y == 15:
-				color = Color("5c3d1f")
-			_px(tile, x, y, color)
-	_px(tile, 12, 8, Color("e6c27a"))
-	_px(tile, 12, 9, Color("e6c27a"))
+			if x % 10 == 0 or y < 2 or y > 29:
+				_px(tile, x, y, Color("5e4230"))
+	_dab(tile, Vector2(24.5, 17.5), 1.6, Color("d9b878"), 1.0)
 
 
 func _chest_side(tile: Vector2i) -> void:
-	_planks(tile, Color("9a6e3e"), Color("6e4c28"))
+	_planks(tile, Color("a07650"), Color("75573a"))
 	for x in range(TILE):
-		_px(tile, x, 5, Color("3d3024"))
-	for y in range(4, 9):
-		_px(tile, 7, y, Color("e6c27a"))
-		_px(tile, 8, y, Color("e6c27a"))
+		_px(tile, x, 10, Color("4a3a2c"))
+		_px(tile, x, 11, Color("4a3a2c"))
+	for y in range(8, 17):
+		for x in range(14, 18):
+			_px(tile, x, y, Color("d9b878"))
 
 
 func _workbench_top(tile: Vector2i) -> void:
-	_planks(tile, Color("c09460"), Color("8d6a3e"))
+	_planks(tile, Color("c39e72"), Color("8c6c4c"))
 	for i in range(TILE):
-		_px(tile, i, 7, Color("5c3d1f"))
-		_px(tile, 7, i, Color("5c3d1f"))
+		_blend(tile, i, 15, Color("5e4230"), 0.9)
+		_blend(tile, 15, i, Color("5e4230"), 0.9)
 
 
 func _workbench_side(tile: Vector2i) -> void:
-	_planks(tile, Color("9a6e3e"), Color("6e4c28"))
-	for y in range(3, 12):
-		_px(tile, 4, y, Color("b0b4b8"))
-	for x in range(9, 14):
-		_px(tile, x, 5, Color("b0b4b8"))
+	_planks(tile, Color("a07650"), Color("75573a"))
+	for y in range(6, 24):
+		_px(tile, 8, y, Color("b7b8b2"))
+		_px(tile, 9, y, Color("9c9d97"))
+	for x in range(18, 28):
+		_px(tile, x, 10, Color("b7b8b2"))
+		_px(tile, x, 11, Color("9c9d97"))
 
 
 func _hearth_side(tile: Vector2i) -> void:
-	_bricks(tile, Color("7e7a74"), Color("5a5650"))
-	for y in range(8, 15):
-		for x in range(4, 12):
-			_px(tile, x, y, Color("f08a2c") if rng.randf() > 0.4 else Color("ffd060"))
+	_bricks(tile, Color("8e8a82"), Color("6c6862"))
+	for y in range(16, 30):
+		for x in range(8, 24):
+			_px(tile, x, y, Color("e08a4a").lerp(Color("f2c46e"), rng.randf() * 0.6))
 
 
 func _embers(tile: Vector2i) -> void:
-	_noise(tile, Color("3a2a22"), Color("2a1d17"), Color("4a362b"))
-	for _i in range(20):
-		_px(tile, rng.randi_range(2, 13), rng.randi_range(2, 13), Color("ff9a3c"))
+	_wash(tile, Color("463730"), 0.05)
+	for _i in range(18):
+		_dab(tile, Vector2(rng.randf_range(4, 28), rng.randf_range(4, 28)), 1.4, Color("ec9a55"), 0.9)
 
 
 func _altar(tile: Vector2i, top: bool) -> void:
-	_bricks(tile, Color("e1dccd"), Color("c4bda8"))
-	var gold := Color("e6c27a")
+	_bricks(tile, Color("e6dfcd"), Color("cbc2ab"))
+	var gold := Color("d4ac62")
 	if top:
-		for angle in range(32):
-			var at: Vector2 = Vector2(7.5, 7.5) + Vector2.from_angle(angle * TAU / 32.0) * 5.0
-			_px(tile, int(at.x), int(at.y), gold)
-		_px(tile, 7, 7, gold)
-		_px(tile, 8, 8, gold)
+		for angle in range(64):
+			var at: Vector2 = Vector2(15.5, 15.5) + Vector2.from_angle(angle * TAU / 64.0) * 10.0
+			_dab(tile, at, 1.2, gold, 0.9)
+		_dab(tile, Vector2(16, 16), 2.2, gold, 1.0)
 	else:
-		for y in range(4, 12):
-			_px(tile, 7, y, gold)
-			_px(tile, 8, y, gold)
-		for x in range(5, 11):
-			_px(tile, x, 6, gold)
+		for y in range(8, 24):
+			_px(tile, 15, y, gold)
+			_px(tile, 16, y, gold)
+		for x in range(10, 22):
+			_px(tile, x, 12, gold)
+			_px(tile, x, 13, gold)
 
 
-func _leaves(tile: Vector2i, base: Color, dark: Color, berries: bool) -> void:
-	for y in range(TILE):
-		for x in range(TILE):
-			var roll: float = rng.randf()
-			if roll < 0.12:
-				continue
-			_px(tile, x, y, dark if roll < 0.4 else base)
+## Foliage painted as overlapping leaf clumps with pale scalloped crests, the
+## cloud motif of woodblock prints.
+func _leaves(tile: Vector2i, base: Color, dark: Color, light: Color, berries: bool) -> void:
+	_wash(tile, base, 0.05)
+	for _i in range(18):
+		_dab(tile, Vector2(rng.randf() * TILE, rng.randf() * TILE), rng.randf_range(2.0, 3.5), dark, 0.55)
+	# Scallops scattered, not gridded, so a canopy never reads as wallpaper.
+	for _i in range(7):
+		var center := Vector2(rng.randf() * TILE, rng.randf_range(4.0, TILE))
+		var radius: float = rng.randf_range(3.0, 4.5)
+		for step in range(14):
+			var angle: float = PI + PI * step / 13.0
+			var at: Vector2 = center + Vector2.from_angle(angle) * radius
+			_blend(tile, int(at.x), int(at.y), light, 0.6)
 	if berries:
-		for _i in range(8):
-			var x: int = rng.randi_range(1, 14)
-			var y: int = rng.randi_range(1, 14)
-			_px(tile, x, y, Color("c0283a"))
-			_px(tile, x + 1, y, Color("e04a5a"))
+		for _i in range(9):
+			_dab(tile, Vector2(rng.randf_range(3, 29), rng.randf_range(3, 29)), 1.6, Color("c4513f"), 1.0)
 
 
 func _glow_lines(tile: Vector2i) -> void:
 	for y in range(TILE):
-		if y % 5 == 2:
-			for x in range(3, 13):
-				_px(tile, x, y + (x % 3) / 2, Color("bdf5ff"))
+		if y % 10 == 4:
+			for x in range(6, 26):
+				_px(tile, x, y + int(sin(x * 0.6) * 1.5), Color("a8ece6"))
 
 
 func _tall_grass(tile: Vector2i) -> void:
-	for blade in range(7):
-		var x: int = 1 + blade * 2
-		var height: int = rng.randi_range(8, 15)
+	for blade in range(9):
+		var x0: float = 2.0 + blade * 3.3
+		var height: int = rng.randi_range(16, 30)
+		var lean: float = rng.randf_range(-0.25, 0.25)
+		var color: Color = Color("a5aa6c").darkened(rng.randf() * 0.18)
 		for y in range(TILE - height, TILE):
-			_px(tile, x + (1 if y < 6 and blade % 2 == 0 else 0), y, Color("7fb04a").darkened(rng.randf() * 0.2))
+			var t: float = float(TILE - y) / height
+			var x: int = int(x0 + lean * t * t * 12.0)
+			_px(tile, x, y, color)
+			if t < 0.5:
+				_px(tile, x + 1, y, color.darkened(0.08))
 
 
 func _table_top(tile: Vector2i) -> void:
-	_planks(tile, Color("c49a64"), Color("9a7446"))
+	_planks(tile, Color("c7a276"), Color("9c7a54"))
 	for i in range(TILE):
-		_px(tile, i, 0, Color("6e4c28"))
-		_px(tile, i, 15, Color("6e4c28"))
+		_px(tile, i, 0, Color("75573a"))
+		_px(tile, i, TILE - 1, Color("75573a"))
 
 
 func _table_side(tile: Vector2i) -> void:
 	for y in range(TILE):
 		for x in range(TILE):
-			var leg: bool = (x < 3 or x > 12) and y > 3
-			if y <= 3 or leg:
-				_px(tile, x, y, Color("9a7446").darkened(rng.randf() * 0.12))
+			var leg: bool = (x < 6 or x > 25) and y > 7
+			if y <= 7 or leg:
+				_px(tile, x, y, Color("9c7a54").darkened(rng.randf() * 0.06))
 
 
 func _bench(tile: Vector2i) -> void:
 	for y in range(TILE):
 		for x in range(TILE):
-			var seat: bool = y >= 6 and y <= 9
-			var leg: bool = (x < 2 or x > 13) and y > 9
+			var seat: bool = y >= 12 and y <= 19
+			var leg: bool = (x < 4 or x > 27) and y > 19
 			if seat or leg:
-				_px(tile, x, y, Color("8d6a3e").darkened(rng.randf() * 0.12))
+				_px(tile, x, y, Color("8c6c4c").darkened(rng.randf() * 0.06))
 
 
 func _tilled(tile: Vector2i) -> void:
-	_noise(tile, Color("5e3f27"), Color("4a301d"), Color("70503a"))
+	_earth(tile, Color("6a4e38"))
 	for y in range(TILE):
-		if y % 4 == 1:
-			for x in range(1, 15):
-				_px(tile, x, y, Color("3d2818"))
+		if y % 8 == 3:
+			for x in range(2, 30):
+				_blend(tile, x, y, Color("4a3628"), 0.8)
 	for i in range(TILE):
-		_px(tile, i, 0, Color("8d6a3e"))
-		_px(tile, i, 15, Color("8d6a3e"))
-		_px(tile, 0, i, Color("8d6a3e"))
-		_px(tile, 15, i, Color("8d6a3e"))
+		for edge in [0, 1, TILE - 2, TILE - 1]:
+			_px(tile, i, edge, Color("8c6c4c"))
+			_px(tile, edge, i, Color("8c6c4c"))
 
 
 func _planter_side(tile: Vector2i) -> void:
-	_planks(tile, Color("9a7446"), Color("6e4c28"))
+	_planks(tile, Color("9c7a54"), Color("75573a"))
 	for x in range(TILE):
-		_px(tile, x, 0, Color("5e3f27"))
-		_px(tile, x, 1, Color("5e3f27"))
+		for y in range(4):
+			_px(tile, x, y, Color("6a4e38"))
 
 
 func _lantern(tile: Vector2i) -> void:
 	for y in range(TILE):
 		for x in range(TILE):
-			var frame: bool = y < 2 or y > 13 or x < 2 or x > 13
-			var glow: Color = Color("ffd27a").lerp(Color("fff1c4"), rng.randf() * 0.5)
-			_px(tile, x, y, Color("3a3a3e") if frame else glow)
+			var frame: bool = y < 4 or y > 27 or x < 4 or x > 27
+			var glow: Color = Color("f4d08c").lerp(Color("fbeccb"), rng.randf() * 0.4)
+			_px(tile, x, y, Color("4a4540") if frame else glow)
 
 
 ## Farmland: dark, damp soil in ridges.
 func _furrows(tile: Vector2i) -> void:
-	_noise(tile, Color("5a3a22"), Color("442b18"), Color("6b4a30"))
+	_earth(tile, Color("6e5038"))
 	for y in range(TILE):
-		if y % 4 == 2:
+		if y % 8 == 4:
 			for x in range(TILE):
-				_px(tile, x, y, Color("3a2414"))
-		elif y % 4 == 0:
+				_blend(tile, x, y, Color("4a3628"), 0.85)
+				_blend(tile, x, y + 1, Color("4a3628"), 0.4)
+		elif y % 8 == 1:
 			for x in range(TILE):
-				if rng.randf() > 0.4:
-					_px(tile, x, y, Color("7a5638"))
+				_blend(tile, x, y, Color("94765a"), 0.5)
 
 
 func _bin_side(tile: Vector2i) -> void:
-	_planks(tile, Color("b8945c"), Color("8a6a3c"))
+	_planks(tile, Color("bd986c"), Color("8c6c4c"))
 	for y in range(TILE):
-		_px(tile, 0, y, Color("5e4226"))
-		_px(tile, 15, y, Color("5e4226"))
+		for x in [0, 1, TILE - 2, TILE - 1]:
+			_px(tile, x, y, Color("6a4e38"))
 	for x in range(TILE):
-		_px(tile, x, 4, Color("5e4226"))
-		_px(tile, x, 11, Color("5e4226"))
+		_px(tile, x, 8, Color("6a4e38"))
+		_px(tile, x, 23, Color("6a4e38"))
 
 
 func _bin_top(tile: Vector2i) -> void:
+	_wash(tile, Color("d9b871"), 0.08)
 	for y in range(TILE):
 		for x in range(TILE):
-			var rim: bool = x < 2 or x > 13 or y < 2 or y > 13
-			_px(tile, x, y, Color("8a6a3c") if rim else Color("d8b45a").darkened(rng.randf() * 0.25))
+			if x < 3 or x > 28 or y < 3 or y > 28:
+				_px(tile, x, y, Color("8c6c4c"))
 
 
 ## A crop by stage: a sprout, a young green tuft, tall green stalks, ripe gold ears.
 func _crop(tile: Vector2i, stage: int) -> void:
-	var heights: Array = [4, 8, 12, 14]
-	var green: Color = Color("6fae3e") if stage < 3 else Color("c9a640")
+	var heights: Array = [8, 16, 24, 28]
+	var green: Color = Color("8fa462") if stage < 3 else Color("cfae5e")
 	for stalk in range(5 if stage > 0 else 3):
-		var x: int = 2 + stalk * 3 if stage > 0 else 5 + stalk * 2
-		var height: int = heights[stage] - rng.randi_range(0, 2)
+		var x: int = 4 + stalk * 6 if stage > 0 else 10 + stalk * 5
+		var height: int = heights[stage] - rng.randi_range(0, 3)
 		for y in range(TILE - height, TILE):
-			_px(tile, x, y, green.darkened(rng.randf() * 0.2))
+			_px(tile, x, y, green.darkened(rng.randf() * 0.12))
+			_px(tile, x + 1, y, green.darkened(0.1 + rng.randf() * 0.1))
 		if stage == 3:
-			for y in range(TILE - height, TILE - height + 4):
-				_px(tile, x + 1, y, Color("e6c65c"))
+			for y in range(TILE - height, TILE - height + 8):
+				_px(tile, x + 2, y, Color("e4c878"))
+				_px(tile, x - 1, y + 1, Color("e4c878"))
 
 
 ## A sapling: a thin brown stem with a few small leaf tufts.
 func _sapling(tile: Vector2i) -> void:
-	for y in range(5, TILE):
-		_px(tile, 7, y, Color("7a5434"))
-		_px(tile, 8, y, Color("8a6440") if y > 9 else Color("7a5434"))
-	for tuft in [Vector2i(6, 1), Vector2i(4, 3), Vector2i(9, 3), Vector2i(5, 6), Vector2i(9, 7)]:
-		for dy in range(3):
-			for dx in range(3):
-				if rng.randf() < 0.85:
-					_px(tile, tuft.x + dx, tuft.y + dy, Color("4f8a3a").darkened(rng.randf() * 0.25))
+	for y in range(10, TILE):
+		_px(tile, 15, y, Color("7d5d44"))
+		_px(tile, 16, y, Color("8e6c50"))
+	for tuft in [Vector2(15, 5), Vector2(10, 9), Vector2(21, 9), Vector2(12, 14), Vector2(20, 15)]:
+		for y in range(int(tuft.y) - 3, int(tuft.y) + 4):
+			for x in range(int(tuft.x) - 3, int(tuft.x) + 4):
+				if Vector2(x, y).distance_to(tuft) < 3.2 and rng.randf() < 0.9:
+					_px(tile, x, y, Color("6f8a5c").darkened(rng.randf() * 0.18))

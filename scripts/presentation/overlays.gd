@@ -5,7 +5,7 @@ extends Node3D
 
 const BOUNDARY_SHADER: String = """
 shader_type spatial;
-render_mode unshaded, cull_disabled, depth_draw_never, blend_add;
+render_mode unshaded, cull_disabled, depth_draw_never, blend_add, fog_disabled;
 uniform vec3 avatar_position;
 uniform vec4 tint : source_color = vec4(0.72, 0.62, 1.0, 1.0);
 uniform float near_range = 7.0;

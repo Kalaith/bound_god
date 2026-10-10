@@ -11,7 +11,7 @@ const DEFAULTS: Dictionary = {
 	"master": 1.0, "music": 1.0, "effects": 1.0, "muted": false,
 	"look_sensitivity": 0.5, "invert_look": false,
 	"fullscreen": false, "reduce_motion": false,
-	"ssao": true, "glow": true, "shadows": true,
+	"ssao": true, "glow": true, "shadows": true, "ink": true,
 	"show_guide": true,
 }
 var values: Dictionary = DEFAULTS.duplicate()
