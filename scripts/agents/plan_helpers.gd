@@ -84,5 +84,25 @@ static func free_hands(agent: RefCounted, resource: String = "") -> Array:
 	return [Plans.go_to(Plans.target(Plans.T.STORE, agent.settlement_id)), Plans.step(Plans.Op.DEPOSIT)]
 
 
+## The nearest loose pile of a resource lying about the person's home, or -1.
+static func loose_item(sim: RefCounted, agent: RefCounted, resource: String) -> int:
+	var settlement: Dictionary = sim.settlements.get_settlement(agent.settlement_id)
+	if settlement.is_empty():
+		return -1
+	var best: int = -1
+	var best_distance: float = INF
+	for id in sim.items:
+		var item: Dictionary = sim.items[id]
+		if item.resource != resource or float(item.amount) < 1.0:
+			continue
+		if distance(item.cell, settlement.center) > float(settlement.radius):
+			continue
+		var d: float = distance(item.cell, agent.cell)
+		if d < best_distance or (d == best_distance and int(id) < best):
+			best = int(id)
+			best_distance = d
+	return best
+
+
 static func option(id: String, preference: float, steps: Array) -> Dictionary:
 	return Plans.option(id, preference, steps)

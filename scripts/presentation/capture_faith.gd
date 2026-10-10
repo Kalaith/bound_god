@@ -73,7 +73,9 @@ static func _raid(main: Node3D, shot: Node) -> void:
 	var sim: RefCounted = main.sim
 	sim.set_block(sim.features.ruin.altar, preload("res://scripts/world/block_registry.gd").id("altar"), 0, "capture")
 	sim.faith.shrines[2].state = "active"
-	sim.settlements.entries[2].stock = {"berries": 30, "stone": 25, "ore": 20, "wood": 25}
+	for chest in sim.settlements.chest_cells(sim, 2):
+		for resource in ["berries", "stone", "wood", "ore"]:
+			sim.settlements.chest_add(chest, resource, 10)
 	sim.calendar.tick = sim.calendar.ticks_per_day * 11
 	var raiders: int = 0
 	for _hour in range(24 * 14):
@@ -90,10 +92,10 @@ static func _raid(main: Node3D, shot: Node) -> void:
 	sim.god.active_shrine_id = 2
 	main.avatar.set_dormant(false)
 	main.faith._process(0.0)
-	var pile: Vector3i = sim.settlements.entries[2].pile
+	var camp: Vector3i = sim.settlements.entries[2].camp
 	main.avatar.global_position = Vector3(sim.features.ruin.altar) + Vector3(1.5, 0.2, -2.5)
 	main.camera_rig.overlook = true
-	main.camera_rig.overlook_center = Vector3(pile)
+	main.camera_rig.overlook_center = Vector3(camp)
 	main.camera_rig._overlook_distance = 22.0
 	main.camera_rig._overlook_pitch = -0.7
 	main.world_view.remesh_now()

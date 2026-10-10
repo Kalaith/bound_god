@@ -2,6 +2,7 @@ extends RefCounted
 ## M10 acceptance: wolves frighten people and the frightened warn others; a
 ## wealthy, lightly defended hamlet is raided and its shrine can fall with
 ## the cause written down; empty buildings decay.
+const Stores = preload("res://tools/checks/stores.gd")
 const Sim = preload("res://scripts/sim/sim.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
@@ -37,7 +38,7 @@ func check_a_wealthy_hamlet_is_raided_and_its_shrine_can_fall():
 	sim.set_block(ruin.altar, Registry.id("altar"), 0, "test")
 	var ridge: Dictionary = sim.faith.shrines[2]
 	ridge.state = "active"
-	sim.settlements.entries[2].stock = {"berries": 30, "stone": 25, "ore": 20, "wood": 25}
+	Stores.fill(sim, 2, {"berries": 30, "stone": 25, "ore": 20, "wood": 25})
 	sim.calendar.tick = sim.calendar.ticks_per_day * 11
 	var raided: bool = false
 	var fell: Dictionary = {}

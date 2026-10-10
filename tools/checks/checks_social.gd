@@ -1,6 +1,7 @@
 extends RefCounted
 ## M7 acceptance: bonds form, friends feed the hungry, breaks override,
 ## and clashing natures sour conversation.
+const Stores = preload("res://tools/checks/stores.gd")
 const Sim = preload("res://scripts/sim/sim.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
@@ -42,12 +43,13 @@ func check_a_hungry_person_with_empty_stores_is_fed_by_a_friend():
 	sim.calendar.tick = sim.calendar.ticks_per_day * 13 / 24
 	var hungry: RefCounted = sim.agents[0]
 	var friend: RefCounted = sim.agents[1]
-	sim.settlements.entries[1].stock = {}
+	Stores.fill(sim, 1, {})
 	for agent in [hungry, friend]:
 		agent.beliefs.stock = {}
 		agent.beliefs.sites.clear()
 		agent.intention = {}
 	hungry.needs[Need.FOOD] = 12.0
+	hungry.carrying = {}
 	friend.needs[Need.FOOD] = 100.0
 	friend.carrying = {"resource": "berries", "amount": 3.0}
 	hungry.beliefs.relation(friend.id).opinion = 60.0

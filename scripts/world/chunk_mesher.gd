@@ -11,6 +11,7 @@ const SURFACE_CUTOUT: int = 1
 const SURFACE_WATER: int = 2
 const AO_LEVELS: Array[float] = [0.5, 0.68, 0.84, 1.0]
 const WATER_ID: int = 7
+const DOOR_OPEN: int = Registry.DOOR_OPEN
 const P: int = 18
 const PP: int = 324
 
@@ -243,9 +244,18 @@ static func _special(world: RefCounted, cell: Vector3i, block: int, shape: int, 
 			low = Vector3(0.35, 0.0, 0.35)
 			high = Vector3(0.65, 1.0, 0.65)
 		Registry.SHAPE_PANEL:
-			if world.block_meta(cell) % 2 == 0:
-				low.z = 0.42
-				high.z = 0.58
+			# Bit 0 is which way a door faces; bit 1 means it stands open,
+			# swung back against its hinge side.
+			var value: int = world.block_meta(cell)
+			var open: bool = value & DOOR_OPEN != 0
+			if value % 2 == 0:
+				if open:
+					high.x = 0.16
+				else:
+					low.z = 0.42
+					high.z = 0.58
+			elif open:
+				high.z = 0.16
 			else:
 				low.x = 0.42
 				high.x = 0.58
@@ -270,3 +280,11 @@ static func _special(world: RefCounted, cell: Vector3i, block: int, shape: int, 
 		for face in range(6):
 			var c: Array = CORNERS[face]
 			collision.append_array([at + c[0], at + c[1], at + c[2], at + c[0], at + c[2], at + c[3]])
+	elif shape == Registry.SHAPE_PANEL and world.block_meta(cell) & DOOR_OPEN == 0:
+		# A shut door stops the avatar; people open doors as they pass.
+		for face in range(6):
+			var c: Array = CORNERS[face]
+			var quad: Array = []
+			for corner in c:
+				quad.append(at + Vector3(lerpf(low.x, high.x, corner.x), lerpf(low.y, high.y, corner.y), lerpf(low.z, high.z, corner.z)))
+			collision.append_array([quad[0], quad[1], quad[2], quad[0], quad[2], quad[3]])

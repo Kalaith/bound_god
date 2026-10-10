@@ -32,6 +32,7 @@
 		"goal_migrate": "move to {place}",
 		"plan_eat_carried": "eat what they carry",
 		"plan_raw_stores": "berries from the stores",
+		"plan_eat_loose": "berries lying at the camp",
 		"plan_forage": "forage at a bush",
 		"plan_ask_friend_for_food": "ask a friend for food",
 		"plan_own_bed": "their own bed",

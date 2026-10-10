@@ -1,9 +1,10 @@
 extends RefCounted
 ## The god's commands beyond block edits: offering a design at the shrine
-## and moving materials between the divine stock and a settlement's stores.
+## and moving materials between the divine stock and a storage chest.
 ## Neither asks anyone to do anything; they change what people know and have.
 const Balance = preload("res://scripts/core/balance.gd")
 const Template = preload("res://scripts/building/template.gd")
+const Registry = preload("res://scripts/world/block_registry.gd")
 
 
 static func apply(sim: RefCounted, command: Dictionary) -> Dictionary:
@@ -12,6 +13,10 @@ static func apply(sim: RefCounted, command: Dictionary) -> Dictionary:
 			return _offer(sim, command)
 		"transfer":
 			return _transfer(sim, command)
+		"toggle_door":
+			return _toggle_door(sim, command)
+		"set_hotbar":
+			return _set_hotbar(sim, command)
 	if sim.faith != null:
 		return sim.faith.apply_command(sim, command)
 	return {"ok": false, "reason": "command_unknown"}
@@ -47,25 +52,60 @@ static func _offer(sim: RefCounted, command: Dictionary) -> Dictionary:
 	return {"ok": true, "reason": "offer_done", "learned": learned.size()}
 
 
-## Positive amounts go from the god to the stores, negative ones back.
+## The player's choice and order of blocks at hand: one placeable block or
+## 0 (empty) per slot.
+static func _set_hotbar(sim: RefCounted, command: Dictionary) -> Dictionary:
+	var slots: Variant = command.get("slots")
+	if not slots is Array or slots.size() != Balance.integer("avatar.hotbar_slots"):
+		return {"ok": false, "reason": "command_unknown"}
+	for block in slots:
+		if not block is int or (block != 0 and (block < 0 or block >= Registry.placeable.size() or Registry.placeable[block] == 0)):
+			return {"ok": false, "reason": "edit_unplaceable"}
+	sim.god.hotbar = slots.duplicate()
+	return {"ok": true, "reason": ""}
+
+
+## Swings a doorway open or shut: every door block stacked in it together.
+## Only the avatar is stopped by a shut door; people open doors as they pass.
+static func _toggle_door(sim: RefCounted, command: Dictionary) -> Dictionary:
+	var cell: Vector3i = command.get("cell", Vector3i(-1, -1, -1))
+	var door: int = Registry.id("door")
+	if sim.voxels.get_block(cell) != door:
+		return {"ok": false, "reason": "interact_nothing"}
+	if sim.god.dormant:
+		return {"ok": false, "reason": "edit_dormant"}
+	if not sim.in_zone(Vector3(cell) + Vector3(0.5, 0, 0.5)):
+		return {"ok": false, "reason": "edit_outside_zone"}
+	var opening: bool = sim.voxels.block_meta(cell) & Registry.DOOR_OPEN == 0
+	var at: Vector3i = cell
+	while sim.voxels.get_block(at + Vector3i.DOWN) == door:
+		at += Vector3i.DOWN
+	while sim.voxels.get_block(at) == door:
+		var facing: int = sim.voxels.block_meta(at) & 1
+		sim.set_block(at, door, facing | (Registry.DOOR_OPEN if opening else 0))
+		at += Vector3i.UP
+	return {"ok": true, "reason": "door_opened" if opening else "door_closed"}
+
+
+## Moves goods between the divine stock and one storage chest: positive
+## amounts go into the chest, negative ones back to the god.
 static func _transfer(sim: RefCounted, command: Dictionary) -> Dictionary:
-	var settlement_id: int = int(command.get("settlement", -1))
+	var chest: Vector3i = command.get("chest", Vector3i(-1, -1, -1))
 	var resource: String = str(command.get("resource", ""))
 	var amount: int = int(command.get("amount", 0))
-	var settlement: Dictionary = sim.settlements.get_settlement(settlement_id)
-	if settlement.is_empty() or amount == 0 or resource.is_empty() or resource == "soil":
+	if not sim.settlements.chests.has(chest) or amount == 0 or resource.is_empty() or resource == "soil":
 		return {"ok": false, "reason": "transfer_invalid"}
 	if sim.god.dormant:
 		return {"ok": false, "reason": "edit_dormant"}
-	if not sim.in_zone(Vector3(settlement.pile)):
+	if not sim.in_zone(Vector3(chest) + Vector3(0.5, 0, 0.5)):
 		return {"ok": false, "reason": "edit_outside_zone"}
 	if amount > 0:
-		var given: int = sim.settlements.add(sim, settlement_id, resource, mini(amount, sim.god.stock(resource)))
+		var given: int = sim.settlements.chest_add(chest, resource, mini(amount, sim.god.stock(resource)))
 		if given <= 0:
-			return {"ok": false, "reason": "transfer_nothing"}
+			return {"ok": false, "reason": "transfer_full" if sim.god.stock(resource) > 0 else "transfer_nothing"}
 		sim.god.add_stock(resource, -given)
 		return {"ok": true, "reason": "transfer_given", "amount": given}
-	var taken: int = sim.settlements.take(settlement_id, resource, -amount)
+	var taken: int = sim.settlements.chest_take(chest, resource, -amount)
 	if taken <= 0:
 		return {"ok": false, "reason": "transfer_nothing"}
 	sim.god.add_stock(resource, taken)

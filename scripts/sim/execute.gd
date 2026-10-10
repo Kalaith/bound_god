@@ -36,12 +36,26 @@ static func resolve_target(sim: RefCounted, agent: RefCounted, where: Dictionary
 			var other: RefCounted = sim.agents[id]
 			return sim.structure_access(other.inside, agent.cell) if other.inside >= 0 else other.cell
 		T.STORE:
-			return sim.settlements.store_access(sim, int(where.id), agent.cell)
+			var purpose: Array = _store_purpose(agent)
+			return sim.settlements.store_access(sim, int(where.id), agent.cell, purpose[0], purpose[1])
 		T.SHRINE:
 			return sim.faith.shrine_access(sim, int(where.id), agent.cell) if sim.faith != null else NONE
 		T.CONSTRUCTION:
 			return sim.construction_access(int(where.id), agent.cell)
 	return NONE
+
+
+## What the walk to the stores is for, read from the next step of the plan:
+## [resource to take, or "", whether it is to store a load].
+static func _store_purpose(agent: RefCounted) -> Array:
+	var plan: Dictionary = agent.intention.get("plan", {}) if not agent.intention.is_empty() else {}
+	var next: int = int(plan.get("cursor", 0)) + 1
+	if plan.is_empty() or next >= plan.steps.size():
+		return ["", not agent.carrying.is_empty()]
+	var step: Dictionary = plan.steps[next]
+	if int(step.op) == Op.TAKE_STOCK:
+		return [str(step.resource), false]
+	return ["", int(step.op) == Op.DEPOSIT or not agent.carrying.is_empty()]
 
 
 static func _near(a: Vector3i, b: Vector3i) -> bool:
@@ -100,7 +114,7 @@ static func _learn(sim: RefCounted, agent: RefCounted, step: Dictionary, reason:
 		agent.beliefs.forget_site(site)
 		agent.beliefs.note_failure("site:%d" % site, now)
 		return
-	if op == Op.TAKE_STOCK and reason == Fail.STOCK_EMPTY:
+	if op == Op.TAKE_STOCK and reason == Fail.STOCK_EMPTY or op == Op.GO_TO and int(step.target.type) == T.STORE:
 		agent.beliefs.stock = sim.settlements.stock_of(agent.settlement_id).duplicate()
 	elif op == Op.GO_TO and int(step.target.type) == T.STRUCTURE:
 		agent.beliefs.note_failure("structure:%d" % int(step.target.id), now)

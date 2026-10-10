@@ -6,7 +6,7 @@ extends RefCounted
 const ACTIONS: Dictionary = {
 	"move_left": "Move left", "move_right": "Move right",
 	"move_forward": "Move forward", "move_back": "Move back",
-	"jump": "Jump", "interact": "Interact / shrine", "inspect": "Inspect person",
+	"jump": "Jump", "interact": "Use / shrine", "inspect": "Inspect person", "inventory": "Blocks and hotbar",
 	"rotate_block": "Rotate block", "design_tool": "Design tool",
 	"zoom_in": "Zoom in", "zoom_out": "Zoom out",
 	"toggle_chronicle": "Chronicle", "toggle_settlement": "Settlement",
@@ -34,11 +34,18 @@ static func allowed(code: int) -> bool:
 	return OS.find_keycode_from_string(OS.get_keycode_string(code)) == code
 
 
+## Bindings saved before an action existed are still valid: the missing
+## actions take their defaults when normalized.
 static func valid(mapping: Variant) -> bool:
-	if not mapping is Dictionary or mapping.size() != ACTIONS.size():
+	if not mapping is Dictionary or mapping.size() > ACTIONS.size():
 		return false
 	var used: Array[int] = []
+	for action in mapping:
+		if not ACTIONS.has(action):
+			return false
 	for action in ACTIONS:
+		if not mapping.has(action):
+			continue
 		var slots: Variant = mapping.get(action)
 		if not slots is Array or slots.size() != 2:
 			return false
@@ -74,8 +81,24 @@ static func change_error(mapping: Dictionary, action: String, slot: int, code: i
 static func normalized(mapping: Dictionary) -> Dictionary:
 	# JSON numbers arrive as floats; keep runtime slots consistently integral.
 	var result: Dictionary = {}
+	var used: Array[int] = []
 	for action in ACTIONS:
-		result[action] = [int(mapping[action][0]), int(mapping[action][1])]
+		if mapping.has(action):
+			result[action] = [int(mapping[action][0]), int(mapping[action][1])]
+			used.append_array(result[action])
+	# An action newer than the saved bindings gets its default key, or the
+	# first free one when the player already uses that key for something else.
+	var defaults_now: Dictionary = defaults()
+	for action in ACTIONS:
+		if result.has(action):
+			continue
+		var code: int = int(defaults_now[action][0])
+		for spare in [code, KEY_U, KEY_O, KEY_Y, KEY_H, KEY_G, KEY_N, KEY_M]:
+			if not used.has(spare):
+				code = spare
+				break
+		result[action] = [code, 0]
+		used.append(code)
 	return result
 
 

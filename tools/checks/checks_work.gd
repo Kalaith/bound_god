@@ -1,6 +1,7 @@
 extends RefCounted
 ## M6 acceptance: an offered dwelling is built by people who chose to, with
 ## sites, materials and labour that nobody assigned.
+const Stores = preload("res://tools/checks/stores.gd")
 const Sim = preload("res://scripts/sim/sim.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Template = preload("res://scripts/building/template.gd")
@@ -17,8 +18,11 @@ static func cottage() -> Dictionary:
 
 func check_the_cottage_moment():
 	var sim: RefCounted = Sim.create(11)
-	# The travellers first see the god beside the tree; then it offers the design.
+	# The travellers first see the god beside the tree, which sets a chest by
+	# their camp as the first steps teach; then it offers the design.
 	sim.run_ticks(12)
+	if Stores.place_chest(sim, 1).x < 0:
+		return "no room for a chest by the camp"
 	var result: Dictionary = sim.apply_command({"type": "offer_template", "template": cottage()})
 	if int(result.get("learned", 0)) < 2:
 		return "the travellers did not learn the offered design: %s" % str(result)
@@ -44,16 +48,15 @@ func check_the_cottage_moment():
 
 func check_a_site_without_means_is_not_started() -> String:
 	var sim: RefCounted = Sim.create(21, {"world": "flat", "size": Vector3i(64, 16, 64), "ground": 4})
-	sim.settlements.entries[1].stock = {"berries": 30}
+	Stores.fill(sim, 1, {"berries": 30})
 	sim.run_ticks(12)
 	sim.apply_command({"type": "offer_template", "template": cottage()})
 	sim.run_ticks(sim.calendar.ticks_per_day)
 	if not sim.construction.sites.is_empty():
 		return "a site was started with no materials believed anywhere"
-	sim.settlements.entries[1].stock = {"berries": 30, "wood": 20}
-	sim.settlements.entries[1]["stock"]["stone"] = 20
-	sim.settlements.entries[1]["stock"]["thatch"] = 10
-	sim.run_ticks(sim.calendar.ticks_per_day)
+	Stores.fill(sim, 1, {"berries": 30, "wood": 20, "stone": 20, "thatch": 10})
+	# People learn what the chests hold by using them or at the day's end.
+	sim.run_ticks(sim.calendar.ticks_per_day * 2)
 	if sim.construction.sites.is_empty():
 		return "materials in the stores did not lead anyone to found a home"
 	for agent in sim.agents:

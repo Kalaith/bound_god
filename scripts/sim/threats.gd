@@ -181,10 +181,14 @@ func _raider(sim: RefCounted, entry: Dictionary) -> void:
 				entry.state = "retreat"
 				sim.raids.on_turned_back(sim, entry, "cause_veiled")
 				return
-			if Vector2(entry.cell.x - settlement.pile.x, entry.cell.z - settlement.pile.z).length() <= 2.0:
+			# Raiders make for the nearest chest with goods in it, or the camp.
+			var goal: Vector3i = sim.settlements.store_access(sim, int(settlement.id), entry.cell)
+			if goal.x < 0:
+				goal = settlement.camp
+			if Vector2(entry.cell.x - goal.x, entry.cell.z - goal.z).length() <= 1.5:
 				entry.state = "loot"
 			else:
-				_path_to(sim, entry, settlement.pile)
+				_path_to(sim, entry, goal)
 		"loot":
 			_loot(sim, entry, settlement)
 		"altar":
@@ -213,12 +217,12 @@ func _raider(sim: RefCounted, entry: Dictionary) -> void:
 func _loot(sim: RefCounted, entry: Dictionary, settlement: Dictionary) -> void:
 	var room: int = int(Balance.number("threats.raider.carry")) - int(entry.carry.get("amount", 0))
 	var taken: int = 0
-	var resources: Array = settlement.stock.keys()
+	var resources: Array = sim.settlements.stock_of(int(settlement.id)).keys()
 	resources.sort()
 	for resource in resources:
 		if room <= 0:
 			break
-		var got: int = sim.settlements.take(int(settlement.id), resource, room)
+		var got: int = sim.settlements.take(sim, int(settlement.id), resource, room, entry.cell)
 		if got > 0:
 			entry.carry = {"resource": resource, "amount": int(entry.carry.get("amount", 0)) + got}
 			sim.raids.note_loot(int(entry.band), resource, got)

@@ -138,6 +138,10 @@ zoom_out={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":45), Object(InputEventJoypadButton,"button_index":12)]
 }
+inventory={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":73)]
+}
 toggle_chronicle={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"physical_keycode":74), Object(InputEventJoypadButton,"button_index":14)]

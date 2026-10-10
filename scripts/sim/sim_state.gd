@@ -5,8 +5,11 @@ extends RefCounted
 ## the running world too, so the saved world and the one that plays on share
 ## the same graph and continue identically.
 const Agent = preload("res://scripts/agents/agent.gd")
+const Migration = preload("res://scripts/sim/save_migration.gd")
 
-const SCHEMA: int = 1
+const SCHEMA: int = 2
+## Older schemas that still load, migrated on the way in.
+const MIGRATES: Array[int] = [1]
 
 
 ## {"sim": Dictionary, "chunks": Dictionary} for a running sim.
@@ -38,7 +41,8 @@ static func capture(sim: RefCounted) -> Dictionary:
 static func problem(state: Variant, chunks: Variant) -> String:
 	if not state is Dictionary or not chunks is Dictionary:
 		return "save_damaged"
-	if int(state.get("schema_version", -1)) != SCHEMA:
+	var version: int = int(state.get("schema_version", -1))
+	if version != SCHEMA and not MIGRATES.has(version):
 		return "save_version"
 	for key in ["seed", "options", "rng_seed", "rng_state", "tick", "voxel_meta", "sites", "structures", "settlements",
 			"settlement_life", "construction", "items", "next_item_id", "agents", "god", "chronicle", "faith", "requests",
@@ -65,7 +69,13 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	sim.calendar.tick = int(state.tick)
 	sim.sites.from_dict(state.sites)
 	sim.structures.from_dict(state.structures)
-	sim.settlements.from_dict(state.settlements)
+	var old_stock: Dictionary = {}
+	if int(state.schema_version) == 1:
+		var migrated: Dictionary = Migration.settlements_from_1(sim, state.settlements)
+		old_stock = migrated.stocks
+		sim.settlements.from_dict(migrated)
+	else:
+		sim.settlements.from_dict(state.settlements)
 	sim.settlement_life.from_dict(state.settlement_life)
 	sim.construction.from_dict(state.construction)
 	sim.items = state.items
@@ -73,6 +83,8 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	sim.agents = []
 	for data in state.agents:
 		sim.agents.append(Agent.from_dict(data))
+	if int(state.schema_version) == 1:
+		state.god["hotbar"] = Migration.empty_hotbar()
 	sim.god.from_dict(state.god)
 	sim.chronicle.from_dict(state.chronicle)
 	sim.faith.from_dict(state.faith)
@@ -83,6 +95,7 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	sim.kindled = state.kindled
 	sim.veils = state.veils
 	sim.nav.build()
+	Migration.store_old_stock(sim, old_stock)
 	sim.rng.seed = int(state.rng_seed)
 	sim.rng.state = int(state.rng_state)
 	sim.after_restore()

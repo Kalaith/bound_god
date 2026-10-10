@@ -38,6 +38,8 @@ Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) plan
 
 - M12 Vertical slice polish: pause menu on Esc (return, save, settings reusing the title's settings screen, save and leave to title), audio bus layout (Master, Music, Effects) and a synthesised sound director (wind by hour, place and break, miracle chime, prayer bell; no audio assets), a first-steps guide line under the clock that points to the next step of the GDD §14 moment (gather, build, capture, offer, miracle, carry the name, transfer, rest), controls hint moved bottom-left clear of the hotbar. Presentation scripts cost under 1 ms a frame (measured per node). `publish.ps1 -BuildOnly` produced a Windows build that boots and exits cleanly; nothing was deployed. Captures: `m12_first_steps_1080.png`, `m12_first_steps_720.png`.
 
+- Stores in chests and things to use (user request, 2026-10-10): settlement stock is only what lies in storage chests in its area, each chest holding its own goods (`settlements.chests`, save schema 2 with a schema 1 migration that puts the old pooled stock into chests and the overflow loose at the camp). The invisible pile is gone; its cell is now the settlement's **camp**. A walk to the stores reads the next plan step: taking leads to the nearest chest holding the resource, storing to the nearest with room (or the camp, where the load is set down loose). Loose goods feed the hungry (`eat_loose`) and builders but are hauled only when a chest has room. A broken chest spills its goods. The travellers start with berries in their packs; the hamlet keeps its goods in two chests on its square. Interact uses the block under the crosshair (chest panel, bed rest, workbench designs, hearth kindle, door open/shut with a prompt under the crosshair); a shut door collides with the avatar only. The hotbar starts empty and is filled and ordered on the blocks screen (I), kept in the god's state by an unlogged `set_hotbar` command. The first steps now begin: gather, put a chest in the hotbar, place it by the tree, fill it, then build a home. Checks: six scenarios in `checks_stores.gd`. Captures: `stores_*_1080.png`, `stores_blocks_720.png`, `stores_chest_720.png`.
+
 ## Next
 
 - M13 (see `IMPLEMENTATION_PLAN.md` §4): fresh-player playtests of the GDD §14.1 moment and balance from what they find; contextual onboarding; profiling at 60 detailed people; the region feasibility spike; save schema migrations with fixture saves.
@@ -67,6 +69,8 @@ Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) plan
 - A lash-out break spends itself on one fight, then the break is sulking: repeated insults otherwise killed both people.
 - RestoreShrine (confirmed by the user) is open to Believers (utility 0.35 × devotion) as well as the Devout (0.6 ×): with only the Devout the ridge altar was never restored by its own people.
 - `tools/scratch/` holds local diagnostic probes and is git-ignored.
+- People learn what the chests hold when they use one, pass within reach of one, or at the day's end; they do not see into chests from afar.
+- Key bindings saved before an action existed still load: the new action takes its default key, or the first free one.
 - Valley layout: sacred tree at the valley centre (80,80), ridge ruin at (128,128) (~68 blocks), hamlet at (112,134). The tree's first circle (20 blocks) always holds a few trees, stone outcrops and berry bushes. The river runs beside the tree-ridge axis so nobody must cross water.
 
 ## Questions for the user (decided, revisit if you disagree)
@@ -81,6 +85,9 @@ Phase 1 (vertical slice, M0–M12) complete. Phase 2 (full game, M13–M24) plan
 - Raids start on day 12 and can strike a shrine the player has just helped raise. Kept per GDD; confirm it does not feel unfair in play.
 
 ## Known issues
+
+- Not verified by eye: the hamlet's two chests (placed and filled, confirmed by data); a capture cannot leave the presence zone of the tree.
+- People do not yet build storage chests themselves; a storehouse design offered to them still adds chests.
 
 - Not verified: the GDD §14 moment by a fresh player in under an hour, frame rate with 30 people at x10, and audio levels by ear (sounds are synthesised and only checked to load and play without errors).
 

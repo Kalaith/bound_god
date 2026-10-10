@@ -36,7 +36,8 @@ Non-goals (from the concept): not a Minecraft remake, not a survival-crafting tr
 
 - Third-person divine avatar (about 1.8 blocks tall, glowing, slightly translucent at the edges). Walks, sprints, jumps 1 block, climbs 1-block steps automatically.
 - **Bound:** the avatar can only exist inside the **presence zone** of the shrine it is manifested at. Walking to the edge meets a soft shimmering wall; the avatar cannot pass.
-- **Hands-on actions:** break block, place block, pick up and drop loose items, interact (open the shrine menu, inspect an NPC, read a sign-post template).
+- **Hands-on actions:** break block, place block, pick up and drop loose items, inspect an NPC, read a sign-post template, and **use** the block under the crosshair: a storage chest opens its contents, a bed offers rest, a workbench opens the design library, a hearth is kindled, a door swings open or shut (a shut door stops only the avatar; people open doors as they pass), an altar or the sacred tree opens the shrine menu.
+- **Hotbar:** nine slots that start empty. The player chooses which placeable blocks go in them and in what order on the blocks screen; nothing is added or removed by itself.
 - The avatar does not eat, sleep or die. It can be **expelled** (see §7.5).
 - NPCs can see the avatar. Seeing it is an event in their minds (awe, fear, curiosity), so where and how the player appears matters.
 
@@ -91,7 +92,7 @@ Breaking a block yields its resource (log → wood, stone → stone, ore → ore
 | Grain | Farm plots (**Later**) | Food (meals) |
 | Ore | Ridge ore blocks | Trade with the ridge hamlet; tools (**Later**) |
 
-Each settlement has a **stockpile** (the sum of its storage chests). Resources in the world are tracked as **resource sites** (a tree, a bush, an outcrop) so NPC beliefs can remember them, exactly as Final Landing's nodes.
+Each settlement has a **stockpile**: the sum of the storage chests standing in its area, each chest holding its own goods (40 units). People walk to the chest that holds what they need, and store into the nearest chest with room. While no chest has room, loads are set down loose at the settlement's camp; loose goods can still be eaten, built with and hauled into a chest later, but they are never counted as stock. The god's divine stock is never the settlement's. Resources in the world are tracked as **resource sites** (a tree, a bush, an outcrop) so NPC beliefs can remember them, exactly as Final Landing's nodes.
 
 ### 4.4 Time
 
@@ -105,7 +106,7 @@ Each settlement has a **stockpile** (the sum of its storage chests). Resources i
 ### 5.1 Direct construction
 
 - Crosshair targets a block face; place onto it or break it. Hold to repeat. Rotate orientable blocks (door, bed, stairs later).
-- The avatar carries a divine stock of resources gathered by breaking blocks. Players can deposit into or withdraw from a settlement stockpile at a storage chest, which is the main way the god supplies a village with materials.
+- The avatar carries a divine stock of resources gathered by breaking blocks. Players can deposit into or withdraw from a storage chest by using it, which is the main way the god supplies a village with materials. The first steps teach this as the god's first build: a storage chest by the sacred tree, then filling it.
 - **Decision:** no hunger, durability or crafting for the avatar. The friction is materials and reach, not survival.
 
 ### 5.2 Capturing a template
@@ -384,7 +385,9 @@ Post requests → followers travel and preach → a remote shrine rises → tran
 
 | Screen / element | Contents |
 | --- | --- |
-| HUD (small) | Time and speed, current shrine name, Favour, renown, divine stock (top materials), crosshair, prayer toast feed (last 3) |
+| HUD (small) | Time and speed, current shrine name, Favour, renown, divine stock (top materials), crosshair with a use prompt for the block under it, hotbar, prayer toast feed (last 3) |
+| Blocks screen (I) | Every placeable block with its material and how much the god holds; the nine hotbar slots to fill, reorder and empty |
+| Chest panel (use a chest) | What the chest holds beside the divine stock, give and take, and which settlement uses it |
 | Shrine menu (interact with altar) | Shrines list with status and transfer, offer template, post request, miracle list with costs, rest |
 | Design tool | Corner marking, capture preview, function, materials bill, name, save |
 | Template library | Private and offered designs, adoption counts per settlement, import/export |

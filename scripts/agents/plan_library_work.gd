@@ -114,7 +114,7 @@ static func _build(sim: RefCounted, agent: RefCounted, site_id: int) -> Array:
 				Plans.step(Op.TAKE_STOCK, {"resource": resource, "amount": amount}), to_site, deliver, place]))
 			break
 	var board: Dictionary = sim.settlement_life.board(agent.settlement_id)
-	for item_id in board.get("items", []):
+	for item_id in board.get("loose", []):
 		var item: Dictionary = sim.items.get(item_id, {})
 		if not item.is_empty() and missing.has(item.resource):
 			result.append(H.option("fetch_loose", 0.8, H.free_hands(agent, item.resource) + [Plans.go_cell(item.cell), Plans.step(Op.PICK_UP, {"item": item_id}), to_site, deliver, place]))

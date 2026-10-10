@@ -8,6 +8,7 @@ const Template = preload("res://scripts/building/template.gd")
 const TextForCapture = preload("res://scripts/core/text.gd")
 const Data = preload("res://scripts/core/data.gd")
 const CapturePeople = preload("res://scripts/presentation/capture_people.gd")
+const CaptureStores = preload("res://scripts/presentation/capture_stores.gd")
 const CaptureSettlement = preload("res://scripts/presentation/capture_settlement.gd")
 const CaptureFaith = preload("res://scripts/presentation/capture_faith.gd")
 const CaptureTime = preload("res://scripts/presentation/capture_time.gd")
@@ -34,6 +35,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 		return
 	if scenario.begins_with("people_"):
 		CapturePeople.arrange(main, shot, scenario)
+		return
+	if scenario.begins_with("stores_"):
+		CaptureStores.arrange(main, shot, scenario)
 		return
 	match scenario:
 		"design_library", "design_box", "design_invalid":
@@ -146,6 +150,8 @@ static func _build_test(main: Node3D, shot: Node) -> void:
 	main.camera_rig.pitch = -0.55
 	sim.god.add_stock("wood", 40)
 	sim.god.add_stock("thatch", 10)
+	var Registry = preload("res://scripts/world/block_registry.gd")
+	sim.apply_command({"type": "set_hotbar", "slots": [Registry.id("planks"), 0, Registry.id("thatch"), 0, 0, 0, 0, 0, 0]})
 	for frame in range(10):
 		await main.get_tree().process_frame
 	var placed: int = 0

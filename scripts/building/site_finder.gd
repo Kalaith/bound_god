@@ -46,11 +46,11 @@ static func find(sim: RefCounted, template: RefCounted, settlement: Dictionary) 
 		if a.origin != b.origin:
 			return sim.voxels.index_of(a.origin) < sim.voxels.index_of(b.origin)
 		return a.rotation < b.rotation)
-	var pile: Vector3i = settlement.pile
+	var camp: Vector3i = settlement.camp
 	for i in range(mini(candidates.size(), 4)):
 		var choice: Dictionary = candidates[i]
 		var door_out: Vector3i = sim.nav.nearest_walkable(choice.outside, 1)
-		if door_out.x >= 0 and (door_out == pile or not sim.nav.find_path(door_out, pile).is_empty()):
+		if door_out.x >= 0 and (door_out == camp or not sim.nav.find_path(door_out, camp).is_empty()):
 			choice["order"] = _order(sim, template, choice)
 			return choice
 	return {}

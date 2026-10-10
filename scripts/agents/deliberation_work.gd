@@ -120,7 +120,7 @@ static func _actionable(sim: RefCounted, agent: RefCounted, job: Dictionary, boa
 	for resource in job.missing:
 		if agent.beliefs.believes_stock(resource) or agent.carried(resource) >= 1.0:
 			return true
-		for item_id in board.items:
+		for item_id in board.get("loose", []):
 			if sim.items.has(item_id) and sim.items[item_id].resource == resource:
 				return true
 	return false
@@ -189,8 +189,8 @@ static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float
 		return
 	var id: int = agent.settlement_id
 	var wants: Array = []
-	var total: int = sim.settlements.total(id)
-	if total >= int(sim.settlements.capacity(sim, id) * 0.85):
+	var capacity: int = sim.settlements.capacity(sim, id)
+	if capacity > 0 and sim.settlements.total(id) >= int(capacity * 0.85):
 		wants.append(["storehouse", "reason_stores_full", 0.9])
 	if int(board.get("housing_deficit", 0)) >= 3:
 		wants.append(["shelter", "reason_many_homeless", 0.8])

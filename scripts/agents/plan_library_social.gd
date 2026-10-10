@@ -77,7 +77,7 @@ static func _migrate(sim: RefCounted, agent: RefCounted, settlement_id: int, dep
 	var settlement: Dictionary = sim.settlements.get_settlement(settlement_id)
 	var result: Array = []
 	if not settlement.is_empty():
-		result.append(H.option("move_there", 1.0, [Plans.go_cell(settlement.pile), Plans.step(Op.JOIN, {"settlement": settlement_id})]))
+		result.append(H.option("move_there", 1.0, [Plans.go_cell(settlement.camp), Plans.step(Op.JOIN, {"settlement": settlement_id})]))
 	var edge: Vector3i = valley_edge(sim, agent) if departing else Vector3i(-1, -1, -1)
 	if edge.x >= 0:
 		result.append(H.option("leave_the_valley", 0.2, [Plans.go_cell(edge), Plans.step(Op.LEAVE)]))

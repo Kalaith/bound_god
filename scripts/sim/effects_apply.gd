@@ -65,7 +65,7 @@ static func _take_stock(sim: RefCounted, agent: RefCounted, action: Dictionary) 
 	if not agent.carrying.is_empty() and agent.carrying.resource != resource:
 		agent.step_result = {"took": 0}
 		return
-	var taken: int = sim.settlements.take(int(action.settlement), resource, int(action.amount))
+	var taken: int = sim.settlements.take(sim, int(action.settlement), resource, int(action.amount), agent.cell)
 	if taken > 0:
 		agent.carrying = {"resource": resource, "amount": agent.carried(resource) + taken}
 	agent.step_result = {"took": taken}
@@ -79,12 +79,12 @@ static func _deposit(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 		return
 	var resource: String = agent.carrying.resource
 	var whole: int = int(floor(float(agent.carrying.amount)))
-	var stored: int = sim.settlements.add(sim, int(action.settlement), resource, whole)
+	var stored: int = sim.settlements.add(sim, int(action.settlement), resource, whole, agent.cell)
 	var left: float = float(agent.carrying.amount) - stored
 	if left > 0.05:
 		agent.carrying.amount = left
 		if stored == 0:
-			# The stores are full: set it down beside them for later.
+			# No chest here has room: set it down loose for later.
 			sim.drop_item(agent.cell, resource, left)
 			agent.carrying = {}
 	else:
@@ -202,7 +202,7 @@ static func _join(sim: RefCounted, agent: RefCounted, settlement_id: int) -> voi
 	var from: String = sim.settlements.get_settlement(agent.settlement_id).get("name", "")
 	sim.set_home(agent, -1)
 	sim.settlements.join(agent, settlement_id)
-	agent.beliefs.stock = settlement.stock.duplicate()
+	agent.beliefs.stock = sim.settlements.stock_of(settlement_id).duplicate()
 	for id in agent.beliefs.known_templates:
 		if not settlement.known_templates.has(id):
 			settlement.known_templates.append(id)

@@ -21,7 +21,8 @@ const AgentViews = preload("res://scripts/presentation/agent_views.gd")
 const Inspector = preload("res://scripts/presentation/ui/inspector.gd")
 const PeopleController = preload("res://scripts/presentation/people_controller.gd")
 const ConstructionView = preload("res://scripts/presentation/construction_view.gd")
-const StoresPanel = preload("res://scripts/presentation/ui/stores_panel.gd")
+const InteractController = preload("res://scripts/presentation/interact_controller.gd")
+const InventoryScreen = preload("res://scripts/presentation/ui/inventory_screen.gd")
 const SettlementPanel = preload("res://scripts/presentation/ui/settlement_panel.gd")
 const FaithController = preload("res://scripts/presentation/faith_controller.gd")
 const RequestsPanel = preload("res://scripts/presentation/ui/requests_panel.gd")
@@ -51,7 +52,8 @@ var agent_views: Node3D
 var inspector: Control
 var people: Node
 var construction_view: Node3D
-var stores_panel: Control
+var interaction: Node
+var inventory: Control
 var settlement_panel: Control
 var faith: Node
 var requests_panel: Control
@@ -152,13 +154,19 @@ func _start() -> void:
 	construction_view = ConstructionView.new()
 	construction_view.sim = sim
 	add_child(construction_view)
-	stores_panel = StoresPanel.new()
-	stores_panel.sim = sim
-	ui_layer.add_child(stores_panel)
-	stores_panel.closed.connect(_close_stores)
-	stores_panel.transfer.connect(func(id: int, resource: String, amount: int) -> void:
-		var result: Dictionary = sim.apply_command({"type": "transfer", "settlement": id, "resource": resource, "amount": amount})
-		hud.flash(Text.label(result.reason), not result.ok))
+	interaction = InteractController.new()
+	interaction.main = self
+	interaction.sim = sim
+	add_child(interaction)
+	inventory = InventoryScreen.new()
+	inventory.sim = sim
+	ui_layer.add_child(inventory)
+	inventory.closed.connect(func() -> void:
+		inventory.hide()
+		resume_world_input())
+	inventory.hotbar_changed.connect(func(slots: Array, selected: int) -> void:
+		sim.apply_command({"type": "set_hotbar", "slots": slots})
+		builder.select(selected))
 	settlement_panel = SettlementPanel.new()
 	settlement_panel.sim = sim
 	ui_layer.add_child(settlement_panel)
@@ -269,11 +277,12 @@ func _hud_state() -> Dictionary:
 	return {
 		"clock": _clock_text(),
 		"stock": sim.god.divine_stock,
-		"hotbar": builder.hotbar,
+		"hotbar": builder.hotbar(),
 		"selected": builder.selected,
 		"shrine": faith.shrine_line(),
 		"prayers": faith.prayer_lines(),
 		"hint": design_tool.hint() if design_tool.active else Text.label("hud_controls"),
+		"prompt": interaction.prompt() if accepts_world_input() else "",
 		"guide": _guide_text,
 		"hotbar_visible": not design_tool.active and not library_screen.visible,
 		"crosshair": Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not capture_request.is_empty(),
@@ -281,7 +290,7 @@ func _hud_state() -> Dictionary:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if library_screen != null and _modal_open():
+	if library_screen != null and modal_open():
 		return
 	if event.is_action_pressed("design_tool"):
 		design_tool.finish()
@@ -299,8 +308,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("speed_down"):
 		driver.set_speed(driver.speed_index - 1)
 	elif event.is_action_pressed("interact"):
-		if not faith.try_open_menu():
-			_open_stores()
+		interaction.use()
+	elif event.is_action_pressed("inventory"):
+		pause_world_input()
+		inventory.open(builder.selected)
 	elif event.is_action_pressed("quick_save"):
 		world_io.save()
 	elif event.is_action_pressed("toggle_chronicle"):
@@ -358,10 +369,12 @@ func _apply_settings(store: RefCounted) -> void:
 
 
 ## Screens that take the world's input while open.
-func _modal_open() -> bool:
+func modal_open() -> bool:
 	if settings_screen != null and settings_screen.visible:
 		return true
-	for screen in [library_screen, stores_panel, faith.menu, requests_panel, rest_overlay, chronicle_screen, pause_menu]:
+	if interaction.is_open() or inventory.visible:
+		return true
+	for screen in [library_screen, faith.menu, requests_panel, rest_overlay, chronicle_screen, pause_menu]:
 		if screen.visible:
 			return true
 	return false
@@ -369,7 +382,7 @@ func _modal_open() -> bool:
 
 ## Modal screens take the world's input; the inspector does not.
 func accepts_world_input() -> bool:
-	return library_screen != null and not _modal_open()
+	return library_screen != null and not modal_open()
 
 
 func _offer(design: RefCounted) -> void:
@@ -379,28 +392,20 @@ func _offer(design: RefCounted) -> void:
 	library_screen._refresh()
 
 
-## Interact beside a settlement's pile or chest opens its stores.
-func _open_stores() -> void:
-	var here := Vector3i(avatar.global_position.floor())
-	for id in sim.settlements.ids():
-		var near: bool = Vector3(sim.settlements.entries[id].pile).distance_to(Vector3(here)) <= 4.5
-		for chest in sim.settlements.chest_cells(sim, id):
-			near = near or Vector3(chest).distance_to(Vector3(here)) <= 4.5
-		if near:
-			builder.enabled = false
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-			stores_panel.open(id)
-			return
-	hud.flash(Text.label("stores_none_near"), true)
-
-
+## The shrine menu's Stores: the settlement's nearest chest in the presence.
 func open_stores_for(id: int) -> void:
-	if not sim.settlements.entries.has(id):
-		hud.flash(Text.label("stores_none_near"), true)
-		return
+	interaction.open_settlement_chest(id)
+
+
+## Screens opened from the world free the mouse and stop building.
+func pause_world_input() -> void:
 	builder.enabled = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	stores_panel.open(id)
+
+
+func resume_world_input() -> void:
+	builder.enabled = true
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func open_requests() -> void:
@@ -416,14 +421,12 @@ func rest(days: float) -> void:
 	rest_overlay.begin(days)
 
 
-func _close_stores() -> void:
-	stores_panel.hide()
-	builder.enabled = true
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-
-
 func restore_overlook_center() -> void:
 	camera_rig.overlook_center = sim.zone_center()
+
+
+func open_library() -> void:
+	_open_library()
 
 
 func _open_library(design: RefCounted = null) -> void:

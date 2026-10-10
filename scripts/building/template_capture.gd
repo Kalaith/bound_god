@@ -45,8 +45,9 @@ static func capture(world: RefCounted, a: Vector3i, b: Vector3i, title: String) 
 					design.palette.append(block_name)
 				var index: int = design.index_of(local)
 				design.cells[index] = design.palette.find(block_name)
-				if world.block_meta(cell) != 0:
-					design.meta[index] = world.block_meta(cell)
+				# A design keeps which way its doors face, not whether they stand open.
+				if block_name == "door" and world.block_meta(cell) & 1 != 0:
+					design.meta[index] = 1
 	design.id = "design_" + (str(design.size) + str(design.cells) + str(design.meta)).sha256_text().left(16)
 	design.recompute()
 	return Template.from_dict(design.to_dict())

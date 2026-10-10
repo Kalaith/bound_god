@@ -10,6 +10,8 @@ const SHAPE_PANEL: int = 2
 const SHAPE_SLAB: int = 3
 const SHAPE_POST: int = 4
 const SHAPES: Array[String] = ["cube", "cross", "panel", "slab", "post"]
+## Door meta: bit 0 is the facing, this bit means the door stands open.
+const DOOR_OPEN: int = 2
 
 static var _built: bool = false
 static var solid := PackedByteArray()

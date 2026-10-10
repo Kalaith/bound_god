@@ -12,8 +12,8 @@ const RESERVE: Dictionary = {"wood": [12, 2], "stone": [8, 1], "thatch": [8, 1],
 
 static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 	var id: int = int(settlement.id)
-	var board: Dictionary = {"builds": [], "repairs": [], "gather_demand": {}, "items": [], "threats": []}
-	var stock: Dictionary = settlement.stock
+	var board: Dictionary = {"builds": [], "repairs": [], "gather_demand": {}, "items": [], "loose": [], "threats": []}
+	var stock: Dictionary = sim.settlements.stock_of(id)
 	var site_need: Dictionary = {}
 	for site_id in sim.construction.in_settlement(id):
 		var missing: Dictionary = sim.construction.missing(site_id)
@@ -21,10 +21,14 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 		for resource in missing:
 			site_need[resource] = int(site_need.get(resource, 0)) + int(missing[resource])
 	var loose: Dictionary = {}
+	# Loose goods are worth hauling only when a chest has room for them.
+	var room: bool = sim.settlements.capacity(sim, id) > sim.settlements.total(id)
 	for item_id in _sorted(sim.items.keys()):
 		var item: Dictionary = sim.items[item_id]
 		if _distance(item.cell, settlement.center) <= float(settlement.radius):
-			board.items.append(item_id)
+			board.loose.append(item_id)
+			if room:
+				board.items.append(item_id)
 			loose[item.resource] = float(loose.get(item.resource, 0.0)) + float(item.amount)
 	var residents: int = settlement.residents.size()
 	for resource in RESOURCES:

@@ -28,6 +28,13 @@ static func eat(sim: RefCounted, agent: RefCounted) -> Array:
 			Plans.step(Op.TAKE_STOCK, {"resource": "berries", "amount": 1}),
 			Plans.step(Op.EAT),
 		]))
+	var loose: int = H.loose_item(sim, agent, "berries")
+	if loose >= 0:
+		plans.append(H.option("eat_loose", 0.6, H.free_hands(agent, "berries") + [
+			Plans.go_cell(sim.items[loose].cell),
+			Plans.step(Op.PICK_UP, {"item": loose}),
+			Plans.step(Op.EAT),
+		]))
 	var bushes: Array = H.known_sites(sim, agent, "bush")
 	if not bushes.is_empty():
 		plans.append(H.option("forage", 0.45, [

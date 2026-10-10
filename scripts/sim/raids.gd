@@ -113,7 +113,7 @@ static func _edge(sim: RefCounted, center: Vector3i) -> Vector3i:
 		if cell.x < 0:
 			continue
 		var d: float = Vector2(cell.x - center.x, cell.z - center.z).length()
-		if d < best_distance and not sim.nav.find_path(cell, sim.settlements.entries[sim.settlements.at_cell(center)].pile if sim.settlements.at_cell(center) >= 0 else center).is_empty():
+		if d < best_distance and not sim.nav.find_path(cell, sim.settlements.entries[sim.settlements.at_cell(center)].camp if sim.settlements.at_cell(center) >= 0 else center).is_empty():
 			best = cell
 			best_distance = d
 	return best

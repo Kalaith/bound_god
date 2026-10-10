@@ -11,6 +11,9 @@ var renown: int = 0
 var offered: Dictionary = {}
 ## template id -> shrine id it was offered at
 var offered_at: Dictionary = {}
+## The blocks the god keeps at hand, by hotbar slot (0 = empty). Chosen
+## and ordered by the player; nothing is added or removed by itself.
+var hotbar: Array = []
 ## Where the avatar stands, so people can see the god.
 var avatar_cell := Vector3i(-1, -1, -1)
 ## Events for the presentation to react to: expelled, dormant, transfer.
@@ -37,7 +40,7 @@ func to_dict() -> Dictionary:
 	return {
 		"divine_stock": divine_stock.duplicate(), "active_shrine_id": active_shrine_id, "dormant": dormant,
 		"renown": renown, "offered": offered.duplicate(true), "offered_at": offered_at.duplicate(),
-		"avatar_cell": avatar_cell,
+		"avatar_cell": avatar_cell, "hotbar": hotbar.duplicate(),
 	}
 
 
@@ -49,3 +52,4 @@ func from_dict(data: Dictionary) -> void:
 	offered = data.offered
 	offered_at = data.offered_at
 	avatar_cell = data.avatar_cell
+	hotbar = data.hotbar

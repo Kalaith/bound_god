@@ -9,10 +9,6 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const VoxelRay = preload("res://scripts/world/voxel_ray.gd")
 const Commands = preload("res://scripts/sim/commands.gd")
 const Text = preload("res://scripts/core/text.gd")
-const ORDER: Array[String] = [
-	"planks", "log", "thatch", "cobble", "cut_stone", "door", "bed", "storage_chest", "hearth",
-	"altar", "workbench", "glass", "fence", "berry_bush", "dirt", "grass", "stone", "sand", "gravel",
-]
 const REPEAT_SECONDS: float = 0.22
 
 var sim: RefCounted
@@ -20,7 +16,6 @@ var world_view: Node3D
 var camera_rig: Node3D
 var avatar: Node3D
 var enabled: bool = true
-var hotbar: Array[int] = []
 var selected: int = 0
 var rotate_flip: bool = false
 var target: Dictionary = {}
@@ -36,8 +31,6 @@ var _repeat: float = 0.0
 
 func _ready() -> void:
 	Registry.build()
-	for name in ORDER:
-		hotbar.append(Registry.id(name))
 	_outline_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_outline_material.albedo_color = Color(1, 1, 1, 0.9)
 	_outline_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -73,12 +66,18 @@ func _box_lines() -> ImmediateMesh:
 	return mesh
 
 
+## The god's hotbar, chosen and ordered in the blocks screen (0 = empty).
+func hotbar() -> Array:
+	return sim.god.hotbar if sim != null else []
+
+
 func selected_block() -> int:
-	return hotbar[selected]
+	var slots: Array = hotbar()
+	return int(slots[selected]) if selected < slots.size() else 0
 
 
 func select(index: int) -> void:
-	selected = posmod(index, hotbar.size())
+	selected = posmod(index, maxi(hotbar().size(), 1))
 
 
 func door_meta() -> int:
@@ -92,7 +91,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	for slot in range(9):
 		if event.is_action_pressed("hotbar_%d" % (slot + 1)):
-			select((selected / 9) * 9 + slot)
+			select(slot)
 			return
 	if event.is_action_pressed("hotbar_next") and not Input.is_key_pressed(KEY_CTRL):
 		select(selected + 1)
@@ -144,13 +143,16 @@ func _update_target() -> void:
 	# Tall grass and similar soft blocks are replaced in place.
 	if Registry.passable[target.block] == 1 and Registry.solid[target.block] == 0:
 		place_cell = cell
-	place_problem = Commands.edit_problem(sim, place_cell, selected_block(), _head(), reach)
+	if selected_block() == 0:
+		place_problem = "hotbar_empty"
+	else:
+		place_problem = Commands.edit_problem(sim, place_cell, selected_block(), _head(), reach)
 	if place_problem.is_empty() and Registry.solid[selected_block()] == 1 and _touches_avatar(place_cell):
 		place_problem = "edit_someone_there"
 	_outline.visible = true
 	_outline.global_position = Vector3(cell)
 	_outline_material.albedo_color = Color(1, 1, 1, 0.9) if break_problem.is_empty() else Color(1, 0.45, 0.4, 0.9)
-	_ghost.visible = true
+	_ghost.visible = selected_block() != 0
 	_ghost.global_position = Vector3(place_cell) + Vector3(0.5, 0.5, 0.5)
 	_ghost_material.albedo_color = Color(0.6, 1.0, 0.6, 0.22) if place_problem.is_empty() else Color(1.0, 0.4, 0.35, 0.22)
 
@@ -171,6 +173,8 @@ func _act(breaking: bool) -> void:
 		message.emit(problem_text(problem), true)
 		return
 	var block: int = 0 if breaking else selected_block()
+	if not breaking and block == 0:
+		return
 	var cell: Vector3i = target.cell if breaking else place_cell
 	var meta: int = door_meta() if Registry.component(block) == "door" else 0
 	var result: Dictionary = sim.apply_command({"type": "edit_block", "cell": cell, "id": block, "meta": meta})

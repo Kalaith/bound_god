@@ -241,10 +241,19 @@ func _hamlet() -> void:
 		var origin: Vector3i = entry[1]
 		_stamp(template, origin, entry[2])
 		placed.append({"template": template.id, "origin": origin, "rotation": entry[2]})
+	# Two storage chests stand on the square, where the miners keep their goods.
+	var chests: Array = []
+	for offset in [Vector2i(1, -3), Vector2i(2, -3), Vector2i(1, -4), Vector2i(2, -4), Vector2i(-1, -3), Vector2i(0, -4)]:
+		if chests.size() >= 2:
+			break
+		var cell := Vector3i(center.x + offset.x, ground + 1, center.y + offset.y)
+		if world.get_block(cell) == 0 and world.get_block(cell + Vector3i.DOWN) != 0:
+			world.fill(cell, _id("storage_chest"))
+			chests.append(cell)
 	for z in range(center.y - 11, center.y + 12):
 		for x in range(center.x - 11, center.x + 12):
 			reserved[Vector2i(x, z)] = true
-	features["hamlet"] = {"center": Vector3i(center.x, ground + 1, center.y), "buildings": placed}
+	features["hamlet"] = {"center": Vector3i(center.x, ground + 1, center.y), "buildings": placed, "chests": chests}
 
 
 func _ground_ok(x: int, z: int) -> bool:

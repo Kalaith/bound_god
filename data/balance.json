@@ -56,12 +56,13 @@
 		"home_trees": 5, "home_outcrops": 3, "home_reach": [13.0, 17.0]
 	},
 	"settlements": {
-		"start_radius": 22, "radius_per_structure": 1.0, "max_radius": 40, "pile_capacity": 60, "chest_capacity": 40,
+		"start_radius": 22, "radius_per_structure": 1.0, "max_radius": 40, "chest_capacity": 40,
 		"culture_need_drift": 0.02, "culture_example_drift": 0.01, "culture_min": 0.4, "culture_max": 1.6
 	},
 	"population": {
 		"travellers": 2, "miners": 5, "cap": 30, "migrant_roll_days": 3, "migrant_threshold": 0.35,
-		"migrant_group": [1, 3], "first_migrant_day": 3
+		"migrant_group": [1, 3], "first_migrant_day": 3,
+		"traveller_berries": 5, "hamlet_stock": {"berries": 18, "stone": 12, "ore": 6, "wood": 10}
 	},
 	"faith": {
 		"story_gain": 40.0, "story_aspect_lerp": 0.1, "drift_per_day": 0.05, "decay_per_day": 0.6,
@@ -81,5 +82,5 @@
 		"first_raid_day": 12, "raid_every_days": 4, "raid_base_chance": 0.35, "raid_wealth_weight": 0.004
 	},
 	"decay": {"unattended_days": 20, "block_loss_chance": 0.15, "abandoned_days": 10},
-	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 6.4, "gravity": 16.0}
+	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 6.4, "gravity": 16.0, "hotbar_slots": 9}
 }

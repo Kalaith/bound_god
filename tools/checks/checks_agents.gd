@@ -1,6 +1,7 @@
 extends RefCounted
 ## M4 acceptance: situated, robust, proactive and deterministic people who
 ## survive their first days.
+const Stores = preload("res://tools/checks/stores.gd")
 const Sim = preload("res://scripts/sim/sim.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
@@ -60,6 +61,7 @@ func check_a_failed_plan_corrects_beliefs_and_tries_another_way():
 	var friend: RefCounted = sim.agents[1]
 	agent.needs[Need.FOOD] = 5.0
 	agent.beliefs.stock = {}
+	agent.carrying = {}
 	agent.beliefs.relation(friend.id).opinion = 60.0
 	# A bush remembered beside them that is no longer there.
 	agent.beliefs.note_site(9999, "bush", agent.cell + Vector3i(2, 0, 0), 3, sim.calendar.tick)
@@ -86,7 +88,7 @@ func check_a_failed_plan_corrects_beliefs_and_tries_another_way():
 func check_exhausted_goals_back_off_and_frustrate():
 	var sim: RefCounted = _flat()
 	var agent: RefCounted = sim.agents[0]
-	sim.settlements.entries[agent.settlement_id].stock = {}
+	Stores.fill(sim, agent.settlement_id, {})
 	agent.beliefs.stock = {}
 	agent.beliefs.sites.clear()
 	agent.carrying = {}

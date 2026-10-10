@@ -56,7 +56,7 @@ static func _carry_name(sim: RefCounted, agent: RefCounted, settlement_id: int) 
 		return []
 	var there: bool = Vector2(agent.cell.x - settlement.center.x, agent.cell.z - settlement.center.z).length() <= float(settlement.radius)
 	if not there:
-		return [H.option("travel_there", 1.0, [Plans.go_cell(settlement.pile), Plans.step(Op.WAIT, {"ticks": 5})])]
+		return [H.option("travel_there", 1.0, [Plans.go_cell(settlement.camp), Plans.step(Op.WAIT, {"ticks": 5})])]
 	var listener: int = listener_in(sim, agent, settlement_id, 40.0)
 	var result: Array = []
 	if listener >= 0:
@@ -106,7 +106,7 @@ static func _raise(sim: RefCounted, agent: RefCounted, settlement_id: int) -> Ar
 	var settlement: Dictionary = sim.settlements.get_settlement(settlement_id)
 	if settlement.is_empty():
 		return []
-	var spot: Vector3i = sim.nav.nearest_walkable(settlement.pile + Vector3i(3, 0, 3), 4)
+	var spot: Vector3i = sim.nav.nearest_walkable(settlement.camp + Vector3i(3, 0, 3), 4)
 	if spot.x < 0:
 		return []
 	var place := Plans.step(Op.REPAIR_BLOCK, {"altar_at": spot})

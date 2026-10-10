@@ -33,7 +33,7 @@ static func attractiveness(sim: RefCounted, id: int) -> Array:
 	for agent_id in settlement.residents:
 		if sim.agents[agent_id].home < 0:
 			homeless += 1
-	var food_days: float = float(settlement.stock.get("berries", 0)) / (residents * 2.5)
+	var food_days: float = float(sim.settlements.amount(id, "berries")) / (residents * 2.5)
 	var safety: float = 0.2 if sim.threats_list().is_empty() else 0.05
 	var renown: float = sim.faith.settlement_renown(sim, id) if sim.faith != null else 0.0
 	var score: float = spare * 0.08 + minf(food_days, 2.0) * 0.12 + safety + renown - homeless * 0.03
@@ -60,7 +60,7 @@ func _migrants(sim: RefCounted) -> void:
 				agent.beliefs.known_templates.append("lean_to")
 			var cell: Vector3i = sim.nav.nearest_walkable(edge + Vector3i(i, 0, 0), 8)
 			if cell.x < 0:
-				cell = settlement.pile
+				cell = settlement.camp
 			Population.arrive(sim, agent, cell, id, "")
 			names.append(agent.full_name())
 		var cause: String = "cause_attractive|%d|%d" % [int(reason[1]), floori(float(reason[2]))]

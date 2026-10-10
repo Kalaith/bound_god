@@ -93,6 +93,8 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	# The first morning: the travellers arrive soon after dawn.
 	calendar.tick = calendar.ticks_per_day * 7 / 24
 	god = GodState.new()
+	god.hotbar.resize(Balance.integer("avatar.hotbar_slots"))
+	god.hotbar.fill(0)
 	sites = ResourceSites.new()
 	var size: Vector3i
 	if setup_options.has("size"):
@@ -126,6 +128,8 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	director.raid_hooks = raids
 	if restoring:
 		return
+	for chest in features.get("hamlet", {}).get("chests", []):
+		settlements.chests[chest] = {}
 	Population.found(self, setup_options)
 	faith.setup(self)
 	if setup_options.get("threats", setup_options.get("world", "valley") == "valley"):
@@ -156,6 +160,8 @@ func set_block(cell: Vector3i, block: int, meta: int = 0, source: String = "") -
 	if not voxels.set_block(cell, block, meta):
 		return false
 	sites.on_block_changed(cell, old, block, voxels)
+	if old != block:
+		settlements.on_block(self, cell, old, block)
 	if not source.is_empty():
 		edit_sources[cell] = source
 	if old != block:

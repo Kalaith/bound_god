@@ -18,6 +18,7 @@ var _slots: Array = []
 var _slot_labels: Array = []
 var _slot_counts: Array = []
 var _hotbar: HBoxContainer
+var _prompt: Label
 var _selected_name: Label
 var _message_time: float = 0.0
 var _atlas: Texture2D
@@ -82,6 +83,11 @@ func _ready() -> void:
 		_slots.append(box)
 		_slot_labels.append(icon)
 		_slot_counts.append(count)
+	_prompt = Style.label("", 20, Style.GOLD)
+	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_prompt.add_theme_constant_override("outline_size", 6)
+	_prompt.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	add_child(_prompt)
 	_selected_name = Style.label("", 20, Style.GOLD)
 	_selected_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_selected_name)
@@ -99,6 +105,8 @@ func _layout() -> void:
 	var view: Vector2 = size
 	_crosshair.position = view * 0.5 - Vector2(12, 12)
 	_crosshair.size = Vector2(24, 24)
+	_prompt.position = Vector2(view.x * 0.5 - 300, view.y * 0.5 + 22)
+	_prompt.size = Vector2(600, 30)
 	_hotbar.position = Vector2((view.x - 9 * 82) * 0.5, view.y - 104)
 	_selected_name.position = Vector2(view.x * 0.5 - 300, view.y - 140)
 	_selected_name.size = Vector2(600, 30)
@@ -156,33 +164,29 @@ func refresh(state: Dictionary) -> void:
 	get_node("ShrinePanel").visible = not _shrine.text.is_empty()
 	_crosshair.visible = state.get("crosshair", true)
 	_hint.text = state.get("hint", "")
+	_prompt.text = state.get("prompt", "")
 	_guide.text = state.get("guide", "")
 	_guide.visible = not _guide.text.is_empty()
 	var hotbar: Array = state.get("hotbar", [])
 	var selected: int = int(state.get("selected", 0))
-	var page: int = selected / 9
-	for slot in range(9):
-		var index: int = page * 9 + slot
+	for slot in range(_slots.size()):
 		var box: PanelContainer = _slots[slot]
-		if index >= hotbar.size():
-			box.visible = false
-			continue
-		box.visible = true
-		var block: int = hotbar[index]
+		var block: int = int(hotbar[slot]) if slot < hotbar.size() else 0
 		var icon: TextureRect = _slot_labels[slot]
 		if icon.get_meta("block", -1) != block:
-			icon.texture = _icon(block)
+			icon.texture = _icon(block) if block != 0 else null
 			icon.set_meta("block", block)
-		var resource: String = Registry.resource(block)
-		_slot_counts[slot].text = str(int(stock.get(resource, 0)))
-		var style: StyleBoxFlat = Style.panel_box(0.7, 8, 6)
-		if index == selected:
+		_slot_counts[slot].text = str(int(stock.get(Registry.resource(block), 0))) if block != 0 else ""
+		var style: StyleBoxFlat = Style.panel_box(0.7 if block != 0 else 0.4, 8, 6)
+		if slot == selected:
 			style.border_color = Style.GOLD
 			style.set_border_width_all(3)
 		box.add_theme_stylebox_override("panel", style)
-	if selected < hotbar.size():
-		var block: int = hotbar[selected]
-		_selected_name.text = "%s  ·  %s" % [Text.label("block_" + Registry.block_name(block)), Text.label("resource_" + Registry.resource(block))]
+	var chosen: int = int(hotbar[selected]) if selected < hotbar.size() else 0
+	if chosen != 0:
+		_selected_name.text = "%s  ·  %s" % [Text.label("block_" + Registry.block_name(chosen)), Text.label("resource_" + Registry.resource(chosen))]
+	else:
+		_selected_name.text = Text.label("hotbar_slot_empty")
 	_set_prayers(state.get("prayers", []))
 	_hotbar.visible = state.get("hotbar_visible", true)
 	_selected_name.visible = _hotbar.visible

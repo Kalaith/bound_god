@@ -10,16 +10,16 @@ const Text = preload("res://scripts/core/text.gd")
 
 static func found(sim: RefCounted, options: Dictionary) -> void:
 	var tree: Vector3i = sim.features.sacred_tree
-	var pile: Vector3i = sim.nav.nearest_walkable(tree + Vector3i(4, 0, -3), 5)
-	var hollow: int = sim.settlements.create(Text.label("place_tree_hollow"), tree, pile, sim.calendar.tick)
-	# The travellers' packs: a few days of berries.
-	sim.settlements.entries[hollow].stock = {"berries": 10}
+	var camp: Vector3i = sim.nav.nearest_walkable(tree + Vector3i(4, 0, -3), 5)
+	var hollow: int = sim.settlements.create(Text.label("place_tree_hollow"), tree, camp, sim.calendar.tick)
 	if options.get("people", true):
 		var count: int = int(options.get("travellers", Balance.integer("population.travellers")))
 		for i in range(count):
 			var agent: RefCounted = Generation.adult(sim.rng, sim.agents.size())
 			var cell: Vector3i = sim.nav.nearest_walkable(tree + Vector3i(3 + i, 0, 4), 6)
 			arrive(sim, agent, cell, hollow, "arrival_traveller")
+			# The travellers' packs: a few days of berries. There is no chest yet.
+			agent.carrying = {"resource": "berries", "amount": float(Balance.integer("population.traveller_berries"))}
 	if sim.features.has("hamlet"):
 		_found_hamlet(sim, options)
 
@@ -27,9 +27,17 @@ static func found(sim: RefCounted, options: Dictionary) -> void:
 static func _found_hamlet(sim: RefCounted, options: Dictionary) -> void:
 	var hamlet: Dictionary = sim.features.hamlet
 	var center: Vector3i = hamlet.center
-	var pile: Vector3i = sim.nav.nearest_walkable(center, 4)
-	var id: int = sim.settlements.create(Text.label("place_ridge_hamlet"), center, pile, sim.calendar.tick)
-	sim.settlements.entries[id].stock = {"berries": 18, "stone": 12, "ore": 6, "wood": 10}
+	var camp: Vector3i = sim.nav.nearest_walkable(center, 4)
+	var id: int = sim.settlements.create(Text.label("place_ridge_hamlet"), center, camp, sim.calendar.tick)
+	# The miners' goods lie in the chests on their square.
+	var chests: Array = hamlet.get("chests", [])
+	var goods: Dictionary = Balance.dict("population.hamlet_stock")
+	var resources: Array = goods.keys()
+	resources.sort()
+	for resource in resources:
+		var left: int = int(goods[resource])
+		for chest in chests:
+			left -= sim.settlements.chest_add(chest, resource, left)
 	for building in hamlet.buildings:
 		for entry in sim.structures.built():
 			var offset: Vector3i = entry.anchor - building.origin
