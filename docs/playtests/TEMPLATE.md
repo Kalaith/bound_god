@@ -1,6 +1,6 @@
 # Fresh player session
 
-Tester name or code:
+Tester code (no real names):
 
 Date:
 

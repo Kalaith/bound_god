@@ -12,6 +12,7 @@
     "title_seed_hint": "Same seed, same valley",
     "title_no_save": "No world has been saved yet.",
     "title_data_error": "The game data is broken and the valley cannot rise:",
+    "title_version": "Version {version}",
     "loading_world": "The valley rises from the seed…",
     "block_air": "Air",
     "block_grass": "Grass",

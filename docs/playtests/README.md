@@ -11,4 +11,4 @@ Use these notes to record how a new player experiences the first playable moment
 
 Record the build and version, hardware, total time, which steps they reached and when, stalls and their duration, what the player said, and any free observations. Use elapsed `mm:ss` times from when the valley appears. Mark a step not reached if the session ends first.
 
-Save one completed record per player in this folder as `YYYY-MM-DD-<tester-code>.md`. Keep the notes here so later sessions can be compared with what changed.
+Give each player a short code (P1, P2, …) and never write real names. Save one completed record per player in this folder as `YYYY-MM-DD-<tester-code>.md`. Keep the notes here so later sessions can be compared with what changed.
