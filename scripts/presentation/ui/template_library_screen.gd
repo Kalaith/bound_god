@@ -39,7 +39,7 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 14)
 	_panel.add_child(column)
-	column.add_child(Style.label(Text.label("design_library"), 36, Style.GOLD))
+	column.add_child(Style.heading(Text.label("design_library"), 36, Style.GOLD))
 	column.add_child(Style.wrapped(Text.label("design_private"), 21, Style.MUTED))
 	var row := HBoxContainer.new()
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL

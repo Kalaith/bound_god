@@ -31,7 +31,7 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 12)
 	panel.add_child(column)
-	column.add_child(Style.label(Text.label("requests_title"), 34, Style.FAITH))
+	column.add_child(Style.heading(Text.label("requests_title"), 34, Style.FAITH))
 	column.add_child(Style.wrapped(Text.format("requests_hint", {"boon": int(BOON)}), 19, Style.MUTED))
 	var row := HBoxContainer.new()
 	row.size_flags_vertical = Control.SIZE_EXPAND_FILL

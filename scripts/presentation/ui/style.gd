@@ -3,6 +3,14 @@ extends RefCounted
 ## authored at 1080p; the canvas_items stretch scales them for smaller windows.
 ## The look follows art_direction.md: warm ink-wash panels ruled with a thin
 ## line of aged gold, cream text, and jade kept for the sacred.
+## Type (font_direction.md): a woodblock-flavoured Mincho serif for titles,
+## shrine names and headings; a clean humanist sans for body text (the project
+## theme default, assets/ui_theme.tres) and, in bold, for numbers and counters.
+## Both are OFL, subset to Latin in assets/fonts.
+
+const DISPLAY: Font = preload("res://assets/fonts/ShipporiMinchoB1-Bold.ttf")
+const BODY: Font = preload("res://assets/fonts/ZenKakuGothicNew-Medium.ttf")
+const UTILITY: Font = preload("res://assets/fonts/ZenKakuGothicNew-Bold.ttf")
 
 const INK := Color("1a1714")
 const PANEL := Color(0.11, 0.1, 0.085, 0.86)
@@ -23,11 +31,31 @@ static func label(text: String, size: int = 20, color: Color = WHITE) -> Label:
 	result.text = text
 	result.add_theme_font_size_override("font_size", size)
 	result.add_theme_color_override("font_color", color)
-	result.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	result.add_theme_color_override("font_shadow_color", Color(INK, 0.45))
 	result.add_theme_constant_override("shadow_offset_x", 1)
 	result.add_theme_constant_override("shadow_offset_y", 1)
 	result.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return result
+
+
+## A title, shrine name or section heading, set in the display serif.
+static func heading(text: String, size: int = 30, color: Color = GOLD) -> Label:
+	var result: Label = label(text, size, color)
+	result.add_theme_font_override("font", DISPLAY)
+	return result
+
+
+## Numbers, counters and key labels: the bold sans, steady at small sizes.
+static func utility(text: String, size: int = 16, color: Color = WHITE) -> Label:
+	var result: Label = label(text, size, color)
+	result.add_theme_font_override("font", UTILITY)
+	return result
+
+
+## A heading inside rich text: the theme sets bold in the display serif, a
+## step larger than the body so it holds its own beside the sans.
+static func rich_heading(text: String, color: Color = GOLD, size: int = 22) -> String:
+	return "[font_size=%d][b][color=#%s]%s[/color][/b][/font_size]" % [size, color.to_html(false), text]
 
 
 static func wrapped(text: String, size: int = 18, color: Color = WHITE) -> Label:

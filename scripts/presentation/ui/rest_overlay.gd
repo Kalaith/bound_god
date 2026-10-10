@@ -34,7 +34,7 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 16)
 	panel.add_child(column)
-	_title = Style.label("", 36, Style.FAITH)
+	_title = Style.heading("", 36, Style.FAITH)
 	column.add_child(_title)
 	_bar = Style.meter(0.0, 1.0, 1200.0, Style.FAITH)
 	_bar.custom_minimum_size.y = 18

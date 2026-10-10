@@ -35,7 +35,7 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
 	panel.add_child(column)
-	_title = Style.label("", 30, Style.GOLD)
+	_title = Style.heading("", 30, Style.GOLD)
 	column.add_child(_title)
 	_owner = Style.wrapped("", 19)
 	column.add_child(_owner)
@@ -51,8 +51,8 @@ func _ready() -> void:
 		grid.add_child(Control.new())
 	for resource in RESOURCES:
 		grid.add_child(Style.label(Text.label("resource_" + resource), 22))
-		var here := Style.label("", 22)
-		var mine := Style.label("", 22)
+		var here := Style.utility("", 22)
+		var mine := Style.utility("", 22)
 		grid.add_child(here)
 		grid.add_child(mine)
 		var buttons: Array = []

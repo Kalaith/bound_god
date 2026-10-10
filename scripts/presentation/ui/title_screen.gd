@@ -42,7 +42,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	_heading = Style.label(Text.label("game_title"), 84, Style.WHITE)
+	_heading = Style.heading(Text.label("game_title"), 84, Style.WHITE)
 	add_child(_heading)
 	_tagline = Style.wrapped(Text.label("game_tagline"), 24, Style.LEAF)
 	add_child(_tagline)

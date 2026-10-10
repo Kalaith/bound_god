@@ -29,7 +29,7 @@ func _ready() -> void:
 	panel.add_child(column)
 	var header := HBoxContainer.new()
 	column.add_child(header)
-	var title: Label = Style.label(Text.label("chronicle_title"), 34, Style.GOLD)
+	var title: Label = Style.heading(Text.label("chronicle_title"), 34, Style.GOLD)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 	_places = OptionButton.new()

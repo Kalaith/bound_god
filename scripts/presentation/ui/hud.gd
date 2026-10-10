@@ -36,7 +36,7 @@ func _ready() -> void:
 	var left_box := VBoxContainer.new()
 	left_box.add_theme_constant_override("separation", 4)
 	top_left.add_child(left_box)
-	_clock = Style.label("", 24)
+	_clock = Style.heading("", 24)
 	left_box.add_child(_clock)
 	_stock = Style.label("", 18, Style.MUTED)
 	left_box.add_child(_stock)
@@ -46,7 +46,7 @@ func _ready() -> void:
 	var top_center := Style.panel(0.72)
 	top_center.name = "ShrinePanel"
 	add_child(top_center)
-	_shrine = Style.label("", 22, Style.FAITH)
+	_shrine = Style.heading("", 22, Style.FAITH)
 	_shrine.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	top_center.add_child(_shrine)
 	_prayers = VBoxContainer.new()
@@ -67,7 +67,7 @@ func _ready() -> void:
 		column.alignment = BoxContainer.ALIGNMENT_CENTER
 		column.add_theme_constant_override("separation", 0)
 		box.add_child(column)
-		var key := Style.label(str(slot + 1), 13, Style.MUTED)
+		var key := Style.utility(str(slot + 1), 13, Style.MUTED)
 		column.add_child(key)
 		var icon := TextureRect.new()
 		icon.custom_minimum_size = Vector2(36, 36)
@@ -76,7 +76,7 @@ func _ready() -> void:
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		column.add_child(icon)
-		var count := Style.label("", 15)
+		var count := Style.utility("", 15)
 		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		column.add_child(count)
 		_hotbar.add_child(box)

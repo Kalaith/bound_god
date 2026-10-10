@@ -38,7 +38,7 @@ func _ready() -> void:
 	var body := VBoxContainer.new()
 	body.add_theme_constant_override("separation", 12)
 	panel.add_child(body)
-	body.add_child(Style.label("Settings", 34))
+	body.add_child(Style.heading("Settings", 34))
 	tabs = TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tabs.add_theme_font_size_override("font_size", 18)
@@ -76,7 +76,7 @@ func _build_general() -> void:
 	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rows.add_theme_constant_override("separation", 8)
 	scroll.add_child(rows)
-	rows.add_child(Style.label("Sound", 20, Style.LEAF))
+	rows.add_child(Style.heading("Sound", 20, Style.LEAF))
 	for entry in [["master", "Master volume"], ["music", "Music"], ["effects", "Effects"], ["look_sensitivity", "Look sensitivity"]]:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 14)
@@ -97,7 +97,7 @@ func _build_general() -> void:
 	for entry in [["muted", "Mute all sound"], ["invert_look", "Invert vertical look"], ["fullscreen", "Fullscreen   ·   F11"],
 			["reduce_motion", "Reduce motion"], ["show_guide", "Show first-steps guide"], ["ssao", "Ambient occlusion (SSAO)"], ["glow", "Glow"], ["shadows", "Sun shadows"], ["ink", "Ink outlines and paper"]]:
 		if entry[0] == "ssao":
-			rows.add_child(Style.label("Graphics", 20, Style.LEAF))
+			rows.add_child(Style.heading("Graphics", 20, Style.LEAF))
 		var toggle := CheckButton.new()
 		toggle.text = entry[1]
 		toggle.add_theme_font_size_override("font_size", 18)
@@ -135,7 +135,7 @@ func _build_keys() -> void:
 			grid.add_child(button)
 			pair.append(button)
 		key_buttons[action] = pair
-	holder.add_child(Style.label("Gamepad buttons", 20, Style.LEAF))
+	holder.add_child(Style.heading("Gamepad buttons", 20, Style.LEAF))
 	var pad_grid := GridContainer.new()
 	pad_grid.columns = 2
 	pad_grid.add_theme_constant_override("h_separation", 10)

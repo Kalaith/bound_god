@@ -37,7 +37,7 @@ func _ready() -> void:
 	panel.add_child(column)
 	var header := HBoxContainer.new()
 	column.add_child(header)
-	_title = Style.label("", 30, Style.GOLD)
+	_title = Style.heading("", 30, Style.GOLD)
 	_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_title)
 	var close: Button = Style.button(Text.label("inspect_close"))
@@ -70,7 +70,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _gold(text: String) -> String:
-	return "[color=#%s]%s[/color]" % [Style.GOLD.to_html(false), text]
+	return Style.rich_heading(text)
 
 
 func _process(delta: float) -> void:

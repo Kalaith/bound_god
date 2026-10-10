@@ -58,7 +58,7 @@ func _ready() -> void:
 	var titles := VBoxContainer.new()
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(titles)
-	_name = Style.label("", 30, Style.GOLD)
+	_name = Style.heading("", 30, Style.GOLD)
 	titles.add_child(_name)
 	_subtitle = Style.label("", 18, Style.MUTED)
 	titles.add_child(_subtitle)
@@ -129,7 +129,7 @@ func _build_mind(stack: VBoxContainer) -> void:
 	page.add_child(_drive)
 	_plan = _rich(19)
 	page.add_child(_plan)
-	page.add_child(Style.label(Text.label("inspect_reasoning"), 20, Style.GOLD))
+	page.add_child(Style.heading(Text.label("inspect_reasoning"), 20, Style.GOLD))
 	_log = _rich(18)
 	page.add_child(_log)
 	_beliefs = _rich(18)
@@ -150,7 +150,7 @@ func _build_needs(stack: VBoxContainer) -> void:
 		var bar: ProgressBar = Style.meter(0.0, 100.0, 300.0)
 		bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		grid.add_child(bar)
-		var value := Style.label("", 20, Style.MUTED)
+		var value := Style.utility("", 20, Style.MUTED)
 		grid.add_child(value)
 		_need_bars.append(bar)
 		_need_values.append(value)
@@ -236,7 +236,7 @@ func _refresh_needs(agent: RefCounted) -> void:
 	var lines: Array[String] = []
 	lines.append(Text.format("inspect_health", {"hp": roundi(float(agent.health.hp)), "mood": roundi(agent.mood)}))
 	lines.append("")
-	lines.append("[color=#%s]%s[/color]" % [Style.GOLD.to_html(false), Text.label("inspect_thoughts")])
+	lines.append(Style.rich_heading(Text.label("inspect_thoughts")))
 	for thought in agent.thoughts:
 		var mood: float = float(thought.mood)
 		var color: Color = Style.GOOD if mood > 0.0 else Style.WARN

@@ -42,7 +42,7 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 12)
 	panel.add_child(column)
-	column.add_child(Style.label(Text.label("inventory_title"), 30, Style.GOLD))
+	column.add_child(Style.heading(Text.label("inventory_title"), 30, Style.GOLD))
 	column.add_child(Style.wrapped(Text.label("inventory_hint"), 18, Style.MUTED))
 	for family in FAMILIES:
 		var grid := GridContainer.new()

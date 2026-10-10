@@ -186,3 +186,7 @@ pointing/emulate_mouse_from_touch=false
 renderer/rendering_method="forward_plus"
 anti_aliasing/quality/msaa_3d=2
 environment/defaults/default_clear_color=Color(0.56, 0.7, 0.86, 1)
+
+[gui]
+
+theme/custom="res://assets/ui_theme.tres"

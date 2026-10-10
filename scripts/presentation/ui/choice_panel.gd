@@ -26,7 +26,7 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 12)
 	panel.add_child(column)
-	_title = Style.label("", 30, Style.GOLD)
+	_title = Style.heading("", 30, Style.GOLD)
 	column.add_child(_title)
 	_hint = Style.wrapped("", 19, Style.MUTED)
 	column.add_child(_hint)
