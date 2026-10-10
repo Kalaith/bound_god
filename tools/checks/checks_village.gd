@@ -21,6 +21,7 @@ const Personality = preload("res://scripts/agents/personality.gd")
 const Daily = preload("res://scripts/sim/daily.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
 const Perception = preload("res://scripts/sim/perception.gd")
+const EffectsApply = preload("res://scripts/sim/effects_apply.gd")
 
 const Need = Personality.Need
 
@@ -277,4 +278,29 @@ func check_a_village_founds_a_second_settlement():
 	if not _chronicled(sim, "settlement_founded"):
 		return "the founding was not chronicled"
 	print("      %s founded on day %d with %d people" % [sim.settlements.entries[founded].name, sim.calendar.day(), Standing.present(sim, founded)])
+	return ""
+
+
+## Settlers who once had a bed in the old settlement sleep in the new one:
+## no bed back home is claimed, which would make them residents there again.
+func check_founders_stay_in_their_new_settlement():
+	var sim: RefCounted = Sim.create(11)
+	var camp: Vector3i = sim.settlements.entries[1].camp
+	var origin := Vector3i(camp.x + 4, sim.nav.surface(camp.x + 4, camp.z + 4).y, camp.z + 4)
+	_raise(sim, "timber_cottage", origin)
+	var cottage: Dictionary = sim.structures.at(origin + Vector3i(2, 0, 2))
+	if cottage.is_empty() or not cottage.functions.has("dwelling"):
+		return "the cottage by the tree is not a dwelling"
+	var founder: RefCounted = sim.agents[0]
+	sim.set_home(founder, int(cottage.id))
+	founder.beliefs.structures[cottage.id] = {"functions": cottage.functions.duplicate(), "cell": cottage.anchor, "template_id": "", "seen_tick": 0}
+	founder.carrying = {"resource": "wood", "amount": 4.0}
+	founder.cell = sim.nav.nearest_walkable(sim.features.grounds[0].center, 4)
+	EffectsApply._settle(sim, founder, 0)
+	var new_home: int = sim.settlements.on_ground(0)
+	if new_home < 0 or founder.settlement_id != new_home or founder.home >= 0:
+		return "the founder did not settle the ground: settlement %d, home %d" % [founder.settlement_id, founder.home]
+	for option in PlansNeeds.sleep(sim, founder):
+		if option.id in ["partner_bed", "free_bed", "own_bed"]:
+			return "a settler on new land would go back to sleep in the old settlement (%s)" % option.id
 	return ""

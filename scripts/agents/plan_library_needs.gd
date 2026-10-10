@@ -56,14 +56,16 @@ static func sleep(sim: RefCounted, agent: RefCounted) -> Array:
 	var home: Dictionary = sim.structures.entries.get(agent.home, {})
 	if not home.is_empty() and home.functions.has("dwelling"):
 		plans.append(H.option("own_bed", 1.0, [_structure(home.id), Plans.step(Op.SLEEP, {"structure": home.id})]))
+	# A bed is claimed only in the person's own settlement: taking one makes
+	# its settlement home, which would undo a move to new land.
 	if agent.partner >= 0:
 		var partner_home: int = sim.agents[agent.partner].home
 		var entry: Dictionary = sim.structures.entries.get(partner_home, {})
-		if partner_home != agent.home and not entry.is_empty() and H.free_beds(entry) > 0:
+		if partner_home != agent.home and not entry.is_empty() and H.free_beds(entry) > 0 and sim.settlements.at_cell(entry.anchor) == agent.settlement_id:
 			plans.append(H.option("partner_bed", 1.5, [_structure(partner_home), Plans.step(Op.SLEEP, {"structure": partner_home})]))
 	if home.is_empty():
 		var bed: int = H.nearest_structure(sim, agent, func(s: Dictionary) -> bool:
-			return s.functions.has("dwelling") and H.free_beds(s) > 0)
+			return s.functions.has("dwelling") and H.free_beds(s) > 0 and sim.settlements.at_cell(s.anchor) == agent.settlement_id)
 		if bed >= 0:
 			plans.append(H.option("free_bed", 0.8, [_structure(bed), Plans.step(Op.SLEEP, {"structure": bed})]))
 	var shelter: int = H.nearest_structure(sim, agent, func(s: Dictionary) -> bool:
