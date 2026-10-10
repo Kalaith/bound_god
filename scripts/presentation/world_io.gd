@@ -33,8 +33,15 @@ static func load_slot(slot_name: String) -> RefCounted:
 
 func save(reason: String = "save_done") -> bool:
 	var saved: Dictionary = SimState.capture(sim)
-	var meta: Dictionary = {"schema_version": SimState.SCHEMA, "name": slot, "seed": sim.world_seed, "day": sim.calendar.day(),
-		"played_seconds": int(played_seconds)}
+	var game_version: String = str(ProjectSettings.get_setting("application/config/version"))
+	var meta: Dictionary = {
+		"schema_version": SimState.SCHEMA,
+		"game_version": game_version,
+		"name": slot,
+		"seed": sim.world_seed,
+		"day": sim.calendar.day(),
+		"played_seconds": int(played_seconds),
+	}
 	var payload: Dictionary = {"meta.json": SaveStore.json_bytes(meta), "sim.bin": var_to_bytes(saved.sim),
 		"chunks.bin": var_to_bytes(saved.chunks), "templates.json": SaveStore.json_bytes(sim.god.offered)}
 	var ok: bool = SaveStore.write(slot, payload)

@@ -104,6 +104,7 @@
 		"inspect_last_prayer": "Last prayed on day {when}, for {intent}",
 		"inspect_stories": "Has heard {count} stories of the god",
 		"inspect_health": "Health {hp}   Mood {mood}",
+		"title_version": "Version {version}",
 		"inspect_thoughts": "On their mind",
 		"inspect_nobody": "Nobody there to look at",
 		"threat_wolf": "wolf",

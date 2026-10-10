@@ -22,6 +22,7 @@ var settings_screen: Control
 var _menu: VBoxContainer
 var _heading: Label
 var _tagline: Label
+var _version_label: Label
 
 
 func _ready() -> void:
@@ -45,6 +46,10 @@ func _build() -> void:
 	add_child(_heading)
 	_tagline = Style.wrapped(Text.label("game_tagline"), 24, Style.LEAF)
 	add_child(_tagline)
+	_version_label = Style.label(Text.format("title_version", {
+		"version": str(ProjectSettings.get_setting("application/config/version"))}), 16, Style.MUTED)
+	_version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	add_child(_version_label)
 	_menu = VBoxContainer.new()
 	_menu.add_theme_constant_override("separation", 14)
 	add_child(_menu)
@@ -133,6 +138,8 @@ func _layout() -> void:
 	_heading.position = Vector2(size.x * 0.07, size.y * 0.16)
 	_tagline.position = Vector2(size.x * 0.07 + 6, size.y * 0.16 + 112)
 	_tagline.size = Vector2(size.x * 0.42, 70)
+	_version_label.size = Vector2(200, 24)
+	_version_label.position = Vector2(size.x - 224, maxf(8, size.y - 32))
 	var width: float = minf(520, size.x * 0.36)
 	_menu.size = Vector2(width, 0)
 	_menu.position = Vector2(size.x * 0.07, size.y * 0.42)
