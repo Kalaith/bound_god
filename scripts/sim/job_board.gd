@@ -3,6 +3,7 @@ extends RefCounted
 ## what they lack, repairs, how much each resource is wanted, loose items to
 ## haul and threats near home. Nothing on it is assigned; people read it.
 const Balance = preload("res://scripts/core/balance.gd")
+const Food = preload("res://scripts/sim/food.gd")
 
 const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore"]
 const SITE_KIND: Dictionary = {"wood": "tree", "stone": "rock", "thatch": "grass", "berries": "bush", "ore": "ore"}
@@ -38,6 +39,9 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 		var per_person: float = Balance.number("settlements.autumn_berries_per_person") if autumn and resource == "berries" else float(reserve[1])
 		var wanted: float = float(reserve[0]) + per_person * residents + float(site_need.get(resource, 0))
 		var have: float = float(stock.get(resource, 0)) + float(loose.get(resource, 0.0))
+		# Berries stand for food: grain and meals in the chests count toward them.
+		if resource == "berries":
+			have = (Food.worth(stock) + Food.worth(loose)) / Food.value("berries")
 		if wanted > 0.0:
 			board.gather_demand[resource] = clampf((wanted - have) / wanted, 0.0, 1.0)
 	if sim.settlement_life != null:

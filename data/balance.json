@@ -9,7 +9,7 @@
 	"needs": {
 		"decay_per_day": {"food": 95.0, "rest": 80.0, "shelter": 0.0, "social": 40.0, "recreation": 22.0, "safety": 0.0},
 		"shelter_loss_per_night_hour": 6.0, "shelter_winter_factor": 2.0, "shelter_gain_per_day": 140.0,
-		"raw_food_restore": 38.0, "forage_restore": 30.0,
+		"forage_restore": 30.0,
 		"bed_rest_per_day": 220.0, "ground_rest_per_day": 170.0, "recreation_gain_per_day": 180.0, "hall_recreation_factor": 2.0,
 		"safety_recovery_per_day": 60.0, "safety_loss_on_threat": 35.0, "urgent_threshold": 25.0
 	},
@@ -58,13 +58,17 @@
 		"ground_count": 3, "ground_distance": [42.0, 64.0], "ground_spacing": 36.0, "ground_radius": 5, "ground_flatness": 2, "ground_bushes": 7, "ground_bush_ring": 7
 	},
 	"settlements": {
-		"start_radius": 22, "radius_per_structure": 1.0, "max_radius": 40, "chest_capacity": 40,
+		"start_radius": 22, "radius_per_structure": 1.0, "max_radius": 40, "chest_capacity": 40, "bin_capacity": 80, "bin_holds": ["grain"],
 		"culture_need_drift": 0.02, "culture_example_drift": 0.01, "culture_min": 0.4, "culture_max": 1.6,
-		"berries_per_person_day": 2.5, "standing_grace_days": 2, "autumn_season": 2, "autumn_berries_per_person": 10,
+		"standing_grace_days": 2, "autumn_season": 2, "autumn_berries_per_person": 10,
 		"standing": {
 			"hamlet": {"residents": 4, "housed": 0.5, "food_days": 0.0, "functions": {"dwelling": 2}, "shrine": false},
 			"village": {"residents": 10, "housed": 1.0, "food_days": 1.0, "functions": {"dwelling": 4, "storehouse": 1, "hall": 1, "garden": 1}, "shrine": true}
 		}
+	},
+	"food": {
+		"values": {"meal": 70.0, "grain": 45.0, "berries": 38.0}, "eat_order": ["meal", "grain", "berries"],
+		"spoil_days": {"berries": 6, "meal": 3}, "spoil_note_at": 6
 	},
 	"population": {
 		"travellers": 2, "miners": 5, "cap": 45, "migrant_roll_days": 3, "migrant_threshold": 0.35,

@@ -4,7 +4,7 @@ const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const DIRECTIONS: Array[Vector3i] = [Vector3i.LEFT, Vector3i.RIGHT, Vector3i.UP, Vector3i.DOWN, Vector3i.FORWARD, Vector3i.BACK]
 ## Furniture: components a room holds and the probe passes through.
-const FURNITURE: Array[String] = ["bed", "chest", "hearth", "workbench", "altar", "table", "bench", "lantern"]
+const FURNITURE: Array[String] = ["bed", "chest", "hearth", "workbench", "altar", "table", "bench", "lantern", "granary_bin"]
 ## Components a structure is found from: furniture that gives a room its use,
 ## and planters, whose connected beds make a garden under the open sky.
 const ANCHORS: Array[String] = ["bed", "chest", "altar", "hearth", "workbench", "table", "planter"]

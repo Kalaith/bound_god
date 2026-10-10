@@ -5,9 +5,13 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const Food = preload("res://scripts/sim/food.gd")
 
 const Op = Plans.Op
 const T = Plans.T
+## The best food a person believes is in the stores comes first: a meal,
+## then grain, then berries.
+const STORE_PLANS: Dictionary = {"meal": ["meal_stores", 0.9], "grain": ["grain_stores", 0.8], "berries": ["raw_stores", 0.7]}
 
 
 static func _store(agent: RefCounted) -> Dictionary:
@@ -20,21 +24,24 @@ static func _structure(id: int) -> Dictionary:
 
 static func eat(sim: RefCounted, agent: RefCounted) -> Array:
 	var plans: Array = []
-	if agent.carried("berries") >= 1.0:
+	if Food.is_food(str(agent.carrying.get("resource", ""))) and agent.carried(agent.carrying.resource) >= 1.0:
 		plans.append(H.option("eat_carried", 1.3, [Plans.step(Op.EAT)]))
-	if agent.settlement_id >= 0 and agent.beliefs.believes_stock("berries", 1):
-		plans.append(H.option("raw_stores", 0.7, H.free_hands(agent, "berries") + [
-			Plans.go_to(_store(agent)),
-			Plans.step(Op.TAKE_STOCK, {"resource": "berries", "amount": 1}),
-			Plans.step(Op.EAT),
-		]))
-	var loose: int = H.loose_item(sim, agent, "berries")
-	if loose >= 0:
-		plans.append(H.option("eat_loose", 0.6, H.free_hands(agent, "berries") + [
-			Plans.go_cell(sim.items[loose].cell),
-			Plans.step(Op.PICK_UP, {"item": loose}),
-			Plans.step(Op.EAT),
-		]))
+	for food in Food.eat_order():
+		if agent.settlement_id >= 0 and agent.beliefs.believes_stock(food, 1):
+			plans.append(H.option(STORE_PLANS[food][0], STORE_PLANS[food][1], H.free_hands(agent, food) + [
+				Plans.go_to(_store(agent)),
+				Plans.step(Op.TAKE_STOCK, {"resource": food, "amount": 1}),
+				Plans.step(Op.EAT),
+			]))
+	for food in Food.eat_order():
+		var loose: int = H.loose_item(sim, agent, food)
+		if loose >= 0:
+			plans.append(H.option("eat_loose", 0.6, H.free_hands(agent, food) + [
+				Plans.go_cell(sim.items[loose].cell),
+				Plans.step(Op.PICK_UP, {"item": loose}),
+				Plans.step(Op.EAT),
+			]))
+			break
 	var bushes: Array = H.known_sites(sim, agent, "bush")
 	if not bushes.is_empty():
 		plans.append(H.option("forage", 0.45, [

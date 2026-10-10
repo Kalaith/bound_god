@@ -48,7 +48,7 @@ var settlements: RefCounted
 var chronicle: RefCounted
 ## Array of Agent, index == id (the dead and departed stay, never present).
 var agents: Array = []
-## item id -> {id, cell, resource, amount}
+## item id -> {id, cell, resource, amount, day dropped}
 var items: Dictionary = {}
 var next_item_id: int = 1
 ## Fixed places from generation: sacred_tree, ruin, hamlet.
@@ -118,6 +118,7 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	spatial = Spatial.new()
 	effects = Effects.new()
 	settlements = Settlements.new()
+	settlements.today = calendar.day()
 	chronicle = Chronicle.new()
 	construction = Construction.new()
 	settlement_life = SettlementLife.new()
@@ -269,8 +270,10 @@ func drop_item(cell: Vector3i, resource: String, amount: float) -> void:
 		var item: Dictionary = items[id]
 		if item.cell == cell and item.resource == resource:
 			item.amount = float(item.amount) + amount
+			# A pile is as old as the oldest food in it.
+			item.day = mini(int(item.day), settlements.today)
 			return
-	items[next_item_id] = {"id": next_item_id, "cell": cell, "resource": resource, "amount": amount}
+	items[next_item_id] = {"id": next_item_id, "cell": cell, "resource": resource, "amount": amount, "day": settlements.today}
 	next_item_id += 1
 
 

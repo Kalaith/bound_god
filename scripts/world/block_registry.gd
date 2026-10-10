@@ -25,6 +25,8 @@ static var shape := PackedByteArray()
 static var tiles: Array = []
 ## Atlas tile for a block whose meta is 0 (a picked bush), by block id.
 static var empty_tiles: Dictionary = {}
+## Atlas tile per growth stage (meta) for a crop, by block id: Array of Vector2i.
+static var stage_tiles: Dictionary = {}
 static var components: Array = []
 static var resources: Array = []
 static var yields := PackedInt32Array()
@@ -76,6 +78,11 @@ static func build() -> void:
 		tiles[id] = [side, top, bottom]
 		if entry.has("atlas_empty"):
 			empty_tiles[id] = Vector2i(int(entry.atlas_empty[0]), int(entry.atlas_empty[1]))
+		if entry.has("atlas_stages"):
+			var stages: Array = []
+			for tile in entry.atlas_stages:
+				stages.append(Vector2i(int(tile[0]), int(tile[1])))
+			stage_tiles[id] = stages
 
 
 static func id(name: String) -> int:
@@ -108,3 +115,11 @@ static func resource(block: int) -> String:
 
 static func block_name(block: int) -> String:
 	return names[block]
+
+
+## The side tile for a block as it stands: a crop shows its growth stage.
+static func side_tile(block: int, meta: int) -> Vector2i:
+	if stage_tiles.has(block):
+		var stages: Array = stage_tiles[block]
+		return stages[clampi(meta, 0, stages.size() - 1)]
+	return tiles[block][0]

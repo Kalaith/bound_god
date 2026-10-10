@@ -9,7 +9,7 @@ const Text = preload("res://scripts/core/text.gd")
 const ChestPanel = preload("res://scripts/presentation/ui/chest_panel.gd")
 const ChoicePanel = preload("res://scripts/presentation/ui/choice_panel.gd")
 
-const USABLE: Array[String] = ["chest", "bed", "workbench", "hearth", "door", "altar", "sacred_tree"]
+const USABLE: Array[String] = ["chest", "granary_bin", "bed", "workbench", "hearth", "door", "altar", "sacred_tree"]
 
 var main: Node3D
 var sim: RefCounted
@@ -68,7 +68,7 @@ func use() -> void:
 		return
 	var cell: Vector3i = found.cell
 	match str(found.kind):
-		"chest":
+		"chest", "granary_bin":
 			open_chest(cell)
 		"bed":
 			_rest_choices()

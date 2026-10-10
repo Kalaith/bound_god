@@ -51,12 +51,14 @@ static func resolve_target(sim: RefCounted, agent: RefCounted, where: Dictionary
 static func _store_purpose(agent: RefCounted) -> Array:
 	var plan: Dictionary = agent.intention.get("plan", {}) if not agent.intention.is_empty() else {}
 	var next: int = int(plan.get("cursor", 0)) + 1
+	# A load is stored where there is room for that load (a bin takes only grain).
+	var load: String = str(agent.carrying.get("resource", ""))
 	if plan.is_empty() or next >= plan.steps.size():
-		return ["", not agent.carrying.is_empty()]
+		return [load, not agent.carrying.is_empty()]
 	var step: Dictionary = plan.steps[next]
 	if int(step.op) == Op.TAKE_STOCK:
 		return [str(step.resource), false]
-	return ["", int(step.op) == Op.DEPOSIT or not agent.carrying.is_empty()]
+	return [load, int(step.op) == Op.DEPOSIT or not agent.carrying.is_empty()]
 
 
 static func _near(a: Vector3i, b: Vector3i) -> bool:

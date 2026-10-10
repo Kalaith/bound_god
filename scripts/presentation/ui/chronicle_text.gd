@@ -16,11 +16,14 @@ static func cause(value: String) -> String:
 	return Text.format(parts[0], args)
 
 
-## A value may itself be a label key ("cause_raid", "standing_village");
-## it is worded on display, so saved entries never hold translated text.
+## A value may itself be a label key ("cause_raid", "standing_village",
+## "resource_berries"); it is worded on display, so saved entries never hold
+## translated text. A resource is worded in lower case inside a sentence.
 static func word(value: Variant) -> Variant:
 	if value is String and (value.begins_with("cause_") or value.begins_with("standing_")) and Text.has(value):
 		return Text.label(value)
+	if value is String and value.begins_with("resource_") and Text.has(value):
+		return Text.label(value).to_lower()
 	return value
 
 

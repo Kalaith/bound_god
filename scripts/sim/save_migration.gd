@@ -23,7 +23,7 @@ static func settlements_from_1(sim: RefCounted, data: Dictionary) -> Dictionary:
 	for index in range(blocks.size()):
 		if blocks[index] == chest_id:
 			chests[Vector3i(index % size.x, index / (size.x * size.z), (index / size.x) % size.z)] = {}
-	return {"entries": entries, "next_id": data.next_id, "chests": chests, "stocks": stocks}
+	return {"entries": entries, "next_id": data.next_id, "chests": chests, "stocks": stocks, "bins": {}, "lots": {}}
 
 
 ## Schema 1 had no chosen hotbar; the god starts with empty slots.
@@ -55,3 +55,24 @@ static func lanterns(state: Dictionary) -> Dictionary:
 	if int(state.schema_version) < 3:
 		return {}
 	return state.lanterns
+
+
+## Before schema 4 nothing spoiled and there were no granary bins: the food
+## already in the chests and lying loose is dated the day the save loads.
+static func food_from_3(state: Dictionary, settlements: Dictionary) -> Dictionary:
+	if int(state.schema_version) >= 4:
+		return settlements
+	var day: int = int(state.tick) / Balance.integer("time.ticks_per_day") + 1
+	var result: Dictionary = settlements.duplicate(true)
+	var lots: Dictionary = {}
+	for cell in result.chests:
+		for resource in result.chests[cell]:
+			if Balance.dict("food.spoil_days").has(resource):
+				var held: Dictionary = lots.get(cell, {})
+				held[resource] = [[day, int(result.chests[cell][resource])]]
+				lots[cell] = held
+	result["bins"] = {}
+	result["lots"] = lots
+	for id in state.items:
+		state.items[id]["day"] = day
+	return result

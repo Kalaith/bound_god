@@ -1,6 +1,6 @@
 extends SceneTree
-## Paints assets/blocks_atlas.png: 16 px procedural tiles in an 8 x 6 grid,
-## laid out as data/blocks.json expects (8 x 6 since the village blocks). Run once after changing a tile:
+## Paints assets/blocks_atlas.png: 16 px procedural tiles in an 8 x 7 grid,
+## laid out as data/blocks.json expects (8 x 7 since fields and granaries). Run once after changing a tile:
 ## Godot --headless --path . --script res://tools/make_atlas.gd
 
 const TILE: int = 16
@@ -10,7 +10,7 @@ var image: Image
 
 func _init() -> void:
 	rng.seed = 1717
-	image = Image.create(TILE * 8, TILE * 6, false, Image.FORMAT_RGBA8)
+	image = Image.create(TILE * 8, TILE * 7, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
 	_noise(Vector2i(0, 0), Color("5a9138"), Color("4a7f2e"), Color("6ea648"))
 	_grass_side(Vector2i(1, 0))
@@ -53,6 +53,11 @@ func _init() -> void:
 	_tilled(Vector2i(3, 5))
 	_planter_side(Vector2i(4, 5))
 	_lantern(Vector2i(5, 5))
+	_furrows(Vector2i(6, 5))
+	_bin_side(Vector2i(7, 5))
+	_bin_top(Vector2i(0, 6))
+	for stage in range(4):
+		_crop(Vector2i(1 + stage, 6), stage)
 	var error: int = image.save_png("res://assets/blocks_atlas.png")
 	print("atlas saved: ", error == OK)
 	quit(0 if error == OK else 1)
@@ -329,3 +334,47 @@ func _lantern(tile: Vector2i) -> void:
 			var frame: bool = y < 2 or y > 13 or x < 2 or x > 13
 			var glow: Color = Color("ffd27a").lerp(Color("fff1c4"), rng.randf() * 0.5)
 			_px(tile, x, y, Color("3a3a3e") if frame else glow)
+
+
+## Farmland: dark, damp soil in ridges.
+func _furrows(tile: Vector2i) -> void:
+	_noise(tile, Color("5a3a22"), Color("442b18"), Color("6b4a30"))
+	for y in range(TILE):
+		if y % 4 == 2:
+			for x in range(TILE):
+				_px(tile, x, y, Color("3a2414"))
+		elif y % 4 == 0:
+			for x in range(TILE):
+				if rng.randf() > 0.4:
+					_px(tile, x, y, Color("7a5638"))
+
+
+func _bin_side(tile: Vector2i) -> void:
+	_planks(tile, Color("b8945c"), Color("8a6a3c"))
+	for y in range(TILE):
+		_px(tile, 0, y, Color("5e4226"))
+		_px(tile, 15, y, Color("5e4226"))
+	for x in range(TILE):
+		_px(tile, x, 4, Color("5e4226"))
+		_px(tile, x, 11, Color("5e4226"))
+
+
+func _bin_top(tile: Vector2i) -> void:
+	for y in range(TILE):
+		for x in range(TILE):
+			var rim: bool = x < 2 or x > 13 or y < 2 or y > 13
+			_px(tile, x, y, Color("8a6a3c") if rim else Color("d8b45a").darkened(rng.randf() * 0.25))
+
+
+## A crop by stage: a sprout, a young green tuft, tall green stalks, ripe gold ears.
+func _crop(tile: Vector2i, stage: int) -> void:
+	var heights: Array = [4, 8, 12, 14]
+	var green: Color = Color("6fae3e") if stage < 3 else Color("c9a640")
+	for stalk in range(5 if stage > 0 else 3):
+		var x: int = 2 + stalk * 3 if stage > 0 else 5 + stalk * 2
+		var height: int = heights[stage] - rng.randi_range(0, 2)
+		for y in range(TILE - height, TILE):
+			_px(tile, x, y, green.darkened(rng.randf() * 0.2))
+		if stage == 3:
+			for y in range(TILE - height, TILE - height + 4):
+				_px(tile, x + 1, y, Color("e6c65c"))

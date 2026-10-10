@@ -7,6 +7,7 @@ const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")
 const ExecuteDefence = preload("res://scripts/sim/execute_defence.gd")
+const Food = preload("res://scripts/sim/food.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail
@@ -20,15 +21,17 @@ static func enter_here(sim: RefCounted, agent: RefCounted) -> void:
 		agent.inside = sim.structure_id_at(agent.cell)
 
 
+## Eat one portion of whatever food is carried: a cooked meal does the most good.
 static func _eat(sim: RefCounted, agent: RefCounted, step_ticks: int) -> int:
-	if agent.carried("berries") < 0.5:
+	var food: String = str(agent.carrying.get("resource", ""))
+	if not Food.is_food(food) or agent.carried(food) < 0.5:
 		return Fail.STOCK_EMPTY
 	agent.activity = "eating"
 	if step_ticks < EAT_TICKS:
 		return Plans.RUNNING
 	var amount: float = float(agent.carrying.amount)
-	agent.change_need(Need.FOOD, Balance.number("needs.raw_food_restore") * maxf(minf(amount, 1.0), 0.5))
-	Mind.add(agent, "ate_raw", sim.calendar.ticks_per_day)
+	agent.change_need(Need.FOOD, Food.value(food) * maxf(minf(amount, 1.0), 0.5))
+	Mind.add(agent, "ate_a_meal" if food == "meal" else "ate_raw", sim.calendar.ticks_per_day)
 	Mind.remove(agent, "went_hungry")
 	if amount - 1.0 > 0.05:
 		agent.carrying.amount = amount - 1.0

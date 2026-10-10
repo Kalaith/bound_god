@@ -1,10 +1,10 @@
 {
 	"schema_version": 1,
-	"resources": ["wood", "stone", "thatch", "berries", "ore"],
+	"resources": ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal"],
 	"divine_only": ["soil"],
-	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree", "table", "bench", "planter", "lantern"],
+	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree", "table", "bench", "planter", "lantern", "farmland", "granary_bin"],
 	"shapes": ["cube", "cross", "panel", "slab", "post"],
-	"atlas_size": [8, 6],
+	"atlas_size": [8, 7],
 	"blocks": [
 		{"id": 0, "name": "air", "resource": "", "yield": 0, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [0, 0], "shape": "cube", "breakable": false, "placeable": false},
 		{"id": 1, "name": "grass", "resource": "soil", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [1, 0], "atlas_top": [0, 0], "atlas_bottom": [2, 0], "shape": "cube", "breakable": true, "placeable": true},
@@ -36,6 +36,9 @@
 		{"id": 27, "name": "table", "resource": "wood", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": false, "atlas": [1, 5], "atlas_top": [0, 5], "atlas_bottom": [3, 1], "shape": "cube", "component": "table", "breakable": true, "placeable": true},
 		{"id": 28, "name": "bench", "resource": "wood", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": false, "atlas": [2, 5], "atlas_top": [3, 1], "atlas_bottom": [3, 1], "shape": "slab", "component": "bench", "breakable": true, "placeable": true},
 		{"id": 29, "name": "planter", "resource": "wood", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [4, 5], "atlas_top": [3, 5], "atlas_bottom": [3, 1], "shape": "cube", "component": "planter", "breakable": true, "placeable": true},
-		{"id": 30, "name": "lantern", "resource": "stone", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [5, 5], "shape": "post", "component": "lantern", "breakable": true, "placeable": true}
+		{"id": 30, "name": "lantern", "resource": "stone", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [5, 5], "shape": "post", "component": "lantern", "breakable": true, "placeable": true},
+		{"id": 31, "name": "farmland", "resource": "soil", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [2, 0], "atlas_top": [6, 5], "atlas_bottom": [2, 0], "shape": "cube", "component": "farmland", "breakable": true, "placeable": true},
+		{"id": 32, "name": "crop", "resource": "", "yield": 0, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [1, 6], "atlas_stages": [[1, 6], [2, 6], [3, 6], [4, 6]], "shape": "cross", "breakable": true, "placeable": false},
+		{"id": 33, "name": "granary_bin", "resource": "wood", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [7, 5], "atlas_top": [0, 6], "atlas_bottom": [3, 1], "shape": "cube", "component": "granary_bin", "breakable": true, "placeable": true}
 	]
 }

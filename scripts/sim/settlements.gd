@@ -1,7 +1,8 @@
 extends RefCounted
 ## Settlements: who lives where, the shared stock and where it is kept, and
 ## each settlement's culture weights. Stock is only what lies in the storage
-## chests standing in a settlement's area, each chest holding its own goods.
+## chests and granary bins standing in a settlement's area, each holding its
+## own goods (a bin holds grain only). Food that spoils is kept in dated lots.
 ## The camp is where people meet and where goods are set down loose while
 ## there is no chest with room; loose goods are never counted as stock.
 const Balance = preload("res://scripts/core/balance.gd")
@@ -11,13 +12,22 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const NONE := Vector3i(-1, -1, -1)
 ## How far from a chest someone can reach into it.
 const REACH: float = 1.8
+## Components that hold goods.
+const CONTAINERS: Array[String] = ["chest", "granary_bin"]
 
 ## id -> {id, name, center, radius, residents, culture, known_templates,
 ##        site_ids, shrine_ids, camp, founded_tick}
 var entries: Dictionary = {}
 var next_id: int = 1
-## chest cell -> {resource: int}, for every storage chest in the world.
+## container cell -> {resource: int}, for every chest and granary bin in the world.
 var chests: Dictionary = {}
+## container cell -> true for the granary bins among them.
+var bins: Dictionary = {}
+## container cell -> {resource: Array of [day stored, count]}, oldest first,
+## for the goods that spoil; the counts add up to the container's.
+var lots: Dictionary = {}
+## The day lots are dated with; kept by the calendar's daily turn.
+var today: int = 1
 ## Bumped whenever a chest appears, vanishes or its contents change.
 var version: int = 0
 ## settlement id -> [key, chest cells]
@@ -54,14 +64,18 @@ func ids() -> Array:
 ## Keeps the chest registry in step with the world: a new chest starts empty,
 ## a broken one spills what it held beside it as loose goods.
 func on_block(sim: RefCounted, cell: Vector3i, old: int, block: int) -> void:
-	var was_chest: bool = Registry.component(old) == "chest"
-	var is_chest: bool = Registry.component(block) == "chest"
+	var was_chest: bool = Registry.component(old) in CONTAINERS
+	var is_chest: bool = Registry.component(block) in CONTAINERS
 	if is_chest and not chests.has(cell):
 		chests[cell] = {}
+		if Registry.component(block) == "granary_bin":
+			bins[cell] = true
 		version += 1
 	elif was_chest and not is_chest and chests.has(cell):
 		var contents: Dictionary = chests[cell]
 		chests.erase(cell)
+		bins.erase(cell)
+		lots.erase(cell)
 		version += 1
 		var spill: Vector3i = sim.nav.nearest_walkable(cell, 2) if sim.nav != null else cell
 		var resources: Array = contents.keys()
@@ -81,20 +95,41 @@ func chest_total(cell: Vector3i) -> int:
 	return sum
 
 
-func chest_room(cell: Vector3i) -> int:
+## Room left in a container, for `resource` when given: a granary bin has
+## no room for anything but grain.
+func chest_room(cell: Vector3i, resource: String = "") -> int:
 	if not chests.has(cell):
 		return 0
-	return maxi(Balance.integer("settlements.chest_capacity") - chest_total(cell), 0)
+	if bins.has(cell) and not resource.is_empty() and not Balance.list("settlements.bin_holds").has(resource):
+		return 0
+	return maxi(container_capacity(cell) - chest_total(cell), 0)
 
 
-## Puts up to `count` into one chest; returns how many fit.
+func container_capacity(cell: Vector3i) -> int:
+	return Balance.integer("settlements.bin_capacity" if bins.has(cell) else "settlements.chest_capacity")
+
+
+## Puts up to `count` into one container; returns how many fit.
 func chest_add(cell: Vector3i, resource: String, count: int) -> int:
-	var stored: int = mini(count, chest_room(cell))
+	var stored: int = mini(count, chest_room(cell, resource))
 	if stored <= 0 or resource.is_empty():
 		return 0
 	chests[cell][resource] = int(chests[cell].get(resource, 0)) + stored
+	if perishable(resource):
+		var held: Dictionary = lots.get(cell, {})
+		var dated: Array = held.get(resource, [])
+		if not dated.is_empty() and int(dated.back()[0]) == today:
+			dated.back()[1] = int(dated.back()[1]) + stored
+		else:
+			dated.append([today, stored])
+		held[resource] = dated
+		lots[cell] = held
 	version += 1
 	return stored
+
+
+static func perishable(resource: String) -> bool:
+	return Balance.dict("food.spoil_days").has(resource)
 
 
 ## Takes up to `count` from one chest; returns how many were there.
@@ -107,8 +142,23 @@ func chest_take(cell: Vector3i, resource: String, count: int) -> int:
 		chests[cell].erase(resource)
 	else:
 		chests[cell][resource] = held - taken
+	_take_lots(cell, resource, taken)
 	version += 1
 	return taken
+
+
+## The oldest goods go first.
+func _take_lots(cell: Vector3i, resource: String, count: int) -> void:
+	var dated: Array = lots.get(cell, {}).get(resource, [])
+	var left: int = count
+	while left > 0 and not dated.is_empty():
+		var used: int = mini(left, int(dated[0][1]))
+		dated[0][1] = int(dated[0][1]) - used
+		left -= used
+		if int(dated[0][1]) <= 0:
+			dated.pop_front()
+	if dated.is_empty() and lots.has(cell):
+		lots[cell].erase(resource)
 
 
 ## The settlement a chest belongs to, or -1 when it stands outside them all.
@@ -164,7 +214,10 @@ func total(id: int) -> int:
 
 
 func capacity(sim: RefCounted, id: int) -> int:
-	return chest_cells(sim, id).size() * Balance.integer("settlements.chest_capacity")
+	var sum: int = 0
+	for cell in chest_cells(sim, id):
+		sum += container_capacity(cell)
+	return sum
 
 
 ## Stores into the settlement's chests within reach of `near`, nearest first.
@@ -216,7 +269,7 @@ func store_access(sim: RefCounted, id: int, from: Vector3i, resource: String = "
 	var best: Vector3i = NONE
 	var best_distance: float = INF
 	for chest in chest_cells(sim, id):
-		if storing and chest_room(chest) <= 0:
+		if storing and chest_room(chest, resource) <= 0:
 			continue
 		if not storing and not resource.is_empty() and int(chests[chest].get(resource, 0)) <= 0:
 			continue
@@ -293,13 +346,16 @@ static func _distance(a: Vector3i, b: Vector3i) -> float:
 
 
 func to_dict() -> Dictionary:
-	return {"entries": entries.duplicate(true), "next_id": next_id, "chests": chests.duplicate(true)}
+	return {"entries": entries.duplicate(true), "next_id": next_id, "chests": chests.duplicate(true), "bins": bins.duplicate(),
+		"lots": lots.duplicate(true)}
 
 
 func from_dict(data: Dictionary) -> void:
 	entries = data.entries
 	next_id = int(data.next_id)
 	chests = data.chests
+	bins = data.bins
+	lots = data.lots
 	version += 1
 	_chest_cache.clear()
 	_stock_cache.clear()

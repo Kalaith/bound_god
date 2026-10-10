@@ -4,6 +4,7 @@ extends RefCounted
 ## standing in its area and a living shrine). A village is the self-sustaining
 ## state the first steps grow toward. Rises and falls are chronicled.
 const Balance = preload("res://scripts/core/balance.gd")
+const Food = preload("res://scripts/sim/food.gd")
 
 const LEVELS: Array[String] = ["camp", "hamlet", "village"]
 ## Why a settlement fell, by the first criterion it no longer meets.
@@ -17,7 +18,7 @@ const LACKS: Dictionary = {
 ## Food in a settlement's chests, in days for everyone living there.
 static func food_days(sim: RefCounted, id: int) -> float:
 	var residents: int = maxi(present(sim, id), 1)
-	return float(sim.settlements.amount(id, "berries")) / (residents * Balance.number("settlements.berries_per_person_day"))
+	return Food.worth(sim.settlements.stock_of(id)) / (residents * Food.daily_need())
 
 
 static func present(sim: RefCounted, id: int) -> int:

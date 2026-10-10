@@ -7,9 +7,8 @@ signal closed
 signal transfer(chest: Vector3i, resource: String, amount: int)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
-const Balance = preload("res://scripts/core/balance.gd")
 
-const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore"]
+const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal"]
 const STEPS: Array[int] = [1, 10]
 
 var sim: RefCounted
@@ -30,8 +29,8 @@ func _ready() -> void:
 	panel.anchor_bottom = 0.5
 	panel.offset_left = -440
 	panel.offset_right = 440
-	panel.offset_top = -300
-	panel.offset_bottom = 300
+	panel.offset_top = -340
+	panel.offset_bottom = 340
 	add_child(panel)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
@@ -94,8 +93,8 @@ func _process(_delta: float) -> void:
 	if not sim.settlements.chests.has(chest):
 		closed.emit()
 		return
-	var capacity: int = Balance.integer("settlements.chest_capacity")
-	_title.text = Text.format("chest_title", {"total": sim.settlements.chest_total(chest), "capacity": capacity})
+	var capacity: int = sim.settlements.container_capacity(chest)
+	_title.text = Text.format("bin_title" if sim.settlements.bins.has(chest) else "chest_title", {"total": sim.settlements.chest_total(chest), "capacity": capacity})
 	var owner: int = sim.settlements.chest_owner(chest)
 	if owner >= 0:
 		_owner.text = Text.format("chest_owner", {"place": sim.settlements.get_settlement(owner).name})
@@ -104,8 +103,8 @@ func _process(_delta: float) -> void:
 		_owner.text = Text.label("chest_no_owner")
 		_owner.add_theme_color_override("font_color", Style.WARN)
 	var contents: Dictionary = sim.settlements.chest_contents(chest)
-	var room: int = sim.settlements.chest_room(chest)
 	for resource in RESOURCES:
+		var room: int = sim.settlements.chest_room(chest, resource)
 		var row: Array = _rows[resource]
 		var held: int = int(contents.get(resource, 0))
 		row[0].text = str(held)

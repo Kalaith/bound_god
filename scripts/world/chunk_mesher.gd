@@ -219,7 +219,7 @@ static func _special(world: RefCounted, cell: Vector3i, block: int, shape: int, 
 	var at := Vector3(cell)
 	if shape == Registry.SHAPE_CROSS:
 		var surface: Dictionary = surfaces[SURFACE_CUTOUT]
-		var tile: Vector2i = Registry.tiles[block][0]
+		var tile: Vector2i = Registry.side_tile(block, world.block_meta(cell))
 		var base_uv := Vector2(tile.x * tile_size.x, tile.y * tile_size.y)
 		var quads: Array = [
 			[Vector3(0.1, 0, 0.1), Vector3(0.9, 0, 0.9), Vector3(0.9, 1, 0.9), Vector3(0.1, 1, 0.1)],

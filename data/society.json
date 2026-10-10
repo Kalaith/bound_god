@@ -1,7 +1,8 @@
 {
 	"schema_version": 1,
 	"thoughts": [
-		{"id": "ate_raw", "text": "Ate plain berries", "mood": -1, "days": 0.5, "max_stack": 1},
+		{"id": "ate_raw", "text": "Ate plain food", "mood": -1, "days": 0.5, "max_stack": 1},
+		{"id": "ate_a_meal", "text": "Ate a cooked meal", "mood": 4, "days": 0.6, "max_stack": 1},
 		{"id": "ate_foraged", "text": "Ate straight from the bush", "mood": -1, "days": 0.5, "max_stack": 1},
 		{"id": "went_hungry", "text": "Went hungry", "mood": -8, "days": 1.0, "max_stack": 1},
 		{"id": "slept_bed", "text": "Slept in a real bed", "mood": 3, "days": 0.8, "max_stack": 1},

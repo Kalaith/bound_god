@@ -7,9 +7,9 @@ extends RefCounted
 const Agent = preload("res://scripts/agents/agent.gd")
 const Migration = preload("res://scripts/sim/save_migration.gd")
 
-const SCHEMA: int = 3
+const SCHEMA: int = 4
 ## Older schemas that still load, migrated on the way in.
-const MIGRATES: Array[int] = [1, 2]
+const MIGRATES: Array[int] = [1, 2, 3]
 
 
 ## {"sim": Dictionary, "chunks": Dictionary} for a running sim.
@@ -52,6 +52,8 @@ static func problem(state: Variant, chunks: Variant) -> String:
 			return "save_damaged"
 	if version >= 3 and not state.get("lanterns") is Dictionary:
 		return "save_damaged"
+	if version >= 4 and (not state.settlements.get("lots") is Dictionary or not state.settlements.get("bins") is Dictionary):
+		return "save_damaged"
 	for chunk in chunks:
 		if not chunk is Vector3i or not chunks[chunk] is PackedByteArray:
 			return "save_damaged"
@@ -76,9 +78,10 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	if int(state.schema_version) == 1:
 		var migrated: Dictionary = Migration.settlements_from_1(sim, state.settlements)
 		old_stock = migrated.stocks
-		sim.settlements.from_dict(migrated)
+		sim.settlements.from_dict(Migration.food_from_3(state, migrated))
 	else:
-		sim.settlements.from_dict(state.settlements)
+		sim.settlements.from_dict(Migration.food_from_3(state, state.settlements))
+	sim.settlements.today = sim.calendar.day()
 	sim.settlement_life.from_dict(state.settlement_life)
 	sim.construction.from_dict(state.construction)
 	sim.items = state.items

@@ -5,11 +5,13 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Lifecycle = preload("res://scripts/sim/lifecycle.gd")
+const Spoilage = preload("res://scripts/sim/spoilage.gd")
 
 
 static func new_day(sim: RefCounted) -> void:
 	var now: int = sim.calendar.tick
 	var day_ticks: int = sim.calendar.ticks_per_day
+	Spoilage.daily(sim)
 	var decay: float = Balance.number("social.opinion_decay_per_day")
 	for agent in sim.agents:
 		if not agent.is_present():

@@ -7,7 +7,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 
 ## Code records these thoughts by id, so the catalog must hold them.
 const REQUIRED_THOUGHTS: Array[String] = [
-	"ate_raw", "ate_foraged", "went_hungry", "slept_bed", "slept_ground", "exposed", "good_chat",
+	"ate_raw", "ate_a_meal", "ate_foraged", "went_hungry", "slept_bed", "slept_ground", "exposed", "good_chat",
 	"insulted", "comforted", "new_partner", "friend_died", "partner_died", "ambition_fulfilled",
 	"frustrated", "injured", "child_born", "witnessed_attack", "helped_friend", "refused_help",
 	"arrived", "learned", "fought", "mental_break", "death_witness", "cared_for", "saw_the_god",
@@ -29,7 +29,7 @@ const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle",
 const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden"]
 const BALANCE_SECTIONS: Array[String] = [
 	"time", "needs", "agents", "social", "mood", "health", "work", "construction", "world",
-	"settlements", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
+	"settlements", "food", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
 ]
 
 
@@ -105,6 +105,9 @@ static func check_blocks(data: Dictionary) -> Array[String]:
 				if not tile is Array or tile.size() != 2 or not _number(tile[0]) or not _number(tile[1]) \
 						or int(tile[0]) >= int(size[0]) or int(tile[1]) >= int(size[1]):
 					errors.append(label + ": " + key + " is outside the atlas")
+		for tile in entry.get("atlas_stages", []):
+			if not tile is Array or tile.size() != 2 or not _number(tile[0]) or not _number(tile[1]) 					or int(tile[0]) >= int(size[0]) or int(tile[1]) >= int(size[1]):
+				errors.append(label + ": a growth stage tile is outside the atlas")
 		if entry.has("component") and not components.has(entry.component):
 			errors.append(label + ": unknown component " + str(entry.component))
 	if not ids.has(0) or Data.block(0).get("name", "air") != "air":
