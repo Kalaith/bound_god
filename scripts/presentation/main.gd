@@ -175,7 +175,9 @@ func _start() -> void:
 	settlement_panel = SettlementPanel.new()
 	settlement_panel.sim = sim
 	ui_layer.add_child(settlement_panel)
-	settlement_panel.closed.connect(func() -> void: settlement_panel.hide())
+	settlement_panel.closed.connect(func() -> void:
+		settlement_panel.hide()
+		resume_world_input())
 	library_screen.offer_requested.connect(_offer)
 	people = PeopleController.new()
 	people.sim = sim
@@ -333,10 +335,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		chronicle_screen.open()
 	elif event.is_action_pressed("toggle_settlement"):
-		if settlement_panel.visible:
-			settlement_panel.hide()
-		else:
-			settlement_panel.open(sim.settlements.at_cell(Vector3i(sim.zone_center())))
+		# The panel scrolls and has buttons, so the mouse is freed while it is open.
+		pause_world_input()
+		settlement_panel.open(sim.settlements.at_cell(Vector3i(sim.zone_center())))
 	elif event.is_action_pressed("toggle_settings") and inspector.visible:
 		people.close()
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -388,7 +389,7 @@ func modal_open() -> bool:
 		return true
 	if interaction.is_open() or inventory.visible:
 		return true
-	for screen in [library_screen, faith.menu, requests_panel, rest_overlay, chronicle_screen, pause_menu]:
+	for screen in [library_screen, faith.menu, requests_panel, rest_overlay, chronicle_screen, pause_menu, settlement_panel]:
 		if screen.visible:
 			return true
 	return false

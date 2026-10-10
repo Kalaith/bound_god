@@ -63,6 +63,12 @@ func open(id: int) -> void:
 	show()
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and (event.is_action_pressed("toggle_settings") or event.is_action_pressed("toggle_settlement")):
+		closed.emit()
+		get_viewport().set_input_as_handled()
+
+
 func _gold(text: String) -> String:
 	return "[color=#%s]%s[/color]" % [Style.GOLD.to_html(false), text]
 
