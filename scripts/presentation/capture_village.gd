@@ -8,10 +8,15 @@ const Data = preload("res://scripts/core/data.gd")
 const Template = preload("res://scripts/building/template.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Perception = preload("res://scripts/sim/perception.gd")
+const CaptureArchitecture = preload("res://scripts/presentation/capture_architecture.gd")
+const CaptureHalls = preload("res://scripts/presentation/capture_halls.gd")
 
 
 static func arrange(main: Node3D, shot: Node, scenario: String) -> void:
 	var sim: RefCounted = main.sim
+	if scenario == "village_beds":
+		_beds(main, shot)
+		return
 	var tree: Vector3i = sim.features.sacred_tree
 	sim.run_ticks(12)
 	_stamp(sim, "village_hall", tree.x - 15, tree.z + 6)
@@ -50,6 +55,52 @@ static func arrange(main: Node3D, shot: Node, scenario: String) -> void:
 		functions.append(",".join(entry.functions))
 	print("VILLAGE %s structures=%s lanterns=%d lit=%s" % [scenario, functions, sim.lanterns.size(), sim.is_lit(sim.nav.surface(tree.x - 8, tree.z + 8))])
 	shot.shoot_after(120)
+
+
+## Two people asleep in a timber cottage, its thatch lifted for the camera,
+## each lying on their own bed.
+static func _beds(main: Node3D, shot: Node) -> void:
+	var sim: RefCounted = main.sim
+	var choice: Dictionary = CaptureArchitecture._stamp(sim, "timber_cottage")
+	var home: int = -1
+	for entry in choice.get("order", []):
+		if int(entry[1]) == Registry.id("bed"):
+			home = sim.structure_id_at(entry[0])
+	var sleepers: Array = []
+	if home >= 0:
+		var entry: Dictionary = sim.structures.entries[home]
+		var access: Vector3i = sim.structure_access(home, entry.anchor)
+		# Whoever the probe already housed here sleeps here; strangers fill
+		# any bed left.
+		for agent in sim.agents:
+			if not agent.is_present() or (agent.home != home and entry.residents.size() >= int(entry.capacity.get("beds", 0))):
+				continue
+			sim.set_home(agent, home)
+			agent.inside = home
+			agent.activity = "sleeping"
+			agent.cell = access
+			agent.position = Vector3(access) + Vector3(0.5, 0.0, 0.5)
+			agent.previous_position = agent.position
+			sleepers.append(agent.id)
+	main.driver.set_speed(0)
+	# Lift the thatch for the camera, then put back the house the edit lost
+	# (only the picture is opened up; the sleepers stay where they lay).
+	if home >= 0:
+		var kept: Dictionary = sim.structures.entries[home].duplicate(true)
+		CaptureHalls._strip_roof(sim, choice)
+		sim.structures.entries[home] = kept
+		for id in sleepers:
+			sim.agents[id].home = home
+			sim.agents[id].inside = home
+			sim.agents[id].activity = "sleeping"
+	main.world_view.remesh_now()
+	var at: Vector3 = Vector3(choice.get("origin", Vector3i.ZERO)) + Vector3(2.5, 0.6, 2.5)
+	CaptureArchitecture._look(main, at, 3.5, -1.15, 20.0)
+	print("VILLAGE beds home=%d sleepers=%s beds=%s" % [home, str(sleepers), str(sim.structures.entries.get(home, {}).get("components", {}).get("bed", []))])
+	shot.shoot_after(90)
+	main.get_tree().create_timer(1.0).timeout.connect(func() -> void:
+		for id in sleepers:
+			print("VILLAGE sleeper %d lies at %s" % [id, str(main.agent_views.views[id].position)]))
 
 
 ## Raises a valley design on levelled ground, as a god's hands could.

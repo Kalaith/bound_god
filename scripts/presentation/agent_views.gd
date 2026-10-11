@@ -3,6 +3,8 @@ extends Node3D
 ## draws the selected person's ring, path and strongest relations.
 const AgentView = preload("res://scripts/presentation/agent_view.gd")
 const Style = preload("res://scripts/presentation/ui/style.gd")
+## Height of a bed slab's top (see ChunkMesher's slab shape).
+const BED_TOP: float = 0.5625
 
 var sim: RefCounted
 var driver: Node
@@ -52,8 +54,33 @@ func _process(delta: float) -> void:
 			add_child(view)
 			view.setup(agent)
 			views[agent.id] = view
-		view.refresh(agent, alpha, delta, agent.id == selected)
+		view.refresh(agent, alpha, delta, agent.id == selected, _bed_of(agent))
 	_draw_selection()
+
+
+## Where a sleeper lies: the bed matching their place among the residents of
+## the room they sleep in, as [top centre, head direction], or [] when they
+## sleep on the floor. The simulation stands them on the room's floor (a bed
+## is not walkable); only the drawing moves them onto it.
+func _bed_of(agent: RefCounted) -> Array:
+	if agent.activity != "sleeping" or agent.inside < 0:
+		return []
+	var entry: Dictionary = sim.structures.entries.get(agent.inside, {})
+	var beds: Array = entry.get("components", {}).get("bed", [])
+	var slot: int = entry.get("residents", []).find(agent.id)
+	if slot < 0 or slot >= beds.size():
+		return []
+	var bed: Vector3i = beds[slot]
+	# Head against a wall where there is one, else along the x axis.
+	var head := Vector3i.LEFT
+	for side in [Vector3i.FORWARD, Vector3i.LEFT, Vector3i.BACK, Vector3i.RIGHT]:
+		if sim.voxels.is_solid(bed + side) and not sim.voxels.is_solid(bed - side):
+			head = side
+			break
+	# A lying figure is longer than the bed: keep the head off the wall and
+	# let the feet hang over the end.
+	var top := Vector3(bed.x + 0.5, bed.y + BED_TOP, bed.z + 0.5) - Vector3(head) * 0.25
+	return [top, head]
 
 
 func _draw_selection() -> void:

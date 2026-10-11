@@ -98,12 +98,22 @@ func setup(agent: RefCounted) -> void:
 	_phase = float(agent.id) * 1.7
 
 
-func refresh(agent: RefCounted, alpha: float, delta: float, selected: bool) -> void:
+## `bed` is [top centre, head direction] while asleep in a bed, else [].
+func refresh(agent: RefCounted, alpha: float, delta: float, selected: bool, bed: Array = []) -> void:
 	var target: Vector3 = agent.previous_position.lerp(agent.position, alpha)
+	if not bed.is_empty():
+		target = bed[0]
 	var motion: Vector3 = target - position
 	position = target
 	var flat: float = Vector2(motion.x, motion.z).length()
-	if flat > 0.002:
+	# Getting into or out of bed is a step, not a sprint.
+	if flat > 1.5:
+		flat = 0.0
+	if not bed.is_empty():
+		# The lying figure's head is toward its local -z.
+		var head: Vector3i = bed[1]
+		_facing = atan2(-float(head.x), -float(head.z))
+	elif flat > 0.002:
 		_facing = lerp_angle(_facing, atan2(motion.x, motion.z), minf(delta * 10.0, 1.0))
 	rotation.y = _facing
 	scale = Vector3.ONE * (0.7 if agent.is_child else 1.0)
