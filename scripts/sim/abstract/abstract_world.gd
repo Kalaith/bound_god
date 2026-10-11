@@ -30,6 +30,10 @@ const AbstractBuild = preload("res://scripts/sim/abstract/abstract_build.gd")
 const AbstractCultivation = preload("res://scripts/sim/abstract/abstract_cultivation.gd")
 const DesignsLore = preload("res://scripts/sim/designs_lore.gd")
 const Homes = preload("res://scripts/sim/homes.gd")
+const Branches = preload("res://scripts/sim/branches.gd")
+const BranchesAbstract = preload("res://scripts/sim/abstract/abstract_branches.gd")
+const Schools = preload("res://scripts/sim/schools.gd")
+const Relics = preload("res://scripts/sim/relics.gd")
 
 ## Chronicle kinds that wake a meditating god whoever they concern.
 const WAKING: Array[String] = ["shrine_fell", "tree_unlock", "sect_master", "sect_founded"]
@@ -164,6 +168,11 @@ func _day(sim: RefCounted) -> void:
 	Lifecycle.daily(sim)
 	sim.settlement_life.daily(sim)
 	sim.sects.daily(sim)
+	Schools.daily(sim)
+	BranchesAbstract.day(sim)
+	Relics.daily(sim)
+	Relics.abstract_day(sim)
+	sim.routes.daily(sim, true)
 	Blueprints.daily(sim)
 	sim.tree_growth.daily(sim)
 	sim.herbs.abstract_day(sim)
@@ -225,6 +234,7 @@ func finish(sim: RefCounted) -> void:
 		AbstractBuild.stamp(sim, sim.construction.get_site(site_id))
 	sim.settlement_life.apply_pending_decay(sim)
 	sim.herbs.materialise(sim)
+	sim.paths.materialise(sim)
 	sim.weather.flush(sim)
 	for agent in sim.agents:
 		if agent.is_present():

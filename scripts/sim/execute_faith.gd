@@ -58,4 +58,16 @@ static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks
 			return _pray(sim, agent, step, step_ticks)
 		Op.TEND:
 			return _tend(sim, agent, step, step_ticks)
+		Op.TAKE_RELICS:
+			# Taken up at the ruin; the next tick reads whether any were left.
+			if step_ticks == 0:
+				agent.activity = "working"
+				sim.effects.action("take_relics", agent.id, {"shrine": int(step.shrine)})
+				return Plans.RUNNING
+			if not agent.step_result.has("relics"):
+				return Plans.RUNNING
+			return Plans.DONE if int(agent.step_result.relics) > 0 else Fail.TARGET_GONE
+		Op.LAY_RELICS:
+			sim.effects.action("lay_relics", agent.id, {"shrine": int(step.shrine)})
+			return Plans.DONE
 	return Fail.INTERRUPTED

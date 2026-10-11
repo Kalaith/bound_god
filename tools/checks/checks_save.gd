@@ -51,7 +51,7 @@ func check_a_save_survives_the_store_and_a_damaged_file():
 	return ""
 
 
-func check_a_season_of_rest_fits_in_a_minute():
+func long_check_a_season_of_rest_fits_in_a_minute():
 	var sim: RefCounted = Sim.create(11)
 	var started: int = Time.get_ticks_msec()
 	sim.run_ticks(sim.calendar.ticks_per_day * sim.calendar.days_per_season)

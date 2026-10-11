@@ -14,6 +14,7 @@ const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Miracles = preload("res://scripts/sim/miracles.gd")
+const Balance = preload("res://scripts/core/balance.gd")
 
 var sim: RefCounted
 var avatar_cell := Vector3i.ZERO
@@ -121,7 +122,7 @@ func _process(delta: float) -> void:
 	_title.text = str(shrine.get("name", Text.label("shrine_none")))
 	_status.text = Text.format("shrine_menu_status", {"favour": roundi(float(shrine.get("favour", 0.0))), "support": "%.1f" % float(shrine.get("support", 0.0)),
 		"condition": roundi(float(shrine.get("condition", 0.0))), "renown": sim.god.renown, "state": Text.label("shrine_state_" + str(shrine.get("state", "fallen")))})
-	var key: String = "%d|%d|%s" % [sim.god.active_shrine_id, sim.god.renown, avatar_cell]
+	var key: String = "%d|%d|%s|%d" % [sim.god.active_shrine_id, sim.god.renown, avatar_cell, ceili(float(Miracles.transfer_wait(sim)) / sim.calendar.ticks_per_hour())]
 	for id in sim.faith.ids():
 		key += "|%s:%d" % [sim.faith.shrines[id].state, int(sim.faith.shrines[id].favour)]
 	if key != _key:
@@ -140,8 +141,14 @@ func _rebuild_shrines() -> void:
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		line.add_child(label)
 		if id != sim.god.active_shrine_id:
-			var go: Button = Style.button(Text.label("shrine_menu_transfer"), false, 18)
-			go.disabled = shrine.state != "active"
+			var go: Button = Style.button(Text.format("shrine_menu_transfer_cost", {"cost": roundi(Balance.number("shrines.transfer_cost"))}), false, 18)
+			var refusal: String = Miracles.transfer_refusal(sim, id)
+			go.disabled = not refusal.is_empty()
+			# Why the god cannot go yet is said beside the shrine, not hidden in a tooltip.
+			if refusal == "transfer_cooldown":
+				label.text += " · " + Text.format("transfer_cooldown_hours", {"hours": ceili(float(Miracles.transfer_wait(sim)) / sim.calendar.ticks_per_hour())})
+			elif not refusal.is_empty() and refusal != "transfer_inactive":
+				label.text += " · " + Text.label(refusal)
 			go.pressed.connect(func() -> void: command.emit({"type": "transfer_shrine", "shrine": id}))
 			line.add_child(go)
 		_shrines.add_child(line)

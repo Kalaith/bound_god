@@ -134,7 +134,10 @@ static func _weigh_leader(sim: RefCounted, id: int) -> int:
 ## one for the village and one for its sect (whose cultivators build their
 ## halls beside the village's work, as in the detailed world).
 static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
-	var tried: Dictionary = record.get("no_site", {})
+	# Kept on the settlement, not the record, so a meditation that wakes and
+	# resumes does not forget where it found no room and search again at once.
+	var settlement: Dictionary = sim.settlements.entries[id]
+	var tried: Dictionary = settlement.get("no_site", record.get("no_site", {}))
 	var started: Dictionary = {}
 	for want in wants(sim, id):
 		var sect: bool = SectHallWants.PURPOSES.has(str(want[1]))
@@ -160,20 +163,27 @@ static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
 			started[sect] = true
 			continue
 		var failed: Array = tried.get(design.id, [-1, 0, -1, -1])
-		var ground: Array = [int(sim.structures.version), sim.construction.reserved.size()]
-		# Nothing built, fallen or reserved since it last failed: it would fail again.
-		if int(failed[0]) > sim.calendar.tick or (failed.size() > 3 and int(failed[2]) == ground[0] and int(failed[3]) == ground[1]):
+		var ground: Array = _room(sim, id)
+		# No more room in this settlement since it last failed (its area no
+		# wider, nothing of its own fallen or given up): it would fail again.
+		if int(failed[0]) > sim.calendar.tick or (failed.size() > 4 and float(ground[0]) <= float(failed[2]) and int(ground[1]) >= int(failed[3]) and int(ground[2]) >= int(failed[4])):
 			continue
 		var choice: Dictionary = SiteFinder.find(sim, design, sim.settlements.entries[id], SEARCH_ENOUGH, SEARCH_MOST)
 		if choice.is_empty():
 			# No room yet: look again later, and later still each time it fails.
-			var days: float = minf(5.0 * pow(2.0, int(failed[1])), 80.0)
-			tried[design.id] = [sim.calendar.tick + sim.calendar.ticks_for_days(days), int(failed[1]) + 1, ground[0], ground[1]]
-			record["no_site"] = tried
+			var days: float = minf(5.0 * pow(2.0, int(failed[1])), 160.0)
+			tried[design.id] = [sim.calendar.tick + sim.calendar.ticks_for_days(days), int(failed[1]) + 1, ground[0], ground[1], ground[2]]
+			settlement["no_site"] = tried
 			continue
 		tried.erase(design.id)
 		_mark(sim, id, design, choice, want)
 		started[sect] = true
+
+
+## How much a settlement has standing on its ground: [radius, structures,
+## building sites]. A wider area, or fewer of either, may make room.
+static func _room(sim: RefCounted, id: int) -> Array:
+	return [float(sim.settlements.entries[id].radius), sim.settlements.structures_in(sim, id).size(), sim.construction.in_settlement(id).size()]
 
 
 static func _mark(sim: RefCounted, id: int, design: RefCounted, choice: Dictionary, want: Array) -> void:

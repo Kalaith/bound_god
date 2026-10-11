@@ -71,9 +71,9 @@ static func crafters(entry: Dictionary) -> int:
 ## A settlement's alchemy buildings, best tier first, then by id.
 static func workshops(sim: RefCounted, id: int) -> Array:
 	var found: Array = []
-	for entry in sim.structures.built():
+	for entry in sim.settlements.structures_in(sim, id):
 		var tier: int = tier_of(entry)
-		if tier > 0 and sim.settlements.at_cell(entry.anchor) == id:
+		if tier > 0:
 			found.append([tier, int(entry.id)])
 	found.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0] or (a[0] == b[0] and a[1] < b[1]))
 	var result: Array = []
@@ -112,8 +112,8 @@ static func wants(sim: RefCounted, id: int) -> Dictionary:
 	var care: float = Balance.number("health.care_threshold")
 	var cleanse_at: float = float(config().toxicity.cleanse_at)
 	var years: float = Balance.number("alchemy.elixir_years")
-	for agent in sim.agents:
-		if not agent.is_present() or agent.is_child or agent.settlement_id != id:
+	for agent in sim.settlements.present_residents(sim, id):
+		if agent.is_child:
 			continue
 		var c: Dictionary = agent.cultivation
 		if c.is_empty():

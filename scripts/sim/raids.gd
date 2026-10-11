@@ -4,6 +4,7 @@ extends RefCounted
 ## a chosen target is warned the day before (strangers are seen watching),
 ## then the band walks in from the valley edge. Each raid is written to the
 ## chronicle with its cause and its outcome.
+const Schools = preload("res://scripts/sim/schools.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
@@ -31,7 +32,8 @@ static func wealth(sim: RefCounted, id: int) -> float:
 	for entry in sim.structures.built():
 		if Vector2(entry.anchor.x - settlement.center.x, entry.anchor.z - settlement.center.z).length() <= float(settlement.radius):
 			structures += 1
-	return float(sim.settlements.total(id)) + structures * 5.0
+	# A hidden school keeps its wealth out of sight.
+	return (float(sim.settlements.total(id)) + structures * 5.0) * Schools.wealth_factor(sim, id)
 
 
 static func defenders(sim: RefCounted, id: int) -> int:

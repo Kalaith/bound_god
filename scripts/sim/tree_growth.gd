@@ -11,6 +11,7 @@ const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
+const Relics = preload("res://scripts/sim/relics.gd")
 
 ## kind -> amount of insight
 var insights: Dictionary = {}
@@ -292,14 +293,23 @@ func from_dict(state: Dictionary) -> void:
 	relics = state.get("relics", [])
 
 
-## A cultivator of Foundation Establishment or beyond leaves a relic at the
-## tree when they die; relics steady those who face Heaven in its sanctuary.
+## A cultivator of Foundation Establishment or beyond leaves a relic when
+## they die: at the tree, or at their branch's living shrine (relics.gd);
+## relics steady those who face Heaven near where they lie.
 func leave_relic(sim: RefCounted, agent: RefCounted) -> void:
-	relics.append({"name": agent.full_name(), "realm": int(agent.cultivation.realm), "tick": sim.calendar.tick})
-	sim.chronicle_event("relic_left", _tree_place(sim), {"name": agent.full_name()}, "cause_great_cultivator", [agent.id])
+	var shrine: int = Relics.shrine_for(sim, agent)
+	relics.append({"name": agent.full_name(), "realm": int(agent.cultivation.realm), "tick": sim.calendar.tick, "shrine": shrine, "lost": false, "carried": -1})
+	if shrine == Relics.tree_shrine(sim):
+		sim.chronicle_event("relic_left", _tree_place(sim), {"name": agent.full_name()}, "cause_great_cultivator", [agent.id])
+	else:
+		var at: Dictionary = sim.faith.get_shrine(shrine)
+		sim.chronicle_event("relic_left_at", int(at.settlement_id), {"name": agent.full_name(), "shrine": str(at.name)}, "cause_great_cultivator", [agent.id])
 
 
 ## What the relics add to a trial's preparation in the sanctuary; `extra`
-## more relics count where an ancestral hall's tablets keep them.
-func relic_preparation(extra: int = 0) -> float:
-	return minf(float(relics.size()), Balance.number("cultivation.relics_most") + extra) * Balance.number("cultivation.relic_preparation")
+## more relics count where an ancestral hall's tablets keep them. `count`
+## is how many steady it (the tree's own when not given).
+func relic_preparation(sim: RefCounted, extra: int = 0, count: int = -1) -> float:
+	if count < 0:
+		count = Relics.at(sim, Relics.tree_shrine(sim)).size()
+	return minf(float(count), Balance.number("cultivation.relics_most") + extra) * Balance.number("cultivation.relic_preparation")

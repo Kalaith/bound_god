@@ -48,8 +48,8 @@ static func survey(sim: RefCounted, id: int) -> Dictionary:
 			planted += 1
 	var fields: Array = []
 	var growth: int = -1
-	for entry in sim.structures.built():
-		if entry.functions.has("field") and sim.settlements.at_cell(entry.anchor) == id:
+	for entry in sim.settlements.structures_in(sim, id):
+		if entry.functions.has("field"):
 			for cell in entry.components.get("farmland", []):
 				fields.append(cell)
 				var above: Vector3i = cell + Vector3i.UP
@@ -75,8 +75,8 @@ static func _forager_of(sim: RefCounted, cell: Vector3i) -> int:
 
 
 static func _has_function(sim: RefCounted, id: int, function: String) -> bool:
-	for entry in sim.structures.built():
-		if entry.functions.has(function) and sim.settlements.at_cell(entry.anchor) == id:
+	for entry in sim.settlements.structures_in(sim, id):
+		if entry.functions.has(function):
 			return true
 	return false
 

@@ -4,6 +4,7 @@ extends RefCounted
 ## plan (approach, loot the stores, break the altar of a god they have heard
 ## of, retreat) and turn back when defenders outnumber them. Both walk the
 ## same navigation grid as people. Their harm goes straight to the sim.
+const Schools = preload("res://scripts/sim/schools.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
@@ -243,10 +244,13 @@ func _loot(sim: RefCounted, entry: Dictionary, settlement: Dictionary) -> void:
 ## Raiders who have heard of the god break its altar.
 func _desecrate(sim: RefCounted, entry: Dictionary, settlement: Dictionary) -> void:
 	var altar: Vector3i = Vector3i(-1, -1, -1)
+	var torn: bool = false
 	for id in settlement.get("shrine_ids", []):
 		var shrine: Dictionary = sim.faith.get_shrine(id)
-		if not shrine.is_empty() and shrine.kind == "altar" and shrine.state != "fallen":
+		if not shrine.is_empty() and shrine.kind in ["altar", "cutting"] and shrine.state != "fallen":
 			altar = shrine.cell
+			# A branch's cutting is torn up rather than smashed.
+			torn = shrine.kind == "cutting"
 			break
 	if altar.x < 0:
 		entry.state = "retreat"
@@ -254,7 +258,7 @@ func _desecrate(sim: RefCounted, entry: Dictionary, settlement: Dictionary) -> v
 	if Vector2(entry.cell.x - altar.x, entry.cell.z - altar.z).length() > 2.0:
 		_path_to(sim, entry, sim.nav.nearest_walkable(altar, 2))
 		return
-	sim.set_block(altar, Registry.id("cobble"), 0, "raid:%d" % int(entry.band))
+	sim.set_block(altar, 0 if torn else Registry.id("cobble"), 0, "raid:%d" % int(entry.band))
 	sim.raids.note_desecration(int(entry.band))
 	entry.state = "retreat"
 
@@ -306,7 +310,7 @@ func attack_step(sim: RefCounted, agent: RefCounted, step: Dictionary, step_tick
 	agent.path.clear()
 	agent.activity = "fighting"
 	if step_ticks % 6 == 0:
-		var damage: float = 1.2 * 6.0 * (1.0 + maxf(agent.personality.bravery, 0.0)) * agent.capacity()
+		var damage: float = 1.2 * 6.0 * (1.0 + maxf(agent.personality.bravery, 0.0)) * agent.capacity() * Schools.strike_factor(sim, agent)
 		sim.effects.action("attack_threat", agent.id, {"threat": id, "damage": damage})
 	Personality.practise(agent, Personality.Skill.DEFENCE)
 	return Plans.RUNNING

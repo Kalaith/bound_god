@@ -35,7 +35,7 @@ static func capture(sim: RefCounted) -> Dictionary:
 		"requests": sim.requests.to_dict(), "threats": sim.threats.to_dict(), "raids": sim.raids.to_dict(),
 		"command_log": sim.command_log.duplicate(true), "kindled": sim.kindled.duplicate(true), "veils": sim.veils.duplicate(true),
 		"lanterns": sim.lanterns.duplicate(), "crops": sim.crops.to_dict(), "kitchens": sim.kitchens.to_dict(),
-		"woods": sim.woods.to_dict(), "sects": sim.sects.to_dict(), "tribulations": sim.tribulations.to_dict(), "tree": sim.tree_growth.to_dict(), "paths": sim.paths.to_dict(),
+		"woods": sim.woods.to_dict(), "sects": sim.sects.to_dict(), "tribulations": sim.tribulations.to_dict(), "tree": sim.tree_growth.to_dict(), "paths": sim.paths.to_dict(), "routes": sim.routes.to_dict(),
 		"weather": sim.weather.to_dict(), "herbs": sim.herbs.to_dict(),
 		"alchemy": sim.alchemy.to_dict(), "forges": sim.forges.to_dict(),
 	}
@@ -117,6 +117,8 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 		sim.tree_growth.from_dict(state.tree)
 	# Worn paths came with M19 (schema 5 worlds may lack them).
 	sim.paths.from_dict(state.get("paths", {}))
+	# Routes between settlements came with M21.
+	sim.routes.from_dict(state.get("routes", {}))
 	# The sky came with M20; older worlds start under a clear one.
 	sim.weather.from_dict(sim, state.get("weather", {}))
 	sim.herbs.from_dict(state.get("herbs", {}))

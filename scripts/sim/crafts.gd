@@ -17,8 +17,8 @@ const FIRST: Dictionary = {"pill": "first_pill", "tools": "first_tools"}
 ## Structures of a function in a settlement, by id.
 static func stations(sim: RefCounted, id: int, function: String) -> Array:
 	var result: Array = []
-	for entry in sim.structures.built():
-		if entry.functions.has(function) and sim.settlements.at_cell(entry.anchor) == id:
+	for entry in sim.settlements.structures_in(sim, id):
+		if entry.functions.has(function):
 			result.append(int(entry.id))
 	return result
 

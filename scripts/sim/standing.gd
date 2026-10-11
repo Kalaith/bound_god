@@ -48,9 +48,7 @@ static func report(sim: RefCounted, id: int, level: String) -> Array:
 		if agent.is_present() and agent.home >= 0:
 			housed += 1
 	var counts: Dictionary = {}
-	for entry in sim.structures.built():
-		if sim.settlements.at_cell(entry.anchor) != id:
-			continue
+	for entry in sim.settlements.structures_in(sim, id):
 		for function in entry.functions:
 			counts[function] = int(counts.get(function, 0)) + 1
 	var result: Array = []

@@ -17,6 +17,9 @@ var _dirty: Dictionary = {}
 var _edits: Array[Vector3i] = []
 ## Chunks changed since generation, for saving only what differs.
 var edited_chunks: Dictionary = {}
+## Living cuttings of the sacred tree (cell -> true), kept by faith.gd so
+## function rules, which see only the world, can read the qi they carry.
+var qi_sources: Dictionary = {}
 var stride_z: int = 160
 var stride_y: int = 25600
 

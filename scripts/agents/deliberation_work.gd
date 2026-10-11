@@ -3,6 +3,7 @@ extends RefCounted
 ## player priority becomes the settlement's own culture weight, so labour is
 ## steered only by what people need and what their respected members do.
 ## FoundHome and ProposeProject are how construction begins.
+const Schools = preload("res://scripts/sim/schools.gd")
 const DeliberationCrafts = preload("res://scripts/agents/deliberation_crafts.gd")
 const Crafts = preload("res://scripts/sim/crafts.gd")
 const Balance = preload("res://scripts/core/balance.gd")
@@ -132,7 +133,7 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 			var threat_cell: Vector3i = sim.threats.entries[threat_id].cell
 			var reach: float = Vector2(threat_cell.x - agent.cell.x, threat_cell.z - agent.cell.z).length()
 			if reach < 16.0:
-				out.append({"goal": Goals.make(Kind.DEFEND, threat_id), "utility": 0.8 * (0.4 + agent.personality.bravery) * float(agent.health.hp) / 100.0,
+				out.append({"goal": Goals.make(Kind.DEFEND, threat_id), "utility": 0.8 * (0.4 + agent.personality.bravery) * float(agent.health.hp) / 100.0 * Schools.defend_factor(sim, agent),
 					"reason": "reason_defend", "value": reach})
 	_found_home(sim, agent, out, base)
 	_propose(sim, agent, out, base, board)
@@ -225,10 +226,9 @@ static func _found_home(sim: RefCounted, agent: RefCounted, out: Array, base: fl
 ## How many standing structures in a settlement have each function.
 static func _functions_in(sim: RefCounted, id: int) -> Dictionary:
 	var counts: Dictionary = {}
-	for entry in sim.structures.built():
-		if sim.settlements.at_cell(entry.anchor) == id:
-			for function in entry.functions:
-				counts[function] = int(counts.get(function, 0)) + 1
+	for entry in sim.settlements.structures_in(sim, id):
+		for function in entry.functions:
+			counts[function] = int(counts.get(function, 0)) + 1
 	return counts
 
 

@@ -143,7 +143,7 @@ static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks
 		Op.SETTLE:
 			if step_ticks == 0:
 				agent.activity = "settling"
-				sim.effects.action("settle", agent.id, {"ground": int(step.ground)})
+				sim.effects.action("settle", agent.id, {"ground": int(step.ground), "branch": int(step.get("branch", 0))})
 				return Plans.RUNNING
 			if not agent.step_result.has("settled"):
 				return Plans.RUNNING

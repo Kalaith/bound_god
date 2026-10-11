@@ -18,6 +18,8 @@ const Text = preload("res://scripts/core/text.gd")
 const Homes = preload("res://scripts/sim/homes.gd")
 const ResourceSites = preload("res://scripts/sim/resource_sites.gd")
 const Elixirs = preload("res://scripts/sim/elixirs.gd")
+const Relics = preload("res://scripts/sim/relics.gd")
+const Branches = preload("res://scripts/sim/branches.gd")
 
 const Need = Personality.Need
 
@@ -61,7 +63,11 @@ static func apply(sim: RefCounted) -> void:
 			"plant":
 				_plant(sim, agent, action.cell, str(action.get("seed", "berries")))
 			"settle":
-				_settle(sim, agent, int(action.ground))
+				_settle(sim, agent, int(action.ground), int(action.get("branch", 0)))
+			"take_relics":
+				agent.step_result = {"relics": Relics.take(sim, agent, int(action.shrine))}
+			"lay_relics":
+				Relics.lay(sim, agent, int(action.shrine))
 			_:
 				if not EffectsFood.apply(sim, agent, action) and not EffectsCultivation.apply(sim, agent, action) 						and not DesignsLore.apply(sim, agent, action):
 					EffectsBuild.apply(sim, agent, action)
@@ -268,6 +274,7 @@ static func _join(sim: RefCounted, agent: RefCounted, settlement_id: int) -> voi
 
 
 static func _leave(sim: RefCounted, agent: RefCounted) -> void:
+	Relics.drop(sim, agent)
 	agent.life = "departed"
 	agent.life_day = sim.calendar.day()
 	agent.intention = {}
@@ -284,7 +291,10 @@ static func _leave(sim: RefCounted, agent: RefCounted) -> void:
 ## A founder arrives at open land: the first sets down a chest from the wood
 ## they carried and names the new settlement after the place; whoever comes
 ## later joins it. Either way they live there now and put down their load.
-static func _settle(sim: RefCounted, agent: RefCounted, index: int) -> void:
+## `branch` (a Branches.Cause, or 0) marks someone carrying the tree to a
+## branch of their sect.
+static func _settle(sim: RefCounted, agent: RefCounted, index: int, branch: int = 0) -> void:
+	var parent_sect: int = int(agent.cultivation.get("sect_id", -1)) if not agent.cultivation.is_empty() else -1
 	var ground: Dictionary = sim.features.grounds[index]
 	var id: int = sim.settlements.on_ground(index)
 	var from: String = sim.settlements.get_settlement(agent.settlement_id).get("name", "")
@@ -320,6 +330,8 @@ static func _settle(sim: RefCounted, agent: RefCounted, index: int) -> void:
 	agent.low_mood_ticks = 0
 	agent.joined_day = sim.calendar.day()
 	Mind.add(agent, "arrived", sim.calendar.ticks_per_day)
+	if branch > 0 and parent_sect >= 0 and sim.sects != null:
+		Branches.on_settled(sim, agent, id, branch, parent_sect)
 	agent.step_result = {"settled": 1}
 
 

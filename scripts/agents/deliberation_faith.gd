@@ -5,6 +5,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const FaithState = preload("res://scripts/agents/faith_state.gd")
+const Relics = preload("res://scripts/sim/relics.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -62,6 +63,9 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	if stage >= 3:
 		_preach(sim, agent, out, devotion)
 		_restore(sim, agent, out, devotion, stage)
+		var recovery: Dictionary = Relics.recovery(sim, agent)
+		if not recovery.is_empty():
+			out.append(_candidate(Kind.RECOVER_RELIC, float(recovery.utility), "reason_recover_relics", int(recovery.from)))
 	if sim.requests != null:
 		sim.requests.candidates(sim, agent, out)
 

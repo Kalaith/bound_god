@@ -44,8 +44,8 @@ static func _refine(sim: RefCounted, id: int, shops: Array) -> void:
 		crafters += Alchemy.crafters(sim.structures.entries[room])
 	var level: int = 0
 	var anyone: RefCounted = null
-	for agent in sim.agents:
-		if agent.is_present() and not agent.is_child and agent.settlement_id == id:
+	for agent in sim.settlements.present_residents(sim, id):
+		if not agent.is_child:
 			var skill: int = Personality.level(agent.skills, Personality.Skill.MEDICINE)
 			if anyone == null or skill > level:
 				level = skill
@@ -81,8 +81,8 @@ static func _has(sim: RefCounted, id: int, recipe: Dictionary) -> bool:
 
 ## Each person takes what they would take awake, if the stores hold it.
 static func _take(sim: RefCounted, id: int) -> void:
-	for agent in sim.agents:
-		if not agent.is_present() or agent.is_child or agent.settlement_id != id or agent.cultivation.is_empty():
+	for agent in sim.settlements.present_residents(sim, id):
+		if agent.is_child or agent.cultivation.is_empty():
 			continue
 		var wanted: Array = []
 		var sitting: String = Elixirs.for_sitting(sim, agent)

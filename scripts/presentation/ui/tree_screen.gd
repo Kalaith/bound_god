@@ -5,6 +5,7 @@ extends Control
 ## nurtured, then every insight with the latest trials or lessons it came
 ## from. Read-only.
 signal closed
+const Relics = preload("res://scripts/sim/relics.gd")
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Data = preload("res://scripts/core/data.gd")
@@ -104,6 +105,7 @@ static func text(sim: RefCounted) -> String:
 	lines.append(Text.format("tree_fruit", {"count": int(growth.fruit)}))
 	lines.append(Text.format("tree_scars", {"count": growth.scars.size()}))
 	lines.append(Text.format("tree_nurtured", {"count": growth.nurtured.size()}))
+	_relic_lines(sim, growth, lines)
 	lines.append("")
 	lines.append(Style.rich_heading(Text.label("tree_insights")))
 	if growth.insights.is_empty():
@@ -116,6 +118,29 @@ static func text(sim: RefCounted) -> String:
 
 
 ## One insight and the latest of what it came from: trials, or lessons.
+## Where the relics of great cultivators lie: at the tree, at branch
+## shrines, in someone's hands, or in the ruins of a fallen shrine.
+static func _relic_lines(sim: RefCounted, growth: RefCounted, lines: Array[String]) -> void:
+	if growth.relics.is_empty():
+		return
+	## where -> count, in first-seen order
+	var places: Dictionary = {}
+	for relic in growth.relics:
+		var shrine: String = str(sim.faith.get_shrine(Relics.shrine_of(sim, relic)).get("name", ""))
+		var key: String
+		if int(relic.get("carried", -1)) >= 0:
+			key = Text.format("tree_relics_carried", {"name": sim.agents[int(relic.carried)].full_name()})
+		elif bool(relic.get("lost", false)):
+			key = Text.format("tree_relics_ruins", {"shrine": shrine})
+		else:
+			key = Text.format("tree_relics_at", {"shrine": shrine})
+		places[key] = int(places.get(key, 0)) + 1
+	var parts: Array[String] = []
+	for key in places:
+		parts.append("%s %d" % [key, places[key]])
+	lines.append(Text.format("tree_relics_where", {"list": ", ".join(parts)}))
+
+
 static func _insight_lines(growth: RefCounted, kind: String, lines: Array[String]) -> void:
 	var sources: Array = []
 	for record in growth.history:

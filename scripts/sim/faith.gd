@@ -125,28 +125,42 @@ func shrine_access(sim: RefCounted, id: int, from: Vector3i) -> Vector3i:
 
 # --- Edits --------------------------------------------------------------------
 
-## Keep shrines true to the grid: a broken altar is a fallen shrine, an altar
-## placed again (or newly) raises one. Called for every block change.
+## The block that anchors a shrine of each kind (the tree has none: its
+## blocks are protected).
+const ANCHORS: Dictionary = {"altar": "altar", "cutting": "spirit_cutting"}
+
+
+## Keep shrines true to the grid: a broken altar or cutting is a fallen
+## shrine, one placed again (or newly) raises one. Called for every block change.
 func on_block(sim: RefCounted, cell: Vector3i, old: int, block: int, source: String) -> void:
-	var altar: int = Registry.id("altar")
 	if source == "god" and old != 0:
 		_harm(sim, cell)
 	if by_cell.has(cell):
 		var shrine: Dictionary = shrines[by_cell[cell]]
-		if shrine.kind == "altar" and block != altar and shrine.state != "fallen":
+		if not ANCHORS.has(str(shrine.kind)):
+			return
+		var anchor: int = Registry.id(ANCHORS[shrine.kind])
+		if block != anchor and shrine.state != "fallen":
 			_fall(sim, shrine, source)
-		elif shrine.kind == "altar" and block == altar and shrine.state == "fallen":
+		elif block == anchor and shrine.state == "fallen":
 			shrine.state = "dormant"
 			shrine.condition = 60.0
 			shrine.below_days = 0
 			shrine["restored_tick"] = sim.calendar.tick
 			sim.chronicle_event("shrine_restored", int(shrine.settlement_id), {"shrine": shrine.name}, _cause(source), _people(sim, source))
+		if shrine.kind == "cutting":
+			sync_sources(sim)
 		return
-	if block == altar and old != altar:
+	for kind in ANCHORS:
+		if block != Registry.id(ANCHORS[kind]) or old == block:
+			continue
 		var settlement: int = sim.settlements.at_cell(cell)
-		var name: String = Text.format("shrine_named", {"place": sim.settlements.get_settlement(settlement).get("name", Text.label("somewhere"))})
-		var id: int = add(sim, "altar", cell, settlement, name, "dormant")
-		sim.chronicle_event("shrine_raised", settlement, {"shrine": shrines[id].name}, _cause(source), _people(sim, source))
+		var place: String = sim.settlements.get_settlement(settlement).get("name", Text.label("somewhere"))
+		var name: String = Text.format("shrine_named" if kind == "altar" else "shrine_cutting_named", {"place": place})
+		var id: int = add(sim, kind, cell, settlement, name, "dormant")
+		if kind == "cutting":
+			sync_sources(sim)
+		sim.chronicle_event("shrine_raised" if kind == "altar" else "cutting_planted", settlement, {"shrine": shrines[id].name}, _cause(source), _people(sim, source))
 
 
 ## The god breaking someone's home is felt: most lose faith, but the
@@ -243,7 +257,9 @@ func daily(sim: RefCounted) -> void:
 			continue
 		shrine.condition = maxf(float(shrine.condition) - Balance.number("shrines.condition_decay_per_day"), 0.0)
 		# The sacred tree never sleeps; its reach shrinks with its support instead.
-		var supported: bool = float(shrine.support) >= threshold or shrine.kind == "tree"
+		# A cutting carries the tree's own life, so fewer prayers wake it.
+		var needed: float = threshold * (Balance.number("shrines.cutting_support") if shrine.kind == "cutting" else 1.0)
+		var supported: bool = float(shrine.support) >= needed or shrine.kind == "tree"
 		if supported:
 			shrine.below_days = 0
 			if shrine.state != "active":
@@ -328,6 +344,15 @@ func missing_blocks(sim: RefCounted, id: int) -> Array:
 		else:
 			result.append(entry)
 	return result
+
+
+## The world's qi sources follow the living cuttings.
+func sync_sources(sim: RefCounted) -> void:
+	sim.voxels.qi_sources.clear()
+	for id in ids():
+		if str(shrines[id].kind) == "cutting" and str(shrines[id].state) != "fallen":
+			sim.voxels.qi_sources[shrines[id].cell] = true
+	sim.qi.clear_cache()
 
 
 # --- Contract used by other systems -------------------------------------------

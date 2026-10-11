@@ -9,6 +9,8 @@ const Spoilage = preload("res://scripts/sim/spoilage.gd")
 const Blueprints = preload("res://scripts/sim/blueprints.gd")
 const Homes = preload("res://scripts/sim/homes.gd")
 const Elixirs = preload("res://scripts/sim/elixirs.gd")
+const Schools = preload("res://scripts/sim/schools.gd")
+const Relics = preload("res://scripts/sim/relics.gd")
 
 
 static func new_day(sim: RefCounted) -> void:
@@ -39,7 +41,10 @@ static func new_day(sim: RefCounted) -> void:
 		sim.settlement_life.daily(sim)
 	if sim.sects != null:
 		sim.sects.daily(sim)
+		Schools.daily(sim)
+	Relics.daily(sim)
 	Blueprints.daily(sim)
+	sim.routes.daily(sim)
 	sim.paths.daily(sim)
 	if sim.tree_growth != null:
 		sim.tree_growth.daily(sim)

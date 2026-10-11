@@ -28,6 +28,9 @@ var protect: Dictionary = {}
 ## Blueprints the god has laid (sim/blueprints.gd), oldest first.
 var blueprints: Array = []
 var next_blueprint: int = 1
+## When the god last transferred between shrines (-1: never); the next
+## transfer waits out the cooldown (M21).
+var last_transfer_tick: int = -1
 ## Events for the presentation to react to: expelled, dormant, transfer.
 var events: Array = []
 
@@ -55,6 +58,7 @@ func to_dict() -> Dictionary:
 		"avatar_cell": avatar_cell, "hotbar": hotbar.duplicate(), "prompts_dismissed": prompts_dismissed.duplicate(),
 		"followed": followed.duplicate(), "protect": protect.duplicate(true),
 		"blueprints": blueprints.duplicate(true), "next_blueprint": next_blueprint,
+		"last_transfer_tick": last_transfer_tick,
 	}
 
 
@@ -74,3 +78,5 @@ func from_dict(data: Dictionary) -> void:
 	# Blueprints came with M19 (schema 5 worlds may lack them).
 	blueprints = data.get("blueprints", [])
 	next_blueprint = int(data.get("next_blueprint", 1))
+	# Transfers were free of a cooldown before M21.
+	last_transfer_tick = int(data.get("last_transfer_tick", -1))

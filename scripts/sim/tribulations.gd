@@ -13,6 +13,7 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
+const Relics = preload("res://scripts/sim/relics.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
@@ -156,7 +157,11 @@ func _begin(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 	# The relics steady a trial in the sanctuary, or at home where an
 	# ancestral hall keeps their memory (each tablet keeps one more).
 	if sim.tree_growth != null and SectHalls.relics_help(sim, agent, agent.cell, bool(trial.sanctuary)):
-		trial.preparation = minf(float(trial.preparation) + sim.tree_growth.relic_preparation(SectHalls.relic_extra(sim, agent.settlement_id)), 1.0)
+		trial.preparation = minf(float(trial.preparation) + sim.tree_growth.relic_preparation(sim, SectHalls.relic_extra(sim, agent.settlement_id)), 1.0)
+	elif sim.tree_growth != null and Relics.branch_count(sim, agent.cell) > 0:
+		# Far from the tree, the relics a branch keeps at its shrine.
+		var count: int = Relics.branch_count(sim, agent.cell)
+		trial.preparation = minf(float(trial.preparation) + sim.tree_growth.relic_preparation(sim, SectHalls.relic_extra(sim, agent.settlement_id), count), 1.0)
 	# Heaven's storm is fiercer when it breaks inside a thunderstorm.
 	if sim.weather != null and sim.weather.trial() > 0.0:
 		trial["weather"] = sim.weather.kind

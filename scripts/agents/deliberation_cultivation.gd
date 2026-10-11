@@ -14,6 +14,7 @@ const FruitChoice = preload("res://scripts/agents/fruit_choice.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const Elixirs = preload("res://scripts/sim/elixirs.gd")
+const Branches = preload("res://scripts/sim/branches.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -31,6 +32,7 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	_learn(sim, agent, out)
 	_teach(sim, agent, out)
 	_found_sect(sim, agent, out)
+	_branch(sim, agent, out)
 	_breakthrough(sim, agent, out)
 	_witness(sim, agent, out)
 	_share_fruit(sim, agent, out)
@@ -71,6 +73,8 @@ static func spot(sim: RefCounted, agent: RefCounted) -> Vector3i:
 		cells.append(H.ring_cell(sim, middle + Vector3(0.5, 0.0, 0.5), agent.id, 0.5, 2.0))
 	cells.append(SectPlaces.hall_mat(sim, agent))
 	cells.append(SectHalls.room_mat(sim, agent))
+	# A branch sits round its own cutting of the tree.
+	cells.append(Branches.ring_cell(sim, agent))
 	for cell in cells:
 		if cell.x < 0 or _taken(sim, agent, cell):
 			continue
@@ -196,6 +200,20 @@ static func _found_sect(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	out.append(_candidate(Kind.FOUND_SECT, utility, "reason_found_sect"))
 
 
+## An elder may carry a cutting to free land, and a member may follow a
+## branch of their sect (branches.gd weighs both).
+static func _branch(sim: RefCounted, agent: RefCounted, out: Array) -> void:
+	var want: Dictionary = Branches.founding(sim, agent)
+	if not want.is_empty():
+		var candidate: Dictionary = _candidate(Kind.FOUND_BRANCH, float(want.utility), "reason_found_branch", int(want.ground))
+		candidate.goal = Goals.make(Kind.FOUND_BRANCH, int(want.ground), int(want.cause))
+		out.append(candidate)
+		return
+	want = Branches.following(sim, agent)
+	if not want.is_empty():
+		out.append(_candidate(Kind.FOUND_BRANCH, float(want.utility), "reason_follow_branch", int(want.ground)))
+
+
 ## At a realm's peak a cultivator weighs facing Heaven: impatience grows
 ## the longer they wait, preparation (rest, food, help) makes it look less
 ## like folly, courage and ambition push, a cracked foundation holds back.
@@ -239,7 +257,10 @@ static func trial_site(sim: RefCounted, agent: RefCounted) -> Vector3i:
 		if cell.x >= 0:
 			return cell
 	if tree.x < 0 or not near_tree:
-		return H.wander_cell(sim, agent)
+		# Far from the tree, a branch faces Heaven by its own cutting, where
+		# its relics lie.
+		var by_cutting: Vector3i = Branches.ring_cell(sim, agent)
+		return by_cutting if by_cutting.x >= 0 else H.wander_cell(sim, agent)
 	# A quiet place beyond the sanctuary, on their own side of the tree.
 	var angle: float = float(agent.id) * 2.39996
 	var reach: float = Balance.number("cultivation.sanctuary_radius") + 8.0

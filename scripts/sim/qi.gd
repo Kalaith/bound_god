@@ -4,6 +4,7 @@ extends RefCounted
 ## makes cultivation go faster where it is dense. Queried per cell, cached
 ## per column; the cache is cleared when the field changes.
 const Data = preload("res://scripts/core/data.gd")
+const Balance = preload("res://scripts/core/balance.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
@@ -54,8 +55,32 @@ func density(sim: RefCounted, cell: Vector3i) -> float:
 	value = maxf(value, SectHalls.array_qi(sim, cell))
 	# The root network carries qi along the worn paths it reaches.
 	value = maxf(value, TreeAbilities.root_qi(sim, column))
+	# A living cutting of the tree carries its qi to a branch.
+	value = maxf(value, cutting_qi(sim.voxels, cell))
 	_cache[column] = value
 	return value
+
+
+## Qi round a living cutting of the tree (M21), dense at its stem and gone
+## by `branches.cutting_curve`'s last point.
+static func cutting_curve(distance: float) -> float:
+	var points: Array = Balance.list("branches.cutting_curve")
+	if distance <= float(points[0][0]):
+		return float(points[0][1])
+	for i in range(1, points.size()):
+		if distance <= float(points[i][0]):
+			var a: Array = points[i - 1]
+			var b: Array = points[i]
+			return lerpf(float(a[1]), float(b[1]), (distance - float(a[0])) / maxf(float(b[0]) - float(a[0]), 0.001))
+	return 0.0
+
+
+## The densest qi any living cutting in `world` gives a cell.
+static func cutting_qi(world: RefCounted, cell: Vector3i) -> float:
+	var best: float = 0.0
+	for at in world.qi_sources:
+		best = maxf(best, cutting_curve(Vector2(cell.x - at.x, cell.z - at.z).length()))
+	return best
 
 
 func clear_cache() -> void:

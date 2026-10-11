@@ -1,6 +1,7 @@
 extends RefCounted
 ## Births, ageing, deaths and departures.
 const Balance = preload("res://scripts/core/balance.gd")
+const Relics = preload("res://scripts/sim/relics.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
@@ -58,6 +59,7 @@ static func die(sim: RefCounted, agent: RefCounted, cause: String) -> void:
 	if sim.tree_growth != null and sim.tree_growth.in_shade(sim, agent.cell, agent.settlement_id):
 		sim.tree_growth.lesson(sim, "death", agent.full_name(), [agent.id])
 	_legacy(sim, agent)
+	Relics.drop(sim, agent)
 
 
 ## What a cultivator leaves behind: their techniques kept as a manual by

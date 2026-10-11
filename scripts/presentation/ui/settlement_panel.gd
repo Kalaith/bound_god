@@ -10,6 +10,7 @@ const Goals = preload("res://scripts/agents/goals.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const StandingText = preload("res://scripts/presentation/ui/standing_text.gd")
 const Sects = preload("res://scripts/sim/sects.gd")
+const Branches = preload("res://scripts/sim/branches.gd")
 ## Goods listed on the panel, food last.
 const STOCK: Array[String] = ["wood", "stone", "thatch", "ore", "seed", "tree_seed", "berries", "grain", "meal"]
 
@@ -176,3 +177,21 @@ func _sect(lines: Array[String]) -> void:
 	for key in Sects.DOCTRINE:
 		leanings.append("%s %d" % [Text.label("doctrine_" + key), roundi(float(sect.doctrine[key]) * 100.0)])
 	lines.append(Text.format("settle_doctrine", {"list": ", ".join(leanings)}))
+	_lineage(lines, sect)
+
+
+## A branch names its parent (or the sect it broke from) and its school; a
+## parent names its branches.
+func _lineage(lines: Array[String], sect: Dictionary) -> void:
+	var parent: Dictionary = sim.sects.get_sect(int(sect.get("parent", -1)))
+	if not parent.is_empty():
+		lines.append(Text.format("settle_branch_of", {"sect": Sects.name_of(parent)}))
+	elif sim.sects.entries.has(int(sect.get("broke_from", -1))):
+		lines.append(Text.format("settle_broke_from", {"sect": Sects.name_of(sim.sects.entries[int(sect.broke_from)])}))
+	if not str(sect.get("school", "")).is_empty():
+		lines.append(Text.format("settle_school", {"school": Text.label("school_" + str(sect.school))}))
+	var branches: Array[String] = []
+	for id in Branches.living_branches(sim, int(sect.id)):
+		branches.append(Sects.name_of(sim.sects.entries[id]))
+	if not branches.is_empty():
+		lines.append(Text.format("settle_branches", {"list": ", ".join(branches)}))

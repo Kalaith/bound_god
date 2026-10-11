@@ -54,6 +54,11 @@
 		{"id": "given_fruit", "text": "Was given the sacred tree's fruit", "mood": 10, "days": 3.0, "max_stack": 1},
 		{"id": "fruit_awakened", "text": "Woke a little to the Way", "mood": 12, "days": 3.0, "max_stack": 1},
 		{"id": "foundation_mended", "text": "Felt a cracked foundation whole again", "mood": 10, "days": 3.0, "max_stack": 1},
-		{"id": "heard_the_way", "text": "Heard the Way expounded in the lecture hall", "mood": 5, "days": 1.0, "max_stack": 1}
+		{"id": "heard_the_way", "text": "Heard the Way expounded in the lecture hall", "mood": 5, "days": 1.0, "max_stack": 1},
+		{"id": "founded_branch", "text": "Planted a cutting of the tree on new land", "mood": 14, "days": 5.0, "max_stack": 1},
+		{"id": "joined_branch", "text": "Followed their teacher to a new branch", "mood": 6, "days": 3.0, "max_stack": 1},
+		{"id": "carried_relics", "text": "Carried the relics of the dead home", "mood": 10, "days": 4.0, "max_stack": 1},
+		{"id": "school_taken", "text": "Saw their branch find its own way", "mood": 6, "days": 3.0, "max_stack": 1},
+		{"id": "schism", "text": "Broke with the sect that raised them", "mood": -6, "days": 4.0, "max_stack": 1}
 	]
 }

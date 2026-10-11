@@ -37,6 +37,13 @@ var version: int = 0
 ## Bumped only when a container appears or vanishes (or settlements change),
 ## so the cached list of where a settlement's chests stand survives meals.
 var places_version: int = 0
+## Bumped when a settlement is founded or its area grows, so caches of what
+## stands in each settlement's area know to rebuild.
+var areas_version: int = 0
+## settlement id -> structures whose anchor lies in its area, in id order,
+## rebuilt when a structure or an area changes.
+var _owned: Dictionary = {}
+var _owned_key: Array = []
 ## settlement id -> [key, chest cells]
 var _chest_cache: Dictionary = {}
 ## settlement id -> [key, stock]
@@ -53,7 +60,35 @@ func create(name: String, center: Vector3i, camp: Vector3i, tick: int) -> int:
 		"residents": [], "culture": culture, "known_templates": [], "site_ids": [], "shrine_ids": [],
 		"camp": camp, "founded_tick": tick}
 	version += 1
+	areas_version += 1
 	return id
+
+
+## Standing structures whose anchor lies in a settlement's area (the
+## nearest centre where areas overlap), in id order.
+func structures_in(sim: RefCounted, id: int) -> Array:
+	var key: Array = [sim.structures.version, areas_version]
+	if key != _owned_key:
+		_owned_key = key
+		_owned.clear()
+		for entry in sim.structures.built():
+			var owner: int = at_cell(entry.anchor)
+			if not _owned.has(owner):
+				_owned[owner] = []
+			_owned[owner].append(entry)
+	return _owned.get(id, [])
+
+
+## A settlement's people who are present, in id order (as a scan of every
+## agent would meet them).
+func present_residents(sim: RefCounted, id: int) -> Array:
+	var result: Array = []
+	for agent_id in entries.get(id, {}).get("residents", []):
+		var agent: RefCounted = sim.agents[agent_id]
+		if agent.is_present() and agent.settlement_id == id:
+			result.append(agent)
+	result.sort_custom(func(a: RefCounted, b: RefCounted) -> bool: return a.id < b.id)
+	return result
 
 
 func get_settlement(id: int) -> Dictionary:
@@ -398,6 +433,7 @@ func to_dict() -> Dictionary:
 
 func from_dict(data: Dictionary) -> void:
 	entries = data.entries
+	areas_version += 1
 	next_id = int(data.next_id)
 	chests = data.chests
 	bins = data.bins

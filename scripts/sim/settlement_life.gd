@@ -81,8 +81,11 @@ func _grow(sim: RefCounted, settlement: Dictionary) -> void:
 	for entry in sim.structures.built():
 		if Vector2(entry.anchor.x - settlement.center.x, entry.anchor.z - settlement.center.z).length() <= float(settlement.radius):
 			count += 1
-	settlement.radius = minf(Balance.number("settlements.start_radius") + count * Balance.number("settlements.radius_per_structure"),
+	var radius: float = minf(Balance.number("settlements.start_radius") + count * Balance.number("settlements.radius_per_structure"),
 		Balance.number("settlements.max_radius"))
+	if radius != float(settlement.radius):
+		settlement.radius = radius
+		sim.settlements.areas_version += 1
 
 
 ## Each weight moves toward what the settlement needs and toward what its

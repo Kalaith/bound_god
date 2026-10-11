@@ -18,7 +18,7 @@ func _flat() -> RefCounted:
 	return Sim.create(21, {"world": "flat", "size": Vector3i(48, 16, 48), "ground": 4})
 
 
-func check_relationships_form_over_twenty_days():
+func long_check_relationships_form_over_twenty_days():
 	var sim: RefCounted = Sim.create(11)
 	sim.run_ticks(sim.calendar.ticks_per_day * 20)
 	var friends: int = 0

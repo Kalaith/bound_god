@@ -11,8 +11,8 @@ const NONE := Vector3i(-1, -1, -1)
 ## Standing structures of one function belonging to a settlement, in id order.
 static func of(sim: RefCounted, settlement_id: int, function: String) -> Array:
 	var result: Array = []
-	for entry in sim.structures.built():
-		if entry.functions.has(function) and sim.settlements.at_cell(entry.anchor) == settlement_id:
+	for entry in sim.settlements.structures_in(sim, settlement_id):
+		if entry.functions.has(function):
 			result.append(entry)
 	return result
 

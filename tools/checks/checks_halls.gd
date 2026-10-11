@@ -252,7 +252,7 @@ func check_gate_ancestors_and_stele():
 	for i in range(8):
 		sim.tree_growth.relics.append({"name": "old %d" % i, "realm": 2, "tick": 0})
 	var most: float = Balance.number("cultivation.relics_most") * Balance.number("cultivation.relic_preparation")
-	if sim.tree_growth.relic_preparation(SectHalls.relic_extra(sim, 1)) <= most + 0.001:
+	if sim.tree_growth.relic_preparation(sim, SectHalls.relic_extra(sim, 1)) <= most + 0.001:
 		return "the tablets keep no more relics' help"
 	return ""
 

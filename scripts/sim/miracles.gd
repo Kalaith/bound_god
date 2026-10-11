@@ -240,14 +240,48 @@ static func _whisper(sim: RefCounted, args: Dictionary) -> Dictionary:
 	return {"ok": true, "reason": "whisper_sent"}
 
 
-static func _transfer(sim: RefCounted, id: int) -> Dictionary:
+## Why the god cannot transfer to shrine `id` now, or "": the shrine must be
+## active and elsewhere, the god must not have transferred within the
+## cooldown, and the shrine it leaves must hold the Favour the journey costs.
+static func transfer_refusal(sim: RefCounted, id: int) -> String:
 	var shrine: Dictionary = sim.faith.get_shrine(id)
 	if shrine.is_empty() or shrine.state != "active":
-		return {"ok": false, "reason": "transfer_inactive"}
+		return "transfer_inactive"
 	if id == sim.god.active_shrine_id:
-		return {"ok": false, "reason": "transfer_here"}
+		return "transfer_here"
+	if sim.god.last_transfer_tick >= 0 and sim.calendar.tick - sim.god.last_transfer_tick < transfer_cooldown_ticks(sim):
+		return "transfer_cooldown"
+	var here: Dictionary = sim.faith.current(sim)
+	if not here.is_empty() and float(here.favour) < Balance.number("shrines.transfer_cost"):
+		return "transfer_favour"
+	return ""
+
+
+static func transfer_cooldown_ticks(sim: RefCounted) -> int:
+	return sim.calendar.ticks_for_days(Balance.number("shrines.transfer_cooldown_days"))
+
+
+## Ticks until the god may transfer again (0 when it may now).
+static func transfer_wait(sim: RefCounted) -> int:
+	if sim.god.last_transfer_tick < 0:
+		return 0
+	return maxi(sim.god.last_transfer_tick + transfer_cooldown_ticks(sim) - sim.calendar.tick, 0)
+
+
+## The god leaves for another active shrine, paying the journey from the
+## Favour of the shrine it leaves; expulsion (faith.gd) is free.
+static func _transfer(sim: RefCounted, id: int) -> Dictionary:
+	var refusal: String = transfer_refusal(sim, id)
+	if not refusal.is_empty():
+		return {"ok": false, "reason": refusal}
+	var shrine: Dictionary = sim.faith.get_shrine(id)
+	var here: Dictionary = sim.faith.current(sim)
+	var cost: float = Balance.number("shrines.transfer_cost")
+	if not here.is_empty():
+		here.favour = maxf(float(here.favour) - cost, 0.0)
 	var from: String = sim.faith.shrine_name(sim, sim.god.active_shrine_id)
 	sim.god.active_shrine_id = id
+	sim.god.last_transfer_tick = sim.calendar.tick
 	sim.god.events.append({"kind": "transfer", "to": id})
-	sim.chronicle_event("god_transferred", int(shrine.settlement_id), {"from": from, "to": shrine.name}, "cause_god")
+	sim.chronicle_event("god_transferred", int(shrine.settlement_id), {"from": from, "to": shrine.name}, "cause_transfer_paid|%d" % roundi(cost))
 	return {"ok": true, "reason": "transfer_done"}

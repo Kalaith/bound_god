@@ -15,18 +15,36 @@ var _today: Dictionary = {}
 
 func step_on(cell: Vector3i) -> void:
 	var column := Vector2i(cell.x, cell.z)
-	_today[column] = int(_today.get(column, 0)) + 1
+	_today[column] = float(_today.get(column, 0)) + 1.0
+
+
+## Steps walked on a column by traffic too thin to simulate (routes.gd).
+func add_steps(column: Vector2i, steps: float) -> void:
+	_today[column] = float(_today.get(column, 0)) + steps
 
 
 func daily(sim: RefCounted) -> void:
 	var keep: float = Balance.number("paths.wear_keep")
+	for column in _today:
+		wear[column] = float(wear.get(column, 0.0))
+	_today_into_wear(keep)
+	_lay(sim, true)
+
+
+## The valley materialises after abstract time: columns the routes wore lay
+## their paths; nothing grasses over (paths keep while abstract).
+func materialise(sim: RefCounted) -> void:
+	_today.clear()
+	_lay(sim, false)
+
+
+## Grass worn past the threshold turns to path; with `fade`, paths walked too
+## little grass over again.
+func _lay(sim: RefCounted, fade: bool) -> void:
 	var worn: float = Balance.number("paths.wear_to_path")
 	var faded: float = Balance.number("paths.wear_to_grass")
 	var grass: int = Registry.id("grass")
 	var path: int = Registry.id("path")
-	for column in _today:
-		wear[column] = float(wear.get(column, 0.0))
-	_today_into_wear(keep)
 	var edits: Array = []
 	var columns: Array = wear.keys()
 	columns.sort()
@@ -37,6 +55,8 @@ func daily(sim: RefCounted) -> void:
 		var value: float = float(wear[column])
 		if block == grass and value >= worn:
 			edits.append([cell, path, 0])
+		elif not fade:
+			continue
 		elif block == path and value < faded:
 			edits.append([cell, grass, 0])
 			wear.erase(column)

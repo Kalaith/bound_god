@@ -108,4 +108,5 @@ static func tree_qi(world: RefCounted, cell: Vector3i) -> float:
 	if world.size.x <= int(limits[0]) and world.size.z <= int(limits[2]):
 		return 1.0
 	var centre := Vector2(world.size.x / 2 + 1.0, world.size.z / 2 + 1.0)
-	return Qi.curve_at(Vector2(cell.x + 0.5, cell.z + 0.5).distance_to(centre))
+	# A living cutting of the tree carries its qi to a branch (M21).
+	return maxf(Qi.curve_at(Vector2(cell.x + 0.5, cell.z + 0.5).distance_to(centre)), Qi.cutting_qi(world, cell))

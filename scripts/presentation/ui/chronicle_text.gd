@@ -23,10 +23,14 @@ static func cause(value: String) -> String:
 static func word(value: Variant) -> Variant:
 	if value is String and value.begins_with("sect_name|"):
 		var parts: PackedStringArray = value.split("|")
-		return Text.format("sect_name", {"adjective": Text.label(parts[1]), "noun": Text.label(parts[2])}) if parts.size() == 3 else value
+		if parts.size() < 3:
+			return value
+		var base: String = Text.format("sect_name", {"adjective": Text.label(parts[1]), "noun": Text.label(parts[2])})
+		return Text.format("sect_branch_name", {"sect": base, "place": Text.label(parts[3])}) if parts.size() == 4 else base
 	if value is String and (value.begins_with("cause_") or value.begins_with("standing_") or value.begins_with("realm_")
 			or value.begins_with("technique_") or value.begins_with("rank_") or value.begins_with("insight_")
-			or value.begins_with("unlock_") or value.begins_with("phase_") or value.begins_with("awakened_")) and Text.has(value):
+			or value.begins_with("unlock_") or value.begins_with("phase_") or value.begins_with("awakened_")
+			or value.begins_with("doctrine_") or value.begins_with("school_")) and Text.has(value):
 		return Text.label(value)
 	if value is String and (value.begins_with("resource_") or value.begins_with("function_") or value.begins_with("threat_")) and Text.has(value):
 		return Text.label(value).to_lower()

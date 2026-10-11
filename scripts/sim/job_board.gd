@@ -78,8 +78,8 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 ## The settlement's kitchens by structure id, in id order.
 static func kitchens(sim: RefCounted, id: int) -> Array:
 	var result: Array = []
-	for entry in sim.structures.built():
-		if entry.functions.has("kitchen") and sim.settlements.at_cell(entry.anchor) == id:
+	for entry in sim.settlements.structures_in(sim, id):
+		if entry.functions.has("kitchen"):
 			result.append(int(entry.id))
 	return result
 
@@ -91,8 +91,8 @@ static func fields(sim: RefCounted, id: int) -> Array:
 	var result: Array = []
 	var most: int = Balance.integer("farming.board_cells")
 	var sowing: bool = Crops.can_sow(sim, Crops.staple())
-	for entry in sim.structures.built():
-		if not entry.functions.has("field") or sim.settlements.at_cell(entry.anchor) != id:
+	for entry in sim.settlements.structures_in(sim, id):
+		if not entry.functions.has("field"):
 			continue
 		var cells: Array = entry.components.get("farmland", []).duplicate()
 		cells.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return [a.y, a.z, a.x] < [b.y, b.z, b.x])
@@ -116,8 +116,8 @@ static func fields(sim: RefCounted, id: int) -> Array:
 static func ripe(sim: RefCounted, id: int) -> Array:
 	var result: Array = []
 	var least: int = Balance.integer("world.garden_pick_at")
-	for entry in sim.structures.built():
-		if not entry.functions.has("garden") or sim.settlements.at_cell(entry.anchor) != id:
+	for entry in sim.settlements.structures_in(sim, id):
+		if not entry.functions.has("garden"):
 			continue
 		var cells: Array = entry.components.get("planter", []).duplicate()
 		cells.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return [a.y, a.z, a.x] < [b.y, b.z, b.x])
@@ -134,8 +134,8 @@ static func ripe(sim: RefCounted, id: int) -> Array:
 ## few at most, in a stable order.
 static func plots(sim: RefCounted, id: int) -> Array:
 	var result: Array = []
-	for entry in sim.structures.built():
-		if not entry.functions.has("garden") or sim.settlements.at_cell(entry.anchor) != id:
+	for entry in sim.settlements.structures_in(sim, id):
+		if not entry.functions.has("garden"):
 			continue
 		var cells: Array = entry.components.get("planter", []).duplicate()
 		cells.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return [a.y, a.z, a.x] < [b.y, b.z, b.x])

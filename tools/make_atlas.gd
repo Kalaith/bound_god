@@ -11,6 +11,7 @@ const TILE: int = 32
 const AtlasSect = preload("res://tools/atlas_sect.gd")
 const AtlasSeasons = preload("res://tools/atlas_seasons.gd")
 const AtlasAlchemy = preload("res://tools/atlas_alchemy.gd")
+const AtlasBranches = preload("res://tools/atlas_branches.gd")
 var rng := RandomNumberGenerator.new()
 var image: Image
 
@@ -87,6 +88,8 @@ func _init() -> void:
 	AtlasSeasons.paint(self)
 	# The sect's alchemy (M20b).
 	AtlasAlchemy.paint(self)
+	# Branches and sacred sites (M21).
+	AtlasBranches.paint(self)
 	var error: int = image.save_png("res://assets/blocks_atlas.png")
 	print("atlas saved: ", error == OK)
 	quit(0 if error == OK else 1)

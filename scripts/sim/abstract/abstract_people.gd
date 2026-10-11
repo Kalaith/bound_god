@@ -4,6 +4,7 @@ extends RefCounted
 ## steps without plans or paths. Sleep comes in the sleep hours, company and
 ## leisure in the free hours, food from the settlement's chests (the best
 ## food first, berries before grain while grain is put by).
+const Schools = preload("res://scripts/sim/schools.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
@@ -181,7 +182,7 @@ static func _health(sim: RefCounted, k: Dictionary, agent: RefCounted) -> void:
 	if change >= 0.0 and agent.need(Need.FOOD) > 10.0:
 		if float(agent.health.hp) >= 100.0:
 			return
-		change += float(k.regen)
+		change += float(k.regen) * Schools.heal_factor(sim, agent)
 	agent.health.hp = clampf(float(agent.health.hp) + change, 0.0, 100.0)
 
 

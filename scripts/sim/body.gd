@@ -1,5 +1,6 @@
 extends RefCounted
 ## Per-tick bodily change: need decay, shelter, health, thoughts and mood.
+const Schools = preload("res://scripts/sim/schools.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
@@ -112,7 +113,7 @@ static func _health(sim: RefCounted, agent: RefCounted) -> void:
 	if change < 0.0:
 		change *= ward(sim, agent)
 	if change >= 0.0 and agent.need(Need.FOOD) > 10.0:
-		var rate: float = Balance.number("health.regen_per_day")
+		var rate: float = Balance.number("health.regen_per_day") * Schools.heal_factor(sim, agent)
 		if agent.activity == "recovering":
 			rate *= Balance.number("halls.infirmary_factor") if SectHalls.in_infirmary(sim, agent) else 2.0
 		change += rate

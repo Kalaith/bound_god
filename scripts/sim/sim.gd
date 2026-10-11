@@ -46,6 +46,7 @@ const Weather = preload("res://scripts/sim/weather.gd")
 const Herbs = preload("res://scripts/sim/herbs.gd")
 const Alchemy = preload("res://scripts/sim/alchemy.gd")
 const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
+const Routes = preload("res://scripts/sim/routes.gd")
 
 var world_seed: int = 1
 ## How this world was made (world kind, size); saved so a load regenerates it.
@@ -89,6 +90,8 @@ var sects: RefCounted = null
 var tribulations: RefCounted = null
 var tree_growth: RefCounted = null
 var paths: RefCounted = null
+## Traffic between linked settlements wearing their routes (M21).
+var routes: RefCounted = null
 var weather: RefCounted = null
 var herbs: RefCounted = null
 ## Smithy anvils, worked like kitchens (M20).
@@ -166,6 +169,7 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	tribulations = Tribulations.new()
 	tree_growth = TreeGrowth.new()
 	paths = Paths.new()
+	routes = Routes.new()
 	weather = Weather.new()
 	herbs = Herbs.new()
 	forges = Kitchens.new("smithy")
@@ -198,6 +202,7 @@ func after_restore() -> void:
 	_templates.clear()
 	goal_version += 1
 	director.raid_hooks = raids
+	faith.sync_sources(self)
 	_refresh_site_buckets()
 	_refresh_agent_buckets()
 
@@ -474,7 +479,7 @@ func state_hash() -> int:
 	for agent in agents:
 		people.append(agent.to_dict())
 	var state: Array = [calendar.tick, rng.state, people, settlements.to_dict(), sites.to_dict(), items, crops.to_dict(), kitchens.to_dict(), woods.to_dict(),
-		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state(), sects.to_dict(), tribulations.to_dict(), tree_growth.to_dict(), weather.to_dict(), herbs.to_dict(), alchemy.to_dict(), forges.to_dict()]
+		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state(), sects.to_dict(), tribulations.to_dict(), tree_growth.to_dict(), weather.to_dict(), herbs.to_dict(), alchemy.to_dict(), forges.to_dict(), routes.to_dict()]
 	return hash(var_to_bytes(state))
 
 

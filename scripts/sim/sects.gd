@@ -48,15 +48,21 @@ func can_found_in(sim: RefCounted, settlement_id: int) -> bool:
 	return sim.qi.density(sim, settlement.center) >= Balance.number("cultivation.sect_place_qi")
 
 
-## The sect's display name, from its label keys.
+## The sect's display name, from its label keys; a branch adds its place.
 static func name_of(sect: Dictionary) -> String:
 	if sect.is_empty():
 		return ""
-	return Text.format(str(Data.cultivation().sect_names.pattern), {"adjective": Text.label(sect.name.adjective), "noun": Text.label(sect.name.noun)})
+	var base: String = Text.format(str(Data.cultivation().sect_names.pattern), {"adjective": Text.label(sect.name.adjective), "noun": Text.label(sect.name.noun)})
+	if str(sect.get("branch", "")).is_empty():
+		return base
+	return Text.format("sect_branch_name", {"sect": base, "place": Text.label(str(sect.branch))})
 
 
-## The sect's name as the chronicle keeps it: label keys, worded on display.
+## The sect's name as the chronicle keeps it: label keys, worded on display
+## (a branch's carries its place as a fourth part).
 static func name_key(sect: Dictionary) -> String:
+	if not str(sect.get("branch", "")).is_empty():
+		return "sect_name|%s|%s|%s" % [sect.name.adjective, sect.name.noun, sect.branch]
 	return "sect_name|%s|%s" % [sect.name.adjective, sect.name.noun]
 
 
@@ -110,6 +116,23 @@ func _join(sect: Dictionary, agent: RefCounted, rank: String) -> void:
 	agent.cultivation.sect_id = int(sect.id)
 
 
+func join(sect: Dictionary, agent: RefCounted, rank: String) -> void:
+	_join(sect, agent, rank)
+
+
+## A branch of `parent` founded by `founder` in `settlement_id` (M21): the
+## parent's name and doctrine, the place's label key, and the parent kept.
+func found_branch(sim: RefCounted, founder: RefCounted, parent: Dictionary, settlement_id: int, place: String) -> int:
+	var id: int = next_id
+	next_id += 1
+	var sect: Dictionary = {"id": id, "name": parent.name.duplicate(), "settlement_id": settlement_id, "founded_tick": sim.calendar.tick,
+		"founder": founder.id, "master": founder.id, "members": {}, "doctrine": parent.doctrine.duplicate(), "manuals": parent.get("manuals", []).duplicate(),
+		"parent": int(parent.id), "branch": place, "school": "", "school_days": 0}
+	entries[id] = sect
+	_join(sect, founder, "master")
+	return id
+
+
 ## Being taught by a member makes a disciple of the sect.
 func on_taught(sim: RefCounted, teacher: RefCounted, student: RefCounted) -> void:
 	var sect: Dictionary = entries.get(int(teacher.cultivation.sect_id), {})
@@ -148,6 +171,11 @@ func daily(sim: RefCounted) -> void:
 			if not agent.is_present() or agent.settlement_id != int(sect.settlement_id):
 				sect.members.erase(member)
 				agent.cultivation.sect_id = -1
+				# Someone who left a branch does not chase it again soon.
+				if not str(sect.get("branch", "")).is_empty():
+					if not agent.cultivation.has("left_branches"):
+						agent.cultivation["left_branches"] = {}
+					agent.cultivation.left_branches[int(sect.id)] = sim.calendar.tick
 		_recruit(sim, sect)
 		if sect.members.is_empty():
 			entries.erase(id)

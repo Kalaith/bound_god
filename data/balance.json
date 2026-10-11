@@ -92,7 +92,8 @@
 	"shrines": {
 		"support_window_days": 3, "prayer_keep_days": 3.0, "active_support": 1.2, "radius_base": 16.0, "radius_per_sqrt_support": 6.0,
 		"radius_max": 40.0, "favour_per_devotion": 0.04, "favour_cap": 120.0, "meditation_favour": 0.5, "condition_decay_per_day": 2.0,
-		"low_condition": 30.0, "dormant_days": 3, "tree_min_radius": 20.0, "tend_per_tick": 0.3, "start_favour": 30.0
+		"low_condition": 30.0, "dormant_days": 3, "tree_min_radius": 20.0, "tend_per_tick": 0.3, "start_favour": 30.0,
+		"transfer_cost": 8.0, "transfer_cooldown_days": 2.0, "cutting_support": 0.5
 	},
 	"miracle_costs": {"identity_discount": 0.25, "identity_penalty": 0.25, "dormant_whisper_cost": 0},
 	"threats": {
@@ -137,5 +138,14 @@
 		"abstract_hours_per_day": 4.0, "abstract_trip_chance": 0.04, "wayfarer_days": [8, 14], "wayfarer_stay_days": [1, 2]
 	},
 	"paths": {"wear_keep": 0.7, "wear_to_path": 30.0, "wear_to_grass": 0.5},
+	"branches": {
+		"cutting_curve": [[0.0, 0.85], [4.0, 0.75], [10.0, 0.45], [16.0, 0.15], [20.0, 0.0]], "spot_inner": 1.5, "spot_outer": 4.5,
+		"settled_days": 8, "crowded": 10, "after_days": 15, "most": 2, "between_days": 12, "followers": 4, "left_days": 40,
+		"found_base": 0.35, "found_crowd": 0.35, "found_ambition": 0.3, "follow_base": 0.5, "follow_opinion": 20.0,
+		"school_at": 0.72, "school_lose": 0.62, "school_days": 10, "schism_distance": 1.0, "schism_opinion": -20.0, "schism_far": 1.5,
+		"relic_reach": 16.0, "recover_pull": 0.5, "abstract_found": 0.08, "abstract_recover": 0.2
+	},
+	"routes": {"per_link": 10.0, "per_pilgrim": 1.0, "most": 30.0, "refind_days": 10},
+	"schools": {"heal_factor": 1.6, "defend_factor": 1.5, "strike_factor": 1.5, "hidden_wealth": 0.4},
 	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 6.4, "gravity": 16.0, "hotbar_slots": 9, "pickup_reach": 1.5}
 }
