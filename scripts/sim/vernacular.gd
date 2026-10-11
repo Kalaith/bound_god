@@ -26,7 +26,7 @@ static func daily(sim: RefCounted) -> void:
 static func _homeless(sim: RefCounted, id: int) -> bool:
 	for agent_id in sim.settlements.entries[id].residents:
 		var agent: RefCounted = sim.agents[agent_id]
-		if agent.is_present() and agent.home < 0 and agent.age_years >= Balance.number("agents.adult_age_years"):
+		if agent.is_present() and agent.home < 0 and agent.age_years >= Balance.number("agents.adult_age_years") and not bool(agent.backstory.get("wayfarer", false)):
 			return true
 	return false
 

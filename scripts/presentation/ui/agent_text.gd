@@ -26,7 +26,7 @@ static func goal(sim: RefCounted, value: Dictionary) -> String:
 	match kind:
 		Goals.Kind.GATHER:
 			args["resource"] = Text.label("resource_" + sim_resource(target)).to_lower()
-		Goals.Kind.PROPOSE_PROJECT:
+		Goals.Kind.PROPOSE_PROJECT, Goals.Kind.STUDY:
 			args["function"] = Text.label("function_" + function_name(target)).to_lower()
 		Goals.Kind.MIGRATE:
 			args["place"] = sim.settlements.get_settlement(target).get("name", Text.label("somewhere"))

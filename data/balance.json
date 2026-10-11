@@ -112,6 +112,7 @@
 		"inherit_talent": 0.5, "inherit_drive": 0.4, "manual_chance": 0.15, "relic_preparation": 0.03, "relics_most": 5, "join_chance": 0.1
 	},
 	"halls": {
+		"master_propose": 0.75,
 		"library_study_factor": 3.0, "library_copy_chance": 0.1, "library_members": 5,
 		"seclusion_factor": 1.5, "room_members": 2,
 		"chamber_severity": 0.15,
@@ -125,6 +126,12 @@
 	},
 	"alchemy": {"pills_kept": 2, "pill_preparation": 0.3, "refine_pull": 0.65},
 	"tools": {"speed": 1.5, "wear_hours": 40.0, "people_per_set": 2.0, "smithy_people": 6, "smithy_ore": 3, "smith_pull": 1.5},
+	"designs": {
+		"village_authors": ["valley folk", "ridge folk"], "sect_authors": ["wandering cultivators"],
+		"hours_per_block": 0.25, "sect_factor": 3.0, "master_pace": 1.5, "study_ticks": 60, "study_min_people": 4, "study_pull": 1.5, "master_pull": 1.6,
+		"trip_days": [4, 7], "trip_designs": 2, "trip_min_people": 6, "trip_settled_days": 8, "trip_pull": 1.4,
+		"abstract_hours_per_day": 4.0, "abstract_trip_chance": 0.04, "wayfarer_days": [8, 14], "wayfarer_stay_days": [1, 2]
+	},
 	"paths": {"wear_keep": 0.7, "wear_to_path": 30.0, "wear_to_grass": 0.5},
 	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 6.4, "gravity": 16.0, "hotbar_slots": 9, "pickup_reach": 1.5}
 }

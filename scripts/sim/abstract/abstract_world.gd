@@ -27,6 +27,7 @@ const AbstractPeople = preload("res://scripts/sim/abstract/abstract_people.gd")
 const AbstractEconomy = preload("res://scripts/sim/abstract/abstract_economy.gd")
 const AbstractBuild = preload("res://scripts/sim/abstract/abstract_build.gd")
 const AbstractCultivation = preload("res://scripts/sim/abstract/abstract_cultivation.gd")
+const DesignsLore = preload("res://scripts/sim/designs_lore.gd")
 
 ## Chronicle kinds that wake a meditating god whoever they concern.
 const WAKING: Array[String] = ["shrine_fell", "tree_unlock", "sect_master", "sect_founded"]
@@ -152,6 +153,7 @@ func _day(sim: RefCounted) -> void:
 			records[id] = AbstractEconomy.survey(sim, id)
 		AbstractEconomy.day(sim, id, records[id])
 		AbstractCrafts.day(sim, id, records[id])
+		DesignsLore.abstract_day(sim, id)
 		# A new project is weighed every few days, not every morning.
 		if (sim.calendar.day() + id) % AbstractBuild.PLAN_EVERY_DAYS == 0:
 			AbstractBuild.day(sim, id, records[id])

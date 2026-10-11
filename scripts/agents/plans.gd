@@ -12,6 +12,7 @@ enum Op {
 	SOW, REAP, TEND_CROPS, ADD_TO_POT, COOK,
 	CULTIVATE, TEACH, WAIT_TO_LEARN, PROCLAIM,
 	FACE_HEAVEN, PICK_FRUIT, HAND_FRUIT,
+	STUDY, SET_OUT,
 }
 const OP_NAMES: Array[String] = [
 	"go_to", "take_stock", "deposit", "deliver", "place_block", "mark_site", "harvest", "forage", "pick_up",
@@ -22,6 +23,7 @@ const OP_NAMES: Array[String] = [
 	"sow", "reap", "tend_crops", "add_to_pot", "cook",
 	"cultivate", "teach", "wait_to_learn", "proclaim",
 	"face_heaven", "pick_fruit", "hand_fruit",
+	"study", "set_out",
 ]
 
 enum Fail { NO_PATH, TARGET_GONE, STOCK_EMPTY, DEPLETED, OCCUPIED, REFUSED, TIMED_OUT, INTERRUPTED, TOO_DANGEROUS, NO_SITE }

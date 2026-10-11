@@ -200,6 +200,9 @@ static func _founding(sim: RefCounted, agent: RefCounted) -> bool:
 static func _found_home(sim: RefCounted, agent: RefCounted, out: Array, base: float) -> void:
 	if agent.home >= 0 or agent.age_years < Balance.number("agents.adult_age_years") or _founding(sim, agent):
 		return
+	# A wayfarer only passing through (wayfarers.gd) builds no home here.
+	if bool(agent.backstory.get("wayfarer", false)):
+		return
 	if agent.partner >= 0 and sim.agents[agent.partner].home >= 0:
 		return
 	if _open_sites(sim, agent.settlement_id) >= Balance.integer("construction.max_open_sites"):
@@ -260,11 +263,14 @@ static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float
 		wants = sect_wants
 	else:
 		wants.append_array(sect_wants)
+	# The master above all wants the sect's grand halls raised.
+	var sect: Dictionary = sim.sects.in_settlement(id) if sim.sects != null else {}
+	var master: float = Balance.number("halls.master_propose") if int(sect.get("master", -1)) == agent.id else 0.0
 	for want in wants:
 		var design: RefCounted = known_design(sim, agent, want[0])
 		if design == null or not means_believed(sim, agent, design) or (SectHallWants.busy(sim, id, want[0]) and not design.bill.is_empty()):
 			continue
 		if _site_open_for(sim, id, want[0]):
 			continue
-		var weight: float = 0.5 + maxf(agent.personality.leadership, 0.0) + (0.5 if sect_wants.has(want) else 0.0)
+		var weight: float = 0.5 + maxf(agent.personality.leadership, 0.0) + (0.5 + master if sect_wants.has(want) else 0.0)
 		out.append(_candidate(Kind.PROPOSE_PROJECT, base * weight * float(want[2]) / 0.42 * 0.6, want[1], FUNCTIONS.find(want[0])))

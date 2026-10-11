@@ -69,7 +69,7 @@ static func wants(sim: RefCounted, id: int) -> Array:
 	var homeless: int = -1
 	for agent_id in settlement.residents:
 		var agent: RefCounted = sim.agents[agent_id]
-		if agent.is_present() and not agent.is_child and agent.home < 0 and agent.age_years >= Balance.number("agents.adult_age_years"):
+		if agent.is_present() and not agent.is_child and agent.home < 0 and agent.age_years >= Balance.number("agents.adult_age_years") 				and not bool(agent.backstory.get("wayfarer", false)):
 			if homeless < 0 or (agent.partner >= 0 and sim.agents[homeless].partner < 0):
 				homeless = agent_id
 	if homeless >= 0:

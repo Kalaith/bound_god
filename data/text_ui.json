@@ -90,6 +90,7 @@
 		"inspect_no_bonds": "Knows nobody yet.",
 		"inspect_dead": "(died)",
 		"inspect_departed": "(left)",
+		"inspect_away": "(away)",
 		"inspect_present": "",
 		"inspect_skills": "Skills",
 		"inspect_passion": "passion",

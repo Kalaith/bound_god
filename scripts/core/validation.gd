@@ -35,7 +35,7 @@ const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shri
 const BALANCE_SECTIONS: Array[String] = [
 	"time", "needs", "agents", "social", "mood", "health", "work", "construction", "world",
 	"settlements", "food", "farming", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
-	"cultivation", "halls", "alchemy", "tools",
+	"cultivation", "halls", "alchemy", "tools", "designs",
 ]
 
 

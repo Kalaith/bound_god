@@ -47,6 +47,23 @@
 		"log_took_tools": "Took a set of tools from the stores",
 		"chronicle_pill_eaten": "{name} swallowed a foundation pill as Heaven gathered.",
 		"chronicle_first_pill": "{name} refined the first foundation pill in {place}.",
-		"chronicle_first_tools": "{name} forged the first tools in {place}."
+		"chronicle_first_tools": "{name} forged the first tools in {place}.",
+		"goal_study": "work out how to build a {function}",
+		"goal_seek_plans": "set out to learn building plans",
+		"plan_think_it_through_by_the_camp": "sit by the camp and work the design out",
+		"plan_think_it_through_here": "work the design out where they stand",
+		"plan_set_out_from_the_valley": "walk to the valley's rim and set out",
+		"step_study": "work out a design",
+		"step_set_out": "set out from the valley",
+		"activity_studying": "working out a design",
+		"reason_study": "nobody here knows how to build what is needed",
+		"reason_seek_plans": "people beyond the valley know designs this place lacks",
+		"chronicle_design_worked_out": "{name} worked out how to build a {function}: the {design}.",
+		"chronicle_set_out_for_plans": "{name} set out from the valley to learn building plans, meaning to be back in {days} days.",
+		"chronicle_returned_with_plans": "{name} came back to the valley with plans: {designs}.",
+		"chronicle_returned_empty_handed": "{name} came back to the valley with no plans the settlement still lacked.",
+		"cause_lacked_design": "nobody there knew how to build a {0}",
+		"chronicle_wayfarer_came": "{name}, a wayfarer from {origin}, stopped for the night and shared the plans of the {design}.",
+		"chronicle_wayfarer_moved_on": "{name} went on their way."
 	}
 }

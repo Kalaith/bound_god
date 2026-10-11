@@ -12,7 +12,7 @@ const Sects = preload("res://scripts/sim/sects.gd")
 
 ## Events worth naming one by one, in this order of interest.
 const NOTABLE: Array[String] = ["sect_founded", "sect_master", "tree_unlock", "tree_grew", "relic_left", "trial_defied",
-	"trial_died", "manual_kept", "shrine_fell", "settlement_abandoned", "standing_rose", "standing_fell"]
+	"trial_died", "manual_kept", "shrine_fell", "settlement_abandoned", "standing_rose", "standing_fell", "design_worked_out", "returned_with_plans", "wayfarer_came"]
 const MOST_NOTABLE: int = 10
 
 
@@ -54,7 +54,9 @@ static func _pinned(sim: RefCounted, entries: Array, lines: Array[String]) -> vo
 	for id in sim.god.followed:
 		var agent: RefCounted = sim.agents[int(id)]
 		var realm: String = Text.label("realm_" + str(Data.realm(int(agent.cultivation.get("realm", 0))).id))
-		if agent.is_present():
+		if agent.life == "away":
+			lines.append(Text.format("med_pinned_away", {"name": agent.full_name(), "age": int(agent.age_years), "realm": realm}))
+		elif agent.is_present():
 			lines.append(Text.format("med_pinned_alive", {"name": agent.full_name(), "age": int(agent.age_years), "realm": realm}))
 		else:
 			lines.append(Text.format("med_pinned_gone", {"name": agent.full_name(), "realm": realm, "day": agent.life_day,

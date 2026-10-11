@@ -10,6 +10,7 @@ const PlansSocial = preload("res://scripts/agents/plan_library_social.gd")
 const PlansFaith = preload("res://scripts/agents/plan_library_faith.gd")
 const PlansFood = preload("res://scripts/agents/plan_library_food.gd")
 const PlansCultivation = preload("res://scripts/agents/plan_library_cultivation.gd")
+const PlansDesigns = preload("res://scripts/agents/plan_library_designs.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 
 const Kind = Goals.Kind
@@ -42,6 +43,8 @@ static func plans_for(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> A
 			plans = PlansFood.plans(sim, agent, goal)
 		Kind.CULTIVATE, Kind.TEACH, Kind.LEARN, Kind.FOUND_SECT, Kind.BREAKTHROUGH, Kind.SHARE_FRUIT:
 			plans = PlansCultivation.plans(sim, agent, goal)
+		Kind.STUDY, Kind.SEEK_PLANS:
+			plans = PlansDesigns.plans(sim, agent, goal)
 		_:
 			plans = PlansWork.plans(sim, agent, goal)
 	Plans.sort_options(plans)

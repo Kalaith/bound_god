@@ -116,6 +116,19 @@ static func _plant(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ti
 	return Plans.DONE if int(agent.step_result.planted) > 0 else Fail.OCCUPIED
 
 
+## Work a design out a sitting at a time; the hours count when it ends.
+## Hunger or exhaustion breaks a sitting off, and what was done still counts.
+static func _study(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:
+	agent.activity = "studying"
+	var tired: bool = agent.need(Personality.Need.FOOD) < Balance.number("needs.urgent_threshold") or agent.need(Personality.Need.REST) < 15.0
+	if step_ticks < int(step.ticks) and not tired:
+		Personality.practise(agent, Personality.Skill.CONSTRUCTION)
+		return Plans.RUNNING
+	sim.effects.action("study", agent.id, {"function": str(step.function), "sect": bool(step.sect),
+		"hours": float(step_ticks) / float(sim.calendar.ticks_per_hour())})
+	return Plans.DONE
+
+
 static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:
 	match int(step.op):
 		Op.TAKE_STOCK:
@@ -132,4 +145,9 @@ static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks
 			return _plant(sim, agent, step, step_ticks)
 		Op.SOW, Op.REAP, Op.TEND_CROPS, Op.ADD_TO_POT, Op.COOK:
 			return ExecuteFood.run(sim, agent, step, step_ticks)
+		Op.STUDY:
+			return _study(sim, agent, step, step_ticks)
+		Op.SET_OUT:
+			sim.effects.action("set_out", agent.id)
+			return Plans.DONE
 	return ExecuteBuild.run(sim, agent, step, step_ticks)

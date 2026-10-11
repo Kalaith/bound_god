@@ -131,6 +131,7 @@
 		"med_woke_sect_founded": "You woke: a sect has been founded.",
 		"med_pinned": "Those you keep close",
 		"med_pinned_alive": "{name}, {age}, {realm}",
+		"med_pinned_away": "{name}, {age}, {realm}: away from the valley, seeking plans",
 		"med_pinned_gone": "{name} ({realm}): {life} on day {day}, of {cause}",
 		"med_sect": "The sect",
 		"med_sect_line": "{sect}: master {master}, {members} members",

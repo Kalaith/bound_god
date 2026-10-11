@@ -12,6 +12,7 @@ const Social = preload("res://scripts/sim/social.gd")
 const EffectsBuild = preload("res://scripts/sim/effects_build.gd")
 const EffectsFood = preload("res://scripts/sim/effects_food.gd")
 const EffectsCultivation = preload("res://scripts/sim/effects_cultivation.gd")
+const DesignsLore = preload("res://scripts/sim/designs_lore.gd")
 const Woods = preload("res://scripts/sim/woods.gd")
 const Text = preload("res://scripts/core/text.gd")
 
@@ -59,7 +60,7 @@ static func apply(sim: RefCounted) -> void:
 			"settle":
 				_settle(sim, agent, int(action.ground))
 			_:
-				if not EffectsFood.apply(sim, agent, action) and not EffectsCultivation.apply(sim, agent, action):
+				if not EffectsFood.apply(sim, agent, action) and not EffectsCultivation.apply(sim, agent, action) 						and not DesignsLore.apply(sim, agent, action):
 					EffectsBuild.apply(sim, agent, action)
 	for entry in effects.interactions:
 		Social.resolve(sim, entry)

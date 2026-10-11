@@ -8,6 +8,8 @@ const JobBoard = preload("res://scripts/sim/job_board.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Construction = preload("res://scripts/sim/construction.gd")
 const Vernacular = preload("res://scripts/sim/vernacular.gd")
+const DesignsLore = preload("res://scripts/sim/designs_lore.gd")
+const Wayfarers = preload("res://scripts/sim/wayfarers.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 
 ## settlement id -> job board
@@ -67,6 +69,8 @@ func daily(sim: RefCounted) -> void:
 	Standing.daily(sim)
 	_make_do(sim)
 	Vernacular.daily(sim)
+	DesignsLore.daily(sim)
+	Wayfarers.daily(sim)
 	_abandon(sim)
 	_decay(sim)
 	_overgrow(sim)
