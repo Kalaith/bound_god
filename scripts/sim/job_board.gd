@@ -3,16 +3,18 @@ extends RefCounted
 ## what they lack, repairs, how much each resource is wanted, loose items to
 ## haul and threats near home. Nothing on it is assigned; people read it.
 const Crafts = preload("res://scripts/sim/crafts.gd")
-const Kitchens = preload("res://scripts/sim/kitchens.gd")
+const Alchemy = preload("res://scripts/sim/alchemy.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Food = preload("res://scripts/sim/food.gd")
 const Crops = preload("res://scripts/sim/crops.gd")
 const Woods = preload("res://scripts/sim/woods.gd")
 
-const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore", "herb"]
-const SITE_KIND: Dictionary = {"wood": "tree", "stone": "rock", "thatch": "grass", "berries": "bush", "ore": "ore", "herb": "herb"}
+const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore", "herb", "ginseng", "thunder_root", "frost_lotus"]
+const SITE_KIND: Dictionary = {"wood": "tree", "stone": "rock", "thatch": "grass", "berries": "bush", "ore": "ore", "herb": "herb",
+	"ginseng": "ginseng", "thunder_root": "thunder_root", "frost_lotus": "frost_lotus"}
 ## Stock a settlement likes to keep before anyone needs it: base + per resident.
-const RESERVE: Dictionary = {"wood": [12, 2], "stone": [8, 1], "thatch": [8, 1], "berries": [6, 4], "ore": [0, 0], "herb": [0, 0]}
+const RESERVE: Dictionary = {"wood": [12, 2], "stone": [8, 1], "thatch": [8, 1], "berries": [6, 4], "ore": [0, 0], "herb": [0, 0],
+	"ginseng": [0, 0], "thunder_root": [0, 0], "frost_lotus": [0, 0]}
 
 
 static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
@@ -39,12 +41,10 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 				board.items.append(item_id)
 			loose[item.resource] = float(loose.get(item.resource, 0.0)) + float(item.amount)
 	var residents: int = settlement.residents.size()
-	board["alchemy"] = Crafts.stations(sim, id, "alchemy_room")
+	board["alchemy"] = Alchemy.workshops(sim, id)
 	board["smithies"] = Crafts.stations(sim, id, "smithy")
-	# Herbs for the furnace's pills still to refine, ore for the anvil's tools.
-	var crafts: Dictionary = {}
-	if not board.alchemy.is_empty():
-		crafts["herb"] = Crafts.pills_short(sim, id) * int(Kitchens.recipe_for("alchemy_room").inputs.herb)
+	# Herbs for the preparations still to refine, ore for the anvil's tools.
+	var crafts: Dictionary = Alchemy.herbs_wanted(sim, id) if not board.alchemy.is_empty() else {}
 	if not board.smithies.is_empty():
 		crafts["ore"] = Crafts.tools_short(sim, id)
 	# Before winter, people want food put by for the months without berries.

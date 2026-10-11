@@ -24,8 +24,6 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 			return _farm(sim, agent, int(goal.target))
 		Kind.COOK:
 			return _cook(sim, agent, int(goal.target))
-		Kind.REFINE:
-			return _craft(sim, agent, int(goal.target), "alchemy_room", clampi(Crafts.pills_short(sim, agent.settlement_id), 1, 2), "refine_pills")
 		Kind.SMITH:
 			return _craft(sim, agent, int(goal.target), "smithy", clampi(Crafts.tools_short(sim, agent.settlement_id), 1, 3), "forge_tools")
 	return []

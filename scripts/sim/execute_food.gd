@@ -8,6 +8,8 @@ const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Crops = preload("res://scripts/sim/crops.gd")
 const Kitchens = preload("res://scripts/sim/kitchens.gd")
+const Alchemy = preload("res://scripts/sim/alchemy.gd")
+const Data = preload("res://scripts/core/data.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail
@@ -48,7 +50,7 @@ static func _tend(sim: RefCounted, agent: RefCounted, step_ticks: int) -> int:
 
 
 ## What working each station looks like.
-const ACTIVITY: Dictionary = {"kitchen": "cooking", "alchemy_room": "refining", "smithy": "forging"}
+const ACTIVITY: Dictionary = {"kitchen": "cooking", "alchemy": "refining", "smithy": "forging"}
 
 
 ## Put a carried ingredient into the kitchen's pot.
@@ -57,7 +59,8 @@ static func _add_to_pot(sim: RefCounted, agent: RefCounted, step: Dictionary, st
 	if step_ticks == 0:
 		if agent.carrying.is_empty():
 			return Fail.STOCK_EMPTY
-		sim.effects.action("add_to_pot", agent.id, {"kitchen": int(step.kitchen), "batches": int(step.batches), "station": str(step.get("station", "kitchen"))})
+		sim.effects.action("add_to_pot", agent.id, {"kitchen": int(step.kitchen), "batches": int(step.batches), "station": str(step.get("station", "kitchen")),
+			"recipe": str(step.get("recipe", "")), "seat": int(step.get("seat", 0))})
 		return Plans.RUNNING
 	if not agent.step_result.has("added"):
 		return Plans.RUNNING
@@ -69,12 +72,14 @@ static func _cook(sim: RefCounted, agent: RefCounted, step: Dictionary, step_tic
 	var station: String = str(step.get("station", "kitchen"))
 	agent.activity = ACTIVITY.get(station, "cooking")
 	var kitchen: int = int(step.kitchen)
-	var batches: int = sim.station(station).batches_ready(kitchen)
+	# At an alchemy building each crafter works a bench (a seat) of it.
+	var alchemy: bool = station == Alchemy.STATION
+	var batches: int = sim.alchemy.batches_ready(kitchen, int(step.get("seat", 0))) if alchemy else sim.station(station).batches_ready(kitchen)
 	if batches <= 0 and not agent.step_result.has("cooked"):
 		return Fail.STOCK_EMPTY
-	var recipe: Dictionary = Kitchens.recipe_for(station)
+	var recipe: Dictionary = Data.recipe(str(step.recipe)) if alchemy else Kitchens.recipe_for(station)
 	var skill: int = Personality.SKILLS.find(recipe.skill)
-	return work_then(sim, agent, step_ticks, float(recipe.ticks) * maxi(batches, 1), skill, "cook", {"kitchen": kitchen, "station": station}, "cooked", Fail.STOCK_EMPTY)
+	return work_then(sim, agent, step_ticks, float(recipe.ticks) * maxi(batches, 1), skill, "cook", {"kitchen": kitchen, "station": station, "seat": int(step.get("seat", 0))}, "cooked", Fail.STOCK_EMPTY)
 
 
 static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:

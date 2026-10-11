@@ -1,0 +1,53 @@
+{
+	"schema_version": 1,
+	"herb_search": {
+		"reach": 16.0,
+		"tries": 8,
+		"water_reach": 2,
+		"waterside_reach": 60.0
+	},
+	"herbs": [
+		{"id": "spirit_herb", "resource": "herb", "grows": "deep_qi", "qi": 0.6, "ripen_days": 3, "most": 12, "per_day": 2, "seasons": ["spring", "summer", "autumn"], "withers": false},
+		{"id": "jade_ginseng", "resource": "ginseng", "grows": "shade", "qi": 0.35, "ripen_days": 7, "most": 8, "per_day": 1, "seasons": ["spring", "summer", "autumn"], "withers": false},
+		{"id": "thunder_root", "resource": "thunder_root", "grows": "scar", "qi": 0.0, "ripen_days": 5, "most": 10, "per_day": 2, "seasons": ["spring", "summer", "autumn"], "withers": false},
+		{"id": "frost_lotus", "resource": "frost_lotus", "grows": "waterside", "qi": 0.0, "ripen_days": 3, "most": 6, "per_day": 1, "seasons": ["winter"], "withers": true}
+	],
+	"garden": {
+		"qi": 0.3,
+		"ripen": 1.5,
+		"per_day": 2,
+		"sun": "spirit_herb",
+		"shade": "jade_ginseng"
+	},
+	"elixirs": [
+		{"id": "healing_draught", "use": "heal", "heal": 30.0, "mend": 0.08, "toxicity": 0.0, "priority": 1.2},
+		{"id": "awakening_tea", "use": "sitting", "realm": "mortal", "factor": 1.5, "days": 1.0, "toxicity": 0.0, "priority": 0.6},
+		{"id": "pill", "use": "trial", "preparation": 0.3, "severity": 0.0, "toxicity": 0.1, "priority": 1.0},
+		{"id": "qi_pill", "use": "sitting", "realm": "cultivator", "factor": 1.5, "days": 2.0, "toxicity": 0.15, "priority": 0.7},
+		{"id": "warding_pill", "use": "trial", "preparation": 0.0, "severity": 0.15, "toxicity": 0.1, "priority": 1.1},
+		{"id": "cleansing_pill", "use": "cleanse", "toxicity": 0.0, "priority": 1.0},
+		{"id": "longevity_elixir", "use": "longevity", "years": 20.0, "toxicity": 0.2, "priority": 1.3}
+	],
+	"halls": [
+		{"function": "herbal_workshop", "tier": 1, "crafters": {"mortar": 1}, "crafters_most": 1},
+		{"function": "alchemy_room", "tier": 2, "crafters": {"furnace": 1}, "crafters_most": 1},
+		{"function": "alchemy_hall", "tier": 3, "crafters": {"furnace": 1}, "crafters_most": 4},
+		{"function": "pill_pavilion", "tier": 4, "crafters": {"furnace": 1, "cauldron": 2}, "crafters_most": 8}
+	],
+	"toxicity": {
+		"decay": 0.02,
+		"rate": 0.6,
+		"preparation": 0.3,
+		"limit": 0.6,
+		"cleanse_at": 0.35
+	},
+	"refining": {
+		"fail_base": 0.25,
+		"fail_per_level": 0.03,
+		"fail_least": 0.03,
+		"tier_bonus": [0.0, 0.0, 0.0, 0.05, 0.1],
+		"alchemist_level": 5,
+		"alchemist_pull": 1.4,
+		"cauldron_extra": 0.25
+	}
+}

@@ -7,7 +7,9 @@ extends RefCounted
 ##  peak_tick: int (when they reached the peak, -1), blessed_until: int (tick),
 ##  flawed: bool (a breakthrough Heaven meant to end), next_factor: float (harder next realm),
 ##  trials: Array of {tick, kind, outcome, sanctuary, severity, shield},
-##  fruit: bool (holds a spirit fruit for their next trial)}
+##  fruit: bool (holds a spirit fruit for their next trial),
+##  and what preparations left (M20b, `sim/elixirs.gd`): toxicity, elixir_until,
+##  elixir_factor, pill, warding, longevity, alchemist}
 ## Most people have little talent; would-be cultivators drawn by the tree's
 ## qi arrive with more of it and a stronger drive.
 const Balance = preload("res://scripts/core/balance.gd")
@@ -56,7 +58,8 @@ static func lifespan(cultivation: Dictionary) -> float:
 	var bonus: float = float(Data.realm(int(cultivation.realm)).get("lifespan_bonus", 0.0))
 	if bool(cultivation.flawed):
 		bonus *= float(Data.tribulations().outcomes.defied_lifespan)
-	return Balance.number("health.old_age_years") + bonus
+	# A longevity elixir adds its years to whatever span the realm gives.
+	return Balance.number("health.old_age_years") + bonus + float(cultivation.get("longevity", 0.0))
 
 
 static func needed(cultivation: Dictionary) -> float:

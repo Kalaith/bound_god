@@ -20,6 +20,7 @@ const Personality = preload("res://scripts/agents/personality.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const Lifecycle = preload("res://scripts/sim/lifecycle.gd")
 const Movement = preload("res://scripts/sim/movement.gd")
+const Elixirs = preload("res://scripts/sim/elixirs.gd")
 
 var entries: Dictionary = {}
 var next_id: int = 1
@@ -73,7 +74,8 @@ static func preparation(sim: RefCounted, agent: RefCounted) -> float:
 				or (int(agent.cultivation.sect_id) >= 0 and int(other.cultivation.sect_id) == int(agent.cultivation.sect_id))):
 			helped = maxf(helped, 0.7)
 	var fruit: float = float(Data.tree_growth().fruit.preparation) if bool(agent.cultivation.get("fruit", false)) else 0.0
-	var pill: float = Balance.number("alchemy.pill_preparation") if bool(agent.cultivation.get("pill", false)) else 0.0
+	# A foundation pill kept for the trial helps; the toxicity pills leave weakens.
+	var pill: float = Elixirs.trial_preparation(agent)
 	return clampf(0.35 * agent.need(Personality.Need.REST) / 100.0 + 0.35 * agent.need(Personality.Need.FOOD) / 100.0 + 0.3 * helped + fruit + pill, 0.0, 1.0)
 
 
@@ -163,6 +165,12 @@ func _begin(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 	if not SectHalls.chamber_at(sim, agent.cell).is_empty():
 		trial["chamber"] = true
 		trial.severity = maxf(float(trial.severity) - Balance.number("halls.chamber_severity"), 0.05)
+	# A thunder-warding pill kept for this moment softens Heaven's storm.
+	if bool(agent.cultivation.get("warding", false)):
+		agent.cultivation.erase("warding")
+		trial["warding"] = true
+		trial.severity = maxf(float(trial.severity) - float(Data.elixir("warding_pill").severity), 0.05)
+		sim.chronicle_event("warding_eaten", agent.settlement_id, {"name": agent.full_name()}, "cause_before_trial", [agent.id])
 	# A foundation pill kept for this moment is swallowed now.
 	if bool(agent.cultivation.get("pill", false)):
 		agent.cultivation.erase("pill")
@@ -354,12 +362,13 @@ func abstract_trial(sim: RefCounted, agent: RefCounted, site: Vector3i) -> Strin
 	var id: int = announce(sim, agent, site)
 	if id <= 0:
 		return ""
-	# A pill in the stores is taken for the trial, as a waking cultivator would.
-	if not bool(agent.cultivation.get("pill", false)) and sim.settlements.amount(agent.settlement_id, "pill") > 0:
-		for chest in sim.settlements.chest_cells(sim, agent.settlement_id):
-			if sim.settlements.chest_take(chest, "pill", 1) > 0:
-				agent.cultivation["pill"] = true
-				break
+	# Pills in the stores are taken for the trial, as a waking cultivator would.
+	for pill in Elixirs.KEPT:
+		if Elixirs.would_take(sim, agent, pill) and sim.settlements.amount(agent.settlement_id, pill) > 0:
+			for chest in sim.settlements.chest_cells(sim, agent.settlement_id):
+				if sim.settlements.chest_take(chest, pill, 1) > 0:
+					Elixirs.consume(sim, agent, pill)
+					break
 	var trial: Dictionary = entries[id]
 	_protect(sim, trial, agent)
 	agent.cell = site

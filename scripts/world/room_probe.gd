@@ -5,17 +5,17 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const DIRECTIONS: Array[Vector3i] = [Vector3i.LEFT, Vector3i.RIGHT, Vector3i.UP, Vector3i.DOWN, Vector3i.FORWARD, Vector3i.BACK]
 ## Furniture: components a room holds and the probe passes through.
 const FURNITURE: Array[String] = ["bed", "chest", "hearth", "workbench", "altar", "table", "bench", "lantern", "granary_bin", "mat",
-	"scripture", "lectern", "incense", "medicine", "tablet", "bell", "array"]
+	"scripture", "lectern", "incense", "medicine", "tablet", "bell", "array", "mortar", "rack", "cauldron"]
 ## Components a structure is found from: furniture that gives a room its use,
 ## and planters and farmland, whose connected beds make a garden or a field
 ## under the open sky.
 const ANCHORS: Array[String] = ["bed", "chest", "altar", "hearth", "workbench", "table", "planter", "farmland", "granary_bin", "mat", "formation",
-	"scripture", "lectern", "incense", "medicine", "tablet", "bell", "array", "jade", "stele", "banner"]
+	"scripture", "lectern", "incense", "medicine", "tablet", "bell", "array", "jade", "stele", "banner", "mortar", "rack", "cauldron", "herb_bed"]
 ## Components that stand on a cut-stone platform under the sky: a trial
 ## ground's formation stones, an array's jade, a stele, a gate's banners.
 const PLATFORM: Array[String] = ["formation", "jade", "stele", "banner"]
 ## Bed components: probed as connected beds, not as rooms.
-const BEDS: Array[String] = ["planter", "farmland"]
+const BEDS: Array[String] = ["planter", "farmland", "herb_bed"]
 
 
 ## An open column straight up from the seed, as tall as a room may be: the

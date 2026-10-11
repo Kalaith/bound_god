@@ -7,6 +7,8 @@ extends RefCounted
 const Crafts = preload("res://scripts/sim/crafts.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Crops = preload("res://scripts/sim/crops.gd")
+const Alchemy = preload("res://scripts/sim/alchemy.gd")
+const EffectsAlchemy = preload("res://scripts/sim/effects_alchemy.gd")
 
 
 ## Applies one food action; false when the action is not a food action.
@@ -19,9 +21,15 @@ static func apply(sim: RefCounted, agent: RefCounted, action: Dictionary) -> boo
 		"tend_crops":
 			_tend(sim, agent)
 		"add_to_pot":
-			_add_to_pot(sim, agent, int(action.kitchen), int(action.batches), str(action.get("station", "kitchen")))
+			if str(action.get("station", "")) == Alchemy.STATION:
+				EffectsAlchemy.add(sim, agent, int(action.kitchen), int(action.seat), str(action.recipe), int(action.batches))
+			else:
+				_add_to_pot(sim, agent, int(action.kitchen), int(action.batches), str(action.get("station", "kitchen")))
 		"cook":
-			_cook(sim, agent, int(action.kitchen), str(action.get("station", "kitchen")))
+			if str(action.get("station", "")) == Alchemy.STATION:
+				EffectsAlchemy.refine(sim, agent, int(action.kitchen), int(action.seat))
+			else:
+				_cook(sim, agent, int(action.kitchen), str(action.get("station", "kitchen")))
 		_:
 			return false
 	return true

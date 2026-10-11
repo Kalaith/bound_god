@@ -47,7 +47,7 @@
 	},
 	"scorch": {
 		"charred_wood": ["log", "planks", "door", "table", "bench", "fence"],
-		"burned": ["leaves", "thatch", "tall_grass", "crop", "sapling", "spirit_herb"],
+		"burned": ["leaves", "thatch", "tall_grass", "crop", "sapling", "spirit_herb", "jade_ginseng", "thunder_root", "frost_lotus"],
 		"scorched_earth": ["grass", "dirt", "farmland"],
 		"split": ["stone", "cobble", "cut_stone"],
 		"split_into": "gravel"

@@ -138,7 +138,7 @@ static func cracked(agent: RefCounted) -> bool:
 
 
 ## Mends a cracked foundation by `amount`, towards what it was before.
-static func mend(sim: RefCounted, agent: RefCounted, amount: float) -> void:
+static func mend(sim: RefCounted, agent: RefCounted, amount: float, cause: String = "cause_infirmary") -> void:
 	if not cracked(agent):
 		return
 	var c: Dictionary = agent.cultivation
@@ -146,7 +146,7 @@ static func mend(sim: RefCounted, agent: RefCounted, amount: float) -> void:
 	if float(c.foundation) >= float(c.sound_foundation) - 0.001:
 		c.erase("sound_foundation")
 		Mind.add(agent, "foundation_mended", sim.calendar.ticks_per_day)
-		sim.chronicle_event("foundation_mended", agent.settlement_id, {"name": agent.full_name()}, "cause_infirmary", [agent.id])
+		sim.chronicle_event("foundation_mended", agent.settlement_id, {"name": agent.full_name()}, cause, [agent.id])
 
 
 ## The infirmary nearest a person in their settlement, or -1.

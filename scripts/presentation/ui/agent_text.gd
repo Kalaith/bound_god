@@ -109,7 +109,13 @@ static func entry(sim: RefCounted, value: Dictionary) -> String:
 		"interrupted":
 			return Text.format("log_interrupted", {"by": Text.label(str(value.by))})
 		"message":
-			return Text.format(str(value.text), value.get("args", {}))
+			# A resource or recipe named by its label key is worded on display.
+			var args: Dictionary = value.get("args", {}).duplicate()
+			for key in args:
+				var word: Variant = args[key]
+				if word is String and (word.begins_with("resource_") or word.begins_with("recipe_")) and Text.has(word):
+					args[key] = Text.label(word).to_lower()
+			return Text.format(str(value.text), args)
 	return str(value.kind)
 
 

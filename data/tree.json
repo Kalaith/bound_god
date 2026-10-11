@@ -53,14 +53,6 @@
 		"reach": 2,
 		"gap": 2
 	},
-	"herbs": {
-		"qi": 0.6,
-		"reach": 16.0,
-		"most": 12,
-		"per_day": 2,
-		"ripen_days": 3,
-		"tries": 8
-	},
 	"nurture": {
 		"radius": 4.0,
 		"qi": 0.85,

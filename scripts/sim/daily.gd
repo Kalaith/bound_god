@@ -8,6 +8,7 @@ const Lifecycle = preload("res://scripts/sim/lifecycle.gd")
 const Spoilage = preload("res://scripts/sim/spoilage.gd")
 const Blueprints = preload("res://scripts/sim/blueprints.gd")
 const Homes = preload("res://scripts/sim/homes.gd")
+const Elixirs = preload("res://scripts/sim/elixirs.gd")
 
 
 static func new_day(sim: RefCounted) -> void:
@@ -16,8 +17,9 @@ static func new_day(sim: RefCounted) -> void:
 	Spoilage.daily(sim)
 	sim.crops.daily(sim)
 	sim.kitchens.daily(sim)
-	sim.furnaces.daily(sim)
 	sim.forges.daily(sim)
+	sim.alchemy.daily(sim)
+	Elixirs.daily(sim)
 	var decay: float = Balance.number("social.opinion_decay_per_day")
 	for agent in sim.agents:
 		if not agent.is_present():

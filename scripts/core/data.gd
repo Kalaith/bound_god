@@ -16,15 +16,17 @@ const FILES: Dictionary = {
 	"tribulations": "res://data/tribulations.json",
 	"tree": "res://data/tree.json",
 	"weather": "res://data/weather.json",
+	"alchemy": "res://data/alchemy.json",
 	"text": "res://data/text.json",
 	"text_agents": "res://data/text_agents.json",
 	"text_ui": "res://data/text_ui.json",
 	"text_cultivation": "res://data/text_cultivation.json",
 	"text_sect": "res://data/text_sect.json",
 	"text_seasons": "res://data/text_seasons.json",
+	"text_alchemy": "res://data/text_alchemy.json",
 }
 ## Text catalogs, split by responsibility; their labels share one namespace.
-const TEXT_FILES: Array[String] = ["text", "text_agents", "text_ui", "text_cultivation", "text_sect", "text_seasons"]
+const TEXT_FILES: Array[String] = ["text", "text_agents", "text_ui", "text_cultivation", "text_sect", "text_seasons", "text_alchemy"]
 
 static var _files: Dictionary = {}
 static var _blocks_by_id: Array = []
@@ -230,3 +232,24 @@ static func tribulations() -> Dictionary:
 
 static func tree_growth() -> Dictionary:
 	return file("tree")
+
+
+# --- Alchemy --------------------------------------------------------------------
+
+static func alchemy() -> Dictionary:
+	return file("alchemy")
+
+
+## A preparation's effect by its resource id, or {}.
+static func elixir(id: String) -> Dictionary:
+	for entry in file("alchemy").get("elixirs", []):
+		if entry.get("id") == id:
+			return entry
+	return {}
+
+
+static func recipe(id: String) -> Dictionary:
+	for entry in recipes():
+		if entry.get("id") == id:
+			return entry
+	return {}

@@ -6,6 +6,7 @@ const SimState = preload("res://scripts/sim/sim_state.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Herbs = preload("res://scripts/sim/herbs.gd")
 const EffectsApply = preload("res://scripts/sim/effects_apply.gd")
+const ResourceSites = preload("res://scripts/sim/resource_sites.gd")
 
 
 ## Days of herb growth without the rest of the world.
@@ -31,6 +32,8 @@ func check_herbs_wait_for_the_tree_and_its_qi():
 	if sim.herbs.count() < 3:
 		return "only %d herbs sprouted in five days" % sim.herbs.count()
 	for cell in sim.herbs.plants:
+		if sim.voxels.get_block(cell) != Herbs.block_id():
+			continue
 		if sim.qi.density(sim, cell) < float(Herbs.settings().qi):
 			return "a herb sprouted in thin qi (%.2f at %s)" % [sim.qi.density(sim, cell), cell]
 		if sim.voxels.get_block(cell + Vector3i.DOWN) != Registry.id("grass"):
@@ -46,11 +49,11 @@ func check_herbs_wait_for_the_tree_and_its_qi():
 		if sim.voxels.block_meta(cell) >= Herbs.RIPE:
 			ripe += 1
 			var site: int = int(sim.sites.by_cell.get(cell, -1))
-			if site < 0 or sim.sites.get_site(site).kind != "herb" or int(sim.sites.get_site(site).amount) != 1:
+			if site < 0 or not sim.sites.get_site(site).kind in ResourceSites.HERB_SITES.values() or int(sim.sites.get_site(site).amount) != 1:
 				return "a ripe herb is not a site to gather"
 	if ripe == 0:
 		return "no herb ripened"
-	if sim.herbs.count() > int(Herbs.settings().most):
+	if sim.herbs.wild_count(sim, "spirit_herb") > int(Herbs.settings().most):
 		return "more herbs than the valley holds"
 	# Winter: none sprout.
 	var before: int = sim.herbs.count()
@@ -58,7 +61,7 @@ func check_herbs_wait_for_the_tree_and_its_qi():
 		sim.set_block(cell, 0, 0, "test")
 	sim.calendar.tick = (3 * sim.calendar.days_per_season + 1) * sim.calendar.ticks_per_day
 	_herb_days(sim, 3)
-	if before == 0 or sim.herbs.count() > 0:
+	if before == 0 or sim.herbs.count_of(sim, "spirit_herb") > 0:
 		return "herbs sprouted in winter"
 	return ""
 

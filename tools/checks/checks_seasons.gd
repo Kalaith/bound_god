@@ -217,7 +217,7 @@ func check_the_sky_and_herbs_pass_while_abstract():
 		kinds[sim.weather.kind] = true
 	if kinds.size() < 2:
 		return "four abstract days passed under one sky (%s)" % kinds.keys()
-	if sim.herbs.count() > 0 or int(sim.herbs.pool.plants) == 0 or float(sim.herbs.pool.ripe) <= 0.0:
+	if sim.herbs.count() > 0 or int(sim.herbs.pool.get("spirit_herb", {}).get("plants", 0)) == 0 or float(sim.herbs.pool.get("spirit_herb", {}).get("ripe", 0.0)) <= 0.0:
 		return "abstract herbs did not grow as counts (placed %d, pool %s)" % [sim.herbs.count(), sim.herbs.pool]
 	# A homeless person on a snowy winter day.
 	var agent: RefCounted = sim.agents[0]
@@ -229,9 +229,9 @@ func check_the_sky_and_herbs_pass_while_abstract():
 	AbstractPeople._shelter(AbstractPeople.context(sim, 1), agent, false)
 	if agent.need(Need.SHELTER) >= 60.0:
 		return "an abstract snowy day cost the homeless no shelter"
-	var pooled: int = int(sim.herbs.pool.plants)
+	var pooled: int = int(sim.herbs.pool.get("spirit_herb", {}).get("plants", 0))
 	model.finish(sim)
-	if sim.herbs.count() < mini(pooled, 1) or int(sim.herbs.pool.plants) != 0:
+	if sim.herbs.count() < mini(pooled, 1) or not sim.herbs.pool.is_empty():
 		return "the counted herbs did not take root on waking (%d of %d)" % [sim.herbs.count(), pooled]
 	return ""
 

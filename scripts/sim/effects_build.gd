@@ -18,6 +18,8 @@ const SECT_HALL_CAUSES: Dictionary = {
 	"ancestral_hall": "cause_sect_needs_ancestral_hall", "precept_stele": "cause_sect_needs_precept_stele",
 	"bell_tower": "cause_sect_needs_bell_tower", "lecture_hall": "cause_sect_needs_lecture_hall",
 	"alchemy_room": "cause_sect_needs_alchemy_room", "smithy": "cause_no_tools",
+	"herbal_workshop": "cause_needs_herbal_workshop", "alchemy_hall": "cause_sect_needs_alchemy_hall",
+	"pill_pavilion": "cause_sect_needs_pill_pavilion", "herb_garden": "cause_needs_herb_garden",
 }
 
 

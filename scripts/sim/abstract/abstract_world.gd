@@ -10,6 +10,7 @@ extends RefCounted
 ## birth, arrival and harvest is chronicled with its cause.
 ## Randomness comes from the sim's rng, in settlement id order.
 const AbstractCrafts = preload("res://scripts/sim/abstract/abstract_crafts.gd")
+const Elixirs = preload("res://scripts/sim/elixirs.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Spoilage = preload("res://scripts/sim/spoilage.gd")
@@ -159,6 +160,7 @@ func _day(sim: RefCounted) -> void:
 		if (sim.calendar.day() + id) % AbstractBuild.PLAN_EVERY_DAYS == 0:
 			AbstractBuild.day(sim, id, records[id])
 	Homes.daily(sim, true)
+	Elixirs.daily(sim)
 	Lifecycle.daily(sim)
 	sim.settlement_life.daily(sim)
 	sim.sects.daily(sim)

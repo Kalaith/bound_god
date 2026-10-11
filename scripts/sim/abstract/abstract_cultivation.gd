@@ -12,6 +12,7 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
+const Elixirs = preload("res://scripts/sim/elixirs.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Beliefs = preload("res://scripts/agents/beliefs.gd")
@@ -53,6 +54,7 @@ static func hour(sim: RefCounted, agent: RefCounted, hours: int = 1) -> int:
 	if int(c.blessed_until) > sim.calendar.tick:
 		rate *= Balance.number("cultivation.bless_factor")
 	rate *= SectHalls.abstract_factor(sim, agent)
+	rate *= Elixirs.sitting_factor(sim, agent)
 	c.progress = minf(float(c.progress) + rate * share, needed)
 	c.hours = float(c.hours) + share
 	if float(c.progress) < needed:

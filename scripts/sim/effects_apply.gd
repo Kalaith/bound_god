@@ -16,6 +16,8 @@ const DesignsLore = preload("res://scripts/sim/designs_lore.gd")
 const Woods = preload("res://scripts/sim/woods.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Homes = preload("res://scripts/sim/homes.gd")
+const ResourceSites = preload("res://scripts/sim/resource_sites.gd")
+const Elixirs = preload("res://scripts/sim/elixirs.gd")
 
 const Need = Personality.Need
 
@@ -74,12 +76,9 @@ static func apply(sim: RefCounted) -> void:
 
 static func _take_stock(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
 	var resource: String = action.resource
-	# A foundation pill is kept for the trial, not carried in the hands.
-	if resource == "pill":
-		var got: int = 0 if bool(agent.cultivation.get("pill", false)) else sim.settlements.take(sim, int(action.settlement), "pill", 1, agent.cell)
-		if got > 0:
-			agent.cultivation["pill"] = true
-		agent.step_result = {"took": got}
+	# A preparation is taken for oneself (or kept for a trial), not carried.
+	if Elixirs.is_elixir(resource):
+		agent.step_result = {"took": Elixirs.take(sim, agent, int(action.settlement), resource)}
 		agent.beliefs.stock = sim.settlements.stock_of(int(action.settlement)).duplicate()
 		return
 	if not agent.carrying.is_empty() and agent.carrying.resource != resource:
@@ -176,7 +175,7 @@ static func _harvest(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 	if site.kind == "bush":
 		sim.set_block(cell, block, maxi(sim.voxels.block_meta(cell) - 1, 0), source)
 		gained = 1
-	elif site.kind == "herb":
+	elif site.kind in ResourceSites.HERB_SITES.values():
 		# Gathered from the root, the herb grows again.
 		if sim.voxels.block_meta(cell) < sim.herbs.RIPE:
 			agent.step_result = {"got": 0}

@@ -1,16 +1,16 @@
 extends RefCounted
-## Pills and tools (M20): how many a settlement wants, the buildings that
-## make them, and tools in hand. An alchemy room's furnace refines spirit
-## herbs into foundation pills that steady a breakthrough; a smithy's anvil
-## forges ore and wood into tools. A worker without tools takes a set at
-## the stores whenever they use them; tools speed gathering and building
-## and wear out with the work.
+## Tools (M20): how many a settlement wants, the smithy that makes them,
+## and tools in hand. A smithy's anvil forges ore and wood into tools. A
+## worker without tools takes a set at the stores whenever they use them;
+## tools speed gathering and building and wear out with the work. (What an
+## alchemy building refines is `alchemy.gd`'s; the first of each thing made
+## is remembered here for both.)
 const Balance = preload("res://scripts/core/balance.gd")
-const Kitchens = preload("res://scripts/sim/kitchens.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 
 const Skill = Personality.Skill
-## The chronicle's word for the first of each thing made.
+## The chronicle's word for the first of each thing made (any other
+## preparation is `first_preparation`).
 const FIRST: Dictionary = {"pill": "first_pill", "tools": "first_tools"}
 
 
@@ -21,20 +21,6 @@ static func stations(sim: RefCounted, id: int, function: String) -> Array:
 		if entry.functions.has(function) and sim.settlements.at_cell(entry.anchor) == id:
 			result.append(int(entry.id))
 	return result
-
-
-## Pills the stores should hold: one for each cultivator who will soon face
-## Heaven, at least `alchemy.pills_kept`, less what is there.
-static func pills_short(sim: RefCounted, id: int) -> int:
-	return maxi(Balance.integer("alchemy.pills_kept") - sim.settlements.amount(id, "pill"), 0)
-
-
-## Herbs wanted in the stores for the pills still to refine.
-static func herbs_wanted(sim: RefCounted, id: int) -> int:
-	if stations(sim, id, "alchemy_room").is_empty():
-		return 0
-	var per: int = int(Kitchens.recipe_for("alchemy_room").inputs.herb)
-	return maxi(pills_short(sim, id) * per - sim.settlements.amount(id, "herb"), 0)
 
 
 ## Tools wanted: a set for every `tools.people_per_set` adults, less what the
@@ -57,6 +43,11 @@ static func village_wants(sim: RefCounted, id: int, people: int, have: Dictionar
 	if int(have.get("smithy", 0)) == 0 and people >= Balance.integer("tools.smithy_people") \
 			and sim.settlements.amount(id, "ore") >= Balance.integer("tools.smithy_ore"):
 		result.append(["smithy", "reason_no_smithy", 0.72])
+	# A herbalist's workshop once herbs grow in reach (M20b): anyone may brew
+	# a healing draught; a sect's alchemy room does the same and more.
+	var alchemy: int = int(have.get("herbal_workshop", 0)) + int(have.get("alchemy_room", 0))
+	if alchemy == 0 and people >= Balance.integer("alchemy.workshop_people") and sim.herbs != null and sim.herbs.count() > 0:
+		result.append(["herbal_workshop", "reason_no_herbal_workshop", 0.5])
 	return result
 
 
@@ -88,4 +79,4 @@ static func first_made(sim: RefCounted, agent: RefCounted, place: int, resource:
 	if sim.settlements.entries[place].get(key, false):
 		return
 	sim.settlements.entries[place][key] = true
-	sim.chronicle_event(FIRST.get(resource, "first_pill"), place, {"place": sim.settlements.entries[place].name, "name": agent.full_name()}, "", [agent.id])
+	sim.chronicle_event(FIRST.get(resource, "first_preparation"), place, {"place": sim.settlements.entries[place].name, "name": agent.full_name(), "made": "resource_" + resource}, "", [agent.id])

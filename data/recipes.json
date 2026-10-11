@@ -10,20 +10,75 @@
 			"skill": "crafting"
 		},
 		{
-			"id": "foundation_pill",
-			"station": "alchemy_room",
-			"inputs": {"herb": 3},
-			"outputs": {"pill": 1},
-			"ticks": 60,
-			"skill": "medicine"
-		},
-		{
 			"id": "tools",
 			"station": "smithy",
 			"inputs": {"ore": 1, "wood": 1},
 			"outputs": {"tools": 1},
 			"ticks": 40,
 			"skill": "crafting"
+		},
+		{
+			"id": "healing_draught",
+			"station": "alchemy",
+			"tier": 1,
+			"inputs": {"herb": 1, "berries": 2},
+			"outputs": {"healing_draught": 2},
+			"ticks": 30,
+			"skill": "medicine"
+		},
+		{
+			"id": "awakening_tea",
+			"station": "alchemy",
+			"tier": 1,
+			"inputs": {"herb": 1, "grain": 1},
+			"outputs": {"awakening_tea": 2},
+			"ticks": 30,
+			"skill": "medicine"
+		},
+		{
+			"id": "foundation_pill",
+			"station": "alchemy",
+			"tier": 2,
+			"inputs": {"herb": 3},
+			"outputs": {"pill": 1},
+			"ticks": 60,
+			"skill": "medicine"
+		},
+		{
+			"id": "qi_pill",
+			"station": "alchemy",
+			"tier": 2,
+			"inputs": {"herb": 2, "ginseng": 1},
+			"outputs": {"qi_pill": 2},
+			"ticks": 60,
+			"skill": "medicine"
+		},
+		{
+			"id": "warding_pill",
+			"station": "alchemy",
+			"tier": 3,
+			"inputs": {"thunder_root": 2, "herb": 1},
+			"outputs": {"warding_pill": 1},
+			"ticks": 80,
+			"skill": "medicine"
+		},
+		{
+			"id": "cleansing_pill",
+			"station": "alchemy",
+			"tier": 3,
+			"inputs": {"frost_lotus": 1, "ginseng": 1},
+			"outputs": {"cleansing_pill": 1},
+			"ticks": 80,
+			"skill": "medicine"
+		},
+		{
+			"id": "longevity_elixir",
+			"station": "alchemy",
+			"tier": 4,
+			"inputs": {"frost_lotus": 2, "ginseng": 2, "thunder_root": 1},
+			"outputs": {"longevity_elixir": 1},
+			"ticks": 120,
+			"skill": "medicine"
 		}
 	]
 }

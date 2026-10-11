@@ -7,6 +7,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const ValidationFood = preload("res://scripts/core/validation_food.gd")
 const ValidationCultivation = preload("res://scripts/core/validation_cultivation.gd")
 const ValidationSeasons = preload("res://scripts/core/validation_seasons.gd")
+const ValidationAlchemy = preload("res://scripts/core/validation_alchemy.gd")
 
 ## Code records these thoughts by id, so the catalog must hold them.
 const REQUIRED_THOUGHTS: Array[String] = [
@@ -31,7 +32,8 @@ const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle",
 ## Kept in step with FunctionRules.FUNCTIONS (not preloaded: the rules load data).
 const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary",
 	"meditation_hall", "tribulation_ground", "library", "meditation_room", "tribulation_chamber", "infirmary", "spirit_array", "sect_gate",
-	"ancestral_hall", "precept_stele", "bell_tower", "lecture_hall", "alchemy_room", "smithy"]
+	"ancestral_hall", "precept_stele", "bell_tower", "lecture_hall", "alchemy_room", "smithy",
+	"herbal_workshop", "alchemy_hall", "pill_pavilion", "herb_garden"]
 const BALANCE_SECTIONS: Array[String] = [
 	"time", "needs", "agents", "social", "mood", "health", "work", "construction", "world",
 	"settlements", "food", "farming", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
@@ -59,6 +61,7 @@ static func run() -> Array[String]:
 	errors.append_array(ValidationCultivation.check_tribulations(Data.file("tribulations"), Data.realms().size(), Data.file("blocks"), Data.labels()))
 	errors.append_array(ValidationCultivation.check_tree(Data.file("tree"), Data.file("tribulations"), Data.labels()))
 	errors.append_array(ValidationSeasons.check_weather(Data.file("weather"), Data.labels()))
+	errors.append_array(ValidationAlchemy.check(Data.file("alchemy"), Data.file("recipes"), Data.file("blocks"), Data.labels(), FUNCTION_IDS))
 	var seen: Dictionary = {}
 	for name in Data.TEXT_FILES:
 		errors.append_array(check_text(Data.file(name)))
@@ -233,7 +236,7 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 			if not components.has(key):
 				errors.append("templates: " + rule.id + " names unknown component " + str(key))
 		for key in rule.capacity:
-			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots", "furrows", "cooks", "grain", "mats", "formations", "shelves", "cots", "tablets", "furnaces", "anvils"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
+			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots", "furrows", "cooks", "grain", "mats", "formations", "shelves", "cots", "tablets", "furnaces", "anvils", "mortars", "herb_beds"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
 				errors.append("templates: unknown capacity mapping")
 		for key in rule.get("at_most", {}):
 			if not rule.requires.has(key) or not _number(rule.at_most[key]) or float(rule.at_most[key]) < float(rule.requires[key]):

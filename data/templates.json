@@ -25,13 +25,19 @@
 		{"id": "bell_tower", "requires": {"bell": 1}, "requires_any": [], "roofed": ["bell"], "roof_reach": 4, "capacity": {}},
 		{"id": "lecture_hall", "requires": {"lectern": 1, "bench": 4}, "requires_any": [], "roofed": ["lectern"], "roof_reach": 4, "min_roofed_floor": 12, "capacity": {"seats": "bench"}},
 		{"id": "alchemy_room", "requires": {"furnace": 1, "medicine": 1, "door": 1}, "requires_any": [], "roofed": ["furnace", "medicine"], "roof_reach": 4, "capacity": {"furnaces": "furnace"}},
-		{"id": "smithy", "requires": {"anvil": 1, "hearth": 1, "door": 1}, "requires_any": [], "roofed": ["anvil", "hearth"], "roof_reach": 4, "capacity": {"anvils": "anvil"}}
+		{"id": "smithy", "requires": {"anvil": 1, "hearth": 1, "door": 1}, "requires_any": [], "roofed": ["anvil", "hearth"], "roof_reach": 4, "capacity": {"anvils": "anvil"}},
+		{"id": "herbal_workshop", "requires": {"mortar": 1, "rack": 1, "door": 1}, "requires_any": [], "roofed": ["mortar", "rack"], "roof_reach": 4, "capacity": {"mortars": "mortar"}},
+		{"id": "alchemy_hall", "requires": {"furnace": 2, "medicine": 1, "rack": 1, "door": 1}, "requires_any": [], "roofed": ["furnace", "medicine", "rack"], "roof_reach": 4, "capacity": {"furnaces": "furnace"}},
+		{"id": "pill_pavilion", "requires": {"cauldron": 1, "furnace": 3, "medicine": 2, "mortar": 1, "door": 1}, "requires_any": [], "roofed": ["cauldron", "furnace", "medicine", "mortar"], "roof_reach": 4, "min_roofed_floor": 30, "qi_at_least": 0.4, "capacity": {"furnaces": "furnace"}},
+		{"id": "herb_garden", "requires": {"herb_bed": 4}, "requires_any": [], "roofed": [], "roof_reach": 4, "qi_at_least": 0.3, "capacity": {"herb_beds": "herb_bed"}}
 	],
 	"renovations": [
 		{"id": "store_library", "name": "Scripture shelves in the storehouse", "on": "storehouse", "gives": "library", "adds": {"scripture_shelf": 2, "lectern": 1}, "needs": {}},
 		{"id": "hall_lectern", "name": "A lectern in the hall", "on": "hall", "gives": "lecture_hall", "adds": {"lectern": 1, "bench": 2}, "needs": {}},
 		{"id": "home_infirmary", "name": "A medicine cabinet in the home", "on": "dwelling", "gives": "infirmary", "adds": {"medicine_cabinet": 1}, "needs": {"bed": 2}},
-		{"id": "hall_tablets", "name": "Tablets in the meditation hall", "on": "meditation_hall", "gives": "ancestral_hall", "adds": {"memorial_tablet": 2, "incense_burner": 1}, "needs": {}}
+		{"id": "hall_tablets", "name": "Tablets in the meditation hall", "on": "meditation_hall", "gives": "ancestral_hall", "adds": {"memorial_tablet": 2, "incense_burner": 1}, "needs": {}},
+		{"id": "workshop_furnace", "name": "A furnace in the herbalist's workshop", "on": "herbal_workshop", "gives": "alchemy_room", "adds": {"alchemy_furnace": 1, "medicine_cabinet": 1}, "needs": {}},
+		{"id": "room_hall", "name": "A second furnace in the alchemy room", "on": "alchemy_room", "gives": "alchemy_hall", "adds": {"alchemy_furnace": 1, "drying_rack": 1}, "needs": {}}
 	],
 	"starters": [
 		{
@@ -45,6 +51,71 @@
 				["CCDCC", "C...C", "CF.KC", "CCCCC"],
 				["CCDCC", "C...C", "C...C", "CCCCC"],
 				["TTTTT", "TTTTT", "TTTTT", "TTTTT"]
+			]
+		},
+		{
+			"id": "herbalist_hut",
+			"name": "Herbalist's Hut",
+			"author": "valley folk",
+			"legend": {".": "air", "L": "log", "P": "planks", "D": "door", "M": "medicine_mortar", "R": "drying_rack", "T": "thatch"},
+			"entrance": [2, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPDPL", "P...P", "PM.RP", "LPPPL"],
+				["LPDPL", "P...P", "P...P", "LPPPL"],
+				["TTTTT", "TTTTT", "TTTTT", "TTTTT"]
+			]
+		},
+		{
+			"id": "alchemy_hall",
+			"name": "Alchemy Hall",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "L": "lacquered_pillar", "P": "planks", "D": "door", "F": "alchemy_furnace", "K": "medicine_cabinet", "R": "drying_rack", "W": "paper_screen", "X": "roof_tiles"},
+			"entrance": [3, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPPDPPL", "P.....P", "P.....P", "PFRK.FP", "LPPPPPL"],
+				["LPPDPPL", "W.....W", "P.....P", "P.....P", "LPPPPPL"],
+				["XXXXXXX", "XXXXXXX", "XXXXXXX", "XXXXXXX", "XXXXXXX"]
+			]
+		},
+		{
+			"id": "pill_pavilion",
+			"name": "Pill Pavilion",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "L": "lacquered_pillar", "P": "planks", "D": "door", "F": "alchemy_furnace", "K": "medicine_cabinet", "G": "great_cauldron", "M": "medicine_mortar", "R": "drying_rack", "W": "paper_screen", "X": "roof_tiles"},
+			"entrance": [4, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPPPDPPPL", "P.......P", "PK.....KP", "P...G...P", "PR......P", "PF.F.F.MP", "LPPPPPPPL"],
+				["LPPPDPPPL", "W.......W", "P.......P", "W.......W", "P.......P", "W.......W", "LPPPPPPPL"],
+				["LPPPPPPPL", "P.......P", "P.......P", "P.......P", "P.......P", "P.......P", "LPPPPPPPL"],
+				["XXXXXXXXX", "XXXXXXXXX", "XXXXXXXXX", "XXXXXXXXX", "XXXXXXXXX", "XXXXXXXXX", "XXXXXXXXX"]
+			]
+		},
+		{
+			"id": "herb_garden",
+			"name": "Herb Garden",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "F": "fence", "B": "herb_bed"},
+			"entrance": [2, 0, 0],
+			"meta": {},
+			"layers": [
+				["FF.FFF", "FBBBBF", "FBBBBF", "FFFFFF"]
+			]
+		},
+		{
+			"id": "ginseng_house",
+			"name": "Ginseng House",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "L": "log", "B": "herb_bed", "X": "roof_tiles"},
+			"entrance": [0, 0, 1],
+			"meta": {},
+			"layers": [
+				["L....L", ".BBBB.", ".BBBB.", "L....L"],
+				["L....L", "......", "......", "L....L"],
+				["L....L", "......", "......", "L....L"],
+				["XXXXXX", "XXXXXX", "XXXXXX", "XXXXXX"]
 			]
 		},
 		{

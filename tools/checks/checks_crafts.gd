@@ -64,7 +64,9 @@ func check_a_pill_steadies_a_breakthrough():
 	if sim.settlements.amount(agent.settlement_id, "pill") != 1:
 		return "taking a pill left %d in the stores" % sim.settlements.amount(agent.settlement_id, "pill")
 	var helped: float = Tribulations.preparation(sim, agent)
-	if not is_equal_approx(helped - plain, Balance.number("alchemy.pill_preparation")):
+	# The pill's help, less what its toxicity takes back.
+	var expected: float = float(Data.elixir("pill").preparation) - float(Data.alchemy().toxicity.preparation) * float(Data.elixir("pill").toxicity)
+	if not is_equal_approx(helped - plain, expected):
 		return "a pill added %.2f to preparation" % (helped - plain)
 	var id: int = sim.tribulations.announce(sim, agent, agent.cell)
 	var trial: Dictionary = sim.tribulations.entries[id]
@@ -98,10 +100,11 @@ func check_the_furnace_refines_herbs_into_pills():
 		if agent.is_present():
 			agent.cultivation = CultivationState.fresh(0.6, "none", 0.9)
 			agent.cultivation.sect_id = 1
+			agent.cultivation.realm = 1
 	_know(sim, room)
 	sim.run_ticks(sim.calendar.ticks_per_day)
 	if sim.settlements.amount(1, "pill") < 1:
-		return "no pill was refined in a day (herbs left %d, furnace %s)" % [sim.settlements.amount(1, "herb"), sim.furnaces.pots]
+		return "no pill was refined in a day (herbs left %d, furnace %s)" % [sim.settlements.amount(1, "herb"), sim.alchemy.benches]
 	var noted: bool = false
 	for entry in sim.chronicle.entries:
 		noted = noted or entry.kind == "first_pill"
@@ -176,8 +179,9 @@ func check_who_wants_the_furnace_and_the_anvil():
 	var village: Array = Crafts.village_wants(sim, 1, Balance.integer("tools.smithy_people"), {})
 	if village.is_empty() or village[0][0] != "smithy":
 		return "a village with ore and hands did not want a smithy"
-	if not Crafts.village_wants(sim, 1, Balance.integer("tools.smithy_people") - 1, {}).is_empty():
-		return "a small camp wanted a smithy"
+	for want in Crafts.village_wants(sim, 1, Balance.integer("tools.smithy_people") - 1, {}):
+		if want[0] == "smithy":
+			return "a small camp wanted a smithy"
 	return ""
 
 
@@ -243,7 +247,8 @@ func check_abstract_pills_and_tools():
 	Build.stamp(sim, 1, "smithy")
 	Stores.fill(sim, 1, {"ore": 4, "wood": 10})
 	sim.tree_growth.unlocks.append("spirit_herbs")
-	sim.herbs.pool = {"plants": 8, "ripe": 8.0}
+	sim.herbs.pool = {"spirit_herb": {"plants": 8, "ripe": 8.0}}
+	sim.agents[0].cultivation.realm = 1
 	AbstractCrafts.day(sim, 1, {})
 	if sim.settlements.amount(1, "pill") < 1:
 		return "no pill was refined abstractly (herbs %d, pool %s)" % [sim.settlements.amount(1, "herb"), sim.herbs.pool]

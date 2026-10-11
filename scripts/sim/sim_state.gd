@@ -37,7 +37,7 @@ static func capture(sim: RefCounted) -> Dictionary:
 		"lanterns": sim.lanterns.duplicate(), "crops": sim.crops.to_dict(), "kitchens": sim.kitchens.to_dict(),
 		"woods": sim.woods.to_dict(), "sects": sim.sects.to_dict(), "tribulations": sim.tribulations.to_dict(), "tree": sim.tree_growth.to_dict(), "paths": sim.paths.to_dict(),
 		"weather": sim.weather.to_dict(), "herbs": sim.herbs.to_dict(),
-		"furnaces": sim.furnaces.to_dict(), "forges": sim.forges.to_dict(),
+		"alchemy": sim.alchemy.to_dict(), "forges": sim.forges.to_dict(),
 	}
 	return {"sim": state, "chunks": chunks}
 
@@ -120,7 +120,12 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	# The sky came with M20; older worlds start under a clear one.
 	sim.weather.from_dict(sim, state.get("weather", {}))
 	sim.herbs.from_dict(state.get("herbs", {}))
-	sim.furnaces.from_dict(state.get("furnaces", {"pots": {}, "places": {}}))
+	sim.alchemy.from_dict(state.get("alchemy", {}))
+	# An M20 world's alchemy-room pots spill as loose goods where they stood.
+	var furnaces: Dictionary = state.get("furnaces", {"pots": {}, "places": {}})
+	for id in furnaces.pots:
+		for resource in furnaces.pots[id]:
+			sim.drop_item(furnaces.places[id], resource, float(furnaces.pots[id][resource]))
 	sim.forges.from_dict(state.get("forges", {"pots": {}, "places": {}}))
 	# The roots reach is derived from the paths, not saved.
 	TreeAbilities.refresh_roots(sim)

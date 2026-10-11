@@ -68,7 +68,11 @@ static func check_recipes(data: Dictionary, blocks: Dictionary, skills: Array, f
 			continue
 		ids[entry.id] = true
 		var label: String = "recipes[" + entry.id + "]"
-		if not functions.has(entry.get("station")):
+		# Alchemy recipes are worked at any alchemy building of their tier or above.
+		if entry.get("station") == "alchemy":
+			if not _number(entry.get("tier")) or int(entry.tier) < 1 or int(entry.tier) > 4:
+				errors.append(label + ": an alchemy recipe needs a tier from 1 to 4")
+		elif not functions.has(entry.get("station")):
 			errors.append(label + ": station must be a function")
 		if not skills.has(entry.get("skill")):
 			errors.append(label + ": unknown skill " + str(entry.get("skill")))

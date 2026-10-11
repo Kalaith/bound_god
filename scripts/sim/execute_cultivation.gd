@@ -10,6 +10,7 @@ const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
+const Elixirs = preload("res://scripts/sim/elixirs.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail
@@ -37,6 +38,8 @@ static func _cultivate(sim: RefCounted, agent: RefCounted, step: Dictionary, ste
 	# A mat in a meditation hall: shelter and a settled mind; a room's mat:
 	# closed-door seclusion for one already on the Way.
 	rate *= SectHalls.sitting_factor(sim, agent, agent.cell)
+	# A qi-gathering pill or awakening tea quickens it; pill toxicity slows it.
+	rate *= Elixirs.sitting_factor(sim, agent)
 	cultivation.progress = minf(float(cultivation.progress) + rate / per_hour, needed)
 	if int(cultivation.realm) >= 1 and float(cultivation.progress) >= needed and int(cultivation.peak_tick) < 0:
 		cultivation.peak_tick = sim.calendar.tick

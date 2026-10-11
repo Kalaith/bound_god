@@ -44,6 +44,7 @@ const TreeGrowth = preload("res://scripts/sim/tree_growth.gd")
 const Paths = preload("res://scripts/sim/paths.gd")
 const Weather = preload("res://scripts/sim/weather.gd")
 const Herbs = preload("res://scripts/sim/herbs.gd")
+const Alchemy = preload("res://scripts/sim/alchemy.gd")
 const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
 var world_seed: int = 1
@@ -90,9 +91,10 @@ var tree_growth: RefCounted = null
 var paths: RefCounted = null
 var weather: RefCounted = null
 var herbs: RefCounted = null
-## Stations worked like kitchens (M20): alchemy furnaces and smithy anvils.
-var furnaces: RefCounted = null
+## Smithy anvils, worked like kitchens (M20).
 var forges: RefCounted = null
+## Alchemy benches, what to refine and refining (M20b).
+var alchemy: RefCounted = null
 ## Kindled cells (miracle): Array of {cell, radius, until}.
 var kindled: Array = []
 ## Veils of fog (miracle): Array of {cell, radius, until}.
@@ -166,8 +168,8 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	paths = Paths.new()
 	weather = Weather.new()
 	herbs = Herbs.new()
-	furnaces = Kitchens.new("alchemy_room")
 	forges = Kitchens.new("smithy")
+	alchemy = Alchemy.new()
 	weather.setup(self)
 	settlement_life = SettlementLife.new()
 	director = Director.new()
@@ -472,7 +474,7 @@ func state_hash() -> int:
 	for agent in agents:
 		people.append(agent.to_dict())
 	var state: Array = [calendar.tick, rng.state, people, settlements.to_dict(), sites.to_dict(), items, crops.to_dict(), kitchens.to_dict(), woods.to_dict(),
-		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state(), sects.to_dict(), tribulations.to_dict(), tree_growth.to_dict(), weather.to_dict(), herbs.to_dict(), furnaces.to_dict(), forges.to_dict()]
+		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state(), sects.to_dict(), tribulations.to_dict(), tree_growth.to_dict(), weather.to_dict(), herbs.to_dict(), alchemy.to_dict(), forges.to_dict()]
 	return hash(var_to_bytes(state))
 
 
@@ -511,14 +513,10 @@ func template_name(id: String) -> String:
 	return str(Data.starter(id).get("name", id))
 
 
-## The pots of a station's structures by its function: kitchen, alchemy room, smithy.
+## The pots of a station's structures by its function: kitchen or smithy
+## (alchemy has benches of its own, `alchemy`).
 func station(function: String) -> RefCounted:
-	match function:
-		"alchemy_room":
-			return furnaces
-		"smithy":
-			return forges
-	return kitchens
+	return forges if function == "smithy" else kitchens
 
 
 ## Ids of present people whose current goal has this key, in id order.

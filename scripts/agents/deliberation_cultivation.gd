@@ -13,6 +13,7 @@ const H = preload("res://scripts/agents/plan_helpers.gd")
 const FruitChoice = preload("res://scripts/agents/fruit_choice.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
+const Elixirs = preload("res://scripts/sim/elixirs.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -36,7 +37,10 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	_convalesce(sim, agent, out)
 	var refine: Dictionary = DeliberationCrafts.refine(sim, agent)
 	if not refine.is_empty():
-		out.append(_candidate(Kind.REFINE, float(refine.utility), "reason_refine", int(refine.room)))
+		var candidate: Dictionary = _candidate(Kind.REFINE, float(refine.utility), "reason_refine", int(refine.room))
+		candidate.goal = Goals.make(Kind.REFINE, int(refine.room), int(refine.seat))
+		out.append(candidate)
+	_medicate(sim, agent, out)
 
 
 ## The densest spot round the tree this person can sit in that nobody else
@@ -290,3 +294,15 @@ static func _convalesce(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	if not SectHalls.cracked(agent) or SectHalls.infirmary(sim, agent) < 0 or Schedule.is_sleep_time(sim, agent):
 		return
 	out.append(_candidate(Kind.SEEK_CARE, Balance.number("halls.convalesce_utility") * (0.6 + 0.4 * float(agent.cultivation.drive)), "reason_mend_foundation"))
+
+
+## Someone hurt, cracked, poisoned by pills or near the end of their span
+## goes to the stores for the preparation that would help, if they believe
+## the stores hold one.
+static func _medicate(sim: RefCounted, agent: RefCounted, out: Array) -> void:
+	if agent.settlement_id < 0 or Schedule.is_sleep_time(sim, agent):
+		return
+	for need in Elixirs.needs(sim, agent):
+		if agent.beliefs.believes_stock(str(need[0])):
+			out.append(_candidate(Kind.MEDICATE, float(need[1]), "reason_medicate_%s" % need[0], Elixirs.index_of(str(need[0]))))
+			return

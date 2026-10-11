@@ -1,10 +1,10 @@
 {
 	"schema_version": 1,
-	"resources": ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal", "tree_seed", "spirit_fruit", "herb", "pill", "tools"],
+	"resources": ["wood", "stone", "thatch", "berries", "ore", "grain", "seed", "meal", "tree_seed", "spirit_fruit", "herb", "pill", "tools", "ginseng", "thunder_root", "frost_lotus", "healing_draught", "awakening_tea", "qi_pill", "warding_pill", "cleansing_pill", "longevity_elixir"],
 	"divine_only": ["soil"],
-	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree", "table", "bench", "planter", "lantern", "farmland", "granary_bin", "mat", "formation", "scripture", "lectern", "incense", "medicine", "tablet", "bell", "array", "spire", "jade", "stele", "banner", "furnace", "anvil"],
+	"components": ["bed", "door", "chest", "workbench", "hearth", "altar", "sacred_tree", "table", "bench", "planter", "lantern", "farmland", "granary_bin", "mat", "formation", "scripture", "lectern", "incense", "medicine", "tablet", "bell", "array", "spire", "jade", "stele", "banner", "furnace", "anvil", "mortar", "rack", "cauldron", "herb_bed"],
 	"shapes": ["cube", "cross", "panel", "slab", "post"],
-	"atlas_size": [8, 10],
+	"atlas_size": [8, 12],
 	"blocks": [
 		{"id": 0, "name": "air", "resource": "", "yield": 0, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [0, 0], "shape": "cube", "breakable": false, "placeable": false},
 		{"id": 1, "name": "grass", "resource": "soil", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [1, 0], "atlas_top": [0, 0], "atlas_bottom": [2, 0], "shape": "cube", "breakable": true, "placeable": true},
@@ -62,6 +62,13 @@
 		{"id": 53, "name": "paper_screen", "resource": "wood", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [6, 8], "shape": "cube", "breakable": true, "placeable": true},
 		{"id": 54, "name": "spirit_herb", "resource": "herb", "yield": 1, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [7, 8], "atlas_stages": [[7, 8], [0, 9], [1, 9]], "shape": "cross", "breakable": true, "placeable": false},
 		{"id": 55, "name": "alchemy_furnace", "resource": "stone", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [2, 9], "atlas_top": [3, 9], "atlas_bottom": [6, 1], "shape": "cube", "component": "furnace", "breakable": true, "placeable": true},
-		{"id": 56, "name": "anvil", "resource": "ore", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": false, "atlas": [4, 9], "shape": "post", "component": "anvil", "breakable": true, "placeable": true}
+		{"id": 56, "name": "anvil", "resource": "ore", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": false, "atlas": [4, 9], "shape": "post", "component": "anvil", "breakable": true, "placeable": true},
+		{"id": 57, "name": "jade_ginseng", "resource": "ginseng", "yield": 1, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [5, 9], "atlas_stages": [[5, 9], [6, 9], [7, 9]], "shape": "cross", "breakable": true, "placeable": false},
+		{"id": 58, "name": "thunder_root", "resource": "thunder_root", "yield": 1, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [0, 10], "atlas_stages": [[0, 10], [1, 10], [2, 10]], "shape": "cross", "breakable": true, "placeable": false},
+		{"id": 59, "name": "frost_lotus", "resource": "frost_lotus", "yield": 1, "solid": false, "opaque": false, "passable": true, "transparent": false, "atlas": [3, 10], "atlas_stages": [[3, 10], [4, 10], [5, 10]], "shape": "cross", "breakable": true, "placeable": false},
+		{"id": 60, "name": "medicine_mortar", "resource": "stone", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": false, "atlas": [6, 10], "shape": "post", "component": "mortar", "breakable": true, "placeable": true},
+		{"id": 61, "name": "drying_rack", "resource": "wood", "yield": 1, "solid": true, "opaque": false, "passable": false, "transparent": true, "atlas": [7, 10], "shape": "cube", "component": "rack", "breakable": true, "placeable": true},
+		{"id": 62, "name": "great_cauldron", "resource": "ore", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [0, 11], "atlas_top": [1, 11], "atlas_bottom": [6, 1], "shape": "cube", "component": "cauldron", "breakable": true, "placeable": true},
+		{"id": 63, "name": "herb_bed", "resource": "wood", "yield": 1, "solid": true, "opaque": true, "passable": false, "transparent": false, "atlas": [2, 11], "atlas_top": [3, 11], "atlas_bottom": [3, 1], "shape": "cube", "component": "herb_bed", "breakable": true, "placeable": true}
 	]
 }

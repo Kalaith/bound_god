@@ -6,7 +6,10 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 
 ## A spirit herb is ripe at this stage (Herbs.RIPE).
 const HERB_RIPE: int = 2
-const RESOURCE_OF: Dictionary = {"tree": "wood", "bush": "berries", "grass": "thatch", "rock": "stone", "ore": "ore", "herb": "herb"}
+const RESOURCE_OF: Dictionary = {"tree": "wood", "bush": "berries", "grass": "thatch", "rock": "stone", "ore": "ore", "herb": "herb",
+	"ginseng": "ginseng", "thunder_root": "thunder_root", "frost_lotus": "frost_lotus"}
+## Herb blocks and the site kind each is (M20b): the kind is the resource.
+const HERB_SITES: Dictionary = {"spirit_herb": "herb", "jade_ginseng": "ginseng", "thunder_root": "thunder_root", "frost_lotus": "frost_lotus"}
 
 ## id -> {id, kind, cells: Array[Vector3i], amount: int, leaves?: Array}
 var sites: Dictionary = {}
@@ -72,9 +75,9 @@ func on_block_changed(cell: Vector3i, old_block: int, new_block: int, world: Ref
 			else:
 				site.amount = world.block_meta(cell)
 			return
-		# A spirit herb is worth gathering only when ripe.
-		if site.kind == "herb":
-			if new_block != Registry.id("spirit_herb"):
+		# A herb is worth gathering only when ripe.
+		if site.kind in HERB_SITES.values():
+			if HERB_SITES.get(Registry.block_name(new_block), "") != site.kind:
 				_remove(id)
 			else:
 				site.amount = 1 if world.block_meta(cell) >= HERB_RIPE else 0
@@ -88,8 +91,8 @@ func on_block_changed(cell: Vector3i, old_block: int, new_block: int, world: Ref
 			_remove(id)
 	elif new_block == Registry.id("berry_bush"):
 		add("bush", [cell], world.block_meta(cell))
-	elif new_block == Registry.id("spirit_herb"):
-		add("herb", [cell], 1 if world.block_meta(cell) >= HERB_RIPE else 0)
+	elif HERB_SITES.has(Registry.block_name(new_block)):
+		add(HERB_SITES[Registry.block_name(new_block)], [cell], 1 if world.block_meta(cell) >= HERB_RIPE else 0)
 
 
 func _remove(id: int) -> void:

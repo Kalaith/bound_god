@@ -1,13 +1,13 @@
 extends RefCounted
-## Pills and tools while the valley passes abstractly (M20): where an
-## alchemy room stands, ripe herbs are gathered from the herb pool and
-## refined into pills while the stores are short of them; where a smithy
-## stands, ore and wood are forged into tools while hands lack them. Tools
-## in the stores quicken the settlement's labour and wear out with it.
+## Crafts while the valley passes abstractly (M20): alchemy is
+## `abstract_alchemy.gd`'s (M20b); where a smithy stands, ore and wood are
+## forged into tools while hands lack them. Tools in the stores quicken the
+## settlement's labour and wear out with it.
 const Balance = preload("res://scripts/core/balance.gd")
 const Crafts = preload("res://scripts/sim/crafts.gd")
 const Kitchens = preload("res://scripts/sim/kitchens.gd")
 const AbstractPeople = preload("res://scripts/sim/abstract/abstract_people.gd")
+const AbstractAlchemy = preload("res://scripts/sim/abstract/abstract_alchemy.gd")
 
 ## Most batches a station works in a day.
 const BATCHES_PER_DAY: int = 2
@@ -16,11 +16,7 @@ const WORK_HOURS: float = 9.0
 
 
 static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
-	if not Crafts.stations(sim, id, "alchemy_room").is_empty():
-		var herbs: int = sim.herbs.abstract_gather(Crafts.herbs_wanted(sim, id))
-		if herbs > 0:
-			AbstractPeople.store(sim, id, "herb", herbs)
-		_work(sim, id, Kitchens.recipe_for("alchemy_room"), Crafts.pills_short(sim, id))
+	AbstractAlchemy.day(sim, id)
 	if not Crafts.stations(sim, id, "smithy").is_empty():
 		_work(sim, id, Kitchens.recipe_for("smithy"), Crafts.tools_short(sim, id))
 	_wear(sim, id, record)

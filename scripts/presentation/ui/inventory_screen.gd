@@ -18,6 +18,7 @@ const FAMILIES: Array = [
 		"granary_bin", "farmland"]],
 	["inventory_family_sect", ["meditation_mat", "formation_stone", "scripture_shelf", "lectern", "incense_burner", "medicine_cabinet",
 		"memorial_tablet", "bronze_bell", "tribulation_array", "thunder_spire", "spirit_jade", "precept_stele", "sect_banner"]],
+	["inventory_family_crafts", ["alchemy_furnace", "anvil", "medicine_mortar", "drying_rack", "great_cauldron", "herb_bed"]],
 	["inventory_family_ground", ["berry_bush", "sapling", "dirt", "grass", "stone", "sand", "gravel"]],
 ]
 

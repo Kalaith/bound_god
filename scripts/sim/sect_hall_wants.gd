@@ -12,7 +12,8 @@ const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 ## the village's own work: they have `halls.sect_sites` sites of their own
 ## and do not count against the village's.
 const PURPOSES: Array[String] = ["meditation_hall", "tribulation_ground", "library", "meditation_room", "tribulation_chamber", "infirmary",
-	"spirit_array", "sect_gate", "ancestral_hall", "precept_stele", "bell_tower", "lecture_hall", "alchemy_room"]
+	"spirit_array", "sect_gate", "ancestral_hall", "precept_stele", "bell_tower", "lecture_hall", "alchemy_room",
+	"alchemy_hall", "pill_pavilion", "herb_garden"]
 
 
 ## The village's homes and shelters go up beside its common buildings, not
@@ -81,9 +82,7 @@ static func wants(sim: RefCounted, settlement_id: int, sect: Dictionary, have: D
 			hurt_by_heaven = hurt_by_heaven or str(trial.outcome) in ["injured", "defied"]
 	var count: int = members.size()
 	var lacks: Callable = func(function: String) -> bool: return int(have.get(function, 0)) == 0
-	var herbs: bool = sim.herbs != null and sim.herbs.count() + int(sim.herbs.pool.plants) > 0
-	if herbs and refined >= 1 and lacks.call("alchemy_room"):
-		result.append(["alchemy_room", "reason_no_alchemy_room", 0.6])
+	result.append_array(_alchemy(sim, members, refined, have))
 	if cracked and lacks.call("infirmary"):
 		result.append(["infirmary", "reason_no_infirmary", 0.65])
 	if hurt_by_heaven and int(have.get("tribulation_ground", 0)) > 0 and lacks.call("tribulation_chamber"):
@@ -107,4 +106,36 @@ static func wants(sim: RefCounted, settlement_id: int, sect: Dictionary, have: D
 	var age: float = float(sim.calendar.tick - int(sect.founded_tick)) / sim.calendar.ticks_per_day
 	if age >= Balance.number("halls.stele_days") and lacks.call("precept_stele"):
 		result.append(["precept_stele", "reason_no_stele", 0.35])
+	return result
+
+
+## The sect's alchemy (M20b): an alchemy room once herbs grow and a member
+## is on the Way; a hall once the sect is larger and a rarer herb grows or a
+## member reached Foundation Establishment; a pavilion once it has a hall, is
+## larger still and has an elder in Foundation Establishment or beyond; a
+## herb garden once it refines and the wild herbs are few.
+static func _alchemy(sim: RefCounted, members: Array, refined: int, have: Dictionary) -> Array:
+	var result: Array = []
+	if sim.herbs == null:
+		return result
+	var growing: int = sim.herbs.count()
+	for kind in sim.herbs.pool:
+		growing += int(sim.herbs.pool[kind].get("plants", 0))
+	var lacks: Callable = func(function: String) -> bool: return int(have.get(function, 0)) == 0
+	var room: bool = not lacks.call("alchemy_room")
+	var hall: bool = not lacks.call("alchemy_hall")
+	if growing > 0 and refined >= 1 and not room:
+		result.append(["alchemy_room", "reason_no_alchemy_room", 0.6])
+	var founded: bool = false
+	for member in members:
+		founded = founded or int(member.cultivation.realm) >= 2
+	var rare: bool = false
+	for kind in ["jade_ginseng", "thunder_root", "frost_lotus"]:
+		rare = rare or sim.herbs.found.has(kind)
+	if room and not hall and members.size() >= Balance.integer("alchemy.hall_members") and (rare or founded):
+		result.append(["alchemy_hall", "reason_no_alchemy_hall", 0.5])
+	if hall and lacks.call("pill_pavilion") and members.size() >= Balance.integer("alchemy.pavilion_members") and founded:
+		result.append(["pill_pavilion", "reason_no_pill_pavilion", 0.45])
+	if room and lacks.call("herb_garden") and sim.herbs.wild_count(sim, "spirit_herb") < Balance.integer("alchemy.garden_wild"):
+		result.append(["herb_garden", "reason_no_herb_garden", 0.4])
 	return result

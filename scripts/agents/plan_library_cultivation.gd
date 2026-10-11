@@ -7,6 +7,8 @@ const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
+const Elixirs = preload("res://scripts/sim/elixirs.gd")
+const PlansAlchemy = preload("res://scripts/agents/plan_library_alchemy.gd")
 
 const Kind = Goals.Kind
 const Op = Plans.Op
@@ -20,7 +22,12 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 			var result: Array = []
 			var spot: Vector3i = DeliberationCultivation.spot(sim, agent)
 			if spot.x >= 0:
-				result.append(H.option("meditate_in_qi", 1.0, [Plans.go_cell(spot), Plans.step(Op.CULTIVATE, {"ticks": sit})]))
+				var sitting: Array = [Plans.go_cell(spot), Plans.step(Op.CULTIVATE, {"ticks": sit})]
+				result.append(H.option("meditate_in_qi", 1.0, sitting))
+				# A qi-gathering pill (or a mortal's cup of awakening tea) first, when the stores hold one.
+				var elixir: String = Elixirs.for_sitting(sim, agent)
+				if not elixir.is_empty() and agent.beliefs.believes_stock(elixir):
+					result.append(H.option("take_%s_first" % elixir, 1.1, H.free_hands(agent) + PlansAlchemy.take(agent, elixir) + sitting))
 			result.append(H.option("meditate_here", 0.2, [Plans.step(Op.CULTIVATE, {"ticks": sit / 2})]))
 			return result
 		Kind.LEARN:
@@ -44,10 +51,14 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 			var steps: Array = [Plans.go_cell(site)] if site.x >= 0 else []
 			steps.append(Plans.step(Op.FACE_HEAVEN, {}))
 			var options: Array = [H.option("face_heaven", 1.0, steps)]
-			# A foundation pill in the stores is taken first, to eat when Heaven answers.
-			if not bool(agent.cultivation.get("pill", false)) and agent.beliefs.believes_stock("pill"):
-				options.append(H.option("take_a_pill_first", 1.1, [Plans.go_to(Plans.target(T.STORE, agent.settlement_id)),
-					Plans.step(Op.TAKE_STOCK, {"resource": "pill", "amount": 1})] + steps))
+			# Pills in the stores are taken first, kept for when Heaven answers:
+			# a foundation pill and a thunder-warding pill.
+			var pills: Array = []
+			for pill in Elixirs.KEPT:
+				if Elixirs.would_take(sim, agent, pill) and agent.beliefs.believes_stock(pill):
+					pills.append_array(PlansAlchemy.take(agent, pill))
+			if not pills.is_empty():
+				options.append(H.option("take_a_pill_first", 1.1, pills + steps))
 			return options
 		Kind.SHARE_FRUIT:
 			var recipient: int = int(goal.target)

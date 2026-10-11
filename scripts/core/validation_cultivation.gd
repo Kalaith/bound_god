@@ -175,7 +175,7 @@ static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dicti
 		if not labels.has("insight_" + str(kind.get("id"))):
 			errors.append("tree: insight " + str(kind.get("id")) + " has no label")
 	errors.append_array(_check_lessons(data, labels, kinds))
-	for section in ["insight", "fruit", "herbs", "nurture", "scars", "awakening", "deep_roots", "canopy", "roots"]:
+	for section in ["insight", "fruit", "nurture", "scars", "awakening", "deep_roots", "canopy", "roots"]:
 		var values: Variant = data.get(section)
 		if not values is Dictionary or values.is_empty():
 			errors.append("tree: " + section + " is missing")

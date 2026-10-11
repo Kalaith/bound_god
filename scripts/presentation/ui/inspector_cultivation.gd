@@ -53,10 +53,34 @@ static func text(sim: RefCounted, agent: RefCounted) -> String:
 	else:
 		lines.append(_color(Style.FAITH, Text.format("cult_sect", {"rank": Text.label("rank_" + str(sect.members.get(agent.id, "disciple"))).capitalize(), "sect": Sects.name_of(sect)})))
 	_trials(sim, agent, lines)
+	_alchemy(sim, agent, lines)
 	lines.append("")
 	lines.append(Text.format("cult_qi_here", {"value": roundi(sim.qi.density(sim, agent.cell) * 100.0)}))
 	lines.append(Text.format("cult_lifespan", {"years": roundi(CultivationState.lifespan(c))}))
 	return "\n".join(lines)
+
+
+## What preparations left (M20b): a pill or tea still working, pills kept
+## for a trial, pill toxicity, years an elixir added, and an alchemist's name.
+static func _alchemy(sim: RefCounted, agent: RefCounted, lines: Array[String]) -> void:
+	var c: Dictionary = agent.cultivation
+	if bool(c.get("alchemist", false)):
+		lines.append(_color(Style.FAITH, Text.label("cult_alchemist")))
+	if int(c.get("elixir_until", -1)) > sim.calendar.tick:
+		var hours: int = ceili(float(int(c.elixir_until) - sim.calendar.tick) / sim.calendar.ticks_per_hour())
+		lines.append(Text.format("cult_elixir_active", {"factor": snappedf(float(c.get("elixir_factor", 1.0)), 0.1), "hours": hours}))
+	var kept: Array[String] = []
+	for key in ["pill", "warding"]:
+		if bool(c.get(key, false)):
+			kept.append(Text.label("cult_kept_" + key))
+	if not kept.is_empty():
+		lines.append(Text.format("cult_kept", {"list": ", ".join(kept)}))
+	var toxicity: float = float(c.get("toxicity", 0.0))
+	if toxicity > 0.0:
+		var line: String = Text.format("cult_toxicity", {"value": roundi(toxicity * 100.0)})
+		lines.append(_color(Style.WARN, line) if toxicity >= float(Data.alchemy().toxicity.cleanse_at) else line)
+	if float(c.get("longevity", 0.0)) > 0.0:
+		lines.append(Text.format("cult_longevity", {"years": roundi(float(c.longevity))}))
 
 
 ## A trial called or under way, a flawed breakthrough, and past trials.
