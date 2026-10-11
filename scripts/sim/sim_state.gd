@@ -6,6 +6,7 @@ extends RefCounted
 ## the same graph and continue identically.
 const Agent = preload("res://scripts/agents/agent.gd")
 const Migration = preload("res://scripts/sim/save_migration.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
 const SCHEMA: int = 5
 ## Older schemas that still load, migrated on the way in.
@@ -121,6 +122,8 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	sim.herbs.from_dict(state.get("herbs", {}))
 	sim.furnaces.from_dict(state.get("furnaces", {"pots": {}, "places": {}}))
 	sim.forges.from_dict(state.get("forges", {"pots": {}, "places": {}}))
+	# The roots reach is derived from the paths, not saved.
+	TreeAbilities.refresh_roots(sim)
 	sim.qi.clear_cache()
 	sim.nav.build()
 	Migration.store_old_stock(sim, old_stock)

@@ -5,6 +5,7 @@ extends RefCounted
 ## per column; the cache is cleared when the field changes.
 const Data = preload("res://scripts/core/data.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
 ## Vector2i column -> density
 var _cache: Dictionary = {}
@@ -51,6 +52,8 @@ func density(sim: RefCounted, cell: Vector3i) -> float:
 				value = maxf(value, float(spot.qi) * (1.0 - 0.3 * d / maxf(float(spot.radius), 0.1)))
 	# A sect's spirit-gathering array holds dense qi round it.
 	value = maxf(value, SectHalls.array_qi(sim, cell))
+	# The root network carries qi along the worn paths it reaches.
+	value = maxf(value, TreeAbilities.root_qi(sim, column))
 	_cache[column] = value
 	return value
 

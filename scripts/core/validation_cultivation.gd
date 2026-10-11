@@ -155,12 +155,16 @@ static func check_tribulations(data: Dictionary, realms: int, blocks: Dictionary
 	return errors
 
 
-## Unlock effects sim/tree_growth.gd implements; the catalog may not name others.
-const UNLOCK_EFFECTS: Array[String] = ["spirit_fruit", "spirit_herbs"]
+## Unlock effects sim/tree_growth.gd and sim/tree_abilities.gd implement;
+## the catalog may not name others.
+const UNLOCK_EFFECTS: Array[String] = ["spirit_fruit", "spirit_herbs", "deep_roots", "sheltering_canopy", "awakening_fruit", "root_network"]
+## What the tree learns from besides trials; sim/tree_growth.gd hooks each.
+const LESSONS: Array[String] = ["winter", "drought", "teaching", "death"]
 
 
-## The tree: maturity phases in order with labels, unlocks gated on an
-## insight a tribulation can give, numbers where numbers belong.
+## The tree: maturity phases in order with labels, lessons with labels,
+## unlocks gated on an insight a trial or a lesson can give (and on maturity
+## or an earlier unlock), numbers where numbers belong.
 static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
 	if not _number(data.get("schema_version")) or int(data.schema_version) != 1:
@@ -170,7 +174,8 @@ static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dicti
 		kinds.append(kind.get("id"))
 		if not labels.has("insight_" + str(kind.get("id"))):
 			errors.append("tree: insight " + str(kind.get("id")) + " has no label")
-	for section in ["insight", "fruit", "herbs", "nurture", "scars"]:
+	errors.append_array(_check_lessons(data, labels, kinds))
+	for section in ["insight", "fruit", "herbs", "nurture", "scars", "awakening", "deep_roots", "canopy", "roots"]:
 		var values: Variant = data.get(section)
 		if not values is Dictionary or values.is_empty():
 			errors.append("tree: " + section + " is missing")
@@ -178,6 +183,9 @@ static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dicti
 		for key in values:
 			if not _number(values[key]):
 				errors.append("tree: " + section + "." + str(key) + " must be a number")
+	for key in ["lesson_reach", "lesson_records"]:
+		if not _number(data.get(key)):
+			errors.append("tree: " + key + " must be a number")
 	var maturity: Variant = data.get("maturity")
 	if not maturity is Dictionary or not _number(maturity.get("per_day")) or not maturity.get("phases") is Array or maturity.phases.is_empty():
 		errors.append("tree: maturity needs per_day and phases")
@@ -194,14 +202,42 @@ static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dicti
 	if not unlocks is Array:
 		errors.append("tree: unlocks are missing")
 	else:
+		var earlier: Array = []
 		for entry in unlocks:
 			if not entry is Dictionary or not entry.get("id") is String or not UNLOCK_EFFECTS.has(entry.get("effect")):
 				errors.append("tree: an unlock needs an id and an implemented effect")
 				continue
 			var needs: Variant = entry.get("requires")
 			var by_maturity: bool = needs is Dictionary and _number(needs.get("maturity")) and float(needs.maturity) > 0.0
-			if not by_maturity and (not needs is Dictionary or not kinds.has(needs.get("insight")) or not _number(needs.get("amount"))):
-				errors.append("tree: unlock " + entry.id + " must require an insight a trial can give, or the tree's maturity")
-			if not labels.has("unlock_" + entry.id):
-				errors.append("tree: unlock " + entry.id + " has no label")
+			var by_insight: bool = needs is Dictionary and kinds.has(needs.get("insight")) and _number(needs.get("amount"))
+			if not by_maturity and not by_insight:
+				errors.append("tree: unlock " + entry.id + " must require an insight a trial or lesson can give, or the tree's maturity")
+			elif needs.has("insight") and not by_insight:
+				errors.append("tree: unlock " + entry.id + " requires an unknown insight")
+			if needs is Dictionary and needs.has("unlock") and not earlier.has(needs.unlock):
+				errors.append("tree: unlock " + entry.id + " must follow the unlock it requires")
+			if not labels.has("unlock_" + entry.id) or not labels.has("unlock_help_" + entry.id):
+				errors.append("tree: unlock " + entry.id + " needs a label and a help line")
+			earlier.append(entry.id)
+	return errors
+
+
+## Each lesson names an implemented hook and an insight with a label; the
+## insights it gives join `kinds` for the unlocks.
+static func _check_lessons(data: Dictionary, labels: Dictionary, kinds: Array) -> Array[String]:
+	var errors: Array[String] = []
+	var lessons: Variant = data.get("lessons")
+	if not lessons is Array:
+		return ["tree: lessons are missing"]
+	for entry in lessons:
+		if not entry is Dictionary or not LESSONS.has(entry.get("id")) or not entry.get("insight") is String \
+				or not _number(entry.get("first")) or not _number(entry.get("repeat_factor")):
+			errors.append("tree: a lesson needs an implemented id, an insight, first and repeat_factor")
+			continue
+		if not kinds.has(entry.insight):
+			kinds.append(entry.insight)
+		if not labels.has("insight_" + str(entry.insight)):
+			errors.append("tree: insight " + str(entry.insight) + " has no label")
+		if not labels.has("lesson_" + str(entry.id)):
+			errors.append("tree: lesson " + str(entry.id) + " has no label")
 	return errors

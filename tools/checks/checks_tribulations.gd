@@ -215,3 +215,35 @@ static func _sacred_count(sim: RefCounted) -> int:
 				if sacred.has(sim.voxels.get_block(tree + Vector3i(dx, dy, dz))):
 					count += 1
 	return count
+
+
+## Core Formation: a Foundation Establishment cultivator at the peak faces
+## the fiercer lightning that forms a core; passing opens the realm, and the
+## tree learns of it as a new insight. Nothing lies beyond it yet.
+func check_core_formation_is_the_next_trial():
+	var sim: RefCounted = Sim.create(11)
+	var kind: Dictionary = Tribulations.kind_for(2)
+	if str(kind.get("id", "")) != "core_lightning" or float(kind.severity[0]) <= float(Tribulations.kind_for(1).severity[0]):
+		return "Foundation Establishment's trial is not the fiercer core lightning: %s" % str(kind)
+	var agent: RefCounted = sim.agents[0]
+	var passed: bool = false
+	for attempt in range(12):
+		_at_peak(sim, agent, _tree_cell(sim, 2), 0.95)
+		agent.cultivation.realm = 2
+		agent.cultivation.progress = CultivationState.needed(agent.cultivation)
+		agent.health.hp = 100.0
+		agent.life = "present"
+		var outcome: String = sim.tribulations.abstract_trial(sim, agent, agent.cell)
+		if outcome == "passed":
+			passed = true
+			break
+	if not passed:
+		return "twelve well-founded trials in the sanctuary all failed"
+	if int(agent.cultivation.realm) != 3 or Data.realms()[3].id != "core_formation":
+		return "passing did not open Core Formation (realm %d)" % int(agent.cultivation.realm)
+	if float(sim.tree_growth.insights.get("core_lightning", 0.0)) <= 0.0:
+		return "the tree learned nothing from the core's lightning"
+	agent.cultivation.progress = CultivationState.needed(agent.cultivation)
+	if CultivationState.has_next(agent.cultivation) or sim.tribulations.announce(sim, agent, agent.cell) != 0:
+		return "a trial was called beyond Core Formation"
+	return ""

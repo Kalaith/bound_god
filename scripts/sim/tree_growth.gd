@@ -10,6 +10,7 @@ extends RefCounted
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Balance = preload("res://scripts/core/balance.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
 ## kind -> amount of insight
 var insights: Dictionary = {}
@@ -32,6 +33,12 @@ var scars: Array = []
 var nurtured: Array = []
 ## Relics great cultivators left at the tree: Array of {name, realm, tick}
 var relics: Array = []
+## Columns the root network reaches along worn paths (rebuilt daily and on
+## load, not saved): Vector2i -> true.
+var rooted: Dictionary = {}
+var rooted_day: int = -1
+## The worn path columns the roots run along (for drawing), sorted.
+var rooted_paths: Array = []
 
 
 static func data() -> Dictionary:
@@ -70,13 +77,66 @@ func on_trial(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 	_check_unlocks(sim)
 
 
+## The tree learns from more than lightning: a winter or a drought its
+## people came through, the Way taught beneath it, a death in its shade.
+## Each lesson of a kind teaches a little less than the one before; the
+## first is chronicled, every one is kept (the latest few) as a source.
+func lesson(sim: RefCounted, id: String, name: String = "", people: Array = []) -> void:
+	var entry: Dictionary = _lesson(id)
+	var kind: String = str(entry.insight)
+	var times: int = int(witnessed.get(kind, 0))
+	var gain: float = float(entry.first) * pow(float(entry.repeat_factor), times)
+	witnessed[kind] = times + 1
+	insights[kind] = float(insights.get(kind, 0.0)) + gain
+	history.append({"tick": sim.calendar.tick, "day": sim.calendar.day(), "kind": kind, "name": name, "outcome": "lesson_" + id, "gain": gain})
+	_trim_lessons(kind)
+	_grow(sim, gain * float(data().insight.maturity_share))
+	if times == 0:
+		sim.chronicle_event("tree_learned", _tree_place(sim), {"kind": "insight_" + kind, "lesson": "lesson_" + id, "name": name}, "cause_first_insight", people)
+	_check_unlocks(sim)
+
+
+static func _lesson(id: String) -> Dictionary:
+	for entry in data().lessons:
+		if str(entry.id) == id:
+			return entry
+	push_error("Unknown tree lesson " + id)
+	return {}
+
+
+## Lessons come often; only the latest few of a kind are kept as sources.
+func _trim_lessons(kind: String) -> void:
+	var most: int = int(data().lesson_records)
+	var count: int = 0
+	for i in range(history.size() - 1, -1, -1):
+		if str(history[i].kind) != kind or not str(history[i].outcome).begins_with("lesson_"):
+			continue
+		count += 1
+		if count > most:
+			history.remove_at(i)
+
+
+## Whether a cell lies in the tree's shade, where it learns from what
+## happens (while abstract, anyone of the tree's own settlement).
+func in_shade(sim: RefCounted, cell: Vector3i, settlement_id: int) -> bool:
+	if sim.meditating:
+		return settlement_id == _tree_place(sim) and settlement_id >= 0
+	var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))
+	return tree.x >= 0 and Vector2(cell.x - tree.x, cell.z - tree.z).length() <= float(data().lesson_reach)
+
+
 func daily(sim: RefCounted) -> void:
 	_grow(sim, float(data().maturity.per_day))
 	_check_unlocks(sim)
 	var season: int = (sim.calendar.day() - 1) / sim.calendar.days_per_season
 	if season != fruit_season:
+		# Spring after a winter its people came through.
+		if fruit_season >= 0 and sim.calendar.season_name() == "spring" and _tree_place(sim) >= 0 \
+				and not sim.settlements.entries[_tree_place(sim)].residents.is_empty():
+			lesson(sim, "winter")
 		fruit_season = season
 		fruit_grown = 0
+	TreeAbilities.daily(sim)
 	_bear_fruit(sim)
 	var kept: Array = []
 	for spot in nurtured:
@@ -92,14 +152,16 @@ func _check_unlocks(sim: RefCounted) -> void:
 		if unlocks.has(unlock.id):
 			continue
 		var needs: Dictionary = unlock.requires
-		# An unlock asks for an insight's depth, or for the tree's maturity.
-		if needs.has("maturity"):
-			if maturity < float(needs.maturity):
-				continue
-		elif float(insights.get(str(needs.insight), 0.0)) < float(needs.amount):
+		# An unlock asks for an insight's depth, the tree's maturity (its
+		# phase), an earlier unlock, or several of these together.
+		if needs.has("maturity") and maturity < float(needs.maturity):
+			continue
+		if needs.has("insight") and float(insights.get(str(needs.insight), 0.0)) < float(needs.amount):
+			continue
+		if needs.has("unlock") and not unlocks.has(str(needs.unlock)):
 			continue
 		unlocks.append(unlock.id)
-		var cause: String = "cause_maturity" if needs.has("maturity") else "cause_insight_%s" % str(needs.insight)
+		var cause: String = "cause_insight_%s" % str(needs.insight) if needs.has("insight") else "cause_maturity"
 		sim.chronicle_event("tree_unlock", _tree_place(sim), {"unlock": "unlock_" + str(unlock.id)}, cause, [])
 
 
@@ -118,6 +180,21 @@ func _bear_fruit(sim: RefCounted) -> void:
 	fruit += 1
 	fruit_grown += 1
 	sim.chronicle_event("fruit_ripened", _tree_place(sim), {"count": fruit}, "cause_insight_lightning", [])
+
+
+## Why the god cannot ripen a fruit now, or "".
+func ripen_problem() -> String:
+	if not has_unlock("spirit_fruit"):
+		return "miracle_no_fruit"
+	if fruit >= int(data().fruit.most):
+		return "miracle_fruit_full"
+	return ""
+
+
+## The god ripens a fruit out of its season's turn (the Ripen Fruit miracle).
+func ripen(sim: RefCounted) -> void:
+	fruit += 1
+	sim.chronicle_event("fruit_ripened", _tree_place(sim), {"count": fruit}, "cause_god", [])
 
 
 ## Someone picks a fruit from the tree. Returns whether there was one.

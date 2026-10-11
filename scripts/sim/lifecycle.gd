@@ -54,6 +54,9 @@ static func die(sim: RefCounted, agent: RefCounted, cause: String) -> void:
 			sect["mourned"] = int(sect.get("mourned", 0)) + 1
 			if cause == "cause_tribulation":
 				sect["lost_to_heaven"] = int(sect.get("lost_to_heaven", 0)) + 1
+	# A death in the tree's shade teaches it how short a life is.
+	if sim.tree_growth != null and sim.tree_growth.in_shade(sim, agent.cell, agent.settlement_id):
+		sim.tree_growth.lesson(sim, "death", agent.full_name(), [agent.id])
 	_legacy(sim, agent)
 
 

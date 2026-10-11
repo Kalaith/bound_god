@@ -84,6 +84,7 @@ var capture_request: Dictionary = {}
 var camera_hold: bool = false
 var _loading: Label
 var _zone_key: String = ""
+var _roots_key: String = ""
 
 
 func _ready() -> void:
@@ -299,6 +300,7 @@ func _sync_zone() -> void:
 	var radius: float = sim.zone_radius()
 	avatar.zone_center = center
 	avatar.zone_radius = radius
+	avatar.reach = sim.in_zone
 	if (inspector == null or not inspector.following) and not camera_hold:
 		camera_rig.overlook_center = center
 	var key: String = "%s/%.2f" % [center, radius]
@@ -306,6 +308,12 @@ func _sync_zone() -> void:
 		_zone_key = key
 		overlays.set_zone(center, radius)
 		overlays.draw_ring(sim.voxels, center, radius)
+	# The roots' reach along the paths, redrawn when they change (daily).
+	var growth: RefCounted = sim.tree_growth
+	var roots_key: String = "%d/%d/%s" % [growth.rooted_day, growth.rooted_paths.size(), str(sim.faith.current(sim).get("kind", ""))]
+	if roots_key != _roots_key:
+		_roots_key = roots_key
+		overlays.draw_roots(sim.voxels, growth.rooted_paths if str(sim.faith.current(sim).get("kind", "")) == "tree" else [])
 
 
 func _process(_delta: float) -> void:

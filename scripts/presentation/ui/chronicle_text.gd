@@ -26,7 +26,7 @@ static func word(value: Variant) -> Variant:
 		return Text.format("sect_name", {"adjective": Text.label(parts[1]), "noun": Text.label(parts[2])}) if parts.size() == 3 else value
 	if value is String and (value.begins_with("cause_") or value.begins_with("standing_") or value.begins_with("realm_")
 			or value.begins_with("technique_") or value.begins_with("rank_") or value.begins_with("insight_")
-			or value.begins_with("unlock_") or value.begins_with("phase_")) and Text.has(value):
+			or value.begins_with("unlock_") or value.begins_with("phase_") or value.begins_with("awakened_")) and Text.has(value):
 		return Text.label(value)
 	if value is String and (value.begins_with("resource_") or value.begins_with("function_") or value.begins_with("threat_")) and Text.has(value):
 		return Text.label(value).to_lower()
@@ -37,6 +37,9 @@ static func line(entry: Dictionary, with_day: bool = true) -> String:
 	var args: Dictionary = {}
 	for key in entry.args:
 		args[key] = word(entry.args[key])
+		# What the tree learned from names whoever taught or died.
+		if str(entry.args[key]).begins_with("lesson_") and Text.has(str(entry.args[key])):
+			args[key] = Text.format(str(entry.args[key]), {"name": entry.args.get("name", "")})
 	var text: String = Text.format("chronicle_" + str(entry.kind), args)
 	var why: String = cause(str(entry.cause))
 	if not why.is_empty():

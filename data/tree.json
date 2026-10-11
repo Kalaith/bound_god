@@ -6,6 +6,14 @@
 		"severity_base": 0.5,
 		"maturity_share": 0.5
 	},
+	"lessons": [
+		{"id": "winter", "insight": "winter", "first": 4.0, "repeat_factor": 0.85},
+		{"id": "drought", "insight": "drought", "first": 4.0, "repeat_factor": 0.85},
+		{"id": "teaching", "insight": "teaching", "first": 1.0, "repeat_factor": 0.97},
+		{"id": "death", "insight": "mortality", "first": 3.0, "repeat_factor": 0.9}
+	],
+	"lesson_reach": 12.0,
+	"lesson_records": 12,
 	"maturity": {
 		"per_day": 0.05,
 		"phases": [
@@ -18,13 +26,32 @@
 	},
 	"unlocks": [
 		{"id": "spirit_fruit", "requires": {"insight": "lightning", "amount": 5.0}, "effect": "spirit_fruit"},
-		{"id": "spirit_herbs", "requires": {"maturity": 12.0}, "effect": "spirit_herbs"}
+		{"id": "spirit_herbs", "requires": {"maturity": 12.0}, "effect": "spirit_herbs"},
+		{"id": "deep_roots", "requires": {"insight": "drought", "amount": 5.0, "maturity": 12.0}, "effect": "deep_roots"},
+		{"id": "sheltering_canopy", "requires": {"insight": "winter", "amount": 8.0, "maturity": 40.0}, "effect": "sheltering_canopy"},
+		{"id": "awakening_fruit", "requires": {"insight": "mortality", "amount": 5.0, "maturity": 40.0, "unlock": "spirit_fruit"}, "effect": "awakening_fruit"},
+		{"id": "root_network", "requires": {"insight": "teaching", "amount": 10.0, "maturity": 100.0}, "effect": "root_network"}
 	],
 	"fruit": {
 		"per_season": 3,
 		"most": 4,
 		"preparation": 0.4,
 		"near_peak": 0.8
+	},
+	"awakening": {
+		"talent": 0.15,
+		"drive": 0.2
+	},
+	"deep_roots": {
+		"qi": 0.25
+	},
+	"canopy": {
+		"reach": 10.0
+	},
+	"roots": {
+		"qi": 0.45,
+		"reach": 2,
+		"gap": 2
 	},
 	"herbs": {
 		"qi": 0.6,

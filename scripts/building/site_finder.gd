@@ -106,6 +106,12 @@ static func _footprint(sim: RefCounted, corner: Vector2i, size: Vector3i, settle
 	var low: int = 999
 	var high: int = -1
 	var tops: Dictionary = {}
+	# Most spots in a grown settlement already hold a building: a corner or
+	# the middle taken rejects the spot before any ground is measured.
+	var far := Vector2i(corner.x + size.x - 1, corner.y + size.z - 1)
+	for probe in [corner, far, Vector2i(corner.x, far.y), Vector2i(far.x, corner.y), (corner + far) / 2]:
+		if context.blocked.has(probe):
+			return result
 	for z in range(corner.y, corner.y + size.z):
 		for x in range(corner.x, corner.x + size.x):
 			if x < 2 or z < 2 or x >= world.size.x - 2 or z >= world.size.z - 2:

@@ -11,6 +11,17 @@
 			"storm_ticks": 45,
 			"warning_ticks": 120,
 			"insight": 1.0
+		},
+		{
+			"id": "core_lightning",
+			"realm_from": 2,
+			"severity": [0.5, 1.0],
+			"talent_severity": 0.15,
+			"strikes": [6, 10],
+			"radius": 5,
+			"storm_ticks": 60,
+			"warning_ticks": 150,
+			"insight": 1.5
 		}
 	],
 	"odds": {

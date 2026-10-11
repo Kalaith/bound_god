@@ -26,6 +26,7 @@ void fragment() {
 
 var wall := MeshInstance3D.new()
 var ring := MeshInstance3D.new()
+var roots := MeshInstance3D.new()
 var _wall_material := ShaderMaterial.new()
 var _ring_material := StandardMaterial3D.new()
 var _radius: float = -1.0
@@ -45,6 +46,14 @@ func _ready() -> void:
 	ring.material_override = _ring_material
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(ring)
+	var roots_material := StandardMaterial3D.new()
+	roots_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	roots_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	roots_material.albedo_color = Color(0.55, 0.95, 0.8, 0.8)
+	roots_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	roots.material_override = roots_material
+	roots.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(roots)
 
 
 ## A miracle shows where it happened: a bright ring that widens and fades.
@@ -112,3 +121,22 @@ func draw_ring(world: RefCounted, center: Vector3, radius: float) -> void:
 
 func update_avatar(position: Vector3) -> void:
 	_wall_material.set_shader_parameter("avatar_position", position)
+
+## The tree's roots along the paths, where the god's reach runs beyond the
+## circle: a small jade diamond on each rooted path column.
+func draw_roots(world: RefCounted, columns: Array) -> void:
+	if columns.is_empty():
+		roots.mesh = null
+		return
+	var mesh := ImmediateMesh.new()
+	mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	var corners: Array[Vector3] = [Vector3(0.0, 0.0, -0.32), Vector3(0.32, 0.0, 0.0), Vector3(0.0, 0.0, 0.32), Vector3(-0.32, 0.0, 0.0)]
+	for column in columns:
+		var y: float = world.top_solid_y(column.x, column.y) + 1.04
+		var middle := Vector3(column.x + 0.5, y, column.y + 0.5)
+		for triangle in [[0, 1, 2], [0, 2, 3]]:
+			for index in triangle:
+				mesh.surface_add_vertex(middle + corners[index])
+	mesh.surface_end()
+	roots.mesh = mesh
+	roots.global_position = Vector3.ZERO

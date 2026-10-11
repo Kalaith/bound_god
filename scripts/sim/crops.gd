@@ -8,6 +8,7 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
 ## crop cell -> {crop: id, days: int (days in this stage), tended: int (day), weedy: bool}
 var plots: Dictionary = {}
@@ -117,7 +118,7 @@ func daily(sim: RefCounted) -> void:
 		if bool(plot.weedy):
 			continue
 		# A crop grows only within some days of rain.
-		if sim.weather != null and sim.weather.dry_days(sim) > int(crop.get("rain_need", 1 << 20)):
+		if sim.weather != null and sim.weather.dry_days(sim) > int(crop.get("rain_need", 1 << 20)) and not TreeAbilities.watered(sim, cell):
 			var dry: int = sim.settlements.at_cell(cell)
 			thirsty[dry] = int(thirsty.get(dry, 0)) + 1
 			continue

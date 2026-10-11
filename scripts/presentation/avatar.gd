@@ -13,6 +13,10 @@ const GLOW: float = 0.06
 
 var zone_center := Vector3.ZERO
 var zone_radius: float = 1000.0
+## Where else the avatar may stand (the sim's presence check), when set.
+var reach: Callable = Callable()
+var _on_roots: bool = false
+var _last_rooted := Vector2.ZERO
 var camera_yaw: float = 0.0
 var input_enabled: bool = true
 ## Debug captures drive the avatar with a fixed stick and jump.
@@ -113,21 +117,34 @@ func _step_up(motion: Vector3) -> void:
 		return
 	global_position.y += 1.05
 
-
-## The binding: the avatar cannot leave the presence zone.
+## The binding: the avatar cannot leave the presence zone. Beyond the
+## shrine's circle it may walk only where `reach` holds (the tree's roots
+## along the paths), and is stopped at the last step that did.
 func _stay_bound() -> void:
 	var flat := Vector2(global_position.x - zone_center.x, global_position.z - zone_center.z)
 	var limit: float = maxf(zone_radius - 0.4, 1.0)
-	if flat.length() > limit:
-		flat = flat.normalized() * limit
-		global_position.x = zone_center.x + flat.x
-		global_position.z = zone_center.z + flat.y
-		var outward := Vector3(flat.x, 0.0, flat.y).normalized()
-		var push: float = velocity.dot(outward)
-		if push > 0.0:
-			velocity -= outward * push
+	if flat.length() <= limit:
+		_on_roots = false
+		return
+	if reach.is_valid() and reach.call(global_position):
+		_on_roots = true
+		_last_rooted = Vector2(global_position.x, global_position.z)
+		return
+	if _on_roots:
+		global_position.x = _last_rooted.x
+		global_position.z = _last_rooted.y
+		velocity.x = 0.0
+		velocity.z = 0.0
+		return
+	flat = flat.normalized() * limit
+	global_position.x = zone_center.x + flat.x
+	global_position.z = zone_center.z + flat.y
+	var outward := Vector3(flat.x, 0.0, flat.y).normalized()
+	var push: float = velocity.dot(outward)
+	if push > 0.0:
+		velocity -= outward * push
 
 
 func is_inside_zone() -> bool:
 	var flat := Vector2(global_position.x - zone_center.x, global_position.z - zone_center.z)
-	return flat.length() <= zone_radius + 0.01
+	return flat.length() <= zone_radius + 0.01 or (reach.is_valid() and reach.call(global_position))

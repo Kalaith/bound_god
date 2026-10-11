@@ -44,6 +44,7 @@ const TreeGrowth = preload("res://scripts/sim/tree_growth.gd")
 const Paths = preload("res://scripts/sim/paths.gd")
 const Weather = preload("res://scripts/sim/weather.gd")
 const Herbs = preload("res://scripts/sim/herbs.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
 var world_seed: int = 1
 ## How this world was made (world kind, size); saved so a load regenerates it.
@@ -286,9 +287,13 @@ func zone_radius() -> float:
 	return Balance.number("shrines.radius_base")
 
 
+## Within the presence zone: the shrine's circle, and, manifested at the
+## tree once its roots run along the paths, wherever they reach.
 func in_zone(point: Vector3) -> bool:
 	var center: Vector3 = zone_center()
-	return Vector2(point.x - center.x, point.z - center.z).length() <= zone_radius()
+	if Vector2(point.x - center.x, point.z - center.z).length() <= zone_radius():
+		return true
+	return faith != null and not god.dormant and str(faith.current(self).get("kind", "")) == "tree" and TreeAbilities.rooted(self, point)
 
 
 func is_occupied(cell: Vector3i) -> bool:

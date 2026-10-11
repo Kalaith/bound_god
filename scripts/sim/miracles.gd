@@ -76,6 +76,8 @@ static func problem(sim: RefCounted, id: String, cell: Vector3i) -> String:
 		return "miracle_favour"
 	if str(definition.effect) == "calm_sky" and not sim.weather.is_wet() and sim.weather.kind != "snow":
 		return "miracle_sky_clear"
+	if str(definition.effect) == "ripen_fruit":
+		return sim.tree_growth.ripen_problem()
 	return ""
 
 
@@ -112,6 +114,9 @@ static func cast(sim: RefCounted, id: String, cell: Vector3i, args: Dictionary) 
 			result = {"ok": true, "reason": "miracle_nurtured"}
 		"calm_sky":
 			result = {"ok": sim.weather.calm(sim), "reason": "miracle_calmed"}
+		"ripen_fruit":
+			sim.tree_growth.ripen(sim)
+			result = {"ok": true, "reason": "miracle_fruit_ripened"}
 		_:
 			result = {"ok": false, "reason": "miracle_unknown"}
 	if not result.ok:

@@ -27,7 +27,7 @@ const AMBITION_KINDS: Array[String] = [
 	"build_home", "lead_village",
 ]
 ## Miracle effects that sim/miracles.gd implements; the catalog may not name others.
-const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend", "bless_cultivation", "shield_trial", "defy_heaven", "nurture", "calm_sky"]
+const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend", "bless_cultivation", "shield_trial", "defy_heaven", "nurture", "calm_sky", "ripen_fruit"]
 ## Kept in step with FunctionRules.FUNCTIONS (not preloaded: the rules load data).
 const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary",
 	"meditation_hall", "tribulation_ground", "library", "meditation_room", "tribulation_chamber", "infirmary", "spirit_array", "sect_gate",

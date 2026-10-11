@@ -7,6 +7,7 @@ const Data = preload("res://scripts/core/data.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const FruitChoice = preload("res://scripts/agents/fruit_choice.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
 
 ## Returns true when the action was a cultivation effect.
@@ -87,6 +88,9 @@ static func _teach(sim: RefCounted, teacher: RefCounted, id: int, technique: Str
 		"cause_asked_to_learn|%s" % student.given_name, [teacher.id, id])
 	if sim.sects != null:
 		sim.sects.on_taught(sim, teacher, student)
+	# The Way taught beneath the tree teaches the tree too.
+	if sim.tree_growth != null and sim.tree_growth.in_shade(sim, teacher.cell, teacher.settlement_id):
+		sim.tree_growth.lesson(sim, "teaching", teacher.full_name(), [teacher.id, id])
 
 
 ## A fruit from the tree: kept for the picker's own trial, or carried for the
@@ -117,5 +121,5 @@ static func _hand_fruit(sim: RefCounted, agent: RefCounted, recipient: int) -> v
 	if not other.is_present():
 		sim.tree_growth.fruit += 1
 		return
-	other.cultivation.fruit = true
+	TreeAbilities.receive(sim, other, agent)
 	Mind.add(other, "given_fruit", sim.calendar.ticks_per_day, agent.id)

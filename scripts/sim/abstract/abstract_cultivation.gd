@@ -20,6 +20,7 @@ const Schedule = preload("res://scripts/agents/schedule.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
 const FruitChoice = preload("res://scripts/agents/fruit_choice.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 const EffectsCultivation = preload("res://scripts/sim/effects_cultivation.gd")
 const Social = preload("res://scripts/sim/social.gd")
 const AbstractPeople = preload("res://scripts/sim/abstract/abstract_people.gd")
@@ -119,10 +120,25 @@ static func day(sim: RefCounted) -> void:
 
 
 static func _teach(sim: RefCounted) -> void:
+	# What the cultivators of each settlement know between them: someone who
+	# knows all of it has nobody to learn from (teacher_for would find none).
+	var known: Dictionary = {}
+	for other in sim.agents:
+		if not other.is_present() or other.is_child or other.cultivation.is_empty() or not CultivationState.is_cultivator(other.cultivation):
+			continue
+		var techniques: Dictionary = known.get(other.settlement_id, {})
+		for id in other.cultivation.techniques:
+			techniques[id] = true
+		known[other.settlement_id] = techniques
 	for agent in sim.agents:
 		if not agent.is_present() or agent.is_child or agent.cultivation.is_empty():
 			continue
 		if float(agent.cultivation.drive) < 0.3 and int(agent.cultivation.realm) < 1:
+			continue
+		var all_known: bool = true
+		for id in known.get(agent.settlement_id, {}):
+			all_known = all_known and agent.cultivation.techniques.has(id)
+		if all_known:
 			continue
 		var teacher: int = DeliberationCultivation.teacher_for(sim, agent)
 		if teacher < 0 or sim.rng.randf() >= 0.3:
@@ -165,7 +181,7 @@ static func _fruit(sim: RefCounted) -> void:
 			continue
 		sim.tree_growth.pick(sim)
 		var recipient: RefCounted = sim.agents[int(choice[0])]
-		recipient.cultivation.fruit = true
+		TreeAbilities.receive(sim, recipient, master)
 		var kind: String = "fruit_kept" if recipient.id == master.id else "fruit_given"
 		var args: Dictionary = {"name": recipient.full_name()}
 		if kind == "fruit_given":

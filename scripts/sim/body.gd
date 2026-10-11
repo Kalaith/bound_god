@@ -4,6 +4,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const Data = preload("res://scripts/core/data.gd")
 
@@ -20,6 +21,9 @@ static func cover(sim: RefCounted, agent: RefCounted) -> float:
 		return 1.0
 	var cell: Vector3i = agent.cell + Vector3i.UP
 	if sim.voxels.is_roofed(cell, 6) or (not sim.kindled.is_empty() and sim.is_kindled(agent.cell)):
+		return 1.0
+	# Once the tree has learned to shelter, its crown is a roof.
+	if TreeAbilities.sheltered(sim, agent.cell):
 		return 1.0
 	if _leaves < 0:
 		_leaves = Registry.id("leaves")

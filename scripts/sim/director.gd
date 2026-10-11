@@ -8,7 +8,6 @@ const Standing = preload("res://scripts/sim/standing.gd")
 const Perception = preload("res://scripts/sim/perception.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
-const Homes = preload("res://scripts/sim/homes.gd")
 
 var raid_hooks: RefCounted = null
 
@@ -26,10 +25,12 @@ func daily(sim: RefCounted) -> void:
 ## How attractive a settlement looks to someone on the road, and why.
 static func attractiveness(sim: RefCounted, id: int) -> Array:
 	var settlement: Dictionary = sim.settlements.entries[id]
+	# A home with people living in it does not look free from the road, even
+	# where a couple shares one bed: beds beyond the residents are spare.
 	var spare: int = 0
 	for entry in sim.structures.built():
 		if Vector2(entry.anchor.x - settlement.center.x, entry.anchor.z - settlement.center.z).length() <= float(settlement.radius):
-			spare += Homes.free_beds(sim, entry)
+			spare += maxi(int(entry.capacity.get("beds", 0)) - entry.residents.size(), 0)
 	var homeless: int = 0
 	for agent_id in settlement.residents:
 		if sim.agents[agent_id].is_present() and sim.agents[agent_id].home < 0:

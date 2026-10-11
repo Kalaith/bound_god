@@ -12,6 +12,7 @@ const Body = preload("res://scripts/sim/body.gd")
 const Food = preload("res://scripts/sim/food.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const Lifecycle = preload("res://scripts/sim/lifecycle.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
 const Need = Personality.Need
 ## Below this a person eats in an abstract hour (detailed people eat at
@@ -87,8 +88,15 @@ static func context(sim: RefCounted, step: int = 1) -> Dictionary:
 		"regen": Balance.number("health.regen_per_day") * per_hour, "departure": Balance.number("mood.departure_threshold"),
 		"sleep_hour": Balance.number("time.sleep_hour"), "dawn_hour": Balance.number("time.dawn_hour"),
 		"work_start": Balance.number("time.work_start_hour"), "work_end": Balance.number("time.work_end_hour"),
+		"crown_place": _crown_place(sim),
 	}
 	return _context
+
+
+## The settlement whose homeless the tree's crown shelters, or -1.
+static func _crown_place(sim: RefCounted) -> int:
+	var place: int = sim.settlements.at_cell(sim.features.get("sacred_tree", Vector3i.ZERO))
+	return place if place >= 0 and TreeAbilities.shelters_settlement(sim, place) else -1
 
 
 ## Schedule.is_sleep_time and is_work_hours, from the hour's context.
@@ -106,7 +114,8 @@ static func at_work(k: Dictionary, agent: RefCounted) -> bool:
 ## does under foliage (half cover), and get it back by day.
 static func _shelter(k: Dictionary, agent: RefCounted, sleeping: bool, hardy: float = 1.0) -> void:
 	var gain: float = float(k.shelter_gain)
-	if agent.home >= 0:
+	# A home is a roof; so is the tree's crown once it shelters its own.
+	if agent.home >= 0 or agent.settlement_id == int(k.crown_place):
 		agent.change_need(Need.SHELTER, gain)
 	elif bool(k.daylight) and float(k.day_exposure) <= 0.0:
 		agent.change_need(Need.SHELTER, gain * 0.25 * 1.5)

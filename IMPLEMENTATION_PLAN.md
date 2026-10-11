@@ -238,7 +238,7 @@ Detailed after M18 ahead of its fresh-player sessions (the key test's human half
 
 ### Stage E–F outline (to be detailed after M20)
 
-- **M21 Branches and sacred sites:** disciples found branch shrines and sects on founding grounds and beyond; avatar transfer cost and cooldown; branches drifting in doctrine; relics carried from fallen sites. (Carries the former M21 follower and relic work.)
+- **M21 Branches and sacred sites:** disciples found branch shrines and sects on founding grounds and beyond; avatar transfer cost and cooldown; branches drifting in doctrine; relics carried from fallen sites. (Carries the former M21 follower and relic work.) Builds on the tree's root network (2026-10-11): worn paths joined to the tree already carry its qi and the god's reach, but paths wear only in detailed play, so the route to Ridge Hamlet must be walked (or worn by abstract traffic between settlements) before a branch shrine can be reached along it.
 - **M22 Regions, other sects and outsiders:** regions with the abstract model; visiting cultivators seeking sanctuary and the sect's admission decision; rival sects and outlaw cultivators as BDI agents replacing the scripted raid director; trade in herbs and manuals; schisms. (Carries the former M18 and M19.)
 - **M23 Campaign shape:** new-world options, named ages, optional deeds, the epilogue on fading or "Close the book", chronicle export, statistics; the tree's later unlocks (root networks, formations, one hidden realm).
 - **M24 Look, sound and feel:** the ink-and-pastel direction carried to every screen, tribulation and miracle effects, figure poses, music, accessibility, full gamepad navigation, localisation readiness.

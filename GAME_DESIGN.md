@@ -210,7 +210,7 @@ Each settlement holds culture weights per work type that drift toward what it ne
 
 - Start: two wanderers arrive at the tree on day 1; the ridge hamlet has five miners.
 - **Migrants** come when a settlement is attractive (beds, food, safety, shrine renown, standing; **Leaning:** and the tree's qi, which draws would-be cultivators). A hungry settlement draws nobody. Migrants bring designs and news of open land.
-- Births, childhood, ageing and death as in Final Landing. Cap 45 (**Tuning**).
+- Births, childhood, ageing and death as in Final Landing. Migrants stop at 50 people, births at 60, so long-lived cultivators cannot end the generations (**Tuning**). A bed sleeps a couple and partners share a home.
 - **Settlement standing** (built): camp, hamlet or village, judged daily from residents, housing, food days, functions and a living shrine; rises and falls are chronicled. **Leaning:** a **sect** is not a fourth standing but an institution that forms inside a settlement (§7.4).
 - Long unhappiness leads to Migrate, or to leaving the valley.
 
@@ -231,7 +231,7 @@ Added per person (simulated cheaply for most, in depth for notable and followed 
 - **Techniques** known (learned from a teacher, a manual or the tree), and who taught them.
 - Lifespan extended by realm (**Tuning**).
 
-**Decision (brief):** familiar xianxia realms are the scaffold: Mortal → Qi Refining → Foundation Establishment → Golden Core → Nascent Soul → further realms later. Number of realms, durations and power curve are **Tuning**; the slice needs Mortal, Qi Refining and Foundation Establishment.
+**Decision (brief):** familiar xianxia realms are the scaffold: Mortal → Qi Refining → Foundation Establishment → Golden Core → Nascent Soul → further realms later. Number of realms, durations and power curve are **Tuning**; the slice needs Mortal, Qi Refining and Foundation Establishment. **Built (2026-10-11):** Core Formation (the Golden Core) follows Foundation Establishment, through a fiercer lightning that the tree learns from as a new insight.
 
 ### 7.3 Cultivating, teaching, learning
 
@@ -282,6 +282,8 @@ At first breakthroughs happen in the clearing under the branches. Later the sect
 
 **Decision (slice):** one tribulation insight unlocks one concrete capability (a spirit fruit or a nurtured cultivation spot). Insight-to-unlock mapping: **Tuning**.
 
+**Built (2026-10-11, user request):** the tree also learns from lessons: winters and droughts its people came through, the Way taught beneath it, deaths in its shade (each with diminishing returns). Unlocks ask for an insight and a growth phase: deep roots (Spirit Root: fields in its qi grow through a dry spell), a sheltering canopy (Ancient Canopy: within ten blocks the crown is a roof), awakening fruit (Ancient Canopy, after spirit fruit: a mortal given a fruit gains talent or drive, never a realm) and a root network (Heaven-Touched Tree: worn paths joined to the tree carry its qi and, at the tree, the god's reach). The god can ripen a fruit for Favour (Ripen Fruit, 30).
+
 ## 10. Faith, Favour, shrines and miracles
 
 ### 10.1 Two kinds of divinity
@@ -311,7 +313,7 @@ The **sacred tree** is always active: with no support its reach is 10 blocks, wi
 | --- | --- | --- |
 | Whisper / inspire (very low) | **Whisper** (2): a nudge to one believer's goal for a day, logged as "felt the god urge me to…" | An omen; urging someone to take up a blueprint |
 | Bless (low) | **Bless Growth** (15), **Kindle** (5) | Bless a cultivator's training or a task |
-| Nurture (moderate) | — | Nurture a cultivation spot or spirit herb |
+| Nurture (moderate) | **Ripen Fruit** (30, once the tree bears fruit): a spirit fruit ripens now | Nurture a cultivation spot or spirit herb |
 | Protect (high) | **Veil of Fog** (30), **Mend** (25) | Shield a tribulation: lower its risk, no guarantee |
 | Defy Heaven (extreme) | — | Avert an otherwise fatal tribulation; the survivor's breakthrough is imperfect: a damaged foundation, reduced benefit and a harder next realm |
 

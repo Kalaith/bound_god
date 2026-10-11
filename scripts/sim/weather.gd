@@ -118,6 +118,9 @@ func _tallied(sim: RefCounted, what: String) -> bool:
 
 func _watered(sim: RefCounted) -> void:
 	last_wet_day = sim.calendar.day()
+	# Rain ends a drought the valley came through: the tree learns from it.
+	if drought_noted and sim.tree_growth != null:
+		sim.tree_growth.lesson(sim, "drought")
 	drought_noted = false
 
 

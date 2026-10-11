@@ -50,4 +50,32 @@ static func choose(sim: RefCounted, sect: Dictionary, chooser: RefCounted) -> Ar
 			best = id
 			best_score = score
 			best_reason = reason
+	if best < 0:
+		return awakening(sim, sect, chooser)
 	return [best, best_reason]
+
+
+## Nobody near a trial: once the tree's fruit can awaken, the master gives
+## it to a mortal of the sect's settlement who has never eaten one, the
+## keenest or the least gifted by the sect's doctrine. [-1, ""] when the
+## tree cannot awaken anyone or nobody is left to awaken.
+static func awakening(sim: RefCounted, sect: Dictionary, chooser: RefCounted) -> Array:
+	if sim.tree_growth == null or not sim.tree_growth.has_unlock("awakening_fruit"):
+		return [-1, ""]
+	var doctrine: Dictionary = sect.doctrine
+	var best: int = -1
+	var best_score: float = -INF
+	var residents: Array = sim.settlements.get_settlement(int(sect.settlement_id)).get("residents", []).duplicate()
+	residents.sort()
+	for id in residents:
+		var mortal: RefCounted = sim.agents[id]
+		var c: Dictionary = mortal.cultivation
+		if not mortal.is_present() or c.is_empty() or int(c.realm) != 0 or bool(c.get("awakened", false)):
+			continue
+		var score: float = 0.5 * float(c.drive) + 0.5 * (1.0 - float(c.talent)) \
+			+ float(doctrine.mercy) * (1.0 - float(c.talent)) * 0.3 + float(doctrine.ambition) * float(c.drive) * 0.3 \
+			+ (chooser.beliefs.opinion_of(id) / 100.0) * (1.0 - float(doctrine.openness)) * 0.3
+		if score > best_score:
+			best = id
+			best_score = score
+	return [best, "cause_fruit_awaken" if best >= 0 else ""]
