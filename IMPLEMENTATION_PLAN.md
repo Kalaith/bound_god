@@ -100,7 +100,7 @@ Each milestone ends with a runnable game, new `sim_checks` scenarios for its sim
 | A. Hold up | M13 Playtest, balance and foundations | Built except the fresh-player playtests (need people) |
 | B. A living economy | M14 Fields and meals | Built (`PROGRESS.md`) |
 | C. The cultivation slice | M15 Qi and cultivators · M16 Breakthroughs and tribulations · M17 The tree learns · M18 Meditation and generations | Built headlessly; the key test's fresh-player sessions are open |
-| D. A living sect | M19 Sect architecture and living designs · M19b The sect's halls · M20 Seasons, weather and herbs | M19 built headlessly (not played; seekers do not yet bring the sect designs); M19b built headlessly (not played); M20 built headlessly (not played) |
+| D. A living sect | M19 Sect architecture and living designs · M19b The sect's halls · M20 Seasons, weather and herbs · M20b The sect's alchemy | M19 built headlessly (not played; seekers do not yet bring the sect designs); M19b built headlessly (not played); M20 built headlessly (not played); M20b planned |
 | E. A wider world | M21 Branches and sacred sites · M22 Regions, other sects and outsiders | |
 | F. A whole game | M23 Campaign shape · M24 Look, sound and feel · M25 Release | |
 
@@ -236,7 +236,55 @@ Detailed after M18 ahead of its fresh-player sessions (the key test's human half
 
 **Exit:** on seed 11 with a sect, offered the alchemy room design and the tree at Spirit Root, herbs sprout in the tree's qi, the sect raises an alchemy room by its own proposal, gathers herbs, refines a pill and a cultivator eats it before facing Heaven within 40 days headless, chronicled; a settled village with ore, offered the smithy design, raises one and carries its tools to work within 30 days. Checks: weather follows its season (snow only in winter, same seed same sky); a homeless person loses shelter on a snowy day and not indoors; a crop stalls in a dry spell and grows after rain; the same trial is fiercer in a thunderstorm and a cultivator waits one out; Calm the Sky clears it; herbs sprout only after the unlock and only in dense qi, ripen and regrow; a pill raises preparation; tools speed the same person's gathering and wear out; the new state saves; abstract weather, herbs, pills and tools. Captures: rain, snow, thunderstorm, herbs under the tree, alchemy room, smithy, the clock line.
 
-### Stage E–F outline (to be detailed after M20)
+### M20b — The sect's alchemy
+
+**Goal:** alchemy becomes a craft of its own, added at the user's request (2026-10-11): several spirit herbs that each grow where something particular happened to the valley, mixtures and pills that each do one real thing to a person's cultivation, the cost of taking too many, alchemists who grow skilled, and a ladder of alchemy buildings from a herbalist's workshop to a pill pavilion, the larger holding more crafters at once. Everything stays influence, not obedience: what to refine, gather and take is each person's own deliberation.
+
+- **Herbs** (`data/alchemy.json` `herbs`, `sim/herbs.gd` generalised to kinds; closed): each a cross plant with three stages, gathered from the root and growing again, all behind the `spirit_herbs` unlock.
+
+| Herb (resource) | Grows | Notes |
+| --- | --- | --- |
+| Spirit herb (`herb`) | open grass where the tree's qi is deep (as M20) | the common herb |
+| Jade ginseng (`ginseng`) | grass or dirt in shade (no sky above), qi 0.35+ | slow to ripen |
+| Thunder root (`thunder_root`) | scorched earth Heaven's lightning left | every trial scar is a seed bed: the sect's trials feed its furnaces |
+| Frost lotus (`frost_lotus`) | grass beside water, only in winter | withers when spring comes; the rarest |
+
+- **Herb garden** (function): 4+ herb beds (new block and component, spirit soil) where the tree's qi is 0.3+. Empty beds sprout herbs of their own (a spirit herb under the open sky, jade ginseng in shade, so a roofed garden grows ginseng), outside the valley's wild limit, and ripen `alchemy.garden_ripen` times as fast.
+- **Preparations** (`recipes.json` station `alchemy` with a `tier`; effects in `alchemy.json` `elixirs`; closed): taken from the stores, never carried in the hands; each applies at once or is kept for its moment.
+
+| Preparation | Recipe | Tier | Effect |
+| --- | --- | --- | --- |
+| Healing draught (mixture) | 1 herb + 2 berries → 2 | 1 | heals `heal` at once and mends a cracked foundation by `mend` |
+| Awakening tea (mixture) | 1 herb + 1 grain → 2 | 1 | a mortal's sittings progress `factor` times as fast for `days` |
+| Foundation pill | 3 herb → 1 | 2 | preparation for a trial (M20) |
+| Qi-gathering pill | 2 herb + 1 ginseng → 2 | 2 | a cultivator's sittings progress `factor` times as fast for `days` |
+| Thunder-warding pill | 2 thunder root + 1 herb → 1 | 3 | kept for a trial: Heaven's severity lowered by `severity` |
+| Marrow-cleansing pill | 1 frost lotus + 1 ginseng → 1 | 3 | clears pill toxicity and mends a cracked foundation fully |
+| Longevity elixir | 2 frost lotus + 2 ginseng + 1 thunder root → 1 | 4 | `years` more life, once in a life, chronicled |
+
+- **Toxicity** (`cultivation.toxicity`, 0–1): every pill (not the mixtures) leaves some; it fades `toxicity_decay` a day, slows sittings by `toxicity_rate` × toxicity and weakens a trial's preparation by `toxicity_preparation` × toxicity. A person declines a pill that would take them past `toxicity_limit`. The marrow-cleansing pill clears it.
+- **Refining:** a batch is worked as a kitchen's is, at a bench of the person's own inside the building (so several can work at once). A batch can fail and lose its herbs: `fail_base` less `fail_per_level` per medicine level and the building's tier bonus. Refining practises medicine; someone who reaches `alchemist_level` becomes an alchemist (chronicled once) and is drawn to the furnace more. A pill pavilion's great cauldron sometimes yields one more.
+- **What to refine** (`sim/alchemy.gd`): each preparation has a want from the sect's own state (cultivators near a peak, cultivators at all, awakening mortals, the hurt and cracked, the poisoned, elders near the end of their span), less what the stores hold. A refiner works the most wanted preparation their building's tier allows and whose herbs they believe are to hand; gatherers gather each herb kind for the wants their settlement can refine.
+- **Taking them** (`sim/elixirs.gd`): before facing Heaven, a foundation pill and a thunder-warding pill are taken from the stores if believed there; before sitting, a cultivator takes a qi-gathering pill, a mortal a cup of awakening tea; goal **Medicate** (healing draught when hurt or cracked, marrow-cleansing when poisoned or cracked, longevity elixir when old): go to the stores and take it. Every taking is in the decision log; a longevity elixir and a first of each kind are chronicled.
+- **Buildings** (functions appended to `FunctionRules.FUNCTIONS`; a structure's tier is the highest alchemy function it has, and its crafters the benches its components give):
+
+| Function | Components | Tier | Crafters |
+| --- | --- | --- | --- |
+| Herbalist's workshop | a roofed mortar and drying rack, a door | 1 | 1 |
+| Alchemy room (M20) | a roofed furnace and medicine cabinet, a door | 2 | 1 |
+| Alchemy hall | 2+ roofed furnaces, a medicine cabinet, a drying rack, a door | 3 | one per furnace, up to 4 |
+| Pill pavilion | a roofed great cauldron, 3+ furnaces, 2+ cabinets, a mortar, a door, 30+ roofed floor, tree qi 0.4+ | 4 | furnaces + 2, up to 8 |
+
+- **Blocks** (atlas grows to 8 × 12, new tiles painted after every older one): jade ginseng, thunder root and frost lotus (three stages each), mortar, drying rack, great cauldron, herb bed.
+- **Designs:** Herbalist's Hut (valley folk and wandering cultivators; migrants may bring it), Alchemy Hall, Pill Pavilion, Herb Garden and a roofed Ginseng House, by wandering cultivators. Renovations: a furnace and cabinet turn a herbalist's workshop into an alchemy room too; a furnace and drying rack turn an alchemy room into an alchemy hall.
+- **Wants:** a herbalist's workshop once herbs grow in reach and the settlement has `workshop_people`; an alchemy hall once the sect has an alchemy room, `hall_members` and a rarer herb grows or a member reached Foundation Establishment; a pill pavilion once it has an alchemy hall, `pavilion_members` and a member in Foundation Establishment or beyond; a herb garden once it refines and the wild herbs are fewer than `garden_wild`.
+- **Abstract:** herb pools per kind (gardens add to them), benches by crafters and tier with the same wants, failure from the best medicine skill, and the same takings: trial pills, sitting pills and tea scaling abstract cultivation, draughts for the hurt, cleansing for the poisoned, elixirs for the old; toxicity fades by the day.
+- **Presentation:** the new tiles, preparations and herbs named in the stores, toxicity, an active pill and extra years on the Cultivation tab, captures.
+- **Saves:** new state under optional keys; an M20 save's alchemy-room pots spill into the room as loose goods.
+
+**Exit:** on seed 11 with a sect, the tree at Spirit Root and the designs offered, the sect raises an alchemy room or workshop and an alchemy hall by its own proposals within 60 days headless, refines at least four kinds of preparation and its people take them, two crafters work in the hall at once, and thunder root grows on a trial's scar. Checks: each herb grows only in its own conditions; beds sprout spirit herb in sun and ginseng in shade; each preparation's effect (same person, with and without); toxicity slows, fades and is refused past the limit, and cleansing clears it; tiers gate recipes; a pavilion holds more crafters than a room; failure falls with skill; the want chooses what is needed; Medicate; the new state saves; abstract herbs, refining and takings. Captures: each building, the three new herbs, a garden.
+
+### Stage E–F outline (to be detailed after M20b)
 
 - **M21 Branches and sacred sites:** disciples found branch shrines and sects on founding grounds and beyond; avatar transfer cost and cooldown; branches drifting in doctrine; relics carried from fallen sites. (Carries the former M21 follower and relic work.) Builds on the tree's root network (2026-10-11): worn paths joined to the tree already carry its qi and the god's reach, but paths wear only in detailed play, so the route to Ridge Hamlet must be walked (or worn by abstract traffic between settlements) before a branch shrine can be reached along it.
 - **M22 Regions, other sects and outsiders:** regions with the abstract model; visiting cultivators seeking sanctuary and the sect's admission decision; rival sects and outlaw cultivators as BDI agents replacing the scripted raid director; trade in herbs and manuals; schisms. (Carries the former M18 and M19.)
