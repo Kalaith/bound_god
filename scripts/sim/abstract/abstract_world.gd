@@ -172,6 +172,7 @@ func _day(sim: RefCounted) -> void:
 	BranchesAbstract.day(sim)
 	Relics.daily(sim)
 	Relics.abstract_day(sim)
+	load("res://scripts/sim/guests.gd").daily(sim, true)
 	sim.routes.daily(sim, true)
 	Blueprints.daily(sim)
 	sim.tree_growth.daily(sim)

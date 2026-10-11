@@ -31,13 +31,17 @@ static func day(sim: RefCounted) -> void:
 ## Walks (in an instant) to the ground and settles there; the first founder
 ## carries a log for the chest.
 static func _set_out(sim: RefCounted, agent: RefCounted, ground: int, cause: int, founder: bool) -> void:
+	# A ground in another region: they leave this world at once (M22).
+	if Branches.is_abroad(ground):
+		Branches.emigrate(sim, agent, ground, cause if founder else 0)
+		return
 	var settled: bool = sim.settlements.on_ground(ground) >= 0
 	if founder and not settled:
 		if not agent.carrying.is_empty():
 			return
 		# From the stores, or felled on the way as a founder in the detailed
 		# world gathers their provisions.
-		sim.settlements.take(sim, agent.settlement_id, "wood", 1, agent.cell)
+		sim.settlements.take_any(sim, agent.settlement_id, "wood", 1)
 		agent.carrying = {"resource": "wood", "amount": 1.0}
 	var camp: Vector3i = sim.nav.nearest_walkable(sim.features.grounds[ground].center, 4)
 	if camp.x < 0:

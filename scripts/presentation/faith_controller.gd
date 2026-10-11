@@ -19,6 +19,7 @@ var _last_event: int = -1
 func _ready() -> void:
 	menu = ShrineMenu.new()
 	menu.sim = sim
+	menu.campaign = main.campaign
 	main.ui_layer.add_child(menu)
 	menu.closed.connect(close_menu)
 	menu.command.connect(send)
@@ -28,6 +29,9 @@ func _ready() -> void:
 	menu.open_stores.connect(func(id: int) -> void:
 		close_menu()
 		main.open_stores_for(id))
+	menu.open_lands.connect(func() -> void:
+		close_menu()
+		main.open_lands())
 	menu.open_requests.connect(func() -> void:
 		close_menu()
 		main.open_requests())
@@ -48,6 +52,15 @@ func _ready() -> void:
 
 
 func send(command: Dictionary) -> void:
+	if str(command.get("type", "")) == "transfer_region":
+		var crossed: Dictionary = main.campaign.transfer(int(command.region), int(command.shrine))
+		if not crossed.ok:
+			main.hud.flash(Text.label(crossed.reason), true)
+			if menu.visible:
+				menu.notice(Text.label(crossed.reason), true)
+			return
+		main.step_into_region()
+		return
 	var result: Dictionary = sim.apply_command(command)
 	if not str(result.reason).is_empty():
 		main.hud.flash(Text.label(result.reason), not result.ok)

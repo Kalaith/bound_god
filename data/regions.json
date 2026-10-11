@@ -1,0 +1,55 @@
+{
+	"schema_version": 1,
+	"count": 2,
+	"abstract_step": 3,
+	"region_cap": 30,
+	"region_birth_margin": 6,
+	"world_cap": 200,
+	"travel_days": 3,
+	"transfer_cost": 12.0,
+	"relations": {"friendly": 30.0, "hostile": -30.0, "kin": 40.0},
+	"guests": {
+		"seek": 0.5, "renown_known": 20, "receive_pull": 0.75, "wait_days": 2, "stay_days": 8,
+		"admit_relation": 12.0, "refuse_relation": 15.0,
+		"weights": {"base": 0.1, "openness": 1.2, "mercy": 0.8, "secrecy": 1.2, "kindness": 0.3, "relation": 1.0, "waiting": 0.15},
+		"gift": {"herb": 4}
+	},
+	"trade": {
+		"every_days": [12, 20], "keep_days": 4.0, "most": 12, "lacks_below": 3, "trade_relation": 2.0, "manual_relation": 4.0,
+		"keep": {"wood": 20, "stone": 20, "thatch": 12, "ore": 6, "herb": 4, "tools": 2},
+		"values": {"berries": 1.0, "grain": 1.2, "meal": 1.8, "wood": 0.8, "stone": 0.8, "thatch": 0.5, "ore": 2.0, "herb": 3.0, "ginseng": 6.0, "tools": 6.0, "frost_lotus": 9.0, "thunder_root": 7.0, "pill": 10.0}
+	},
+	"home_goods": {"berries": 10, "wood": 8, "herb": 3},
+	"archetypes": [
+		{
+			"id": "bamboo_marsh",
+			"name": "region_bamboo_marsh",
+			"settlement": "place_reed_water",
+			"faction": "lotus_hall",
+			"terrain": {"base_height": 11, "rim_height": 22.0, "ridge_height": 0.0, "river_half_width": 4.0, "forest_threshold": -0.15},
+			"well_qi": 0.75,
+			"people": 9,
+			"cultivators": 0.45,
+			"buildings": ["timber_cottage", "timber_cottage", "timber_cottage", "store_shed", "garden_patch"],
+			"designs": ["timber_cottage", "store_shed", "garden_patch", "field_plot", "lean_to", "herbalist_hut"],
+			"stock": {"berries": 50, "wood": 24, "grain": 20, "herb": 6},
+			"goods": {"herb": 6, "ginseng": 2, "grain": 8},
+			"culture": {"farm": 1.3, "gather": 1.15, "defend": 0.8}
+		},
+		{
+			"id": "iron_pass",
+			"name": "region_iron_pass",
+			"settlement": "place_iron_gate",
+			"faction": "iron_sword",
+			"terrain": {"base_height": 14, "rim_height": 32.0, "ridge_start": 70.0, "ridge_full": 100.0, "ridge_height": 12.0, "river_half_width": 2.0, "forest_threshold": 0.15},
+			"well_qi": 0.7,
+			"people": 9,
+			"cultivators": 0.5,
+			"buildings": ["miner_hut", "miner_hut", "timber_cottage", "store_shed", "smithy"],
+			"designs": ["miner_hut", "timber_cottage", "store_shed", "smithy", "lean_to", "field_plot"],
+			"stock": {"berries": 40, "wood": 20, "stone": 20, "ore": 10, "grain": 16},
+			"goods": {"ore": 6, "tools": 2, "stone": 10},
+			"culture": {"build": 1.2, "defend": 1.4, "scout": 1.2}
+		}
+	]
+}

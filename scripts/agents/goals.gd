@@ -19,6 +19,8 @@ enum Kind {
 	STUDY, SEEK_PLANS,
 	MEDICATE,
 	FOUND_BRANCH, RECOVER_RELIC,
+	SEEK_SANCTUARY, ADMIT_GUEST,
+	RAID, RETREAT,
 }
 
 const NAMES: Array[String] = [
@@ -37,6 +39,8 @@ const NAMES: Array[String] = [
 	"study", "seek_plans",
 	"medicate",
 	"found_branch", "recover_relic",
+	"seek_sanctuary", "admit_guest",
+	"raid", "retreat",
 ]
 
 const SURVIVAL: Array[int] = [Kind.EAT, Kind.SLEEP, Kind.TAKE_SHELTER, Kind.FLEE, Kind.SEEK_CARE]
@@ -50,7 +54,7 @@ const WORK_TYPE: Dictionary = {
 }
 const WORK_TYPES: Array[String] = ["build", "gather", "haul", "defend", "scout", "farm"]
 ## Goals whose target is another person.
-const TARGETS_AGENT: Array[int] = [Kind.CHAT, Kind.COMFORT, Kind.COURT, Kind.RECONCILE, Kind.HELP, Kind.PREACH, Kind.TEACH, Kind.LEARN, Kind.SHARE_FRUIT]
+const TARGETS_AGENT: Array[int] = [Kind.CHAT, Kind.COMFORT, Kind.COURT, Kind.RECONCILE, Kind.HELP, Kind.PREACH, Kind.TEACH, Kind.LEARN, Kind.SHARE_FRUIT, Kind.ADMIT_GUEST]
 
 ## Help needs carried in a HELP goal's `extra`.
 enum HelpNeed { FOOD, CARE, DEFENCE, TEACHING }

@@ -313,7 +313,7 @@ func check_builders_make_do_without_thatch():
 ## Grass walked often wears to path, which navigation prefers slightly; a
 ## path left unwalked grasses over. In a few days of ordinary life the
 ## valley's busiest ways wear.
-func check_paths_wear_and_grass_over():
+func long_check_paths_wear_and_grass_over():
 	var sim: RefCounted = Sim.create(11)
 	var camp: Vector3i = sim.settlements.entries[1].camp
 	var cell: Vector3i = NONE

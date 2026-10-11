@@ -24,7 +24,8 @@ var _b: Dictionary = {}
 func _init(target: RefCounted, random: RandomNumberGenerator) -> void:
 	world = target
 	rng = random
-	_b = Balance.dict("world")
+	# A copy: a region overrides terrain numbers for its own world only.
+	_b = Balance.dict("world").duplicate(true)
 
 
 func _id(name: String) -> int:
@@ -58,6 +59,11 @@ func valley() -> Dictionary:
 	_vegetation()
 	_founding_grounds()
 	return {"sites": sites, "features": features}
+
+
+## A neighbouring region's world from its archetype (M22).
+func region(archetype: Dictionary) -> Dictionary:
+	return load("res://scripts/world/world_gen_region.gd").generate(self, archetype)
 
 
 ## A flat test field for headless scenarios: grass at `ground` over dirt.

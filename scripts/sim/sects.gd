@@ -83,14 +83,9 @@ static func leaning(agent: RefCounted) -> Dictionary:
 func found(sim: RefCounted, founder: RefCounted) -> int:
 	if int(founder.cultivation.sect_id) >= 0 or not can_found_in(sim, founder.settlement_id):
 		return 0
-	var names: Dictionary = Data.cultivation().sect_names
-	var adjective: String = str(names.default_adjective)
-	for id in founder.traits:
-		if names.adjectives.has(id):
-			adjective = str(names.adjectives[id])
-			break
-	var nouns: Array = names.nouns
-	var noun: String = str(nouns[(founder.id + sim.settlements.get_settlement(founder.settlement_id).name.length()) % nouns.size()])
+	var name: Dictionary = name_for(sim, founder)
+	var adjective: String = str(name.adjective)
+	var noun: String = str(name.noun)
 	var id: int = next_id
 	next_id += 1
 	var sect: Dictionary = {"id": id, "name": {"adjective": adjective, "noun": noun}, "settlement_id": founder.settlement_id,
@@ -111,6 +106,19 @@ func found(sim: RefCounted, founder: RefCounted) -> int:
 	return id
 
 
+## A new sect's name from its founder's nature and their place.
+func name_for(sim: RefCounted, founder: RefCounted) -> Dictionary:
+	var names: Dictionary = Data.cultivation().sect_names
+	var adjective: String = str(names.default_adjective)
+	for id in founder.traits:
+		if names.adjectives.has(id):
+			adjective = str(names.adjectives[id])
+			break
+	var nouns: Array = names.nouns
+	var noun: String = str(nouns[(founder.id + sim.settlements.get_settlement(founder.settlement_id).get("name", "").length()) % nouns.size()])
+	return {"adjective": adjective, "noun": noun}
+
+
 func _join(sect: Dictionary, agent: RefCounted, rank: String) -> void:
 	sect.members[agent.id] = rank
 	agent.cultivation.sect_id = int(sect.id)
@@ -118,6 +126,22 @@ func _join(sect: Dictionary, agent: RefCounted, rank: String) -> void:
 
 func join(sect: Dictionary, agent: RefCounted, rank: String) -> void:
 	_join(sect, agent, rank)
+
+
+## A neighbouring region's sect (M22), founded before the god woke: the
+## faction's name and doctrine, `members` its cultivators, `founder` master.
+func found_faction(sim: RefCounted, founder: RefCounted, members: Array, settlement_id: int, faction: Dictionary) -> int:
+	var id: int = next_id
+	next_id += 1
+	var sect: Dictionary = {"id": id, "name": {"adjective": str(faction.adjective), "noun": str(faction.noun)}, "settlement_id": settlement_id,
+		"founded_tick": sim.calendar.tick - sim.calendar.ticks_for_days(400.0), "founder": founder.id, "master": founder.id, "members": {},
+		"doctrine": faction.doctrine.duplicate(), "manuals": [str(faction.technique)], "faction": str(faction.id),
+		"last_branch_tick": sim.calendar.tick}
+	entries[id] = sect
+	for agent in members:
+		_join(sect, agent, "master" if agent == founder else "disciple")
+	_rank(sim, sect)
+	return id
 
 
 ## A branch of `parent` founded by `founder` in `settlement_id` (M21): the

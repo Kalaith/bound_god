@@ -293,6 +293,30 @@ func add(sim: RefCounted, id: int, resource: String, count: int, near: Vector3i)
 	return stored
 
 
+## Takes from any of the settlement's chests, in their stable order: for
+## dealings with the whole store (trade, gifts) rather than a hand at a chest.
+func take_any(sim: RefCounted, id: int, resource: String, count: int) -> int:
+	var taken: int = 0
+	for cell in chest_cells(sim, id):
+		if taken >= count:
+			break
+		taken += chest_take(cell, resource, count - taken)
+	return taken
+
+
+## Puts goods into any of the settlement's chests with room; what does not
+## fit is set down loose at `spill` (the camp). Returns how many were stored.
+func store_any(sim: RefCounted, id: int, resource: String, count: int, spill: Vector3i) -> int:
+	var stored: int = 0
+	for cell in chest_cells(sim, id):
+		if stored >= count:
+			break
+		stored += chest_add(cell, resource, count - stored)
+	if stored < count:
+		sim.drop_item(spill, resource, float(count - stored))
+	return stored
+
+
 ## Takes from the settlement's chests within reach of `near`, nearest first.
 func take(sim: RefCounted, id: int, resource: String, count: int, near: Vector3i) -> int:
 	if not entries.has(id) or count <= 0:

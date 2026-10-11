@@ -59,6 +59,8 @@
 		{"id": "joined_branch", "text": "Followed their teacher to a new branch", "mood": 6, "days": 3.0, "max_stack": 1},
 		{"id": "carried_relics", "text": "Carried the relics of the dead home", "mood": 10, "days": 4.0, "max_stack": 1},
 		{"id": "school_taken", "text": "Saw their branch find its own way", "mood": 6, "days": 3.0, "max_stack": 1},
-		{"id": "schism", "text": "Broke with the sect that raised them", "mood": -6, "days": 4.0, "max_stack": 1}
+		{"id": "schism", "text": "Broke with the sect that raised them", "mood": -6, "days": 4.0, "max_stack": 1},
+		{"id": "welcomed", "text": "Was welcomed beneath a far-off tree", "mood": 8, "days": 3.0, "max_stack": 1},
+		{"id": "turned_away", "text": "Was turned away from the sacred tree", "mood": -8, "days": 4.0, "max_stack": 1}
 	]
 }

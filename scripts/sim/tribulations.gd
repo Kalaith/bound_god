@@ -332,6 +332,9 @@ static func _advance(sim: RefCounted, agent: RefCounted, foundation: float, flaw
 	c.realm = int(c.realm) + 1
 	c.progress = 0.0
 	c.peak_tick = -1
+	# The Clear Mind technique lays a sounder foundation (M22).
+	if c.get("techniques", []).has("clear_mind"):
+		foundation = minf(foundation + float(Data.technique("clear_mind").get("foundation", 0.0)), 1.0)
 	c.foundation = foundation
 	# A new realm lays a new foundation: an old crack no longer matters.
 	c.erase("sound_foundation")

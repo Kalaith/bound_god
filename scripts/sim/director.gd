@@ -66,7 +66,7 @@ static func threatened(sim: RefCounted, id: int) -> bool:
 
 
 func _migrants(sim: RefCounted) -> void:
-	var cap: int = Balance.integer("population.cap")
+	var cap: int = sim.migrant_cap()
 	for id in sim.settlements.ids():
 		if sim.present_count() >= cap:
 			return

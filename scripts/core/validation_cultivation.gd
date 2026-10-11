@@ -6,7 +6,7 @@ extends RefCounted
 const Data = preload("res://scripts/core/data.gd")
 
 ## Where a technique can come from; sim/cultivation.gd handles each.
-const TECHNIQUE_SOURCES: Array[String] = ["tree", "teacher"]
+const TECHNIQUE_SOURCES: Array[String] = ["tree", "teacher", "faction"]
 
 
 static func _number(value: Variant) -> bool:

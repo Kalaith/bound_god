@@ -13,6 +13,7 @@ const PlansCultivation = preload("res://scripts/agents/plan_library_cultivation.
 const PlansDesigns = preload("res://scripts/agents/plan_library_designs.gd")
 const PlansAlchemy = preload("res://scripts/agents/plan_library_alchemy.gd")
 const PlansBranches = preload("res://scripts/agents/plan_library_branches.gd")
+const PlansOutlaw = preload("res://scripts/agents/plan_library_outlaw.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 
 const Kind = Goals.Kind
@@ -49,7 +50,9 @@ static func plans_for(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> A
 			plans = PlansCultivation.plans(sim, agent, goal)
 		Kind.STUDY, Kind.SEEK_PLANS:
 			plans = PlansDesigns.plans(sim, agent, goal)
-		Kind.FOUND_BRANCH, Kind.RECOVER_RELIC:
+		Kind.RAID, Kind.RETREAT:
+			plans = PlansOutlaw.plans(sim, agent, goal)
+		Kind.FOUND_BRANCH, Kind.RECOVER_RELIC, Kind.SEEK_SANCTUARY, Kind.ADMIT_GUEST:
 			plans = PlansBranches.plans(sim, agent, goal)
 		_:
 			plans = PlansWork.plans(sim, agent, goal)

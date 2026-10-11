@@ -8,6 +8,7 @@ const Schools = preload("res://scripts/sim/schools.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
+const Outlaws = preload("res://scripts/sim/outlaws.gd")
 
 const NAMES: Array[String] = ["band_ashen", "band_crows", "band_hollow"]
 
@@ -99,8 +100,8 @@ func _launch(sim: RefCounted, band: Dictionary) -> void:
 		var cell: Vector3i = sim.nav.nearest_walkable(edge + Vector3i(i, 0, i % 2), 6)
 		if cell.x < 0:
 			continue
-		var id: int = sim.threats.spawn("raider", cell, {"state": "approach", "settlement_id": int(band.settlement_id), "band": int(band.id), "targets_altar": knows_god})
-		band.members.append(id)
+		# The band are people who decide for themselves (M22, outlaws.gd).
+		band.members.append(Outlaws.spawn(sim, band, cell, knows_god))
 	sim.chronicle_event("raid_begins", int(band.settlement_id), {"band": band.name, "count": band.members.size()}, "")
 
 

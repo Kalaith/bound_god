@@ -78,11 +78,13 @@ static func _raid(main: Node3D, shot: Node) -> void:
 			sim.settlements.chest_add(chest, resource, 10)
 	sim.calendar.tick = sim.calendar.ticks_per_day * 11
 	var raiders: int = 0
-	for _hour in range(24 * 14):
-		sim.run_ticks(sim.calendar.ticks_per_hour())
+	for _step in range(24 * 14 * 6):
+		sim.run_ticks(sim.calendar.ticks_per_hour() / 6)
+		# Outlaws decide for themselves (M22): catch them at the stores or the altar.
 		raiders = 0
-		for id in sim.threats.ids():
-			if sim.threats.entries[id].kind == "raider" and sim.threats.entries[id].state in ["loot", "altar"]:
+		var stores: Vector3i = sim.settlements.entries[2].camp
+		for agent in sim.agents:
+			if agent.is_present() and agent.backstory.has("outlaw") and Vector2(agent.cell.x - stores.x, agent.cell.z - stores.z).length() < 9.0:
 				raiders += 1
 		if raiders > 0:
 			break

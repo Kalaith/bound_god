@@ -99,7 +99,7 @@
 	"threats": {
 		"wolf": {"count": 3, "speed": 0.8, "health": 30.0, "damage": 4.0, "sight": 10.0, "aggressive": true},
 		"raider": {"speed": 0.7, "health": 40.0, "damage": 5.0, "band": [3, 5], "carry": 15.0, "aggressive": true},
-		"first_raid_day": 12, "raid_every_days": 4, "raid_base_chance": 0.35, "raid_wealth_weight": 0.004
+		"first_raid_day": 12, "raid_every_days": 4, "outlaw_flee_hp": 45.0, "raid_base_chance": 0.35, "raid_wealth_weight": 0.004
 	},
 	"decay": {"unattended_days": 20, "block_loss_chance": 0.15, "abandoned_days": 10},
 	"cultivation": {
@@ -140,10 +140,10 @@
 	"paths": {"wear_keep": 0.7, "wear_to_path": 30.0, "wear_to_grass": 0.5},
 	"branches": {
 		"cutting_curve": [[0.0, 0.85], [4.0, 0.75], [10.0, 0.45], [16.0, 0.15], [20.0, 0.0]], "spot_inner": 1.5, "spot_outer": 4.5,
-		"settled_days": 8, "crowded": 10, "after_days": 15, "most": 2, "between_days": 12, "followers": 4, "left_days": 40,
-		"found_base": 0.35, "found_crowd": 0.35, "found_ambition": 0.3, "follow_base": 0.5, "follow_opinion": 20.0,
-		"school_at": 0.72, "school_lose": 0.62, "school_days": 10, "schism_distance": 1.0, "schism_opinion": -20.0, "schism_far": 1.5,
-		"relic_reach": 16.0, "recover_pull": 0.5, "abstract_found": 0.08, "abstract_recover": 0.2
+		"settled_days": 8, "crowded": 10, "after_days": 40, "keep": 8, "most": 2, "between_days": 12, "followers": 4, "left_days": 40,
+		"found_base": 0.35, "found_crowd": 0.35, "found_ambition": 0.3, "follow_base": 0.5, "follow_opinion": 40.0,
+		"school_at": 0.72, "school_lose": 0.62, "school_days": 10, "schism_distance": 1.0, "schism_opinion": -20.0, "schism_far": 1.5, "schism_relation": -60.0,
+		"relic_reach": 16.0, "recover_pull": 0.5, "abroad_factor": 1.0, "abstract_found": 0.08, "abstract_recover": 0.2
 	},
 	"routes": {"per_link": 10.0, "per_pilgrim": 1.0, "most": 30.0, "refind_days": 10},
 	"schools": {"heal_factor": 1.6, "defend_factor": 1.5, "strike_factor": 1.5, "hidden_wealth": 0.4},

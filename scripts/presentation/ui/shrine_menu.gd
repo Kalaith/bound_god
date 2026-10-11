@@ -8,6 +8,7 @@ signal command(value: Dictionary)
 signal open_library
 signal open_stores(settlement_id: int)
 signal open_requests
+signal open_lands
 signal rest_requested(days: float)
 signal meditate_requested(years: float)
 const Style = preload("res://scripts/presentation/ui/style.gd")
@@ -17,6 +18,8 @@ const Miracles = preload("res://scripts/sim/miracles.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 
 var sim: RefCounted
+## Shrines of every region are listed, each under its region's name (M22).
+var campaign: RefCounted = null
 var avatar_cell := Vector3i.ZERO
 var _title: Label
 var _status: Label
@@ -75,6 +78,8 @@ func _ready() -> void:
 		var shrine: Dictionary = sim.faith.current(sim)
 		open_stores.emit(int(shrine.get("settlement_id", -1))))
 	_add_button(actions, "shrine_menu_requests", func() -> void: open_requests.emit())
+	if campaign != null and campaign.regions.size() > 1:
+		_add_button(actions, "shrine_menu_lands", func() -> void: open_lands.emit())
 	for days in [1.0, 5.0, 10.0]:
 		var label: String = Text.format("shrine_menu_rest", {"days": int(days)})
 		var button: Button = Style.button(label)
@@ -123,33 +128,54 @@ func _process(delta: float) -> void:
 	_status.text = Text.format("shrine_menu_status", {"favour": roundi(float(shrine.get("favour", 0.0))), "support": "%.1f" % float(shrine.get("support", 0.0)),
 		"condition": roundi(float(shrine.get("condition", 0.0))), "renown": sim.god.renown, "state": Text.label("shrine_state_" + str(shrine.get("state", "fallen")))})
 	var key: String = "%d|%d|%s|%d" % [sim.god.active_shrine_id, sim.god.renown, avatar_cell, ceili(float(Miracles.transfer_wait(sim)) / sim.calendar.ticks_per_hour())]
-	for id in sim.faith.ids():
-		key += "|%s:%d" % [sim.faith.shrines[id].state, int(sim.faith.shrines[id].favour)]
+	for entry in _all_shrines():
+		key += "|%d:%s:%d" % [int(entry.region), entry.shrine.state, int(entry.shrine.favour)]
 	if key != _key:
 		_key = key
 		_rebuild_shrines()
 		_rebuild_miracles()
 
 
+## Every shrine the god might reach: {region, shrine}, this region's first.
+func _all_shrines() -> Array:
+	if campaign == null:
+		var only: Array = []
+		for id in sim.faith.ids():
+			only.append({"region": 0, "shrine": sim.faith.shrines[id]})
+		return only
+	return campaign.shrines()
+
+
 func _rebuild_shrines() -> void:
 	for child in _shrines.get_children():
 		child.queue_free()
-	for id in sim.faith.ids():
-		var shrine: Dictionary = sim.faith.shrines[id]
+	var here: int = campaign.active if campaign != null else 0
+	var region_shown: int = -1
+	for entry in _all_shrines():
+		var region: int = int(entry.region)
+		var shrine: Dictionary = entry.shrine
+		var id: int = int(shrine.id)
+		if campaign != null and campaign.regions.size() > 1 and region != region_shown:
+			region_shown = region
+			_shrines.add_child(Style.label(Text.label(str(campaign.regions[region].name)), 18, Style.MUTED))
 		var line := HBoxContainer.new()
 		var label: Label = Style.label("%s · %s" % [shrine.name, Text.label("shrine_state_" + str(shrine.state))], 20)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		line.add_child(label)
-		if id != sim.god.active_shrine_id:
-			var go: Button = Style.button(Text.format("shrine_menu_transfer_cost", {"cost": roundi(Balance.number("shrines.transfer_cost"))}), false, 18)
-			var refusal: String = Miracles.transfer_refusal(sim, id)
+		if region != here or id != sim.god.active_shrine_id:
+			var cost: float = campaign.cost_to(region) if campaign != null else Balance.number("shrines.transfer_cost")
+			var go: Button = Style.button(Text.format("shrine_menu_transfer_cost", {"cost": roundi(cost)}), false, 18)
+			var refusal: String = campaign.transfer_refusal(region, id) if campaign != null else Miracles.transfer_refusal(sim, id)
 			go.disabled = not refusal.is_empty()
 			# Why the god cannot go yet is said beside the shrine, not hidden in a tooltip.
 			if refusal == "transfer_cooldown":
 				label.text += " · " + Text.format("transfer_cooldown_hours", {"hours": ceili(float(Miracles.transfer_wait(sim)) / sim.calendar.ticks_per_hour())})
 			elif not refusal.is_empty() and refusal != "transfer_inactive":
 				label.text += " · " + Text.label(refusal)
-			go.pressed.connect(func() -> void: command.emit({"type": "transfer_shrine", "shrine": id}))
+			if region == here:
+				go.pressed.connect(func() -> void: command.emit({"type": "transfer_shrine", "shrine": id}))
+			else:
+				go.pressed.connect(func() -> void: command.emit({"type": "transfer_region", "region": region, "shrine": id}))
 			line.add_child(go)
 		_shrines.add_child(line)
 

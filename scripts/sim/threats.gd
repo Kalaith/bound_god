@@ -11,6 +11,7 @@ const Mind = preload("res://scripts/agents/mind.gd")
 const Movement = preload("res://scripts/sim/movement.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
+const Outlaws = preload("res://scripts/sim/outlaws.gd")
 
 ## id -> {id, kind, cell, position, previous_position, path, hp, state, target,
 ##        home, carry, band, aggressive, targets_altar, settlement_id, next_think}
@@ -75,6 +76,10 @@ func step(sim: RefCounted) -> void:
 		if not entries.has(id):
 			continue
 		var entry: Dictionary = entries[id]
+		# An outlaw's stand-in follows its outlaw (M22) and does not walk itself.
+		if entry.has("agent"):
+			_stand_in(sim, entry)
+			continue
 		entry.previous_position = entry.position
 		if entry.kind == "wolf":
 			_wolf(sim, entry)
@@ -175,6 +180,21 @@ func _wolf(sim: RefCounted, entry: Dictionary) -> void:
 		_path_to(sim, entry, sim.nav.nearest_walkable(roam, 4))
 
 
+func _stand_in(sim: RefCounted, entry: Dictionary) -> void:
+	if not Outlaws.follow(sim, entry):
+		var agent: RefCounted = sim.agents[int(entry.agent)]
+		if agent.life == "dead":
+			sim.raids.on_driven_off(sim, entry)
+		else:
+			sim.raids.on_left(sim, entry)
+		entries.erase(entry.id)
+		return
+	var foe: RefCounted = Outlaws.strike_back(sim, entry, _people_near(sim, entry.cell, 2.0))
+	if foe != null:
+		entry.target = foe.id
+		_strike(sim, entry, foe)
+
+
 func _raider(sim: RefCounted, entry: Dictionary) -> void:
 	if sim.calendar.tick < int(entry.next_think):
 		var target: RefCounted = sim.agents[int(entry.target)] if int(entry.target) >= 0 else null
@@ -269,6 +289,16 @@ func hit(sim: RefCounted, id: int, damage: float, by: RefCounted) -> void:
 		return
 	var entry: Dictionary = entries[id]
 	entry.hp = float(entry.hp) - damage
+	# Blows on an outlaw's stand-in wound the outlaw; struck down, they fall.
+	if entry.has("agent"):
+		Outlaws.follow(sim, entry)
+		var outlaw: RefCounted = sim.agents[int(entry.agent)]
+		if float(outlaw.health.hp) <= 0.0 and outlaw.is_present():
+			sim.raids.on_driven_off(sim, entry)
+			sim.chronicle_event("threat_driven_off", by.settlement_id, {"name": by.given_name, "kind": entry.kind}, "", [by.id])
+			load("res://scripts/sim/lifecycle.gd").die(sim, outlaw, "cause_struck_down")
+			entries.erase(id)
+		return
 	if float(entry.hp) <= 0.0:
 		if entry.kind == "raider":
 			sim.raids.on_driven_off(sim, entry)

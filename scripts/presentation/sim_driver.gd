@@ -4,11 +4,14 @@ extends Node
 ## budget runs out the remainder carries over and `busy` is raised instead of
 ## spiralling. Resting runs many days behind an overlay with a larger budget.
 signal rest_finished(summary_from_tick: int)
+signal region_changed
 const Balance = preload("res://scripts/core/balance.gd")
 const AbstractWorld = preload("res://scripts/sim/abstract/abstract_world.gd")
 const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
 
 var sim: RefCounted
+## The campaign whose frozen regions follow the active one hour by hour (M22).
+var campaign: RefCounted = null
 ## Index into time.speeds: 0 pause, 1 normal, 2 fast, 3 fastest.
 var speed_index: int = 1
 var accumulator: float = 0.0
@@ -79,7 +82,9 @@ func rest_progress() -> float:
 
 
 func _process(delta: float) -> void:
-	if sim == null:
+	# Once the god has left this region its world is frozen: the scene is
+	# about to be rebuilt round the new one.
+	if sim == null or (campaign != null and campaign.active_sim() != sim):
 		return
 	var started: int = Time.get_ticks_usec()
 	if resting:
@@ -89,6 +94,8 @@ func _process(delta: float) -> void:
 		else:
 			while sim.calendar.tick < rest_target_tick and Time.get_ticks_usec() - started < budget:
 				sim.step()
+				if not _follow():
+					return
 		if sim.calendar.tick >= rest_target_tick:
 			resting = false
 			accumulator = 0.0
@@ -104,13 +111,29 @@ func _process(delta: float) -> void:
 			accumulator = minf(accumulator, 3.0)
 			break
 		sim.step()
+		if not _follow():
+			return
 		accumulator -= 1.0
 	alpha = clampf(accumulator, 0.0, 1.0)
+
+
+## The frozen regions catch up at each hour the active one passes. False
+## when that took the god into another region (the scene must follow).
+func _follow() -> bool:
+	if campaign != null and sim.calendar.is_new_hour():
+		var region: int = campaign.active
+		campaign.sync()
+		if campaign.active != region:
+			region_changed.emit()
+			return false
+	return true
 
 
 func _meditate_frame(started: int, budget: int) -> void:
 	while sim.calendar.tick < rest_target_tick and Time.get_ticks_usec() - started < budget:
 		var reason: Dictionary = meditation.step_hour(sim)
+		if not _follow():
+			return
 		if not reason.is_empty():
 			wake_reason = reason
 			rest_target_tick = sim.calendar.tick

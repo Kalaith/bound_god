@@ -70,7 +70,8 @@ static func contextual(sim: RefCounted) -> Array:
 		result.append(_say("prompt_tree", {}))
 	if sim.tree_growth != null and int(sim.tree_growth.fruit) > 0:
 		result.append(_say("prompt_fruit", {}))
-	if sim.sects != null and not sim.sects.entries.is_empty():
+	# A sect formed beneath the tree (a region's own sect of another path is not news).
+	if sim.sects != null and sim.features.has("sacred_tree") and not sim.sects.entries.is_empty():
 		result.append(_say("prompt_sect", {"sect": Sects.name_of(sim.sects.entries[sim.sects.ids()[0]])}))
 		result.append(_say("prompt_meditate", {}))
 	return result

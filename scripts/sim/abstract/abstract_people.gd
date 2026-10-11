@@ -68,9 +68,11 @@ static var _context: Dictionary = {}
 ## The hour's shared numbers, worked out once for everyone.
 ## `step` is how many hours one abstract step covers (1, or 2 in long meditations).
 static func context(sim: RefCounted, step: int = 1) -> Dictionary:
-	if _context_tick == sim.calendar.tick and not _context.is_empty() and int(_context.step) == step:
+	# Keyed by world as well: a campaign steps several regions at one tick.
+	var key: int = sim.calendar.tick * 1000003 + sim.get_instance_id()
+	if _context_tick == key and not _context.is_empty() and int(_context.step) == step:
 		return _context
-	_context_tick = sim.calendar.tick
+	_context_tick = key
 	var per_hour: float = float(step) / 24.0
 	var rates: Dictionary = Balance.dict("needs.decay_per_day")
 	var loss: float = Balance.number("needs.shelter_loss_per_night_hour")

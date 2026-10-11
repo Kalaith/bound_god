@@ -102,7 +102,9 @@ static func _footprint(sim: RefCounted, corner: Vector2i, size: Vector3i, settle
 	context.footprints[key] = result
 	var world: RefCounted = sim.voxels
 	var spacing: int = Balance.integer("construction.site_spacing")
-	var tree: Vector3i = sim.features.sacred_tree
+	# Buildings keep clear of the sacred tree, or of a region's spirit spring.
+	var wells: Array = sim.features.get("wells", [])
+	var tree: Vector3i = sim.features.get("sacred_tree", wells[0].cell if not wells.is_empty() else Vector3i(-1000, 0, -1000))
 	var low: int = 999
 	var high: int = -1
 	var tops: Dictionary = {}

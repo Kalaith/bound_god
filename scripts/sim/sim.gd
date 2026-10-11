@@ -47,8 +47,12 @@ const Herbs = preload("res://scripts/sim/herbs.gd")
 const Alchemy = preload("res://scripts/sim/alchemy.gd")
 const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 const Routes = preload("res://scripts/sim/routes.gd")
+const Regions = preload("res://scripts/sim/regions.gd")
+const RegionSeed = preload("res://scripts/sim/region_seed.gd")
 
 var world_seed: int = 1
+## Which region of the campaign this world is (0: the home valley, M22).
+var region_id: int = 0
 ## How this world was made (world kind, size); saved so a load regenerates it.
 var options: Dictionary = {}
 var rng := RandomNumberGenerator.new()
@@ -92,6 +96,18 @@ var tree_growth: RefCounted = null
 var paths: RefCounted = null
 ## Traffic between linked settlements wearing their routes (M21).
 var routes: RefCounted = null
+## People setting out for another region since the campaign last looked
+## (sim/travel.gd drains it): Array of Dictionary records (M22).
+var outbound: Array = []
+## Free founding grounds in the other regions, as the campaign last saw
+## them: Array of {region, ground, name, region_name} (M22).
+var abroad: Array = []
+## Whether this region knows of the tree's sanctuary and may seek it
+## ({open: bool}), kept by the campaign (M22).
+var sanctuary: Dictionary = {}
+## Which regions send traders here, as the campaign last saw them:
+## Array of {region, region_name, goods, technique, sect, friendly} (M22).
+var traders: Array = []
 var weather: RefCounted = null
 var herbs: RefCounted = null
 ## Smithy anvils, worked like kitchens (M20).
@@ -130,7 +146,9 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	options = setup_options.duplicate(true)
 	options.erase("restoring")
 	world_seed = maxi(seed, 1)
-	rng.seed = world_seed
+	region_id = int(setup_options.get("region", 0))
+	# A neighbouring region draws from its own stream (plan §3.1, M22).
+	rng.seed = world_seed if region_id == 0 else hash([world_seed, region_id, "region"])
 	calendar = Calendar.new()
 	# The first morning: the travellers arrive soon after dawn.
 	calendar.tick = calendar.ticks_per_day * 7 / 24
@@ -146,8 +164,16 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 		size = Vector3i(int(raw[0]), int(raw[1]), int(raw[2]))
 	voxels = VoxelWorld.new(size)
 	var gen := WorldGen.new(voxels, rng)
-	var result: Dictionary = gen.flat(int(setup_options.get("ground", 4))) if setup_options.get("world", "valley") == "flat" else gen.valley()
+	var result: Dictionary
+	if setup_options.get("world", "valley") == "flat":
+		result = gen.flat(int(setup_options.get("ground", 4)))
+	elif region_id > 0:
+		result = gen.region(Regions.archetype(str(setup_options.archetype)))
+	else:
+		result = gen.valley()
 	features = result.features
+	for well in features.get("wells", []):
+		voxels.qi_wells[well.cell] = float(well.qi)
 	sites.load_generated(result.sites)
 	structures = Structures.new()
 	structures.initialize(voxels)
@@ -187,7 +213,10 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 		return
 	for chest in features.get("hamlet", {}).get("chests", []):
 		settlements.chests[chest] = {}
-	Population.found(self, setup_options)
+	if region_id > 0:
+		RegionSeed.found(self, Regions.archetype(str(setup_options.archetype)))
+	else:
+		Population.found(self, setup_options)
 	faith.setup(self)
 	if setup_options.get("threats", setup_options.get("world", "valley") == "valley"):
 		threats.setup_wolves(self)
@@ -284,7 +313,7 @@ func set_blocks(entries: Array, source: String) -> void:
 func zone_center() -> Vector3:
 	if faith != null:
 		return faith.zone_center(self)
-	var tree: Vector3i = features.sacred_tree
+	var tree: Vector3i = features.get("sacred_tree", features.get("home", {}).get("center", Vector3i.ZERO))
 	return Vector3(tree.x + 1.0, tree.y, tree.z + 1.0)
 
 
@@ -538,6 +567,17 @@ func pursuers(goal_key: int) -> Array:
 					_pursuit[key] = []
 				_pursuit[key].append(agent.id)
 	return _pursuit.get(goal_key, [])
+
+
+## How many may live here before migrants stop coming: the valley's cap, or
+## a neighbouring region's (M22).
+func migrant_cap() -> int:
+	return Balance.integer("population.cap") if region_id == 0 else int(Regions.number("region_cap"))
+
+
+## How many may live here before no more children are born.
+func birth_cap() -> int:
+	return Balance.integer("population.birth_cap") if region_id == 0 else int(Regions.number("region_cap")) + int(Regions.number("region_birth_margin"))
 
 
 func present_count() -> int:

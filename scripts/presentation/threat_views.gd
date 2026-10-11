@@ -61,6 +61,9 @@ func _process(_delta: float) -> void:
 	var seen: Dictionary = {}
 	for id in sim.threats.ids():
 		var entry: Dictionary = sim.threats.entries[id]
+		# An outlaw is drawn as the person they are (agent views), not as their stand-in.
+		if entry.has("agent"):
+			continue
 		seen[id] = true
 		var view: Node3D = views.get(id)
 		if view == null:

@@ -20,6 +20,7 @@ const ResourceSites = preload("res://scripts/sim/resource_sites.gd")
 const Elixirs = preload("res://scripts/sim/elixirs.gd")
 const Relics = preload("res://scripts/sim/relics.gd")
 const Branches = preload("res://scripts/sim/branches.gd")
+const Outlaws = preload("res://scripts/sim/outlaws.gd")
 
 const Need = Personality.Need
 
@@ -64,6 +65,25 @@ static func apply(sim: RefCounted) -> void:
 				_plant(sim, agent, action.cell, str(action.get("seed", "berries")))
 			"settle":
 				_settle(sim, agent, int(action.ground), int(action.get("branch", 0)))
+			"loot":
+				Outlaws.loot(sim, agent)
+			"desecrate":
+				Outlaws.desecrate(sim, agent)
+			"outlaw_turn":
+				if not str(action.cause) in ["cause_raid_over", "cause_raid_done"]:
+					Outlaws.turn_back(sim, agent, str(action.cause))
+			"outlaw_go":
+				Outlaws.leave(sim, agent)
+			"emigrate":
+				# A target below nothing is a guest setting out for the tree.
+				if int(action.target) < 0:
+					load("res://scripts/sim/guests.gd").set_out(sim, agent)
+				else:
+					Branches.emigrate(sim, agent, int(action.target), int(action.cause))
+			"receive_guest":
+				var guest_id: int = int(action.guest)
+				if guest_id >= 0 and guest_id < sim.agents.size() and sim.agents[guest_id].is_present():
+					load("res://scripts/sim/guests.gd").receive(sim, agent, sim.agents[guest_id])
 			"take_relics":
 				agent.step_result = {"relics": Relics.take(sim, agent, int(action.shrine))}
 			"lay_relics":
@@ -273,8 +293,15 @@ static func _join(sim: RefCounted, agent: RefCounted, settlement_id: int) -> voi
 	sim.chronicle_event("migrated", settlement_id, {"name": agent.full_name(), "from": from}, "cause_unhappy", [agent.id])
 
 
-static func _leave(sim: RefCounted, agent: RefCounted) -> void:
+## Someone leaves for good; unless they only go home (a guest) they set out
+## for another region (M22: the campaign carries them there).
+static func _leave(sim: RefCounted, agent: RefCounted, cause: String = "cause_unhappy", travel: bool = true) -> void:
 	Relics.drop(sim, agent)
+	if travel and not bool(agent.backstory.get("wayfarer", false)):
+		sim.outbound.append({"kind": "leaver", "agent": agent.id, "record": agent.to_dict()})
+		# A world without a campaign never sends them; keep the list short.
+		if sim.outbound.size() > 32:
+			sim.outbound.pop_front()
 	agent.life = "departed"
 	agent.life_day = sim.calendar.day()
 	agent.intention = {}
@@ -285,7 +312,7 @@ static func _leave(sim: RefCounted, agent: RefCounted) -> void:
 		sim.settlements.entries[agent.settlement_id].residents.erase(agent.id)
 	if agent.partner >= 0 and sim.agents[agent.partner].partner == agent.id:
 		sim.agents[agent.partner].partner = -1
-	sim.chronicle_event("departed", agent.settlement_id, {"name": agent.full_name()}, "cause_unhappy", [agent.id])
+	sim.chronicle_event("departed", agent.settlement_id, {"name": agent.full_name()}, cause, [agent.id])
 
 
 ## A founder arrives at open land: the first sets down a chest from the wood

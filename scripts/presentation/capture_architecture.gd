@@ -25,7 +25,7 @@ static func _stamp(sim: RefCounted, id: String) -> Dictionary:
 ## degrees), so the trunk never stands between the camera and the subject.
 static func _look(main: Node3D, at: Vector3, distance: float, pitch: float, turn: float) -> void:
 	var camera_rig: Node3D = main.camera_rig
-	var tree: Vector3i = main.sim.features.sacred_tree
+	var tree: Vector3i = main.sim.features.get("sacred_tree", Vector3i(80, 12, 80))
 	main.camera_hold = true
 	camera_rig.overlook = true
 	camera_rig.overlook_center = at

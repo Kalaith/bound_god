@@ -11,6 +11,7 @@ const DeliberationWork = preload("res://scripts/agents/deliberation_work.gd")
 const DeliberationFaith = preload("res://scripts/agents/deliberation_faith.gd")
 const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
 const DeliberationDesigns = preload("res://scripts/agents/deliberation_designs.gd")
+const DeliberationOutlaw = preload("res://scripts/agents/deliberation_outlaw.gd")
 
 const Need = Personality.Need
 const Kind = Goals.Kind
@@ -116,6 +117,9 @@ static func _break_candidate(sim: RefCounted, agent: RefCounted) -> Dictionary:
 
 ## All goals worth considering now, with utilities.
 static func candidates(sim: RefCounted, agent: RefCounted) -> Array:
+	# An outlaw weighs only the raid and the way out (M22).
+	if agent.backstory.has("outlaw"):
+		return DeliberationOutlaw.candidates(sim, agent)
 	var out: Array = []
 	var crisis: Dictionary = _break_candidate(sim, agent)
 	if not crisis.is_empty():

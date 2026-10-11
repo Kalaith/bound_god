@@ -28,7 +28,9 @@
 		"floor": 0.02
 	},
 	"techniques": [
-		{"id": "tree_breath", "progress": 1.5, "source": "tree"}
+		{"id": "tree_breath", "progress": 1.5, "source": "tree"},
+		{"id": "iron_skin", "progress": 1.3, "source": "faction", "endurance": 0.8},
+		{"id": "clear_mind", "progress": 1.3, "source": "faction", "foundation": 0.08}
 	],
 	"sect_names": {
 		"pattern": "sect_name",

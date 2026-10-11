@@ -36,6 +36,7 @@ static func capture(sim: RefCounted) -> Dictionary:
 		"command_log": sim.command_log.duplicate(true), "kindled": sim.kindled.duplicate(true), "veils": sim.veils.duplicate(true),
 		"lanterns": sim.lanterns.duplicate(), "crops": sim.crops.to_dict(), "kitchens": sim.kitchens.to_dict(),
 		"woods": sim.woods.to_dict(), "sects": sim.sects.to_dict(), "tribulations": sim.tribulations.to_dict(), "tree": sim.tree_growth.to_dict(), "paths": sim.paths.to_dict(), "routes": sim.routes.to_dict(),
+		"outbound": sim.outbound.duplicate(true), "abroad": sim.abroad.duplicate(true), "sanctuary": sim.sanctuary.duplicate(), "traders": sim.traders.duplicate(true),
 		"weather": sim.weather.to_dict(), "herbs": sim.herbs.to_dict(),
 		"alchemy": sim.alchemy.to_dict(), "forges": sim.forges.to_dict(),
 	}
@@ -119,6 +120,11 @@ static func restore(state: Dictionary, chunks: Dictionary) -> RefCounted:
 	sim.paths.from_dict(state.get("paths", {}))
 	# Routes between settlements came with M21.
 	sim.routes.from_dict(state.get("routes", {}))
+	# What a region knows of the others came with M22.
+	sim.outbound = state.get("outbound", [])
+	sim.abroad = state.get("abroad", [])
+	sim.sanctuary = state.get("sanctuary", {})
+	sim.traders = state.get("traders", [])
 	# The sky came with M20; older worlds start under a clear one.
 	sim.weather.from_dict(sim, state.get("weather", {}))
 	sim.herbs.from_dict(state.get("herbs", {}))

@@ -15,6 +15,7 @@ const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const Elixirs = preload("res://scripts/sim/elixirs.gd")
 const Branches = preload("res://scripts/sim/branches.gd")
+const Guests = preload("res://scripts/sim/guests.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -33,6 +34,7 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	_teach(sim, agent, out)
 	_found_sect(sim, agent, out)
 	_branch(sim, agent, out)
+	_receive_guest(sim, agent, out)
 	_breakthrough(sim, agent, out)
 	_witness(sim, agent, out)
 	_share_fruit(sim, agent, out)
@@ -200,6 +202,18 @@ static func _found_sect(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	out.append(_candidate(Kind.FOUND_SECT, utility, "reason_found_sect"))
 
 
+## The master receives a guest who has come to the tree for sanctuary.
+static func _receive_guest(sim: RefCounted, agent: RefCounted, out: Array) -> void:
+	if sim.region_id != 0 or sim.sects == null or Schedule.is_sleep_time(sim, agent):
+		return
+	var sect: Dictionary = sim.sects.get_sect(int(agent.cultivation.get("sect_id", -1)))
+	if sect.is_empty() or int(sect.master) != agent.id:
+		return
+	var waiting: Array = Guests.waiting(sim, agent.settlement_id)
+	if not waiting.is_empty():
+		out.append(_candidate(Kind.ADMIT_GUEST, float(Guests.config().receive_pull), "reason_receive_guest", waiting[0].id))
+
+
 ## An elder may carry a cutting to free land, and a member may follow a
 ## branch of their sect (branches.gd weighs both).
 static func _branch(sim: RefCounted, agent: RefCounted, out: Array) -> void:
@@ -224,6 +238,13 @@ static func _breakthrough(sim: RefCounted, agent: RefCounted, out: Array) -> voi
 		return
 	if not sim.tribulations.of(agent.id).is_empty():
 		out.append(_candidate(Kind.BREAKTHROUGH, Balance.number("cultivation.trial_committed"), "reason_facing_heaven"))
+		return
+	# A guest faces Heaven here only once the sect has let them (M22).
+	if not Guests.may_face(agent):
+		return
+	# Abroad, a cultivator may rather face Heaven beneath the sacred tree.
+	if Guests.would_seek(sim, agent):
+		out.append(_candidate(Kind.SEEK_SANCTUARY, Balance.number("cultivation.trial_committed") * 0.5, "reason_seek_sanctuary"))
 		return
 	if Schedule.is_sleep_time(sim, agent):
 		return

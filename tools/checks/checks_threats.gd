@@ -32,7 +32,7 @@ func check_a_sighted_wolf_interrupts_and_warns_others():
 	return ""
 
 
-func check_a_wealthy_hamlet_is_raided_and_its_shrine_can_fall():
+func long_check_a_wealthy_hamlet_is_raided_and_its_shrine_can_fall():
 	var sim: RefCounted = Sim.create(11)
 	var ruin: Dictionary = sim.features.ruin
 	sim.set_block(ruin.altar, Registry.id("altar"), 0, "test")

@@ -19,8 +19,21 @@ const Qi = preload("res://scripts/sim/qi.gd")
 
 const NONE := Vector3i(-1, -1, -1)
 ## Why a founder set out, carried in the goal's `extra`.
-enum Cause { CROWDED = 1, AMBITION = 2 }
-const CAUSES: Dictionary = {Cause.CROWDED: "cause_branch_crowded", Cause.AMBITION: "cause_branch_ambition"}
+enum Cause { CROWDED = 1, AMBITION = 2, SCHISM = 3 }
+const CAUSES: Dictionary = {Cause.CROWDED: "cause_branch_crowded", Cause.AMBITION: "cause_branch_ambition", Cause.SCHISM: "cause_branch_schism"}
+## A goal target at or above this names a ground abroad: region * ABROAD + ground (M22).
+const ABROAD: int = 1000
+
+
+static func is_abroad(target: int) -> bool:
+	return target >= ABROAD
+
+
+## The first free ground in another region the world knows of, as a target, or -1.
+static func ground_abroad(sim: RefCounted) -> int:
+	for entry in sim.abroad:
+		return int(entry.region) * ABROAD + int(entry.ground)
+	return -1
 
 
 # --- Cuttings -------------------------------------------------------------------
@@ -132,6 +145,9 @@ static func founding(sim: RefCounted, agent: RefCounted, abstract: bool = false)
 		return {}
 	if living_branches(sim, int(sect.id)).size() >= Balance.integer("branches.most"):
 		return {}
+	# A sect keeps enough of its own to go on with.
+	if sect.members.size() - 1 < Balance.integer("branches.keep"):
+		return {}
 	# A sect sends out one founder at a time, and lets a branch take root first.
 	if sim.calendar.tick - int(sect.get("last_branch_tick", -sim.calendar.ticks_per_day * 1000)) < sim.calendar.ticks_for_days(Balance.number("branches.between_days")):
 		return {}
@@ -142,9 +158,17 @@ static func founding(sim: RefCounted, agent: RefCounted, abstract: bool = false)
 	var crowd: bool = crowded(sim, sect)
 	var p: Dictionary = agent.personality
 	var ambition: float = clampf(float(p.leadership) * 0.6 + float(agent.cultivation.drive) * 0.6 - 0.4, 0.0, 1.0)
-	if not crowd and ambition <= 0.0:
+	# An elder at odds with the master, and the master with them, may leave
+	# to found a rival sect (M22: a schism within the sect).
+	var feud: bool = at_odds(sim, agent, sect)
+	if not crowd and ambition <= 0.0 and not feud:
 		return {}
 	var ground: int = nearest_free_ground(sim, sim.settlements.get_settlement(agent.settlement_id).get("center", agent.cell))
+	var far: float = 1.0
+	if ground < 0:
+		# Every ground at home is taken: a ground in another region (M22).
+		ground = ground_abroad(sim)
+		far = Balance.number("branches.abroad_factor")
 	if ground < 0:
 		return {}
 	# One founding at a time sets out for a ground.
@@ -152,8 +176,19 @@ static func founding(sim: RefCounted, agent: RefCounted, abstract: bool = false)
 		if int(other) != agent.id:
 			return {}
 	var utility: float = (Balance.number("branches.found_base") + (Balance.number("branches.found_crowd") if crowd else 0.0)
-		+ Balance.number("branches.found_ambition") * ambition) * agent.capacity()
+		+ Balance.number("branches.found_ambition") * ambition) * agent.capacity() * far
+	if feud:
+		return {"utility": utility + Balance.number("branches.found_ambition"), "ground": ground, "cause": Cause.SCHISM}
 	return {"utility": utility, "ground": ground, "cause": Cause.CROWDED if crowd else Cause.AMBITION}
+
+
+## An elder and the master who think ill of one another.
+static func at_odds(sim: RefCounted, agent: RefCounted, sect: Dictionary) -> bool:
+	var master: int = int(sect.master)
+	if master == agent.id or not sim.agents[master].is_present():
+		return false
+	var line: float = Balance.number("branches.schism_opinion")
+	return agent.beliefs.opinion_of(master) < line and sim.agents[master].beliefs.opinion_of(agent.id) < line
 
 
 ## A member of a sect weighs following a branch of it founded on a ground:
@@ -165,7 +200,12 @@ static func following(sim: RefCounted, agent: RefCounted, abstract: bool = false
 	var sect: Dictionary = sim.sects.get_sect(int(agent.cultivation.sect_id))
 	if sect.is_empty() or str(sect.members.get(agent.id, "")) == "master" or (not abstract and Schedule.is_sleep_time(sim, agent)):
 		return {}
-	for branch_id in living_branches(sim, int(sect.id)):
+	if sect.members.size() - 1 < Balance.integer("branches.keep"):
+		return {}
+	var abroad: Dictionary = _follow_abroad(sim, agent, sect)
+	if not abroad.is_empty():
+		return abroad
+	for branch_id in living_branches(sim, int(sect.id)) + rivals(sim, agent, sect):
 		var branch: Dictionary = sim.sects.entries[branch_id]
 		var ground: int = int(sim.settlements.get_settlement(int(branch.settlement_id)).get("ground", -1))
 		if ground < 0 or branch.members.size() > Balance.integer("branches.followers"):
@@ -188,6 +228,84 @@ static func following(sim: RefCounted, agent: RefCounted, abstract: bool = false
 	return {}
 
 
+## A branch of the sect abroad whose founder taught this person or whom they
+## admire: {utility, ground (as an abroad target)} or {}.
+static func _follow_abroad(sim: RefCounted, agent: RefCounted, sect: Dictionary) -> Dictionary:
+	for entry in sect.get("abroad", []):
+		if int(entry.get("followers", 0)) >= Balance.integer("branches.followers"):
+			continue
+		var founder: int = int(entry.founder)
+		var taught: bool = int(agent.cultivation.teacher) == founder
+		if not taught and agent.beliefs.opinion_of(founder) < Balance.number("branches.follow_opinion"):
+			continue
+		return {"utility": Balance.number("branches.follow_base") * Balance.number("branches.abroad_factor") * agent.capacity(),
+			"ground": int(entry.region) * ABROAD + int(entry.ground)}
+	return {}
+
+
+## Someone sets out from the valley for a ground in another region: they
+## leave this world (the campaign carries them, sim/travel.gd), the parent
+## sect's name, doctrine and manuals with them.
+static func emigrate(sim: RefCounted, agent: RefCounted, target: int, cause: int) -> void:
+	var sect: Dictionary = sim.sects.get_sect(int(agent.cultivation.get("sect_id", -1))) if sim.sects != null else {}
+	var parent: Dictionary = {"region": sim.region_id, "sect": int(sect.get("id", -1)), "founder": agent.id if cause > 0 else -1,
+		"name": sect.get("name", {}).duplicate(), "doctrine": sect.get("doctrine", {}).duplicate(), "manuals": sect.get("manuals", []).duplicate()}
+	var region: int = target / ABROAD
+	var ground: int = target % ABROAD
+	if cause <= 0:
+		for entry in sect.get("abroad", []):
+			if int(entry.region) == region and int(entry.ground) == ground:
+				entry["followers"] = int(entry.get("followers", 0)) + 1
+				parent.founder = int(entry.founder)
+	elif not sect.is_empty():
+		sect["last_branch_tick"] = sim.calendar.tick
+	sim.outbound.append({"kind": "emigrant", "region": region, "ground": ground, "cause": cause, "agent": agent.id, "record": agent.to_dict(), "parent": parent})
+	var EffectsApply = load("res://scripts/sim/effects_apply.gd")
+	EffectsApply._leave(sim, agent, "cause_carried_cutting_abroad" if cause > 0 else "cause_followed_abroad", false)
+
+
+## An emigrant settled on a ground abroad (sim/travel.gd): the first founds
+## a branch of the sect they came from (kin across regions, `parent_abroad`),
+## later ones join it. Returns the branch's sect id, or 0.
+static func settle_abroad(sim: RefCounted, agent: RefCounted, settlement_id: int, cause: int, parent: Dictionary) -> int:
+	var here: Dictionary = sim.sects.in_settlement(settlement_id)
+	if here.is_empty():
+		if cutting_of(sim, settlement_id).is_empty():
+			var spot: Vector3i = cutting_spot(sim, sim.settlements.get_settlement(settlement_id).camp)
+			if spot.x >= 0:
+				sim.set_block(spot, Registry.id("spirit_cutting"), 0, "npc:%d" % agent.id)
+		var place: String = str(sim.features.grounds[int(sim.settlements.get_settlement(settlement_id).ground)].name)
+		var stub: Dictionary = {"id": int(parent.sect), "name": parent.name, "doctrine": parent.doctrine, "manuals": parent.manuals}
+		var id: int = sim.sects.found_branch(sim, agent, stub, settlement_id, place)
+		here = sim.sects.entries[id]
+		here.parent = -1
+		here["parent_abroad"] = {"region": int(parent.region), "sect": int(parent.sect)}
+		Mind.add(agent, "founded_branch", sim.calendar.ticks_per_day)
+		sim.chronicle_event("branch_founded_abroad", settlement_id, {"name": agent.full_name(), "sect": sim.sects.name_key(here)},
+			CAUSES.get(cause, "cause_branch_ambition"), [agent.id])
+	elif here.get("parent_abroad", {}).get("sect", -2) == int(parent.sect):
+		sim.sects.join(here, agent, "disciple")
+		Mind.add(agent, "joined_branch", sim.calendar.ticks_per_day)
+		sim.chronicle_event("branch_joined", settlement_id, {"name": agent.full_name(), "sect": sim.sects.name_key(here)}, "cause_came_from_afar", [agent.id])
+	else:
+		return 0
+	_attend(sim, agent, settlement_id)
+	return int(here.id)
+
+
+## Sects that broke from this one in a schism, which a member who thinks ill
+## of the master and not ill of the rival's founder may follow.
+static func rivals(sim: RefCounted, agent: RefCounted, sect: Dictionary) -> Array:
+	var result: Array = []
+	if agent.beliefs.opinion_of(int(sect.master)) >= 0.0:
+		return result
+	for id in sim.sects.ids():
+		var other: Dictionary = sim.sects.entries[id]
+		if int(other.get("broke_from", -1)) == int(sect.id) and not other.members.is_empty() and agent.beliefs.opinion_of(int(other.founder)) >= 0.0:
+			result.append(id)
+	return result
+
+
 # --- Founding -----------------------------------------------------------------
 
 ## Someone who set out for a branch arrived and settled (effects_apply.gd):
@@ -201,7 +319,7 @@ static func on_settled(sim: RefCounted, agent: RefCounted, settlement_id: int, c
 	if here.is_empty():
 		found_branch(sim, agent, parent, settlement_id, cause)
 		_attend(sim, agent, settlement_id)
-	elif int(here.get("parent", -1)) == parent_id:
+	elif int(here.get("parent", -1)) == parent_id or int(here.get("broke_from", -1)) == parent_id:
 		parent.members.erase(agent.id)
 		sim.sects.join(here, agent, "disciple")
 		Mind.add(agent, "joined_branch", sim.calendar.ticks_per_day)
@@ -234,8 +352,17 @@ static func found_branch(sim: RefCounted, founder: RefCounted, parent: Dictionar
 	var id: int = sim.sects.found_branch(sim, founder, parent, settlement_id, place)
 	parent["last_branch_tick"] = sim.calendar.tick
 	var sect: Dictionary = sim.sects.entries[id]
+	if cause == Cause.SCHISM:
+		# A rival, not a branch: a name of its own, no parent, and no love
+		# lost (relations.gd).
+		sect.parent = -1
+		sect["broke_from"] = int(parent.id)
+		sect.erase("branch")
+		sect.name = sim.sects.name_for(sim, founder)
+		sim.outbound.append({"kind": "relation", "sect": id, "other_region": sim.region_id, "other_sect": int(parent.id),
+			"amount": Balance.number("branches.schism_relation"), "cause": "cause_branch_schism"})
 	Mind.add(founder, "founded_branch", sim.calendar.ticks_per_day)
-	sim.chronicle_event("branch_founded", settlement_id, {"name": founder.full_name(), "sect": sim.sects.name_key(sect), "parent": sim.sects.name_key(parent)},
+	sim.chronicle_event("sect_split" if cause == Cause.SCHISM else "branch_founded", settlement_id, {"name": founder.full_name(), "sect": sim.sects.name_key(sect), "parent": sim.sects.name_key(parent)},
 		CAUSES.get(cause, "cause_branch_ambition"), [founder.id])
 	return id
 

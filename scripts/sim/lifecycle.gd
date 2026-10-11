@@ -60,6 +60,7 @@ static func die(sim: RefCounted, agent: RefCounted, cause: String) -> void:
 		sim.tree_growth.lesson(sim, "death", agent.full_name(), [agent.id])
 	_legacy(sim, agent)
 	Relics.drop(sim, agent)
+	load("res://scripts/sim/guests.gd").on_death(sim, agent)
 
 
 ## What a cultivator leaves behind: their techniques kept as a manual by
@@ -103,7 +104,7 @@ static func _births(sim: RefCounted) -> void:
 		var other: RefCounted = sim.agents[agent.partner]
 		if not other.is_present() or other.partner != agent.id or other.is_child or agent.home < 0 or agent.home != other.home:
 			continue
-		if sim.present_count() >= Balance.integer("population.birth_cap"):
+		if sim.present_count() >= sim.birth_cap():
 			return
 		if sim.rng.randf() >= Balance.number("social.child_chance_per_day"):
 			continue

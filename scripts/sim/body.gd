@@ -48,7 +48,11 @@ static func day_exposure(sim: RefCounted) -> float:
 ## How slowly hunger and cold wear on someone: a cultivator's body needs
 ## less as their realm rises (the realm's endurance, 1 for a mortal).
 static func endurance(agent: RefCounted) -> float:
-	return float(Data.realm(int(agent.cultivation.get("realm", 0))).get("endurance", 1.0))
+	var hardy: float = float(Data.realm(int(agent.cultivation.get("realm", 0))).get("endurance", 1.0))
+	# The Iron Skin technique hardens a body against cold and hunger (M22).
+	if agent.cultivation.get("techniques", []).has("iron_skin"):
+		hardy *= float(Data.technique("iron_skin").get("endurance", 1.0))
+	return hardy
 
 
 ## What starving or freezing costs someone in health, as a share of the full

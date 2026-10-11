@@ -16,7 +16,7 @@ static func cottage() -> Dictionary:
 	return design
 
 
-func check_the_cottage_moment():
+func long_check_the_cottage_moment():
 	var sim: RefCounted = Sim.create(11)
 	# The travellers first see the god beside the tree, which sets a chest by
 	# their camp as the first steps teach; then it offers the design.

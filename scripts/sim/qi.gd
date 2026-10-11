@@ -80,6 +80,10 @@ static func cutting_qi(world: RefCounted, cell: Vector3i) -> float:
 	var best: float = 0.0
 	for at in world.qi_sources:
 		best = maxf(best, cutting_curve(Vector2(cell.x - at.x, cell.z - at.z).length()))
+	# A region's spirit spring, along the same curve scaled to its strength.
+	var top: float = cutting_curve(0.0)
+	for at in world.qi_wells:
+		best = maxf(best, cutting_curve(Vector2(cell.x - at.x, cell.z - at.z).length()) * float(world.qi_wells[at]) / top)
 	return best
 
 

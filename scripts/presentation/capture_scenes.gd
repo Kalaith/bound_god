@@ -27,6 +27,7 @@ const CaptureHalls = preload("res://scripts/presentation/capture_halls.gd")
 const CaptureSeasons = preload("res://scripts/presentation/capture_seasons.gd")
 const CaptureAlchemy = preload("res://scripts/presentation/capture_alchemy.gd")
 const CaptureBranches = preload("res://scripts/presentation/capture_branches.gd")
+const CaptureRegions = preload("res://scripts/presentation/capture_regions.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -37,6 +38,10 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 	var camera_rig: Node3D = main.camera_rig
 	var avatar: Node3D = main.avatar
 	var sim: RefCounted = main.sim
+	# Before the clock is set: a region capture runs across a scene rebuild.
+	if scenario.begins_with("region_"):
+		CaptureRegions.arrange(main, shot, scenario)
+		return
 	if not request.has("load"):
 		sim.calendar.tick = sim.calendar.ticks_per_day * 10 / 24
 	if scenario.begins_with("time_"):

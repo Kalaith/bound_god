@@ -1,0 +1,23 @@
+{
+	"schema_version": 1,
+	"factions": [
+		{
+			"id": "lotus_hall",
+			"adjective": "sect_adj_misty",
+			"noun": "sect_noun_lotus",
+			"doctrine": {"openness": 0.6, "martial": 0.3, "secrecy": 0.35, "mercy": 0.85, "ambition": 0.4},
+			"relation": 20,
+			"technique": "clear_mind",
+			"realms": [0, 6, 3, 1]
+		},
+		{
+			"id": "iron_sword",
+			"adjective": "sect_adj_iron",
+			"noun": "sect_noun_blade",
+			"doctrine": {"openness": 0.35, "martial": 0.85, "secrecy": 0.5, "mercy": 0.3, "ambition": 0.75},
+			"relation": -10,
+			"technique": "iron_skin",
+			"realms": [0, 5, 3, 1]
+		}
+	]
+}

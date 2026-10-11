@@ -151,4 +151,24 @@ static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks
 		Op.LEAVE:
 			sim.effects.action("leave", agent.id)
 			return Plans.DONE
+		Op.LOOT, Op.DESECRATE:
+			# A few moments at the chest or the altar, then it is done.
+			agent.activity = "working"
+			if step_ticks < 12:
+				return Plans.RUNNING
+			sim.effects.action("loot" if int(step.op) == Op.LOOT else "desecrate", agent.id)
+			return Plans.DONE
+		Op.LEAVE_VALLEY:
+			sim.effects.action("outlaw_" + str(step.phase), agent.id, {"cause": str(step.cause)})
+			return Plans.DONE
+		Op.EMIGRATE:
+			sim.effects.action("emigrate", agent.id, {"target": int(step.target), "cause": int(step.cause)})
+			return Plans.DONE
+		Op.RECEIVE_GUEST:
+			# A few words with the guest, then the master's answer.
+			agent.activity = "talking"
+			if step_ticks < 20:
+				return Plans.RUNNING
+			sim.effects.action("receive_guest", agent.id, {"guest": int(step.guest)})
+			return Plans.DONE
 	return Fail.INTERRUPTED

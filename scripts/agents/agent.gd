@@ -158,7 +158,8 @@ func record(tick: int, kind: String, fields: Dictionary = {}) -> void:
 
 
 func available_to_talk() -> bool:
-	return is_present() and not activity in ["sleeping", "fleeing", "fighting", "breaking"]
+	# Nobody stops to chat with an outlaw come to rob them (M22).
+	return is_present() and not activity in ["sleeping", "fleeing", "fighting", "breaking"] and not backstory.has("outlaw")
 
 
 const SAVED: Array[String] = [

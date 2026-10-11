@@ -29,6 +29,11 @@ var feed: Dictionary = {}
 
 
 func setup(sim: RefCounted) -> void:
+	# A neighbouring region has no tree: the god is not there until a
+	# shrine is raised and it steps through (M22).
+	if not sim.features.has("sacred_tree"):
+		sim.god.active_shrine_id = -1
+		return
 	var tree: Vector3i = sim.features.sacred_tree
 	var hollow: int = sim.settlements.at_cell(tree)
 	var id: int = add(sim, "tree", tree, hollow, Text.label("shrine_sacred_tree"), "active")
@@ -82,7 +87,7 @@ func current(sim: RefCounted) -> Dictionary:
 func zone_center(sim: RefCounted) -> Vector3:
 	var shrine: Dictionary = current(sim)
 	if shrine.is_empty():
-		return Vector3(sim.features.sacred_tree)
+		return Vector3(sim.features.get("sacred_tree", sim.features.get("home", {}).get("center", Vector3i.ZERO)))
 	var cell: Vector3i = shrine.cell
 	if shrine.kind == "tree":
 		return Vector3(cell.x + 1.0, cell.y, cell.z + 1.0)

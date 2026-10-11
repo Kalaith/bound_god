@@ -157,7 +157,7 @@ func check_a_sect_is_founded_and_succeeded():
 
 ## Pinning a person changes what the god watches and nothing else: the same
 ## world with and without the pin plays out the same for everyone.
-func check_following_grants_nothing():
+func long_check_following_grants_nothing():
 	var plain: RefCounted = Sim.create(11)
 	var pinned: RefCounted = Sim.create(11)
 	if not pinned.apply_command({"type": "follow", "agent": 0}).ok or not pinned.god.followed.has(0):

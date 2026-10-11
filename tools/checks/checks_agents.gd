@@ -101,7 +101,7 @@ func check_exhausted_goals_back_off_and_frustrate():
 	return ""
 
 
-func check_travellers_live_through_five_days():
+func long_check_travellers_live_through_five_days():
 	var sim: RefCounted = Sim.create(11)
 	var seen: Dictionary = {}
 	var started: int = Time.get_ticks_msec()

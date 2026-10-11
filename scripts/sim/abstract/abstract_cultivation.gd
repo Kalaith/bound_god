@@ -10,6 +10,7 @@ extends RefCounted
 ## A pinned person's trial stops meditation instead (unless a protect rule
 ## says what to do), so the god can watch it happen.
 const Balance = preload("res://scripts/core/balance.gd")
+const Guests = preload("res://scripts/sim/guests.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const Elixirs = preload("res://scripts/sim/elixirs.gd")
@@ -105,8 +106,14 @@ static func _maybe_trial(sim: RefCounted, agent: RefCounted) -> int:
 	# A thunderstorm overhead is waited out, as in the detailed world.
 	if sim.weather != null and sim.weather.is_storm() and float(sim.calendar.tick - int(c.peak_tick)) < wait + Balance.number("cultivation.peak_days") * sim.calendar.ticks_per_day:
 		return -1
+	if not Guests.may_face(agent):
+		return -1
 	if sim.god.followed.has(agent.id) and not sim.god.protect.has(agent.id):
 		return agent.id
+	# Abroad, they may set out for the tree's sanctuary instead (M22).
+	if Guests.would_seek(sim, agent):
+		Guests.set_out(sim, agent)
+		return -1
 	var site: Vector3i = DeliberationCultivation.trial_site(sim, agent)
 	sim.tribulations.abstract_trial(sim, agent, site if site.x >= 0 else agent.cell)
 	return -1

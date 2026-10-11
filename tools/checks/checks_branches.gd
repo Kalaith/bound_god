@@ -44,7 +44,7 @@ static func _sect(count: int) -> Dictionary:
 		elder.cultivation.realm = 2
 		elder.joined_day = -20
 		elders.append(id)
-	sect.founded_tick = sim.calendar.tick - sim.calendar.ticks_for_days(30.0)
+	sect.founded_tick = sim.calendar.tick - sim.calendar.ticks_for_days(50.0)
 	sim.sects.daily(sim)
 	return {"sim": sim, "sect": sect, "members": members, "elders": elders}
 
@@ -96,9 +96,9 @@ func check_an_elder_weighs_founding_a_branch():
 	valley.sect.founded_tick = sim.calendar.tick
 	if not Branches.founding(sim, elder).is_empty():
 		return "an elder of a young sect wants a branch"
-	valley.sect.founded_tick = sim.calendar.tick - sim.calendar.ticks_for_days(30.0)
+	valley.sect.founded_tick = sim.calendar.tick - sim.calendar.ticks_for_days(50.0)
 	# Not crowded and not ambitious: no branch.
-	for id in valley.members.slice(5):
+	for id in valley.members.slice(9):
 		valley.sect.members.erase(id)
 	elder.personality.leadership = -0.5
 	elder.cultivation.drive = 0.2

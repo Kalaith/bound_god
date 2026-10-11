@@ -5,6 +5,7 @@ const EnvironmentRig = preload("res://scripts/presentation/environment_rig.gd")
 const Capture = preload("res://scripts/presentation/capture.gd")
 const Session = preload("res://scripts/presentation/session.gd")
 const Sim = preload("res://scripts/sim/sim.gd")
+const Campaign = preload("res://scripts/sim/campaign.gd")
 const SaveStore = preload("res://scripts/core/save_store.gd")
 const WorldView = preload("res://scripts/presentation/world_view.gd")
 const WeatherView = preload("res://scripts/presentation/weather_view.gd")
@@ -29,6 +30,7 @@ const InventoryScreen = preload("res://scripts/presentation/ui/inventory_screen.
 const SettlementPanel = preload("res://scripts/presentation/ui/settlement_panel.gd")
 const FaithController = preload("res://scripts/presentation/faith_controller.gd")
 const RequestsPanel = preload("res://scripts/presentation/ui/requests_panel.gd")
+const LandsPanel = preload("res://scripts/presentation/ui/lands_panel.gd")
 const ThreatViews = preload("res://scripts/presentation/threat_views.gd")
 const TribulationViews = preload("res://scripts/presentation/tribulation_views.gd")
 const TreeMarks = preload("res://scripts/presentation/tree_marks.gd")
@@ -46,6 +48,7 @@ const Prompts = preload("res://scripts/presentation/ui/prompts.gd")
 const TITLE_SCENE: String = "res://scenes/title.tscn"
 
 var rig: Node3D
+var campaign: RefCounted
 var sim: RefCounted
 var world_view: Node3D
 var weather_view: Node3D
@@ -69,6 +72,7 @@ var inventory: Control
 var settlement_panel: Control
 var faith: Node
 var requests_panel: Control
+var lands_panel: Control
 var world_io: Node
 var rest_overlay: Control
 var chronicle_screen: Control
@@ -106,16 +110,23 @@ func _ready() -> void:
 
 func _start() -> void:
 	var started: int = Time.get_ticks_msec()
-	if Session.mode == "load":
-		sim = WorldIO.load_slot(Session.slot)
-		if sim == null:
+	var stepped_through: bool = Session.mode == "region" and Session.campaign != null
+	if stepped_through:
+		campaign = Session.campaign
+	elif Session.mode == "load":
+		campaign = WorldIO.load_slot(Session.slot)
+		if campaign == null:
 			_loading.text = Text.format("save_load_failed", {"error": SaveStore.last_error})
 			return
 	else:
-		sim = Sim.create(Session.seed)
+		campaign = Campaign.create(Session.seed)
+	Session.campaign = null
+	sim = campaign.active_sim()
 	var generated: int = Time.get_ticks_msec()
 	driver = SimDriver.new()
 	driver.sim = sim
+	driver.campaign = campaign
+	driver.region_changed.connect(step_into_region)
 	add_child(driver)
 	world_view = WorldView.new()
 	add_child(world_view)
@@ -126,16 +137,18 @@ func _start() -> void:
 	qi_overlay = QiOverlay.new()
 	qi_overlay.sim = sim
 	add_child(qi_overlay)
-	var aura: Node3D = SacredAura.new()
-	aura.base = sim.features.sacred_tree
-	add_child(aura)
+	# Only the valley has the sacred tree; another region has its spring.
+	var tree: Vector3i = sim.features.get("sacred_tree", sim.features.get("home", {}).get("center", Vector3i(80, 12, 80)))
+	if sim.features.has("sacred_tree"):
+		var aura: Node3D = SacredAura.new()
+		aura.base = tree
+		add_child(aura)
 	avatar = Avatar.new()
 	add_child(avatar)
-	var tree: Vector3i = sim.features.sacred_tree
 	avatar.global_position = Vector3(tree.x + 0.5, tree.y + 0.2, tree.z + 4.5)
-	if Session.mode == "load" and sim.god.active_shrine_id != 1:
+	if Session.mode == "load" or stepped_through:
 		var shrine: Dictionary = sim.faith.current(sim)
-		if not shrine.is_empty():
+		if not shrine.is_empty() and str(shrine.kind) != "tree":
 			avatar.global_position = Vector3(sim.faith.shrine_access(sim, int(shrine.id), shrine.cell)) + Vector3(0.5, 0.2, 0.5)
 	camera_rig = CameraRig.new()
 	camera_rig.target = avatar
@@ -238,6 +251,12 @@ func _start() -> void:
 		requests_panel.hide()
 		builder.enabled = true
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+	lands_panel = LandsPanel.new()
+	lands_panel.campaign = campaign
+	ui_layer.add_child(lands_panel)
+	lands_panel.closed.connect(func() -> void:
+		lands_panel.hide()
+		resume_world_input())
 	faith = FaithController.new()
 	faith.sim = sim
 	faith.main = self
@@ -245,6 +264,7 @@ func _start() -> void:
 	requests_panel.command.connect(faith.send)
 	world_io = WorldIO.new()
 	world_io.sim = sim
+	world_io.campaign = campaign
 	world_io.hud = hud
 	world_io.slot = Session.slot
 	world_io.driver = driver
@@ -333,6 +353,9 @@ func _process(_delta: float) -> void:
 func _clock_text() -> String:
 	var calendar: RefCounted = sim.calendar
 	var text: String = Text.format("hud_day", {"day": calendar.day(), "season": Text.label("season_" + calendar.season_name()), "clock": calendar.clock_text()})
+	# Where the god is, once there is more than one land (M22).
+	if campaign != null and campaign.regions.size() > 1:
+		text = Text.label(str(campaign.regions[campaign.active].name)) + " · " + text
 	text += " · " + Text.label("weather_" + sim.weather.kind)
 	text += "  " + Text.label("hud_speed_%d" % driver.speed_index)
 	if driver.busy:
@@ -501,6 +524,13 @@ func resume_world_input() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
+## The lands beyond the valley (M22).
+func open_lands() -> void:
+	builder.enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	lands_panel.open()
+
+
 func open_requests() -> void:
 	builder.enabled = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -515,6 +545,14 @@ func rest(days: float) -> void:
 
 
 ## Years pass in meditation behind the same veil.
+## The god has stepped into another region (or been expelled there): the
+## scene is rebuilt round the campaign's new active region.
+func step_into_region() -> void:
+	Session.campaign = campaign
+	Session.mode = "region"
+	get_tree().reload_current_scene()
+
+
 func meditate(years: float) -> void:
 	world_io.save("save_autosaved")
 	builder.enabled = false
