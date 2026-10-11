@@ -11,6 +11,9 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 
 ## crop cell -> {crop: id, days: int (days in this stage), tended: int (day), weedy: bool}
 var plots: Dictionary = {}
+## settlement id -> crops standing still for want of rain today (not saved:
+## rebuilt each day from the sky).
+var thirsty: Dictionary = {}
 
 
 static func definition(id: String) -> Dictionary:
@@ -96,6 +99,7 @@ func daily(sim: RefCounted) -> void:
 	var today: int = sim.calendar.day()
 	## settlement id -> crops lost
 	var lost: Dictionary = {}
+	thirsty.clear()
 	for cell in cells:
 		var plot: Dictionary = plots[cell]
 		var crop: Dictionary = definition(plot.crop)
@@ -112,10 +116,22 @@ func daily(sim: RefCounted) -> void:
 			plot.weedy = true
 		if bool(plot.weedy):
 			continue
+		# A crop grows only within some days of rain.
+		if sim.weather != null and sim.weather.dry_days(sim) > int(crop.get("rain_need", 1 << 20)):
+			var dry: int = sim.settlements.at_cell(cell)
+			thirsty[dry] = int(thirsty.get(dry, 0)) + 1
+			continue
 		plot.days = int(plot.days) + 1
 		if int(plot.days) >= int(crop.days_per_stage) and now < int(crop.stages) - 1:
 			plot.days = 0
 			sim.set_block(cell, Registry.id(crop.block), now + 1, "growth")
+	var dry_places: Array = thirsty.keys()
+	dry_places.sort()
+	if not dry_places.is_empty():
+		var total: int = 0
+		for place in dry_places:
+			total += int(thirsty[place])
+		sim.weather.note_drought(sim, int(dry_places[0]), total)
 	var places: Array = lost.keys()
 	places.sort()
 	for place in places:

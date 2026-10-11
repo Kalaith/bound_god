@@ -15,14 +15,16 @@ const FILES: Dictionary = {
 	"cultivation": "res://data/cultivation.json",
 	"tribulations": "res://data/tribulations.json",
 	"tree": "res://data/tree.json",
+	"weather": "res://data/weather.json",
 	"text": "res://data/text.json",
 	"text_agents": "res://data/text_agents.json",
 	"text_ui": "res://data/text_ui.json",
 	"text_cultivation": "res://data/text_cultivation.json",
 	"text_sect": "res://data/text_sect.json",
+	"text_seasons": "res://data/text_seasons.json",
 }
 ## Text catalogs, split by responsibility; their labels share one namespace.
-const TEXT_FILES: Array[String] = ["text", "text_agents", "text_ui", "text_cultivation", "text_sect"]
+const TEXT_FILES: Array[String] = ["text", "text_agents", "text_ui", "text_cultivation", "text_sect", "text_seasons"]
 
 static var _files: Dictionary = {}
 static var _blocks_by_id: Array = []

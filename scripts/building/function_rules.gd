@@ -10,7 +10,7 @@ const Qi = preload("res://scripts/sim/qi.gd")
 ## saved proposals refer to a function by its index here, so only append.
 const FUNCTIONS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary",
 	"meditation_hall", "tribulation_ground", "library", "meditation_room", "tribulation_chamber", "infirmary", "spirit_array", "sect_gate",
-	"ancestral_hall", "precept_stele", "bell_tower", "lecture_hall"]
+	"ancestral_hall", "precept_stele", "bell_tower", "lecture_hall", "alchemy_room", "smithy"]
 
 
 static func evaluate(world: RefCounted, cells: Dictionary) -> Dictionary:

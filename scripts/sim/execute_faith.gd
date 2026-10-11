@@ -23,6 +23,8 @@ static func intent(sim: RefCounted, agent: RefCounted) -> Dictionary:
 		return {"kind": "partner", "level": 40.0}
 	if agent.settlement_id >= 0 and Standing.fear_of_winter(sim, agent.settlement_id):
 		return {"kind": "winter", "level": 45.0}
+	if agent.settlement_id >= 0 and int(sim.crops.thirsty.get(agent.settlement_id, 0)) > 0:
+		return {"kind": "rain", "level": 45.0}
 	return {"kind": "thanks", "level": 100.0}
 
 

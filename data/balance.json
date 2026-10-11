@@ -8,7 +8,7 @@
 	},
 	"needs": {
 		"decay_per_day": {"food": 95.0, "rest": 80.0, "shelter": 0.0, "social": 40.0, "recreation": 22.0, "safety": 0.0},
-		"shelter_loss_per_night_hour": 6.0, "shelter_winter_factor": 2.0, "shelter_gain_per_day": 140.0,
+		"shelter_loss_per_night_hour": 6.0, "shelter_winter_factor": 2.0, "winter_day_exposure": 0.3, "shelter_gain_per_day": 140.0,
 		"forage_restore": 30.0,
 		"bed_rest_per_day": 220.0, "ground_rest_per_day": 170.0, "recreation_gain_per_day": 180.0, "hall_recreation_factor": 2.0,
 		"safety_recovery_per_day": 60.0, "safety_loss_on_threat": 35.0, "urgent_threshold": 25.0
@@ -39,7 +39,7 @@
 	},
 	"work": {
 		"skill_speed_per_level": 0.05, "xp_per_tick": 1.0, "xp_per_level": 420.0, "passion_xp_multiplier": 2.0,
-		"harvest_ticks_per_block": {"wood": 14, "stone": 10, "thatch": 5, "berries": 6, "ore": 14},
+		"harvest_ticks_per_block": {"wood": 14, "stone": 10, "thatch": 5, "berries": 6, "ore": 14, "herb": 8},
 		"base_work_hours": 0.42, "off_hours": 0.08, "hungry_food_pull": 1.5, "plant_trees_pull": 0.6
 	},
 	"construction": {"vernacular_after_days": 12.0, 
@@ -123,6 +123,8 @@
 		"lecture_per_hour": 2.0, "lecture_members": 6, "lecture_hours": 1.5,
 		"sect_sites": 2
 	},
+	"alchemy": {"pills_kept": 2, "pill_preparation": 0.3, "refine_pull": 0.65},
+	"tools": {"speed": 1.5, "wear_hours": 40.0, "people_per_set": 2.0, "smithy_people": 6, "smithy_ore": 3, "smith_pull": 1.5},
 	"paths": {"wear_keep": 0.7, "wear_to_path": 30.0, "wear_to_grass": 0.5},
 	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 6.4, "gravity": 16.0, "hotbar_slots": 9}
 }

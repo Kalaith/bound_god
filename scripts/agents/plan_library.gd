@@ -38,7 +38,7 @@ static func plans_for(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> A
 			plans = PlansSocial.plans(sim, agent, goal)
 		Kind.PRAY, Kind.TEND_SHRINE, Kind.RESTORE_SHRINE, Kind.PREACH, Kind.QUEST:
 			plans = PlansFaith.plans(sim, agent, goal)
-		Kind.FARM, Kind.COOK:
+		Kind.FARM, Kind.COOK, Kind.REFINE, Kind.SMITH:
 			plans = PlansFood.plans(sim, agent, goal)
 		Kind.CULTIVATE, Kind.TEACH, Kind.LEARN, Kind.FOUND_SECT, Kind.BREAKTHROUGH, Kind.SHARE_FRUIT:
 			plans = PlansCultivation.plans(sim, agent, goal)

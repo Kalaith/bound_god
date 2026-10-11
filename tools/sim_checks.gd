@@ -32,6 +32,9 @@ const MODULES: Array[String] = [
 	"res://tools/checks/checks_meditation.gd",
 	"res://tools/checks/checks_architecture.gd",
 	"res://tools/checks/checks_halls.gd",
+	"res://tools/checks/checks_seasons.gd",
+	"res://tools/checks/checks_alchemy.gd",
+	"res://tools/checks/checks_crafts.gd",
 	"res://tools/checks/checks_campaign.gd",
 	"res://tools/checks/checks_generations.gd",
 ]

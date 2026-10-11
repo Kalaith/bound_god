@@ -2,6 +2,7 @@ extends RefCounted
 ## Applies the tick's Effects once, after every agent has acted: world
 ## actions in push order (lowest id first when two want the same thing),
 ## then conversations, then message delivery to inboxes.
+const Crafts = preload("res://scripts/sim/crafts.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
@@ -71,6 +72,14 @@ static func apply(sim: RefCounted) -> void:
 
 static func _take_stock(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
 	var resource: String = action.resource
+	# A foundation pill is kept for the trial, not carried in the hands.
+	if resource == "pill":
+		var got: int = 0 if bool(agent.cultivation.get("pill", false)) else sim.settlements.take(sim, int(action.settlement), "pill", 1, agent.cell)
+		if got > 0:
+			agent.cultivation["pill"] = true
+		agent.step_result = {"took": got}
+		agent.beliefs.stock = sim.settlements.stock_of(int(action.settlement)).duplicate()
+		return
 	if not agent.carrying.is_empty() and agent.carrying.resource != resource:
 		agent.step_result = {"took": 0}
 		return
@@ -78,6 +87,7 @@ static func _take_stock(sim: RefCounted, agent: RefCounted, action: Dictionary) 
 	if taken > 0:
 		agent.carrying = {"resource": resource, "amount": agent.carried(resource) + taken}
 	agent.step_result = {"took": taken}
+	Crafts.take_tool(sim, agent, int(action.settlement))
 	# Whoever uses the stores sees what is left in them.
 	agent.beliefs.stock = sim.settlements.stock_of(int(action.settlement)).duplicate()
 
@@ -105,6 +115,7 @@ static func _deposit(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 	else:
 		agent.carrying = {}
 	agent.step_result = {"stored": stored if stored > 0 else (1 if agent.carrying.is_empty() else 0)}
+	Crafts.take_tool(sim, agent, int(action.settlement))
 	agent.beliefs.stock = sim.settlements.stock_of(int(action.settlement)).duplicate()
 	sim.note_delivery(agent, resource, stored)
 
@@ -163,6 +174,13 @@ static func _harvest(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 	if site.kind == "bush":
 		sim.set_block(cell, block, maxi(sim.voxels.block_meta(cell) - 1, 0), source)
 		gained = 1
+	elif site.kind == "herb":
+		# Gathered from the root, the herb grows again.
+		if sim.voxels.block_meta(cell) < sim.herbs.RIPE:
+			agent.step_result = {"got": 0}
+			return
+		sim.set_block(cell, block, 0, source)
+		sim.herbs.plants[cell] = 0
 	else:
 		sim.set_block(cell, 0, 0, source)
 	agent.carrying = {"resource": resource, "amount": agent.carried(resource) + gained}
@@ -173,7 +191,8 @@ static func _harvest(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 ## tree seed set in open ground becomes a sapling.
 static func _plant(sim: RefCounted, agent: RefCounted, cell: Vector3i, seed_resource: String) -> void:
 	var tree: bool = seed_resource == "tree_seed"
-	var open: bool = Woods.room_for_tree(sim, cell) if tree else 		sim.voxels.get_block(cell) == 0 and Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter"
+	var open: bool = Woods.room_for_tree(sim, cell) if tree else \
+		sim.voxels.get_block(cell) == 0 and Registry.component(sim.voxels.get_block(cell + Vector3i.DOWN)) == "planter"
 	if not open or agent.carried(seed_resource) < 1.0 or sim.is_occupied(cell):
 		agent.step_result = {"planted": 0}
 		return

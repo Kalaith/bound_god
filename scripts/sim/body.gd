@@ -30,6 +30,15 @@ static func cover(sim: RefCounted, agent: RefCounted) -> float:
 	return 0.0
 
 
+## How hard the day itself is on someone outdoors: the weather's exposure,
+## and the winter cold. 0 on a fair day outside winter.
+static func day_exposure(sim: RefCounted) -> float:
+	var exposed: float = sim.weather.exposure() if sim.weather != null else 0.0
+	if sim.calendar.is_winter():
+		exposed += Balance.number("needs.winter_day_exposure")
+	return exposed
+
+
 static func _decay(sim: RefCounted, agent: RefCounted) -> void:
 	var calendar: RefCounted = sim.calendar
 	var rates: Dictionary = Balance.dict("needs.decay_per_day")
@@ -46,14 +55,21 @@ static func _shelter(sim: RefCounted, agent: RefCounted) -> void:
 	var calendar: RefCounted = sim.calendar
 	var covered: float = cover(sim, agent)
 	var gain: float = Balance.number("needs.shelter_gain_per_day")
+	var exposed: float = day_exposure(sim)
 	if covered >= 1.0:
 		agent.change_need(Need.SHELTER, calendar.per_tick(gain))
-	elif calendar.is_daylight():
+	elif calendar.is_daylight() and exposed <= 0.0:
 		agent.change_need(Need.SHELTER, calendar.per_tick(gain * 0.25 * (1.0 + covered)))
+	elif calendar.is_daylight():
+		# Rain, storm, snow and the winter cold wear on whoever is out in them.
+		var day_loss: float = Balance.number("needs.shelter_loss_per_night_hour") * 24.0 * exposed
+		agent.change_need(Need.SHELTER, -calendar.per_tick(day_loss * agent.personality.need_decay[Need.SHELTER] * (1.0 - covered)))
 	else:
 		var loss: float = Balance.number("needs.shelter_loss_per_night_hour") * 24.0
 		if calendar.is_winter():
 			loss *= Balance.number("needs.shelter_winter_factor")
+		if sim.weather != null:
+			loss *= 1.0 + sim.weather.exposure()
 		if agent.activity == "sleeping":
 			loss *= 0.8
 		agent.change_need(Need.SHELTER, -calendar.per_tick(loss * agent.personality.need_decay[Need.SHELTER] * (1.0 - covered)))

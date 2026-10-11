@@ -41,7 +41,8 @@ func on_edit(world: RefCounted, cell: Vector3i, tick: int, source: String) -> vo
 	var reach := Vector3i(int(limits[0]), int(limits[1]), int(limits[2]))
 	var anchors: Array = []
 	for anchor in components:
-		if absi(anchor.x - cell.x) <= reach.x and absi(anchor.z - cell.z) <= reach.z and absi(anchor.y - cell.y) <= reach.y 				and _may_read(anchor, cell):
+		if absi(anchor.x - cell.x) <= reach.x and absi(anchor.z - cell.z) <= reach.z and absi(anchor.y - cell.y) <= reach.y \
+				and _may_read(anchor, cell):
 			anchors.append(anchor)
 	var touched: Array = []
 	for id in entries:

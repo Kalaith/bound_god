@@ -1,5 +1,5 @@
 extends SceneTree
-## Paints assets/blocks_atlas.png: 32 px procedural tiles in an 8 x 9 grid,
+## Paints assets/blocks_atlas.png: 32 px procedural tiles in an 8 x 10 grid,
 ## laid out as data/blocks.json expects. The look is a soft painted wash:
 ## seamless low-frequency colour drift plus a few brush strokes per tile, in a
 ## muted palette of sage, cream, earth and faded blue (see docs/design/art_direction.md).
@@ -9,13 +9,14 @@ extends SceneTree
 
 const TILE: int = 32
 const AtlasSect = preload("res://tools/atlas_sect.gd")
+const AtlasSeasons = preload("res://tools/atlas_seasons.gd")
 var rng := RandomNumberGenerator.new()
 var image: Image
 
 
 func _init() -> void:
 	rng.seed = 1717
-	image = Image.create(TILE * 8, TILE * 9, false, Image.FORMAT_RGBA8)
+	image = Image.create(TILE * 8, TILE * 10, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
 	_meadow(Vector2i(0, 0))
 	_grass_side(Vector2i(1, 0))
@@ -81,6 +82,8 @@ func _init() -> void:
 	_pebbles_on(Vector2i(5, 4))
 	# The sect's halls (M19b): shelves, lecterns, incense, bells and the rest.
 	AtlasSect.paint(self)
+	# Herbs, alchemy and tools (M20).
+	AtlasSeasons.paint(self)
 	var error: int = image.save_png("res://assets/blocks_atlas.png")
 	print("atlas saved: ", error == OK)
 	quit(0 if error == OK else 1)

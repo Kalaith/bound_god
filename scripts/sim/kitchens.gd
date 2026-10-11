@@ -1,8 +1,13 @@
 extends RefCounted
 ## Kitchens: each keeps a pot that cooks fill with a recipe's inputs a load
 ## at a time, then cook into meals. A pot whose kitchen is gone spills what
-## it held beside where the kitchen stood.
+## it held beside where the kitchen stood. The same works any station whose
+## recipe is in `recipes.json` (M20): an alchemy room's furnace refines
+## herbs into pills, a smithy's anvil forges ore and wood into tools.
 const Data = preload("res://scripts/core/data.gd")
+
+## The function whose structures this keeps pots for (a recipe's station).
+var station: String = "kitchen"
 
 ## kitchen structure id -> {resource: int} in its pot
 var pots: Dictionary = {}
@@ -10,9 +15,25 @@ var pots: Dictionary = {}
 var places: Dictionary = {}
 
 
-## The recipe cooks follow (one so far).
+func _init(station_id: String = "kitchen") -> void:
+	station = station_id
+
+
+## The recipe cooks follow.
 static func recipe() -> Dictionary:
-	return Data.recipes()[0]
+	return recipe_for("kitchen")
+
+
+## The recipe worked at a station (one each).
+static func recipe_for(station_id: String) -> Dictionary:
+	for entry in Data.recipes():
+		if str(entry.station) == station_id:
+			return entry
+	return {}
+
+
+func own_recipe() -> Dictionary:
+	return recipe_for(station)
 
 
 func pot(id: int) -> Dictionary:
@@ -22,7 +43,7 @@ func pot(id: int) -> Dictionary:
 ## What the pot still lacks for `batches` of the recipe: {resource: int}.
 func lacking(id: int, batches: int) -> Dictionary:
 	var result: Dictionary = {}
-	var inputs: Dictionary = recipe().inputs
+	var inputs: Dictionary = own_recipe().inputs
 	var resources: Array = inputs.keys()
 	resources.sort()
 	for resource in resources:
@@ -34,7 +55,7 @@ func lacking(id: int, batches: int) -> Dictionary:
 
 ## How many whole batches the pot holds.
 func batches_ready(id: int) -> int:
-	var inputs: Dictionary = recipe().inputs
+	var inputs: Dictionary = own_recipe().inputs
 	var most: int = 1 << 30
 	for resource in inputs:
 		most = mini(most, int(pot(id).get(resource, 0)) / int(inputs[resource]))
@@ -61,7 +82,7 @@ func cook(id: int) -> Dictionary:
 	if batches <= 0:
 		return {}
 	var made: Dictionary = {}
-	var definition: Dictionary = recipe()
+	var definition: Dictionary = own_recipe()
 	for resource in definition.inputs:
 		pots[id][resource] = int(pots[id][resource]) - int(definition.inputs[resource]) * batches
 		if int(pots[id][resource]) <= 0:
@@ -77,7 +98,7 @@ func daily(sim: RefCounted) -> void:
 	ids.sort()
 	for id in ids:
 		var entry: Dictionary = sim.structures.entries.get(id, {})
-		if not entry.is_empty() and entry.functions.has("kitchen"):
+		if not entry.is_empty() and entry.functions.has(station):
 			continue
 		var spill: Vector3i = sim.nav.nearest_walkable(places[id], 2)
 		var resources: Array = pots[id].keys()

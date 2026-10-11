@@ -42,6 +42,8 @@ const Sects = preload("res://scripts/sim/sects.gd")
 const Tribulations = preload("res://scripts/sim/tribulations.gd")
 const TreeGrowth = preload("res://scripts/sim/tree_growth.gd")
 const Paths = preload("res://scripts/sim/paths.gd")
+const Weather = preload("res://scripts/sim/weather.gd")
+const Herbs = preload("res://scripts/sim/herbs.gd")
 
 var world_seed: int = 1
 ## How this world was made (world kind, size); saved so a load regenerates it.
@@ -85,6 +87,11 @@ var sects: RefCounted = null
 var tribulations: RefCounted = null
 var tree_growth: RefCounted = null
 var paths: RefCounted = null
+var weather: RefCounted = null
+var herbs: RefCounted = null
+## Stations worked like kitchens (M20): alchemy furnaces and smithy anvils.
+var furnaces: RefCounted = null
+var forges: RefCounted = null
 ## Kindled cells (miracle): Array of {cell, radius, until}.
 var kindled: Array = []
 ## Veils of fog (miracle): Array of {cell, radius, until}.
@@ -156,6 +163,11 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	tribulations = Tribulations.new()
 	tree_growth = TreeGrowth.new()
 	paths = Paths.new()
+	weather = Weather.new()
+	herbs = Herbs.new()
+	furnaces = Kitchens.new("alchemy_room")
+	forges = Kitchens.new("smithy")
+	weather.setup(self)
 	settlement_life = SettlementLife.new()
 	director = Director.new()
 	_events_seen = structures.events.size()
@@ -202,6 +214,7 @@ func set_block(cell: Vector3i, block: int, meta: int = 0, source: String = "") -
 	if old != block:
 		settlements.on_block(self, cell, old, block)
 		crops.on_block(cell, block)
+		herbs.on_block(cell, block)
 		woods.on_block(self, cell, old, block)
 		if Registry.component(block) == "lantern":
 			lanterns[cell] = true
@@ -238,6 +251,7 @@ func set_blocks(entries: Array, source: String) -> void:
 			continue
 		settlements.on_block(self, cell, old, block)
 		crops.on_block(cell, block)
+		herbs.on_block(cell, block)
 		woods.on_block(self, cell, old, block)
 		if Registry.component(block) == "lantern":
 			lanterns[cell] = true
@@ -453,7 +467,7 @@ func state_hash() -> int:
 	for agent in agents:
 		people.append(agent.to_dict())
 	var state: Array = [calendar.tick, rng.state, people, settlements.to_dict(), sites.to_dict(), items, crops.to_dict(), kitchens.to_dict(), woods.to_dict(),
-		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state(), sects.to_dict(), tribulations.to_dict(), tree_growth.to_dict()]
+		god.to_dict(), chronicle.to_dict(), command_log, voxels.hash_state(), sects.to_dict(), tribulations.to_dict(), tree_growth.to_dict(), weather.to_dict(), herbs.to_dict(), furnaces.to_dict(), forges.to_dict()]
 	return hash(var_to_bytes(state))
 
 
@@ -490,6 +504,16 @@ func template_name(id: String) -> String:
 	if settlements.designs.has(id):
 		return str(settlements.designs[id].get("name", id))
 	return str(Data.starter(id).get("name", id))
+
+
+## The pots of a station's structures by its function: kitchen, alchemy room, smithy.
+func station(function: String) -> RefCounted:
+	match function:
+		"alchemy_room":
+			return furnaces
+		"smithy":
+			return forges
+	return kitchens
 
 
 ## Ids of present people whose current goal has this key, in id order.

@@ -3,6 +3,7 @@ extends RefCounted
 ## technique, teaching someone who asked, and founding a sect once a teacher
 ## has students of their own. All compete in the ordinary utility contest,
 ## so a sect that only meditates goes hungry.
+const DeliberationCrafts = preload("res://scripts/agents/deliberation_crafts.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
@@ -33,6 +34,9 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	_witness(sim, agent, out)
 	_share_fruit(sim, agent, out)
 	_convalesce(sim, agent, out)
+	var refine: Dictionary = DeliberationCrafts.refine(sim, agent)
+	if not refine.is_empty():
+		out.append(_candidate(Kind.REFINE, float(refine.utility), "reason_refine", int(refine.room)))
 
 
 ## The densest spot round the tree this person can sit in that nobody else
@@ -206,6 +210,9 @@ static func _breakthrough(sim: RefCounted, agent: RefCounted, out: Array) -> voi
 	var prep: float = sim.tribulations.preparation(sim, agent)
 	var courage: float = clampf(0.5 + 0.3 * float(agent.personality.bravery) + 0.3 * float(c.drive) - (0.3 if float(c.foundation) < 0.35 else 0.0), 0.1, 1.2)
 	var utility: float = (Balance.number("cultivation.peak_base") + Balance.number("cultivation.peak_impatience") * impatience) * courage * (0.4 + 0.6 * prep)
+	# Few call Heaven while a thunderstorm already rages; only the worn-out wait gives way.
+	if sim.weather != null and sim.weather.is_storm() and impatience < 1.0:
+		utility *= float(sim.weather.data().trial_wait)
 	out.append(_candidate(Kind.BREAKTHROUGH, utility, "reason_at_peak", -1, prep * 100.0))
 
 

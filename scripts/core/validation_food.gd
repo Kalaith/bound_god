@@ -34,6 +34,8 @@ static func check_crops(data: Dictionary, blocks: Dictionary) -> Array[String]:
 			errors.append(label + ": block must be a block with growth stages")
 		elif not _number(entry.get("stages")) or int(entry.stages) < 2 or int(entry.stages) != int(stage_counts[entry.block]):
 			errors.append(label + ": stages must match the block's stage tiles")
+		if not _number(entry.get("rain_need")) or int(entry.rain_need) < 1:
+			errors.append(label + ": rain_need must be at least one day")
 		for key in ["days_per_stage", "yield", "seed_return"]:
 			if not _number(entry.get(key)) or float(entry[key]) < 0 or (key != "seed_return" and float(entry[key]) < 1):
 				errors.append(label + ": " + key + " must be a positive number")

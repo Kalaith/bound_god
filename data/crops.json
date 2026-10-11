@@ -11,7 +11,8 @@
 			"harvest": "grain",
 			"yield": 5,
 			"seed": "seed",
-			"seed_return": 1
+			"seed_return": 1,
+			"rain_need": 4
 		}
 	]
 }

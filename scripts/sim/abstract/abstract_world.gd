@@ -9,6 +9,7 @@ extends RefCounted
 ## Outcomes come only from the same balance numbers, and every death,
 ## birth, arrival and harvest is chronicled with its cause.
 ## Randomness comes from the sim's rng, in settlement id order.
+const AbstractCrafts = preload("res://scripts/sim/abstract/abstract_crafts.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Spoilage = preload("res://scripts/sim/spoilage.gd")
@@ -90,6 +91,8 @@ func step_hour(sim: RefCounted) -> Dictionary:
 	sim.calendar.tick = (sim.calendar.tick / per_step + 1) * per_step
 	if sim.calendar.tick % sim.calendar.ticks_per_day == 0:
 		_day(sim)
+	if sim.weather != null:
+		sim.weather.hourly(sim)
 	var praying: bool = _prayer_hour(sim)
 	var sitting: bool = _in_step(sim, AbstractCultivation.SITTINGS)
 	var k: Dictionary = AbstractPeople.context(sim, step)
@@ -116,10 +119,13 @@ func step_hour(sim: RefCounted) -> Dictionary:
 		# Danger wakes the god once, as it begins, not every hour it lasts.
 		if agent.is_present() and sim.god.followed.has(agent.id) and float(agent.health.hp) < 35.0 and health >= 35.0 and wake.is_empty():
 			wake = {"kind": "danger", "agent": agent.id}
+	# Most work is out under the sky, and goes at its pace.
+	var pace: float = lerpf(1.0, sim.weather.work(), 0.8) if sim.weather != null else 1.0
 	for id in sim.settlements.ids():
 		if records.has(id):
 			var count: Array = counts.get(id, [0.0, 0])
-			AbstractBuild.hour(sim, id, AbstractEconomy.hour(sim, id, records[id], float(count[0]) * step, int(count[1])))
+			var labour: float = float(count[0]) * step * pace * AbstractCrafts.pace(sim, id, int(count[1]))
+			AbstractBuild.hour(sim, id, AbstractEconomy.hour(sim, id, records[id], labour, int(count[1])))
 	sim.faith.hourly(sim)
 	if wake.is_empty():
 		wake = _woken_by(sim, seen)
@@ -145,6 +151,7 @@ func _day(sim: RefCounted) -> void:
 		if not records.has(id):
 			records[id] = AbstractEconomy.survey(sim, id)
 		AbstractEconomy.day(sim, id, records[id])
+		AbstractCrafts.day(sim, id, records[id])
 		# A new project is weighed every few days, not every morning.
 		if (sim.calendar.day() + id) % AbstractBuild.PLAN_EVERY_DAYS == 0:
 			AbstractBuild.day(sim, id, records[id])
@@ -153,6 +160,7 @@ func _day(sim: RefCounted) -> void:
 	sim.sects.daily(sim)
 	Blueprints.daily(sim)
 	sim.tree_growth.daily(sim)
+	sim.herbs.abstract_day(sim)
 	AbstractCultivation.day(sim)
 	sim.faith.daily(sim)
 	if sim.requests != null:
@@ -210,6 +218,7 @@ func finish(sim: RefCounted) -> void:
 	for site_id in sim.construction.ids():
 		AbstractBuild.stamp(sim, sim.construction.get_site(site_id))
 	sim.settlement_life.apply_pending_decay(sim)
+	sim.herbs.materialise(sim)
 	for agent in sim.agents:
 		if agent.is_present():
 			thaw(sim, agent)

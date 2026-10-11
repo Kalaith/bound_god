@@ -1,0 +1,37 @@
+{
+	"schema_version": 1,
+	"kinds": [
+		{"id": "clear", "exposure": 0.0, "work": 1.0, "wet": false, "trial": 0.0},
+		{"id": "overcast", "exposure": 0.0, "work": 1.0, "wet": false, "trial": 0.0},
+		{"id": "rain", "exposure": 0.2, "work": 0.9, "wet": true, "trial": 0.05},
+		{"id": "thunderstorm", "exposure": 0.6, "work": 0.75, "wet": true, "trial": 0.15},
+		{"id": "snow", "exposure": 0.6, "work": 0.8, "wet": false, "trial": 0.0}
+	],
+	"seasons": {
+		"spring": [
+			{"kind": "clear", "weight": 4.0, "hours": [8, 30]},
+			{"kind": "overcast", "weight": 3.0, "hours": [6, 18]},
+			{"kind": "rain", "weight": 3.0, "hours": [4, 12]},
+			{"kind": "thunderstorm", "weight": 0.5, "hours": [2, 6]}
+		],
+		"summer": [
+			{"kind": "clear", "weight": 5.0, "hours": [8, 30]},
+			{"kind": "overcast", "weight": 2.0, "hours": [6, 18]},
+			{"kind": "rain", "weight": 2.5, "hours": [4, 10]},
+			{"kind": "thunderstorm", "weight": 1.5, "hours": [2, 6]}
+		],
+		"autumn": [
+			{"kind": "clear", "weight": 4.0, "hours": [8, 30]},
+			{"kind": "overcast", "weight": 3.0, "hours": [6, 18]},
+			{"kind": "rain", "weight": 3.0, "hours": [4, 12]},
+			{"kind": "thunderstorm", "weight": 0.5, "hours": [2, 6]}
+		],
+		"winter": [
+			{"kind": "clear", "weight": 3.0, "hours": [8, 30]},
+			{"kind": "overcast", "weight": 3.0, "hours": [6, 18]},
+			{"kind": "snow", "weight": 3.0, "hours": [6, 20]}
+		]
+	},
+	"trial_wait": 0.4,
+	"calm_hours": 8
+}

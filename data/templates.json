@@ -23,7 +23,9 @@
 		{"id": "ancestral_hall", "requires": {"tablet": 2, "incense": 1}, "requires_any": [], "roofed": ["tablet"], "roof_reach": 4, "capacity": {"tablets": "tablet"}},
 		{"id": "precept_stele", "requires": {"stele": 1}, "requires_any": [], "roofed": [], "open_sky": ["stele"], "requires_blocks": {"cut_stone": 4}, "roof_reach": 4, "capacity": {}},
 		{"id": "bell_tower", "requires": {"bell": 1}, "requires_any": [], "roofed": ["bell"], "roof_reach": 4, "capacity": {}},
-		{"id": "lecture_hall", "requires": {"lectern": 1, "bench": 4}, "requires_any": [], "roofed": ["lectern"], "roof_reach": 4, "min_roofed_floor": 12, "capacity": {"seats": "bench"}}
+		{"id": "lecture_hall", "requires": {"lectern": 1, "bench": 4}, "requires_any": [], "roofed": ["lectern"], "roof_reach": 4, "min_roofed_floor": 12, "capacity": {"seats": "bench"}},
+		{"id": "alchemy_room", "requires": {"furnace": 1, "medicine": 1, "door": 1}, "requires_any": [], "roofed": ["furnace", "medicine"], "roof_reach": 4, "capacity": {"furnaces": "furnace"}},
+		{"id": "smithy", "requires": {"anvil": 1, "hearth": 1, "door": 1}, "requires_any": [], "roofed": ["anvil", "hearth"], "roof_reach": 4, "capacity": {"anvils": "anvil"}}
 	],
 	"renovations": [
 		{"id": "store_library", "name": "Scripture shelves in the storehouse", "on": "storehouse", "gives": "library", "adds": {"scripture_shelf": 2, "lectern": 1}, "needs": {}},
@@ -32,6 +34,32 @@
 		{"id": "hall_tablets", "name": "Tablets in the meditation hall", "on": "meditation_hall", "gives": "ancestral_hall", "adds": {"memorial_tablet": 2, "incense_burner": 1}, "needs": {}}
 	],
 	"starters": [
+		{
+			"id": "alchemy_room",
+			"name": "Alchemy Room",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "C": "cobble", "D": "door", "F": "alchemy_furnace", "K": "medicine_cabinet", "T": "thatch"},
+			"entrance": [2, 0, 0],
+			"meta": {},
+			"layers": [
+				["CCDCC", "C...C", "CF.KC", "CCCCC"],
+				["CCDCC", "C...C", "C...C", "CCCCC"],
+				["TTTTT", "TTTTT", "TTTTT", "TTTTT"]
+			]
+		},
+		{
+			"id": "smithy",
+			"name": "Smithy",
+			"author": "valley folk",
+			"legend": {".": "air", "L": "log", "P": "planks", "D": "door", "H": "hearth", "A": "anvil", "T": "thatch"},
+			"entrance": [2, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPDPL", "P...P", "PH.AP", "LPPPL"],
+				["LPDPL", "P...P", "P...P", "LPPPL"],
+				["TTTTT", "TTTTT", "TTTTT", "TTTTT"]
+			]
+		},
 		{
 			"id": "miner_hut",
 			"name": "Miner's Hut",

@@ -2,6 +2,7 @@ extends RefCounted
 ## Work steps that touch the shared world: taking from and adding to the
 ## stores, foraging, harvesting, carrying, and building block by block. They
 ## push actions into Effects and read the result back on a later tick.
+const WorkPace = preload("res://scripts/sim/work_pace.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
@@ -80,7 +81,7 @@ static func _harvest(sim: RefCounted, agent: RefCounted, step: Dictionary, step_
 	var skill: int = Skill.GATHERING
 	# Work goes at the pace of the site's own yield (seed is shaken from grass).
 	var base: float = float(Balance.dict("work.harvest_ticks_per_block")[sim.sites.resource_of(int(step.site))])
-	var work: int = maxi(2, int(base / Personality.speed(agent, skill)))
+	var work: int = maxi(2, int(base / WorkPace.speed(sim, agent, skill)))
 	Personality.practise(agent, skill)
 	if step_ticks % (work + 1) == work:
 		agent.step_result["pending"] = true

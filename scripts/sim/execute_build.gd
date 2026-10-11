@@ -1,6 +1,7 @@
 extends RefCounted
 ## Building steps: marking a site, delivering materials, placing blocks one
 ## at a time (walking between them), and repairing a known building.
+const WorkPace = preload("res://scripts/sim/work_pace.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
@@ -119,7 +120,7 @@ static func _place(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ti
 			return moving
 	agent.path.clear()
 	agent.activity = "building"
-	var work: int = maxi(2, int(Balance.number("construction.ticks_per_block") / Personality.speed(agent, Skill.CONSTRUCTION)))
+	var work: int = maxi(2, int(Balance.number("construction.ticks_per_block") / WorkPace.speed(sim, agent, Skill.CONSTRUCTION)))
 	var done: int = int(agent.step_result.get("work", 0)) + 1
 	agent.step_result["work"] = done
 	Personality.practise(agent, Skill.CONSTRUCTION)

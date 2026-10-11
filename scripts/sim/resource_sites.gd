@@ -4,7 +4,9 @@ extends RefCounted
 ## follows the voxel grid: removing a site's block lowers its amount.
 const Registry = preload("res://scripts/world/block_registry.gd")
 
-const RESOURCE_OF: Dictionary = {"tree": "wood", "bush": "berries", "grass": "thatch", "rock": "stone", "ore": "ore"}
+## A spirit herb is ripe at this stage (Herbs.RIPE).
+const HERB_RIPE: int = 2
+const RESOURCE_OF: Dictionary = {"tree": "wood", "bush": "berries", "grass": "thatch", "rock": "stone", "ore": "ore", "herb": "herb"}
 
 ## id -> {id, kind, cells: Array[Vector3i], amount: int, leaves?: Array}
 var sites: Dictionary = {}
@@ -70,6 +72,13 @@ func on_block_changed(cell: Vector3i, old_block: int, new_block: int, world: Ref
 			else:
 				site.amount = world.block_meta(cell)
 			return
+		# A spirit herb is worth gathering only when ripe.
+		if site.kind == "herb":
+			if new_block != Registry.id("spirit_herb"):
+				_remove(id)
+			else:
+				site.amount = 1 if world.block_meta(cell) >= HERB_RIPE else 0
+			return
 		if new_block == old_block:
 			return
 		by_cell.erase(cell)
@@ -79,6 +88,8 @@ func on_block_changed(cell: Vector3i, old_block: int, new_block: int, world: Ref
 			_remove(id)
 	elif new_block == Registry.id("berry_bush"):
 		add("bush", [cell], world.block_meta(cell))
+	elif new_block == Registry.id("spirit_herb"):
+		add("herb", [cell], 1 if world.block_meta(cell) >= HERB_RIPE else 0)
 
 
 func _remove(id: int) -> void:

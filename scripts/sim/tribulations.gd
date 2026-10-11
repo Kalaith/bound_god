@@ -73,7 +73,8 @@ static func preparation(sim: RefCounted, agent: RefCounted) -> float:
 				or (int(agent.cultivation.sect_id) >= 0 and int(other.cultivation.sect_id) == int(agent.cultivation.sect_id))):
 			helped = maxf(helped, 0.7)
 	var fruit: float = float(Data.tree_growth().fruit.preparation) if bool(agent.cultivation.get("fruit", false)) else 0.0
-	return clampf(0.35 * agent.need(Personality.Need.REST) / 100.0 + 0.35 * agent.need(Personality.Need.FOOD) / 100.0 + 0.3 * helped + fruit, 0.0, 1.0)
+	var pill: float = Balance.number("alchemy.pill_preparation") if bool(agent.cultivation.get("pill", false)) else 0.0
+	return clampf(0.35 * agent.need(Personality.Need.REST) / 100.0 + 0.35 * agent.need(Personality.Need.FOOD) / 100.0 + 0.3 * helped + fruit + pill, 0.0, 1.0)
 
 
 ## The decision is made: Heaven will answer after the warning.
@@ -154,10 +155,19 @@ func _begin(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 	# ancestral hall keeps their memory (each tablet keeps one more).
 	if sim.tree_growth != null and SectHalls.relics_help(sim, agent, agent.cell, bool(trial.sanctuary)):
 		trial.preparation = minf(float(trial.preparation) + sim.tree_growth.relic_preparation(SectHalls.relic_extra(sim, agent.settlement_id)), 1.0)
+	# Heaven's storm is fiercer when it breaks inside a thunderstorm.
+	if sim.weather != null and sim.weather.trial() > 0.0:
+		trial["weather"] = sim.weather.kind
+		trial.severity = minf(float(trial.severity) + sim.weather.trial(), 1.0)
 	# A tribulation chamber's array drinks some of Heaven's anger.
 	if not SectHalls.chamber_at(sim, agent.cell).is_empty():
 		trial["chamber"] = true
 		trial.severity = maxf(float(trial.severity) - Balance.number("halls.chamber_severity"), 0.05)
+	# A foundation pill kept for this moment is swallowed now.
+	if bool(agent.cultivation.get("pill", false)):
+		agent.cultivation.erase("pill")
+		trial["pill"] = true
+		sim.chronicle_event("pill_eaten", agent.settlement_id, {"name": agent.full_name()}, "cause_before_trial", [agent.id])
 	# A spirit fruit kept for this moment is eaten now.
 	if bool(agent.cultivation.get("fruit", false)):
 		agent.cultivation.fruit = false
@@ -344,6 +354,12 @@ func abstract_trial(sim: RefCounted, agent: RefCounted, site: Vector3i) -> Strin
 	var id: int = announce(sim, agent, site)
 	if id <= 0:
 		return ""
+	# A pill in the stores is taken for the trial, as a waking cultivator would.
+	if not bool(agent.cultivation.get("pill", false)) and sim.settlements.amount(agent.settlement_id, "pill") > 0:
+		for chest in sim.settlements.chest_cells(sim, agent.settlement_id):
+			if sim.settlements.chest_take(chest, "pill", 1) > 0:
+				agent.cultivation["pill"] = true
+				break
 	var trial: Dictionary = entries[id]
 	_protect(sim, trial, agent)
 	agent.cell = site

@@ -154,7 +154,7 @@ static func check_tribulations(data: Dictionary, realms: int, blocks: Dictionary
 
 
 ## Unlock effects sim/tree_growth.gd implements; the catalog may not name others.
-const UNLOCK_EFFECTS: Array[String] = ["spirit_fruit"]
+const UNLOCK_EFFECTS: Array[String] = ["spirit_fruit", "spirit_herbs"]
 
 
 ## The tree: maturity phases in order with labels, unlocks gated on an
@@ -168,7 +168,7 @@ static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dicti
 		kinds.append(kind.get("id"))
 		if not labels.has("insight_" + str(kind.get("id"))):
 			errors.append("tree: insight " + str(kind.get("id")) + " has no label")
-	for section in ["insight", "fruit", "nurture", "scars"]:
+	for section in ["insight", "fruit", "herbs", "nurture", "scars"]:
 		var values: Variant = data.get(section)
 		if not values is Dictionary or values.is_empty():
 			errors.append("tree: " + section + " is missing")
@@ -197,8 +197,9 @@ static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dicti
 				errors.append("tree: an unlock needs an id and an implemented effect")
 				continue
 			var needs: Variant = entry.get("requires")
-			if not needs is Dictionary or not kinds.has(needs.get("insight")) or not _number(needs.get("amount")):
-				errors.append("tree: unlock " + entry.id + " must require an insight a trial can give")
+			var by_maturity: bool = needs is Dictionary and _number(needs.get("maturity")) and float(needs.maturity) > 0.0
+			if not by_maturity and (not needs is Dictionary or not kinds.has(needs.get("insight")) or not _number(needs.get("amount"))):
+				errors.append("tree: unlock " + entry.id + " must require an insight a trial can give, or the tree's maturity")
 			if not labels.has("unlock_" + entry.id):
 				errors.append("tree: unlock " + entry.id + " has no label")
 	return errors

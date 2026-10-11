@@ -24,7 +24,8 @@ static func food_days(sim: RefCounted, id: int) -> float:
 ## Autumn with too little put by for the winter: fields and granaries matter
 ## more, farming is weighed higher and prayers carry the fear.
 static func fear_of_winter(sim: RefCounted, id: int) -> bool:
-	return sim.calendar.season() == int(Balance.number("settlements.autumn_season")) 		and food_days(sim, id) < Balance.number("farming.winter_food_days")
+	return sim.calendar.season() == int(Balance.number("settlements.autumn_season")) \
+		and food_days(sim, id) < Balance.number("farming.winter_food_days")
 
 
 static func present(sim: RefCounted, id: int) -> int:

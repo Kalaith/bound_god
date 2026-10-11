@@ -3,6 +3,8 @@ extends RefCounted
 ## player priority becomes the settlement's own culture weight, so labour is
 ## steered only by what people need and what their respected members do.
 ## FoundHome and ProposeProject are how construction begins.
+const DeliberationCrafts = preload("res://scripts/agents/deliberation_crafts.gd")
+const Crafts = preload("res://scripts/sim/crafts.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
@@ -106,10 +108,13 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	# Plant trees where the woods near home are thin, with a seed to hand or
 	# a tree to search for one.
 	var groves: Array = board.get("groves", [])
-	if not groves.is_empty() and (agent.carried("tree_seed") >= 1.0 or agent.beliefs.believes_stock("tree_seed") 			or H.loose_item(sim, agent, "tree_seed") >= 0 or agent.beliefs.has_site("tree")):
-		var pull: float = Balance.number("work.plant_trees_pull") * (0.5 + float(board.get("woods_thin", 0.0))) 			+ float(board.gather_demand.get("wood", 0.0)) * 0.3
+	if not groves.is_empty() and (agent.carried("tree_seed") >= 1.0 or agent.beliefs.believes_stock("tree_seed") \
+			or H.loose_item(sim, agent, "tree_seed") >= 0 or agent.beliefs.has_site("tree")):
+		var pull: float = Balance.number("work.plant_trees_pull") * (0.5 + float(board.get("woods_thin", 0.0))) \
+			+ float(board.gather_demand.get("wood", 0.0)) * 0.3
 		push.call(Goals.make(Kind.PLANT_TREES), float(culture.gather) * aptitude(agent, Skill.GATHERING) * pull, "reason_plant_trees")
 	DeliberationFood.add(sim, agent, board, culture, aptitude(agent, Skill.GATHERING), aptitude(agent, Skill.CRAFTING), hungry, push)
+	DeliberationCrafts.add(sim, agent, board, culture, aptitude(agent, Skill.CRAFTING), push)
 	var unknown: int = 0
 	for resource in board.gather_demand:
 		if float(board.gather_demand[resource]) > 0.3 and not agent.beliefs.has_site(JobBoard.SITE_KIND[resource]):
@@ -248,6 +253,7 @@ static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float
 	if Standing.food_days(sim, id) < Balance.number("construction.garden_food_days") and int(have.get("garden", 0)) < gardens_wanted:
 		wants.append(["garden", "reason_food_low", 0.8])
 	wants.append_array(DeliberationFood.wants(sim, id, people, have))
+	wants.append_array(Crafts.village_wants(sim, id, people, have))
 	var sect_wants: Array = SectHallWants.all(sim, id, have, agent)
 	if sect_only:
 		wants = sect_wants

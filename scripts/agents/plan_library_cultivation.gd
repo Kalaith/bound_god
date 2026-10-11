@@ -43,7 +43,12 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 			var site: Vector3i = DeliberationCultivation.trial_site(sim, agent)
 			var steps: Array = [Plans.go_cell(site)] if site.x >= 0 else []
 			steps.append(Plans.step(Op.FACE_HEAVEN, {}))
-			return [H.option("face_heaven", 1.0, steps)]
+			var options: Array = [H.option("face_heaven", 1.0, steps)]
+			# A foundation pill in the stores is taken first, to eat when Heaven answers.
+			if not bool(agent.cultivation.get("pill", false)) and agent.beliefs.believes_stock("pill"):
+				options.append(H.option("take_a_pill_first", 1.1, [Plans.go_to(Plans.target(T.STORE, agent.settlement_id)),
+					Plans.step(Op.TAKE_STOCK, {"resource": "pill", "amount": 1})] + steps))
+			return options
 		Kind.SHARE_FRUIT:
 			var recipient: int = int(goal.target)
 			var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))

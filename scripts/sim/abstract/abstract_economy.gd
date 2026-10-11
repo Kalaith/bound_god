@@ -147,6 +147,10 @@ static func _fields(sim: RefCounted, id: int, record: Dictionary) -> void:
 			record.growth = 0
 			record.weedy = false
 		return
+	# A dry spell stalls the fields as it does the detailed crops.
+	if sim.weather != null and sim.weather.dry_days(sim) > int(crop.rain_need):
+		sim.weather.note_drought(sim, id, record.fields.size())
+		return
 	record.growth = int(record.growth) + 1
 	if int(record.growth) >= ripe_at:
 		var amount: int = int(crop.yield)

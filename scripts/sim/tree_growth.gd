@@ -72,6 +72,7 @@ func on_trial(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 
 func daily(sim: RefCounted) -> void:
 	_grow(sim, float(data().maturity.per_day))
+	_check_unlocks(sim)
 	var season: int = (sim.calendar.day() - 1) / sim.calendar.days_per_season
 	if season != fruit_season:
 		fruit_season = season
@@ -91,10 +92,15 @@ func _check_unlocks(sim: RefCounted) -> void:
 		if unlocks.has(unlock.id):
 			continue
 		var needs: Dictionary = unlock.requires
-		if float(insights.get(str(needs.insight), 0.0)) < float(needs.amount):
+		# An unlock asks for an insight's depth, or for the tree's maturity.
+		if needs.has("maturity"):
+			if maturity < float(needs.maturity):
+				continue
+		elif float(insights.get(str(needs.insight), 0.0)) < float(needs.amount):
 			continue
 		unlocks.append(unlock.id)
-		sim.chronicle_event("tree_unlock", _tree_place(sim), {"unlock": "unlock_" + str(unlock.id)}, "cause_insight_%s" % str(needs.insight), [])
+		var cause: String = "cause_maturity" if needs.has("maturity") else "cause_insight_%s" % str(needs.insight)
+		sim.chronicle_event("tree_unlock", _tree_place(sim), {"unlock": "unlock_" + str(unlock.id)}, cause, [])
 
 
 ## Spirit fruit ripens a few at a time through the season (none in winter),

@@ -8,6 +8,22 @@
 			"outputs": {"meal": 2},
 			"ticks": 12,
 			"skill": "crafting"
+		},
+		{
+			"id": "foundation_pill",
+			"station": "alchemy_room",
+			"inputs": {"herb": 3},
+			"outputs": {"pill": 1},
+			"ticks": 60,
+			"skill": "medicine"
+		},
+		{
+			"id": "tools",
+			"station": "smithy",
+			"inputs": {"ore": 1, "wood": 1},
+			"outputs": {"tools": 1},
+			"ticks": 40,
+			"skill": "crafting"
 		}
 	]
 }

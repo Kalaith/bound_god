@@ -74,6 +74,8 @@ static func problem(sim: RefCounted, id: String, cell: Vector3i) -> String:
 		return "miracle_renown"
 	if float(shrine.favour) < float(cost_of(sim, definition)[0]):
 		return "miracle_favour"
+	if str(definition.effect) == "calm_sky" and not sim.weather.is_wet() and sim.weather.kind != "snow":
+		return "miracle_sky_clear"
 	return ""
 
 
@@ -108,6 +110,8 @@ static func cast(sim: RefCounted, id: String, cell: Vector3i, args: Dictionary) 
 		"nurture":
 			sim.tree_growth.nurture(sim, cell)
 			result = {"ok": true, "reason": "miracle_nurtured"}
+		"calm_sky":
+			result = {"ok": sim.weather.calm(sim), "reason": "miracle_calmed"}
 		_:
 			result = {"ok": false, "reason": "miracle_unknown"}
 	if not result.ok:

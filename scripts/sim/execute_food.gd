@@ -2,6 +2,7 @@ extends RefCounted
 ## Food steps that touch the shared world: sowing, weeding and reaping a
 ## field, filling a kitchen's pot and cooking. They push actions into Effects
 ## and read the result back on a later tick.
+const WorkPace = preload("res://scripts/sim/work_pace.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
@@ -16,7 +17,7 @@ const Skill = Personality.Skill
 ## Work for a while at `skill`, then push `action` once and wait for the
 ## result under `key`: done when it reports something done, else `fail`.
 static func work_then(sim: RefCounted, agent: RefCounted, step_ticks: int, ticks: float, skill: int, action: String, args: Dictionary, key: String, fail: int) -> int:
-	var work: int = maxi(2, int(ticks / Personality.speed(agent, skill)))
+	var work: int = maxi(2, int(ticks / WorkPace.speed(sim, agent, skill)))
 	if step_ticks < work:
 		Personality.practise(agent, skill)
 		return Plans.RUNNING
@@ -46,13 +47,17 @@ static func _tend(sim: RefCounted, agent: RefCounted, step_ticks: int) -> int:
 	return work_then(sim, agent, step_ticks, Balance.number("farming.tend_ticks"), Skill.GATHERING, "tend_crops", {}, "tended", Plans.DONE)
 
 
+## What working each station looks like.
+const ACTIVITY: Dictionary = {"kitchen": "cooking", "alchemy_room": "refining", "smithy": "forging"}
+
+
 ## Put a carried ingredient into the kitchen's pot.
 static func _add_to_pot(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:
-	agent.activity = "cooking"
+	agent.activity = ACTIVITY.get(str(step.get("station", "kitchen")), "cooking")
 	if step_ticks == 0:
 		if agent.carrying.is_empty():
 			return Fail.STOCK_EMPTY
-		sim.effects.action("add_to_pot", agent.id, {"kitchen": int(step.kitchen), "batches": int(step.batches)})
+		sim.effects.action("add_to_pot", agent.id, {"kitchen": int(step.kitchen), "batches": int(step.batches), "station": str(step.get("station", "kitchen"))})
 		return Plans.RUNNING
 	if not agent.step_result.has("added"):
 		return Plans.RUNNING
@@ -61,14 +66,15 @@ static func _add_to_pot(sim: RefCounted, agent: RefCounted, step: Dictionary, st
 
 ## Cook what the pot holds into meals, a while per batch.
 static func _cook(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:
-	agent.activity = "cooking"
+	var station: String = str(step.get("station", "kitchen"))
+	agent.activity = ACTIVITY.get(station, "cooking")
 	var kitchen: int = int(step.kitchen)
-	var batches: int = sim.kitchens.batches_ready(kitchen)
+	var batches: int = sim.station(station).batches_ready(kitchen)
 	if batches <= 0 and not agent.step_result.has("cooked"):
 		return Fail.STOCK_EMPTY
-	var recipe: Dictionary = Kitchens.recipe()
+	var recipe: Dictionary = Kitchens.recipe_for(station)
 	var skill: int = Personality.SKILLS.find(recipe.skill)
-	return work_then(sim, agent, step_ticks, float(recipe.ticks) * maxi(batches, 1), skill, "cook", {"kitchen": kitchen}, "cooked", Fail.STOCK_EMPTY)
+	return work_then(sim, agent, step_ticks, float(recipe.ticks) * maxi(batches, 1), skill, "cook", {"kitchen": kitchen, "station": station}, "cooked", Fail.STOCK_EMPTY)
 
 
 static func run(sim: RefCounted, agent: RefCounted, step: Dictionary, step_ticks: int) -> int:

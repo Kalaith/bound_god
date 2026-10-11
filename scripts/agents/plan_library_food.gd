@@ -2,6 +2,7 @@ extends RefCounted
 ## Food plans: farming a field (reap what is ripe, weed what is untended, sow
 ## what is open) and cooking at a kitchen. Each reads the person's beliefs
 ## and the visible job board.
+const Crafts = preload("res://scripts/sim/crafts.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
@@ -23,6 +24,10 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 			return _farm(sim, agent, int(goal.target))
 		Kind.COOK:
 			return _cook(sim, agent, int(goal.target))
+		Kind.REFINE:
+			return _craft(sim, agent, int(goal.target), "alchemy_room", clampi(Crafts.pills_short(sim, agent.settlement_id), 1, 2), "refine_pills")
+		Kind.SMITH:
+			return _craft(sim, agent, int(goal.target), "smithy", clampi(Crafts.tools_short(sim, agent.settlement_id), 1, 3), "forge_tools")
 	return []
 
 
@@ -104,18 +109,24 @@ static func _sow(sim: RefCounted, agent: RefCounted, open: Array, crop: Dictiona
 ## Fill the pot a load at a time (from the hands or the stores), cook the
 ## batches, and put the meals in the stores.
 static func _cook(sim: RefCounted, agent: RefCounted, kitchen: int) -> Array:
-	var entry: Dictionary = sim.structures.entries.get(kitchen, {})
-	if entry.is_empty() or not entry.functions.has("kitchen"):
-		return []
 	var recipe: Dictionary = Kitchens.recipe()
 	var made: int = int(recipe.outputs.values()[0])
 	var short: int = Food.meals_wanted(Standing.present(sim, agent.settlement_id)) - sim.settlements.amount(agent.settlement_id, "meal")
 	var batches: int = clampi(ceili(float(short) / made), 1, Balance.integer("food.batch_most"))
+	return _craft(sim, agent, kitchen, "kitchen", batches, "cook_a_meal")
+
+
+## Fill a station's pot (a kitchen's, a furnace, an anvil) a load at a time
+## from the hands or the stores, work the batches, and store what is made.
+static func _craft(sim: RefCounted, agent: RefCounted, kitchen: int, station: String, batches: int, option: String) -> Array:
+	var entry: Dictionary = sim.structures.entries.get(kitchen, {})
+	if entry.is_empty() or not entry.functions.has(station):
+		return []
 	var go := Plans.go_to(Plans.target(T.STRUCTURE, kitchen))
 	var put_away: Array = [_store(agent), Plans.step(Op.DEPOSIT)]
-	var add := Plans.step(Op.ADD_TO_POT, {"kitchen": kitchen, "batches": batches})
+	var add := Plans.step(Op.ADD_TO_POT, {"kitchen": kitchen, "batches": batches, "station": station})
 	var steps: Array = []
-	var lacking: Dictionary = sim.kitchens.lacking(kitchen, batches)
+	var lacking: Dictionary = sim.station(station).lacking(kitchen, batches)
 	var resources: Array = lacking.keys()
 	resources.sort()
 	# What will be in hand as the plan goes: what is carried, until it is
@@ -137,5 +148,5 @@ static func _cook(sim: RefCounted, agent: RefCounted, kitchen: int) -> Array:
 			return []
 	if not hands.is_empty():
 		steps.append_array(put_away)
-	steps.append_array([go, Plans.step(Op.COOK, {"kitchen": kitchen})] + put_away)
-	return [H.option("cook_a_meal", 1.0, steps)]
+	steps.append_array([go, Plans.step(Op.COOK, {"kitchen": kitchen, "station": station})] + put_away)
+	return [H.option(option, 1.0, steps)]

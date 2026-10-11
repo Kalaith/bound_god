@@ -6,6 +6,7 @@ const Data = preload("res://scripts/core/data.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const ValidationFood = preload("res://scripts/core/validation_food.gd")
 const ValidationCultivation = preload("res://scripts/core/validation_cultivation.gd")
+const ValidationSeasons = preload("res://scripts/core/validation_seasons.gd")
 
 ## Code records these thoughts by id, so the catalog must hold them.
 const REQUIRED_THOUGHTS: Array[String] = [
@@ -26,15 +27,15 @@ const AMBITION_KINDS: Array[String] = [
 	"build_home", "lead_village",
 ]
 ## Miracle effects that sim/miracles.gd implements; the catalog may not name others.
-const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend", "bless_cultivation", "shield_trial", "defy_heaven", "nurture"]
+const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend", "bless_cultivation", "shield_trial", "defy_heaven", "nurture", "calm_sky"]
 ## Kept in step with FunctionRules.FUNCTIONS (not preloaded: the rules load data).
 const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary",
 	"meditation_hall", "tribulation_ground", "library", "meditation_room", "tribulation_chamber", "infirmary", "spirit_array", "sect_gate",
-	"ancestral_hall", "precept_stele", "bell_tower", "lecture_hall"]
+	"ancestral_hall", "precept_stele", "bell_tower", "lecture_hall", "alchemy_room", "smithy"]
 const BALANCE_SECTIONS: Array[String] = [
 	"time", "needs", "agents", "social", "mood", "health", "work", "construction", "world",
 	"settlements", "food", "farming", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
-	"cultivation", "halls",
+	"cultivation", "halls", "alchemy", "tools",
 ]
 
 
@@ -57,6 +58,7 @@ static func run() -> Array[String]:
 	errors.append_array(ValidationCultivation.check(Data.file("cultivation"), Data.labels(), trait_ids))
 	errors.append_array(ValidationCultivation.check_tribulations(Data.file("tribulations"), Data.realms().size(), Data.file("blocks"), Data.labels()))
 	errors.append_array(ValidationCultivation.check_tree(Data.file("tree"), Data.file("tribulations"), Data.labels()))
+	errors.append_array(ValidationSeasons.check_weather(Data.file("weather"), Data.labels()))
 	var seen: Dictionary = {}
 	for name in Data.TEXT_FILES:
 		errors.append_array(check_text(Data.file(name)))
@@ -119,7 +121,8 @@ static func check_blocks(data: Dictionary) -> Array[String]:
 						or int(tile[0]) >= int(size[0]) or int(tile[1]) >= int(size[1]):
 					errors.append(label + ": " + key + " is outside the atlas")
 		for tile in entry.get("atlas_stages", []):
-			if not tile is Array or tile.size() != 2 or not _number(tile[0]) or not _number(tile[1]) 					or int(tile[0]) >= int(size[0]) or int(tile[1]) >= int(size[1]):
+			if not tile is Array or tile.size() != 2 or not _number(tile[0]) or not _number(tile[1]) \
+					or int(tile[0]) >= int(size[0]) or int(tile[1]) >= int(size[1]):
 				errors.append(label + ": a growth stage tile is outside the atlas")
 		if entry.has("component") and not components.has(entry.component):
 			errors.append(label + ": unknown component " + str(entry.component))
@@ -230,7 +233,7 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 			if not components.has(key):
 				errors.append("templates: " + rule.id + " names unknown component " + str(key))
 		for key in rule.capacity:
-			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots", "furrows", "cooks", "grain", "mats", "formations", "shelves", "cots", "tablets"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
+			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots", "furrows", "cooks", "grain", "mats", "formations", "shelves", "cots", "tablets", "furnaces", "anvils"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
 				errors.append("templates: unknown capacity mapping")
 		for key in rule.get("at_most", {}):
 			if not rule.requires.has(key) or not _number(rule.at_most[key]) or float(rule.at_most[key]) < float(rule.requires[key]):

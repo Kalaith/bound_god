@@ -78,6 +78,9 @@ func check_food_designs_have_their_functions():
 ## says so.
 func check_crops_grow_when_tended_and_die_in_winter():
 	var sim: RefCounted = _flat()
+	# Days pass here without their hours, so no rain falls: keep the field
+	# watered (dry spells are checked in checks_seasons).
+	sim.weather.last_wet_day = 1 << 20
 	var origin: Vector3i = _raise(sim, "field_plot", Vector3i(4, 0, 4))
 	var crop: Dictionary = Crops.staple()
 	var a: Vector3i = origin + Vector3i(0, 1, 0)

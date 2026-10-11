@@ -9,6 +9,7 @@ extends RefCounted
 ## time, spending the materials. Blocks reach the world when a site is
 ## finished (then the same completion as a builder's last block) or when the
 ## valley materialises.
+const Crafts = preload("res://scripts/sim/crafts.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
@@ -78,6 +79,8 @@ static func wants(sim: RefCounted, id: int) -> Array:
 	var leader: int = _leader(sim, id)
 	for want in DeliberationFood.wants(sim, id, people, have):
 		result.append([want[0], want[0], leader])
+	for want in Crafts.village_wants(sim, id, people, have):
+		result.append([want[0], want[0], leader])
 	if Standing.food_days(sim, id) < Balance.number("construction.garden_food_days") and int(have.get("garden", 0)) < ceili(float(people) / Balance.number("construction.people_per_garden")):
 		result.append(["garden", "garden", leader])
 	var capacity: int = sim.settlements.capacity_for(sim, id, "wood")
@@ -100,7 +103,8 @@ static func _leader(sim: RefCounted, id: int) -> int:
 	# Keyed by world as well: several worlds may live in one run (checks).
 	var key: String = "%d:%d" % [sim.get_instance_id(), id]
 	var known: Array = _leaders.get(key, [-1, -1])
-	if int(known[0]) >= 0 and sim.calendar.tick - int(known[0]) < sim.calendar.ticks_for_days(10.0) and int(known[1]) >= 0 			and int(known[1]) < sim.agents.size() and sim.agents[int(known[1])].is_present():
+	if int(known[0]) >= 0 and sim.calendar.tick - int(known[0]) < sim.calendar.ticks_for_days(10.0) and int(known[1]) >= 0 \
+			and int(known[1]) < sim.agents.size() and sim.agents[int(known[1])].is_present():
 		return int(known[1])
 	var best: int = _weigh_leader(sim, id)
 	_leaders[key] = [sim.calendar.tick, best]

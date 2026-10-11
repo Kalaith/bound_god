@@ -4,6 +4,7 @@ extends RefCounted
 ## loose beside them), weeding tends the crops within reach, and cooks fill
 ## a kitchen's pot and cook it into meals. A settlement's first harvest and
 ## first meal are chronicled.
+const Crafts = preload("res://scripts/sim/crafts.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Crops = preload("res://scripts/sim/crops.gd")
 
@@ -18,9 +19,9 @@ static func apply(sim: RefCounted, agent: RefCounted, action: Dictionary) -> boo
 		"tend_crops":
 			_tend(sim, agent)
 		"add_to_pot":
-			_add_to_pot(sim, agent, int(action.kitchen), int(action.batches))
+			_add_to_pot(sim, agent, int(action.kitchen), int(action.batches), str(action.get("station", "kitchen")))
 		"cook":
-			_cook(sim, agent, int(action.kitchen))
+			_cook(sim, agent, int(action.kitchen), str(action.get("station", "kitchen")))
 		_:
 			return false
 	return true
@@ -67,25 +68,25 @@ static func _tend(sim: RefCounted, agent: RefCounted) -> void:
 	agent.step_result = {"tended": maxi(tended, 1)}
 
 
-static func _add_to_pot(sim: RefCounted, agent: RefCounted, kitchen: int, batches: int) -> void:
+static func _add_to_pot(sim: RefCounted, agent: RefCounted, kitchen: int, batches: int, station: String) -> void:
 	var entry: Dictionary = sim.structures.entries.get(kitchen, {})
-	if entry.is_empty() or not entry.functions.has("kitchen") or agent.carrying.is_empty():
+	if entry.is_empty() or not entry.functions.has(station) or agent.carrying.is_empty():
 		agent.step_result = {"added": 0}
 		return
 	var resource: String = agent.carrying.resource
-	var added: int = sim.kitchens.add(kitchen, resource, int(floor(float(agent.carrying.amount))), batches, entry.anchor)
+	var added: int = sim.station(station).add(kitchen, resource, int(floor(float(agent.carrying.amount))), batches, entry.anchor)
 	agent.carrying.amount = float(agent.carrying.amount) - added
 	if float(agent.carrying.amount) < 0.05:
 		agent.carrying = {}
 	agent.step_result = {"added": added}
 
 
-static func _cook(sim: RefCounted, agent: RefCounted, kitchen: int) -> void:
+static func _cook(sim: RefCounted, agent: RefCounted, kitchen: int, station: String) -> void:
 	var entry: Dictionary = sim.structures.entries.get(kitchen, {})
-	if entry.is_empty() or not entry.functions.has("kitchen") or not agent.carrying.is_empty():
+	if entry.is_empty() or not entry.functions.has(station) or not agent.carrying.is_empty():
 		agent.step_result = {"cooked": 0}
 		return
-	var made: Dictionary = sim.kitchens.cook(kitchen)
+	var made: Dictionary = sim.station(station).cook(kitchen)
 	if made.is_empty():
 		agent.step_result = {"cooked": 0}
 		return
@@ -93,6 +94,9 @@ static func _cook(sim: RefCounted, agent: RefCounted, kitchen: int) -> void:
 	agent.carrying = {"resource": resource, "amount": float(made[resource])}
 	agent.step_result = {"cooked": int(made[resource])}
 	var place: int = sim.settlements.at_cell(entry.anchor)
+	if station != "kitchen":
+		Crafts.first_made(sim, agent, place, resource)
+		return
 	if place >= 0 and not sim.settlements.entries[place].get("cooked", false):
 		sim.settlements.entries[place]["cooked"] = true
 		sim.chronicle_event("first_meal", place, {"place": sim.settlements.entries[place].name, "name": agent.full_name()}, "cause_kitchen_built", [agent.id])

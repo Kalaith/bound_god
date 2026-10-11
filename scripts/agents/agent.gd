@@ -50,6 +50,8 @@ var move_budget: float = 0.0
 var inside: int = -1
 ## {} or {resource, amount}
 var carrying: Dictionary = {}
+## Work ticks left in the tools this person carries (0: none; M20).
+var tool: float = 0.0
 var activity: String = "idle"
 var home: int = -1
 ## present, dead, departed
@@ -165,8 +167,10 @@ const SAVED: Array[String] = [
 	"backoff", "next_deliberation", "cell", "previous_position", "position", "path", "move_budget", "inside",
 	"carrying", "activity", "home", "life", "life_day", "life_cause", "settlement_id", "partner", "help_task",
 	"mental_break", "low_mood_ticks", "faith", "quest_id", "whispers", "joined_day", "stats", "step_result",
-	"interrupted_by", "cultivation",
+	"interrupted_by", "cultivation", "tool",
 ]
+## Keys older saves may lack; the agent keeps its default for them.
+const OPTIONAL: Array[String] = ["tool"]
 
 
 func to_dict() -> Dictionary:
@@ -181,6 +185,8 @@ func to_dict() -> Dictionary:
 static func from_dict(data: Dictionary) -> RefCounted:
 	var agent = load("res://scripts/agents/agent.gd").new()
 	for key in SAVED:
+		if not data.has(key) and OPTIONAL.has(key):
+			continue
 		if not data.has(key):
 			push_error("Saved agent is missing " + key)
 			assert(false, "Saved agent is missing " + key)

@@ -9,7 +9,7 @@ const Personality = preload("res://scripts/agents/personality.gd")
 
 const Need = Personality.Need
 ## Which need a miracle relieves, for interpreting it and answering prayers.
-const RELIEF: Dictionary = {"bless_growth": "food", "kindle": "shelter", "veil_of_fog": "safety", "mend": "shelter"}
+const RELIEF: Dictionary = {"bless_growth": "food", "kindle": "shelter", "veil_of_fog": "safety", "mend": "shelter", "calm_sky": "shelter"}
 
 
 ## Devotion gains scaled by temperament: the pious feel more, sceptics less.
@@ -112,7 +112,7 @@ static func answer_prayers(sim: RefCounted, miracle: String, cell: Vector3i, rad
 				continue
 			var kind: String = str(prayer.intent.get("kind", ""))
 			# Growth blessed against hunger also answers the fear of winter.
-			if kind != relief and not (relief == "safety" and kind == "threat") and not (relief == "food" and kind == "winter"):
+			if kind != relief and not (relief == "safety" and kind == "threat") and not (relief == "food" and kind in ["winter", "rain"]):
 				continue
 			var agent: RefCounted = sim.agents[int(prayer.agent)]
 			if not agent.is_present() or Vector2(agent.cell.x - cell.x, agent.cell.z - cell.z).length() > radius + 16.0:

@@ -17,13 +17,22 @@
 		]
 	},
 	"unlocks": [
-		{"id": "spirit_fruit", "requires": {"insight": "lightning", "amount": 5.0}, "effect": "spirit_fruit"}
+		{"id": "spirit_fruit", "requires": {"insight": "lightning", "amount": 5.0}, "effect": "spirit_fruit"},
+		{"id": "spirit_herbs", "requires": {"maturity": 12.0}, "effect": "spirit_herbs"}
 	],
 	"fruit": {
 		"per_season": 3,
 		"most": 4,
 		"preparation": 0.4,
 		"near_peak": 0.8
+	},
+	"herbs": {
+		"qi": 0.6,
+		"reach": 16.0,
+		"most": 12,
+		"per_day": 2,
+		"ripen_days": 3,
+		"tries": 8
 	},
 	"nurture": {
 		"radius": 4.0,

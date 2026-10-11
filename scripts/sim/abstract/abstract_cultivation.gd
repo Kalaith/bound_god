@@ -99,6 +99,9 @@ static func _maybe_trial(sim: RefCounted, agent: RefCounted) -> int:
 	var wait: float = Balance.number("cultivation.peak_days") * (1.6 - courage) * sim.calendar.ticks_per_day
 	if float(sim.calendar.tick - int(c.peak_tick)) < wait:
 		return -1
+	# A thunderstorm overhead is waited out, as in the detailed world.
+	if sim.weather != null and sim.weather.is_storm() and float(sim.calendar.tick - int(c.peak_tick)) < wait + Balance.number("cultivation.peak_days") * sim.calendar.ticks_per_day:
+		return -1
 	if sim.god.followed.has(agent.id) and not sim.god.protect.has(agent.id):
 		return agent.id
 	var site: Vector3i = DeliberationCultivation.trial_site(sim, agent)

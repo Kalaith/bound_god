@@ -2,15 +2,17 @@ extends RefCounted
 ## A settlement's job board, refreshed every 10 ticks: building sites and
 ## what they lack, repairs, how much each resource is wanted, loose items to
 ## haul and threats near home. Nothing on it is assigned; people read it.
+const Crafts = preload("res://scripts/sim/crafts.gd")
+const Kitchens = preload("res://scripts/sim/kitchens.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Food = preload("res://scripts/sim/food.gd")
 const Crops = preload("res://scripts/sim/crops.gd")
 const Woods = preload("res://scripts/sim/woods.gd")
 
-const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore"]
-const SITE_KIND: Dictionary = {"wood": "tree", "stone": "rock", "thatch": "grass", "berries": "bush", "ore": "ore"}
+const RESOURCES: Array[String] = ["wood", "stone", "thatch", "berries", "ore", "herb"]
+const SITE_KIND: Dictionary = {"wood": "tree", "stone": "rock", "thatch": "grass", "berries": "bush", "ore": "ore", "herb": "herb"}
 ## Stock a settlement likes to keep before anyone needs it: base + per resident.
-const RESERVE: Dictionary = {"wood": [12, 2], "stone": [8, 1], "thatch": [8, 1], "berries": [6, 4], "ore": [0, 0]}
+const RESERVE: Dictionary = {"wood": [12, 2], "stone": [8, 1], "thatch": [8, 1], "berries": [6, 4], "ore": [0, 0], "herb": [0, 0]}
 
 
 static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
@@ -37,12 +39,20 @@ static func refresh(sim: RefCounted, settlement: Dictionary) -> Dictionary:
 				board.items.append(item_id)
 			loose[item.resource] = float(loose.get(item.resource, 0.0)) + float(item.amount)
 	var residents: int = settlement.residents.size()
+	board["alchemy"] = Crafts.stations(sim, id, "alchemy_room")
+	board["smithies"] = Crafts.stations(sim, id, "smithy")
+	# Herbs for the furnace's pills still to refine, ore for the anvil's tools.
+	var crafts: Dictionary = {}
+	if not board.alchemy.is_empty():
+		crafts["herb"] = Crafts.pills_short(sim, id) * int(Kitchens.recipe_for("alchemy_room").inputs.herb)
+	if not board.smithies.is_empty():
+		crafts["ore"] = Crafts.tools_short(sim, id)
 	# Before winter, people want food put by for the months without berries.
 	var autumn: bool = sim.calendar.season() == int(Balance.number("settlements.autumn_season"))
 	for resource in RESOURCES:
 		var reserve: Array = RESERVE[resource]
 		var per_person: float = Balance.number("settlements.autumn_berries_per_person") if autumn and resource == "berries" else float(reserve[1])
-		var wanted: float = float(reserve[0]) + per_person * residents + float(site_need.get(resource, 0))
+		var wanted: float = float(reserve[0]) + per_person * residents + float(site_need.get(resource, 0)) + float(crafts.get(resource, 0))
 		var have: float = float(stock.get(resource, 0)) + float(loose.get(resource, 0.0))
 		# Berries stand for food: grain and meals in the chests count toward them.
 		if resource == "berries":

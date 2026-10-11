@@ -15,6 +15,8 @@ static func new_day(sim: RefCounted) -> void:
 	Spoilage.daily(sim)
 	sim.crops.daily(sim)
 	sim.kitchens.daily(sim)
+	sim.furnaces.daily(sim)
+	sim.forges.daily(sim)
 	var decay: float = Balance.number("social.opinion_decay_per_day")
 	for agent in sim.agents:
 		if not agent.is_present():
@@ -27,6 +29,7 @@ static func new_day(sim: RefCounted) -> void:
 			relation.opinion = move_toward(float(relation.opinion), 0.0, decay)
 	_regrow(sim)
 	sim.woods.daily(sim)
+	sim.herbs.daily(sim)
 	Lifecycle.daily(sim)
 	if sim.settlement_life != null:
 		sim.settlement_life.daily(sim)
@@ -47,6 +50,8 @@ static func new_day(sim: RefCounted) -> void:
 static func new_hour(sim: RefCounted) -> void:
 	Lifecycle.hourly(sim)
 	sim.woods.hourly(sim)
+	if sim.weather != null:
+		sim.weather.hourly(sim)
 	if sim.faith != null:
 		sim.faith.hourly(sim)
 
