@@ -102,7 +102,7 @@ Visual changes are verified with in-game captures written to `docs/verification/
 | `scenes/` | Title and main scenes |
 | `scripts/` | Simulation, agents, building, presentation and core (data, validation, saves, settings) |
 | `data/` | Catalogs, balance and text |
-| `assets/` | Textures, fonts and icon |
+| `assets/` | Block atlas, fonts, shaders, UI theme and icon |
 | `tools/` | Headless checks, profiling and atlas tools (excluded from the export) |
 | `docs/` | Design notes, art direction, playtests and verification captures (not imported by Godot) |
 
