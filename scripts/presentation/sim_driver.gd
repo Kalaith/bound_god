@@ -23,6 +23,9 @@ var ticks_per_second: float = 6.0
 ## stopped early ({} when it ran its span).
 var meditation: RefCounted = null
 var wake_reason: Dictionary = {}
+## Where the meditation was meant to end, kept when something wakes the god
+## early so the rest of the span can be sat through.
+var meditation_end_tick: int = 0
 var _speeds: Array = []
 
 
@@ -47,9 +50,13 @@ func rest(days: float) -> void:
 
 
 ## Years pass abstractly; the valley materialises at the end or when
-## something wakes the god.
-func meditate(days: float) -> void:
+## something wakes the god. Meditating on after a wake passes the first
+## sitting's start as `from_tick`, so the summary covers the whole span.
+func meditate(days: float, from_tick: int = -1) -> void:
 	rest(days)
+	meditation_end_tick = rest_target_tick
+	if from_tick >= 0:
+		rest_from_tick = from_tick
 	wake_reason = {}
 	meditation = AbstractWorld.begin(sim)
 	meditation.step = AbstractWorld.step_for(days, float(sim.calendar.days_per_season * 4))
@@ -58,6 +65,11 @@ func meditate(days: float) -> void:
 
 func meditating() -> bool:
 	return resting and meditation != null
+
+
+## Days of the meditation still unsat when the god woke early (0 if none).
+func meditation_days_left() -> float:
+	return maxf(float(meditation_end_tick - sim.calendar.tick), 0.0) / float(sim.calendar.ticks_per_day)
 
 
 func rest_progress() -> float:

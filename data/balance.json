@@ -43,7 +43,7 @@
 		"base_work_hours": 0.42, "off_hours": 0.08, "hungry_food_pull": 1.5, "plant_trees_pull": 0.6
 	},
 	"construction": {"vernacular_after_days": 12.0, 
-		"ticks_per_block": 6, "abandon_days": 5, "max_open_sites": 2, "site_search_radius": 26, "site_spacing": 2,
+		"ticks_per_block": 6, "abandon_days": 5, "max_open_sites": 2, "common_sites": 1, "site_search_radius": 26, "site_spacing": 2,
 		"max_height_variation": 1, "builds_offered": 4, "found_home_base": 0.55,
 		"stone_walk": 12.0, "hall_residents": 6, "garden_food_days": 2.0, "people_per_garden": 5
 	},
@@ -126,5 +126,5 @@
 	"alchemy": {"pills_kept": 2, "pill_preparation": 0.3, "refine_pull": 0.65},
 	"tools": {"speed": 1.5, "wear_hours": 40.0, "people_per_set": 2.0, "smithy_people": 6, "smithy_ore": 3, "smith_pull": 1.5},
 	"paths": {"wear_keep": 0.7, "wear_to_path": 30.0, "wear_to_grass": 0.5},
-	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 6.4, "gravity": 16.0, "hotbar_slots": 9}
+	"avatar": {"reach": 5.0, "overlook_reach": 24.0, "walk_speed": 5.0, "sprint_speed": 8.5, "jump_velocity": 6.4, "gravity": 16.0, "hotbar_slots": 9, "pickup_reach": 1.5}
 }

@@ -14,6 +14,7 @@ var _title: Label
 var _bar: ProgressBar
 var _summary: RichTextLabel
 var _continue: Button
+var _meditate_on: Button
 var _meditating: bool = false
 var _before: int = 0
 
@@ -58,6 +59,10 @@ func _ready() -> void:
 		hide()
 		finished.emit())
 	column.add_child(_continue)
+	_meditate_on = Style.button("")
+	_meditate_on.pressed.connect(_resume)
+	column.add_child(_meditate_on)
+	_meditate_on.hide()
 	driver.rest_finished.connect(_on_finished)
 	hide()
 
@@ -68,9 +73,22 @@ func begin_meditation(years: float) -> void:
 	_title.text = Text.format("med_title", {"years": int(years)})
 	_summary.text = ""
 	_continue.hide()
+	_meditate_on.hide()
 	_bar.show()
 	show()
 	driver.meditate(years * sim.calendar.days_per_season * 4)
+
+
+## Woken early: sit again for what is left of the span. A trial is excluded,
+## since the god was woken to answer it.
+func _resume() -> void:
+	var days: float = driver.meditation_days_left()
+	_title.text = Text.format("med_title", {"years": "%.1f" % (days / float(sim.calendar.days_per_season * 4))})
+	_summary.text = ""
+	_continue.hide()
+	_meditate_on.hide()
+	_bar.show()
+	driver.meditate(days, driver.rest_from_tick)
 
 
 func begin(days: float) -> void:
@@ -78,6 +96,7 @@ func begin(days: float) -> void:
 	_title.text = Text.format("rest_title", {"days": int(days)})
 	_summary.text = ""
 	_continue.hide()
+	_meditate_on.hide()
 	_bar.show()
 	show()
 	driver.rest(days)
@@ -93,6 +112,10 @@ func _on_finished(from_tick: int) -> void:
 	if _meditating:
 		_title.text = Text.label("med_while")
 		_summary.text = MeditationSummary.text(sim, from_tick, _before, driver.wake_reason)
+		var left: float = driver.meditation_days_left()
+		if left >= 1.0 and str(driver.wake_reason.get("kind", "")) != "trial":
+			_meditate_on.text = Text.format("med_meditate_on", {"years": "%.1f" % (left / float(sim.calendar.days_per_season * 4))})
+			_meditate_on.show()
 		_continue.show()
 		_continue.grab_focus()
 		return

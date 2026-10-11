@@ -114,6 +114,7 @@
 		"shrine_menu_meditate": "Meditate {years} y",
 		"med_title": "The god meditates beneath the tree for {years} years…",
 		"med_while": "While you meditated…",
+		"med_meditate_on": "Meditate on ({years} years left)",
 		"med_span": "{years} years passed ({days} days).",
 		"med_woke_trial": "You woke: {name} is about to face Heaven.",
 		"med_woke_danger": "You woke: {name} is in mortal danger.",

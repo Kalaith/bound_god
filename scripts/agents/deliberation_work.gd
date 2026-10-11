@@ -175,10 +175,11 @@ static func means_believed(sim: RefCounted, agent: RefCounted, template: RefCoun
 	return true
 
 
-## Open sites that need materials brought: a field is tilled from the ground
-## where it lies, so it never keeps builders from a home.
+## Open housing sites that need materials brought: a field is tilled from
+## the ground where it lies, and common buildings have sites of their own,
+## so neither keeps builders from a home.
 static func _open_sites(sim: RefCounted, settlement_id: int) -> int:
-	return SectHallWants.open_sites(sim, settlement_id, false)
+	return SectHallWants.open_sites(sim, settlement_id, "housing")
 
 
 ## Whether a site for `purpose` is already open in the settlement.

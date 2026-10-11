@@ -15,12 +15,27 @@ const PURPOSES: Array[String] = ["meditation_hall", "tribulation_ground", "libra
 	"spirit_array", "sect_gate", "ancestral_hall", "precept_stele", "bell_tower", "lecture_hall", "alchemy_room"]
 
 
-## Open sites that need materials brought, the sect's (true) or the village's.
-static func open_sites(sim: RefCounted, settlement_id: int, sect: bool) -> int:
+## The village's homes and shelters go up beside its common buildings, not
+## instead of them: newcomers arriving without a roof would otherwise hold
+## every site and no hall, field or granary would ever be raised. Housing
+## has `construction.max_open_sites` sites, common work
+## `construction.common_sites`, the sect `halls.sect_sites`.
+const HOUSING: Array[String] = ["home", "dwelling", "shelter"]
+
+
+## Which share of the building a purpose falls in: "sect", "housing" or "common".
+static func share(purpose: String) -> String:
+	if PURPOSES.has(purpose):
+		return "sect"
+	return "housing" if HOUSING.has(purpose) else "common"
+
+
+## Open sites that need materials brought in one share.
+static func open_sites(sim: RefCounted, settlement_id: int, kind: String) -> int:
 	var count: int = 0
 	for id in sim.construction.in_settlement(settlement_id):
 		var site: Dictionary = sim.construction.get_site(id)
-		if PURPOSES.has(str(site.purpose)) != sect:
+		if share(str(site.purpose)) != kind:
 			continue
 		var template: RefCounted = sim.template(site.template_id)
 		if template == null or not template.bill.is_empty():
@@ -30,9 +45,10 @@ static func open_sites(sim: RefCounted, settlement_id: int, sect: bool) -> int:
 
 ## Whether there is no room for another site needing materials for `purpose`.
 static func busy(sim: RefCounted, settlement_id: int, purpose: String) -> bool:
-	var sect: bool = PURPOSES.has(purpose)
-	var most: int = Balance.integer("halls.sect_sites") if sect else Balance.integer("construction.max_open_sites")
-	return open_sites(sim, settlement_id, sect) >= most
+	var kind: String = share(purpose)
+	var most: int = Balance.integer({"sect": "halls.sect_sites", "housing": "construction.max_open_sites",
+		"common": "construction.common_sites"}[kind])
+	return open_sites(sim, settlement_id, kind) >= most
 
 
 ## Everything a sect would build, M19's places first; `agent` null asks for
