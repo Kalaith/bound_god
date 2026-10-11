@@ -100,7 +100,7 @@ Each milestone ends with a runnable game, new `sim_checks` scenarios for its sim
 | A. Hold up | M13 Playtest, balance and foundations | Built except the fresh-player playtests (need people) |
 | B. A living economy | M14 Fields and meals | Built (`PROGRESS.md`) |
 | C. The cultivation slice | M15 Qi and cultivators · M16 Breakthroughs and tribulations · M17 The tree learns · M18 Meditation and generations | Built headlessly; the key test's fresh-player sessions are open |
-| D. A living sect | M19 Sect architecture and living designs · M19b The sect's halls · M20 Seasons, weather and herbs · M20b The sect's alchemy | M19 built headlessly (not played; seekers do not yet bring the sect designs); M19b built headlessly (not played); M20 built headlessly (not played); M20b planned |
+| D. A living sect | M19 Sect architecture and living designs · M19b The sect's halls · M20 Seasons, weather and herbs · M20b The sect's alchemy | M19 built headlessly (not played; seekers do not yet bring the sect designs); M19b built headlessly (not played); M20 built headlessly (not played); M20b built headlessly (not played) |
 | E. A wider world | M21 Branches and sacred sites · M22 Regions, other sects and outsiders | |
 | F. A whole game | M23 Campaign shape · M24 Look, sound and feel · M25 Release | |
 

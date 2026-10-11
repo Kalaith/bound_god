@@ -18,6 +18,11 @@ const EffectsApply = preload("res://scripts/sim/effects_apply.gd")
 const AbstractAlchemy = preload("res://scripts/sim/abstract/abstract_alchemy.gd")
 const Stores = preload("res://tools/checks/stores.gd")
 const Build = preload("res://tools/checks/build.gd")
+const Balance = preload("res://scripts/core/balance.gd")
+const Crafts = preload("res://scripts/sim/crafts.gd")
+const SectHallWants = preload("res://scripts/sim/sect_hall_wants.gd")
+const Template = preload("res://scripts/building/template.gd")
+const Meditation = preload("res://tools/checks/meditation.gd")
 
 const Kind = Goals.Kind
 
@@ -251,3 +256,81 @@ func check_abstract_alchemy_refines_and_is_taken():
 	for agent in sim.agents:
 		took += 1 if int(agent.cultivation.get("elixir_until", -1)) > sim.calendar.tick else 0
 	return "" if took > 0 else "nobody took a qi pill while abstract (stores %d)" % sim.settlements.amount(1, "qi_pill")
+
+
+## A sect wants an alchemy hall once it has a room, enough members and a
+## rarer herb growing; a pavilion once it has a hall, more members and an
+## elder in Foundation Establishment; a village with herbs and hands wants a
+## herbalist's workshop.
+func check_who_wants_the_alchemy_halls():
+	var sim: RefCounted = _flat()
+	var members: Array = []
+	for i in range(Balance.integer("alchemy.pavilion_members")):
+		var agent: RefCounted = sim.agents[i % sim.agents.size()]
+		members.append(agent)
+	_cultivator(members[0], 1)
+	sim.herbs.plants[Vector3i(1, 5, 1)] = 0
+	var wanted: Callable = func(have: Dictionary, count: int) -> Array:
+		var result: Array = []
+		for want in SectHallWants._alchemy(sim, members.slice(0, count), 1, have):
+			result.append(want[0])
+		return result
+	if not wanted.call({}, 1).has("alchemy_room"):
+		return "the sect did not want an alchemy room with herbs growing"
+	var hall_members: int = Balance.integer("alchemy.hall_members")
+	if wanted.call({"alchemy_room": 1}, hall_members).has("alchemy_hall"):
+		return "the sect wanted a hall before any rarer herb grew or anyone was founded"
+	sim.herbs.found["jade_ginseng"] = true
+	if not wanted.call({"alchemy_room": 1}, hall_members).has("alchemy_hall") or wanted.call({"alchemy_room": 1}, hall_members - 1).has("alchemy_hall"):
+		return "the hall was not wanted at %d members with ginseng growing" % hall_members
+	var have: Dictionary = {"alchemy_room": 1, "alchemy_hall": 1}
+	if wanted.call(have, members.size()).has("pill_pavilion"):
+		return "a pavilion was wanted with nobody in Foundation Establishment"
+	members[0].cultivation.realm = 2
+	if not wanted.call(have, members.size()).has("pill_pavilion"):
+		return "a pavilion was not wanted by a grown sect with a founded elder"
+	var village: Array = []
+	for want in Crafts.village_wants(sim, 1, Balance.integer("alchemy.workshop_people"), {}):
+		village.append(want[0])
+	if not village.has("herbal_workshop") or not Crafts.village_wants(sim, 1, Balance.integer("alchemy.workshop_people"), {"herbal_workshop": 1}).filter(func(w: Array) -> bool: return w[0] == "herbal_workshop").is_empty():
+		return "the village's want of a herbalist's workshop was %s" % [village]
+	return ""
+
+
+## The M20b exit: on seed 11 with a sect, the tree at Spirit Root and the
+## alchemy designs offered, the sect raises an alchemy room or herbalist's
+## workshop and an alchemy hall by its own proposals within 60 days,
+## refines at least four kinds of preparation and its people take them,
+## and thunder root grows where Heaven scorched.
+func long_check_the_sect_takes_up_alchemy():
+	var valley: Dictionary = Meditation.valley(11)
+	var sim: RefCounted = valley.sim
+	for id in ["herbalist_hut", "alchemy_room", "alchemy_hall", "pill_pavilion", "herb_garden", "ginseng_house"]:
+		sim.apply_command({"type": "offer_template", "template": Template.from_starter(Data.starter(id)).to_dict()})
+	sim.tree_growth.maturity = 12.0
+	var start: int = sim.calendar.tick
+	var seen: Dictionary = {}
+	var made: Dictionary = {}
+	var taken: Dictionary = {}
+	for day in range(60):
+		sim.run_ticks(sim.calendar.ticks_per_day)
+		for entry in sim.chronicle.since(start):
+			if entry.kind in ["first_pill", "first_preparation"]:
+				made[str(entry.args.get("made", "resource_pill"))] = true
+			if entry.kind == "herb_found" and entry.args.get("herb", "") == "resource_thunder_root" and not seen.has("thunder_root"):
+				seen["thunder_root"] = sim.calendar.day()
+		for agent in sim.agents:
+			for record in agent.decisions:
+				if str(record.get("text", "")) == "log_took_elixir":
+					taken[str(record.args.elixir)] = true
+		for function in ["herbal_workshop", "alchemy_room", "alchemy_hall"]:
+			if not seen.has(function) and not _with(sim, function).is_empty():
+				seen[function] = sim.calendar.day()
+		if (seen.has("alchemy_room") or seen.has("herbal_workshop")) and seen.has("alchemy_hall") and made.size() >= 4 and taken.size() >= 4 and seen.has("thunder_root"):
+			break
+	print("      days: %s made %s taken %s" % [seen, made.keys(), taken.keys()])
+	if not (seen.has("alchemy_room") or seen.has("herbal_workshop")) or not seen.has("alchemy_hall"):
+		return "the sect raised %s in 60 days" % [seen]
+	if made.size() < 4 or taken.size() < 4:
+		return "made %s, taken %s" % [made.keys(), taken.keys()]
+	return "" if seen.has("thunder_root") else "no thunder root grew on a scar"
