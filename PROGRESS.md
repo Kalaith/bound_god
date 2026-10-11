@@ -4,7 +4,7 @@ Resume from here and `git log`. Checks: `--headless --path . --script res://tool
 
 ## Current milestone
 
-Phase 1 (vertical slice, M0–M12), M13 (all but the fresh-player playtests), M14 (fields and meals), M15 (qi and cultivators), M16 (breakthroughs and tribulations), M17 (the tree learns) and **M18 (meditation and generations)** are built: the cultivation slice is complete headlessly (M14 meets its exit headlessly; not yet played by hand). **Direction change (2026-10-10):** the game is now a tree spirit guarding a cultivation sect (`docs/design/sacred_tree_cultivation_design.md`, carried into GDD v0.3). Everything built stays; the plan was re-sequenced so the **cultivation slice (M15–M18)** comes next and the former weather, crafts, designs, regions and factions milestones follow it (`IMPLEMENTATION_PLAN.md` §4). M15–M18 meet their exits headlessly and in captures, including M18's scripted key test; none has been played by hand, and the fresh-player half of the key test is open. **M19 (sect architecture and living designs)** is built and meets its exit headlessly and in captures (not played by hand). **M19b (the sect's halls)**, added at the user's request (a building phase: ten more sect buildings, new blocks, renovations), is built and meets its exit headlessly and in captures (not played by hand). **M20** is next and is still an outline in the plan.
+Phase 1 (vertical slice, M0–M12), M13 (all but the fresh-player playtests), M14 (fields and meals), M15 (qi and cultivators), M16 (breakthroughs and tribulations), M17 (the tree learns) and **M18 (meditation and generations)** are built: the cultivation slice is complete headlessly (M14 meets its exit headlessly; not yet played by hand). **Direction change (2026-10-10):** the game is now a tree spirit guarding a cultivation sect (`docs/design/sacred_tree_cultivation_design.md`, carried into GDD v0.3). Everything built stays; the plan was re-sequenced so the **cultivation slice (M15–M18)** comes next and the former weather, crafts, designs, regions and factions milestones follow it (`IMPLEMENTATION_PLAN.md` §4). M15–M18 meet their exits headlessly and in captures, including M18's scripted key test; none has been played by hand, and the fresh-player half of the key test is open. **M19 (sect architecture and living designs)** is built and meets its exit headlessly and in captures (not played by hand). **M19b (the sect's halls)**, added at the user's request (a building phase: ten more sect buildings, new blocks, renovations), is built and meets its exit headlessly and in captures (not played by hand). **M20** is next; it is detailed in the plan.
 
 ## Done
 
@@ -79,7 +79,7 @@ Phase 1 (vertical slice, M0–M12), M13 (all but the fresh-player playtests), M1
 
 ## Next
 
-- M20 Seasons, weather and herbs: detail it in the plan the way M15–M19 are written, then build it.
+- M20 Seasons, weather and herbs: detailed in the plan; build it.
 - M19b by hand: build a library or meditation room by hand from the blocks screen and watch the function appear; watch a renovation go up; the halls' roofs hide their furniture from the overlook (the captures strip the roof).
 - M19 by hand: lay a blueprint and watch it taken up; the hall's roof hides its mats from the overlook (consider a cutaway).
 - M18's second half of the key test: fresh players play the slice (`docs/playtests/TEMPLATE_CULTIVATION.md`) and say whether they cared what happened to their disciple. Needs people.
