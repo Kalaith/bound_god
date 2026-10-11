@@ -16,6 +16,8 @@ static func apply(sim: RefCounted, command: Dictionary) -> Dictionary:
 			return _transfer(sim, command)
 		"toggle_door":
 			return _toggle_door(sim, command)
+		"gather_items":
+			return _gather(sim, command)
 		"set_hotbar":
 			return _set_hotbar(sim, command)
 		"follow":
@@ -36,6 +38,35 @@ static func apply(sim: RefCounted, command: Dictionary) -> Dictionary:
 	if sim.faith != null:
 		return sim.faith.apply_command(sim, command)
 	return {"ok": false, "reason": "command_unknown"}
+
+
+## Loose items lying within a step of `cell` (the god's feet), by id order.
+static func items_near(sim: RefCounted, cell: Vector3i) -> Array:
+	var reach: float = Balance.number("avatar.pickup_reach")
+	var ids: Array = sim.items.keys()
+	ids.sort()
+	return ids.filter(func(id: int) -> bool:
+		var at: Vector3i = sim.items[id].cell
+		return absi(at.y - cell.y) <= 1 and Vector2(at.x - cell.x, at.z - cell.z).length() <= reach and float(sim.items[id].amount) >= 1.0)
+
+
+## The god walking over loose items takes them into the divine stock, whole
+## units only; a sliver left over stays on the ground for people to haul.
+static func _gather(sim: RefCounted, command: Dictionary) -> Dictionary:
+	if sim.god.dormant:
+		return {"ok": false, "reason": "edit_dormant"}
+	var gathered: Dictionary = {}
+	for id in items_near(sim, command.get("cell", Vector3i(-1, -1, -1))):
+		var item: Dictionary = sim.items[id]
+		var whole: int = floori(float(item.amount))
+		sim.god.add_stock(item.resource, whole)
+		gathered[item.resource] = int(gathered.get(item.resource, 0)) + whole
+		item.amount = float(item.amount) - whole
+		if item.amount <= 0.05:
+			sim.items.erase(id)
+	if gathered.is_empty():
+		return {"ok": false, "reason": "gather_nothing"}
+	return {"ok": true, "reason": "", "gathered": gathered}
 
 
 ## Offered designs become known to the people of the shrine's settlement who

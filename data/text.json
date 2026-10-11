@@ -72,6 +72,8 @@
     "edit_someone_there": "Someone is standing there",
     "edit_no_stock": "No {resource} in your divine stock",
     "edit_harvested": "Berries gathered into your stock",
+    "gather_nothing": "Nothing lies here to pick up",
+    "god_gathered": "Picked up {items}",
     "command_unknown": "The world did not understand",
     "hud_stock": "Divine stock",
     "hud_stock_empty": "empty — break blocks to gather",

@@ -7,6 +7,7 @@ const Text = preload("res://scripts/core/text.gd")
 const ShrineMenu = preload("res://scripts/presentation/ui/shrine_menu.gd")
 const AgentText = preload("res://scripts/presentation/ui/agent_text.gd")
 const Movement = preload("res://scripts/sim/movement.gd")
+const CommandsWorld = preload("res://scripts/sim/commands_world.gd")
 
 var sim: RefCounted
 var main: Node3D
@@ -83,12 +84,26 @@ func _process(_delta: float) -> void:
 	if cell != _avatar_cell:
 		_avatar_cell = cell
 		sim.apply_command({"type": "avatar_moved", "cell": cell})
+		_gather(cell)
 	for event in sim.god.take_events():
 		_on_god_event(event)
 	for event in sim.faith.events:
 		if int(event.uid) > _last_event:
 			_last_event = int(event.uid)
 			main.overlays.flash(Vector3(event.cell) + Vector3(0.5, 0.2, 0.5), float(event.radius))
+
+
+## Walking over loose items picks them up into the divine stock.
+func _gather(cell: Vector3i) -> void:
+	if sim.god.dormant or CommandsWorld.items_near(sim, cell).is_empty():
+		return
+	var result: Dictionary = sim.apply_command({"type": "gather_items", "cell": cell})
+	if not result.ok:
+		return
+	var parts: Array = []
+	for resource in result.gathered:
+		parts.append("%d %s" % [result.gathered[resource], Text.label("resource_" + resource)])
+	main.hud.flash(Text.format("god_gathered", {"items": ", ".join(parts)}))
 
 
 func _on_god_event(event: Dictionary) -> void:

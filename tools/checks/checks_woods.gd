@@ -120,6 +120,25 @@ func check_the_god_plants_saplings_in_ground_and_finds_seeds_in_leaves():
 	return ""
 
 
+func check_the_god_picks_up_seeds_fallen_from_leaves():
+	var sim: RefCounted = _flat()
+	var tree: Vector3i = sim.features.sacred_tree
+	var ground := Vector3i(tree.x + 4, 5, tree.z + 1)
+	sim.drop_item(ground, "tree_seed", 1.0)
+	sim.drop_item(ground + Vector3i(6, 0, 0), "tree_seed", 1.0)
+	var before: int = sim.god.stock("tree_seed")
+	var result: Dictionary = sim.apply_command({"type": "gather_items", "cell": ground + Vector3i(1, 0, 0)})
+	if not result.ok or sim.god.stock("tree_seed") != before + 1:
+		return "walking beside a fallen seed did not pick it up: %s" % str(result)
+	if sim.items.size() != 1:
+		return "%d items remain where 1 was out of reach" % sim.items.size()
+	if sim.command_log.is_empty() or sim.command_log[-1].command.type != "gather_items":
+		return "picking up is not in the command log, so a replay would differ"
+	if Registry.id("sapling") < 0 or Registry.resource(Registry.id("sapling")) != "tree_seed":
+		return "the sapling block is not planted from tree seeds"
+	return ""
+
+
 func check_people_plant_trees_where_the_woods_are_thin():
 	var sim: RefCounted = _flat()
 	Stores.fill(sim, 1, {"berries": 40, "tree_seed": 4})
