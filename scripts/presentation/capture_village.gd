@@ -2,8 +2,9 @@ extends RefCounted
 ## Debug-only captures of the village buildings (M13): `village_day` and
 ## `village_night` (a hall, a garden, a store shed, a timber cottage and
 ## lanterns raised beside the tree), `village_panel` (the settlement panel's
-## standing checklist), `village_library` (what each building does) and
-## `village_requests` (a village asked to found a settlement).
+## standing checklist), `village_library` (what each building does),
+## `village_requests` (a village asked to found a settlement) and
+## `village_beds` (two sleepers on their beds in a roofless cottage).
 const Data = preload("res://scripts/core/data.gd")
 const Template = preload("res://scripts/building/template.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
