@@ -21,22 +21,23 @@ static func settle(sim: RefCounted, agent: RefCounted) -> void:
 
 
 ## Someone walled in where they stand (a pit dug around them, a wall raised
-## beside them) clambers to the nearest cell close by from which `goal` can
-## be reached. Tried at most once a while, as it searches several paths.
+## beside them, a roof finished under their feet) clambers to the nearest
+## cell close by from which `goal` can be reached. Tried at most once a
+## while, as it searches several paths.
 static func scramble(sim: RefCounted, agent: RefCounted, goal: Vector3i) -> bool:
 	var now: int = sim.calendar.tick
 	if agent.beliefs.recently_failed("scramble", now, Balance.integer("agents.failure_memory_ticks")):
 		return false
 	agent.beliefs.note_failure("scramble", now)
 	var near: Array = []
-	for dz in range(-3, 4):
-		for dx in range(-3, 4):
-			for dy in range(-3, 4):
+	for dz in range(-4, 5):
+		for dx in range(-4, 5):
+			for dy in range(-5, 4):
 				var cell: Vector3i = agent.cell + Vector3i(dx, dy, dz)
 				if cell != agent.cell and sim.nav.is_walkable(cell):
 					near.append([absi(dx) + absi(dz) + absi(dy), cell.y, cell.z, cell.x, cell])
 	near.sort()
-	for i in range(mini(near.size(), 6)):
+	for i in range(mini(near.size(), 8)):
 		var cell: Vector3i = near[i][4]
 		if not sim.nav.find_path(cell, goal).is_empty():
 			agent.cell = cell
