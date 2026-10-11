@@ -19,13 +19,15 @@ const Construction = preload("res://scripts/sim/construction.gd")
 const EffectsBuild = preload("res://scripts/sim/effects_build.gd")
 const DeliberationFood = preload("res://scripts/agents/deliberation_food.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
+const SectHallWants = preload("res://scripts/sim/sect_hall_wants.gd")
 const DeliberationWork = preload("res://scripts/agents/deliberation_work.gd")
 const AbstractPeople = preload("res://scripts/sim/abstract/abstract_people.gd")
+const Renovations = preload("res://scripts/sim/renovations.gd")
 
 ## Blocks one pair of hands sets in an hour, fetching included.
 const BLOCKS_PER_HOUR: float = 3.0
 ## Materials one pair of hands brings in an hour from known places.
-const GATHER_PER_HOUR: Dictionary = {"wood": 4.0, "stone": 2.0, "thatch": 3.0}
+const GATHER_PER_HOUR: Dictionary = {"wood": 4.0, "stone": 2.0, "thatch": 3.0, "ore": 1.0}
 ## Days between a settlement's looks at what it lacks.
 const PLAN_EVERY_DAYS: int = 3
 ## Candidates the site search gathers before choosing (the nearest rings).
@@ -84,7 +86,7 @@ static func wants(sim: RefCounted, id: int) -> Array:
 	if people >= Balance.integer("construction.hall_residents") and int(have.get("hall", 0)) == 0:
 		result.append(["hall", "hall", leader])
 	var sect: Dictionary = sim.sects.in_settlement(id) if sim.sects != null else {}
-	for want in SectPlaces.wants(sim, id, have):
+	for want in SectHallWants.all(sim, id, have):
 		result.append([want[0], want[0], int(sect.get("master", leader))])
 	return result
 
@@ -126,11 +128,6 @@ static func _weigh_leader(sim: RefCounted, id: int) -> int:
 
 ## Daily: start the most pressing project there is room and a design for.
 static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
-	var open: int = 0
-	for site_id in sim.construction.in_settlement(id):
-		var template: RefCounted = sim.template(sim.construction.get_site(site_id).template_id)
-		if template == null or not template.bill.is_empty():
-			open += 1
 	var tried: Dictionary = record.get("no_site", {})
 	for want in wants(sim, id):
 		if int(want[2]) < 0:
@@ -138,8 +135,13 @@ static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
 		var design: RefCounted = design_for(sim, id, str(want[0]))
 		if design == null or _open_for(sim, id, str(want[1])):
 			continue
-		if not design.bill.is_empty() and open >= Balance.integer("construction.max_open_sites"):
+		if not design.bill.is_empty() and SectHallWants.busy(sim, id, str(want[1])):
 			continue
+		# A standing building to add to comes before a new one.
+		var renovation: Dictionary = Renovations.option(sim, id, str(want[0]))
+		if not renovation.is_empty():
+			_renovate(sim, id, renovation, want)
+			return
 		# The god's blueprint for this function, while its spot is free, first.
 		var proposal: Dictionary = _blueprint(sim, id, str(want[0]))
 		if not proposal.is_empty():
@@ -170,6 +172,15 @@ static func _mark(sim: RefCounted, id: int, design: RefCounted, choice: Dictiona
 	site["cause"] = EffectsBuild._cause(sim, sim.agents[int(want[2])], str(want[1]))
 	site["placed_to"] = 0
 	sim.chronicle_event("site_marked", id, {"name": sim.agents[int(want[2])].full_name(), "design": sim.template_name(design.id)}, str(site.cause), [int(want[2])])
+
+
+static func _renovate(sim: RefCounted, id: int, renovation: Dictionary, want: Array) -> void:
+	var template_id: String = Renovations.PREFIX + str(renovation.renovation.id)
+	var site_id: int = sim.construction.create(template_id, renovation.order[0][0], 0, id, int(want[2]), str(want[1]), renovation.order, sim.calendar.tick)
+	var site: Dictionary = sim.construction.sites[site_id]
+	site["cause"] = EffectsBuild._cause(sim, sim.agents[int(want[2])], str(want[1]))
+	site["placed_to"] = 0
+	sim.chronicle_event("site_marked", id, {"name": sim.agents[int(want[2])].full_name(), "design": sim.template_name(template_id)}, str(site.cause), [int(want[2])])
 
 
 ## A free blueprint in the settlement of a design its people know.

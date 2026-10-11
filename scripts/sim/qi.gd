@@ -4,9 +4,12 @@ extends RefCounted
 ## makes cultivation go faster where it is dense. Queried per cell, cached
 ## per column; the cache is cleared when the field changes.
 const Data = preload("res://scripts/core/data.gd")
+const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 
 ## Vector2i column -> density
 var _cache: Dictionary = {}
+## The structures' version the cache was filled at (arrays come and go).
+var _version: int = -1
 
 
 static func curve_at(distance: float) -> float:
@@ -31,6 +34,9 @@ static func source(sim: RefCounted) -> Vector2:
 
 func density(sim: RefCounted, cell: Vector3i) -> float:
 	var column := Vector2i(cell.x, cell.z)
+	if sim.structures.version != _version:
+		_version = sim.structures.version
+		_cache.clear()
 	if _cache.has(column):
 		return _cache[column]
 	var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))
@@ -43,6 +49,8 @@ func density(sim: RefCounted, cell: Vector3i) -> float:
 			var d: float = Vector2(cell.x - spot.cell.x, cell.z - spot.cell.z).length()
 			if d <= float(spot.radius):
 				value = maxf(value, float(spot.qi) * (1.0 - 0.3 * d / maxf(float(spot.radius), 0.1)))
+	# A sect's spirit-gathering array holds dense qi round it.
+	value = maxf(value, SectHalls.array_qi(sim, cell))
 	_cache[column] = value
 	return value
 

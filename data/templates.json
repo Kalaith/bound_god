@@ -13,7 +13,23 @@
 		{"id": "kitchen", "requires": {"hearth": 1}, "requires_any": ["workbench", "chest"], "roofed": ["hearth"], "roof_reach": 4, "capacity": {"cooks": "hearth"}},
 		{"id": "granary", "requires": {"granary_bin": 2, "door": 1}, "requires_any": [], "roofed": ["granary_bin"], "roof_reach": 4, "capacity": {"grain": "granary_bin"}},
 		{"id": "meditation_hall", "requires": {"mat": 2}, "requires_any": [], "roofed": ["mat"], "roof_reach": 4, "qi_at_least": 0.5, "capacity": {"mats": "mat"}},
-		{"id": "tribulation_ground", "requires": {"formation": 2}, "requires_any": [], "roofed": [], "open_sky": ["formation"], "requires_blocks": {"cut_stone": 6}, "apart_from": {"dwelling": 10}, "roof_reach": 4, "capacity": {"formations": "formation"}}
+		{"id": "tribulation_ground", "requires": {"formation": 2}, "requires_any": [], "roofed": [], "open_sky": ["formation"], "requires_blocks": {"cut_stone": 6}, "apart_from": {"dwelling": 10}, "roof_reach": 4, "capacity": {"formations": "formation"}},
+		{"id": "library", "requires": {"scripture": 2, "lectern": 1, "door": 1}, "requires_any": [], "roofed": ["scripture", "lectern"], "roof_reach": 4, "capacity": {"shelves": "scripture"}},
+		{"id": "meditation_room", "requires": {"mat": 1, "incense": 1, "door": 1}, "at_most": {"mat": 1}, "requires_any": [], "roofed": ["mat"], "roof_reach": 4, "qi_at_least": 0.5, "capacity": {"mats": "mat"}},
+		{"id": "tribulation_chamber", "requires": {"array": 1, "spire": 1, "door": 1}, "requires_any": [], "roofed": ["array"], "open_sky": ["spire"], "requires_blocks": {"cut_stone": 12}, "apart_from": {"dwelling": 10}, "roof_reach": 4, "capacity": {}},
+		{"id": "infirmary", "requires": {"medicine": 1, "bed": 2, "door": 1}, "requires_any": [], "roofed": ["bed", "medicine"], "roof_reach": 4, "capacity": {"cots": "bed"}},
+		{"id": "spirit_array", "requires": {"jade": 4}, "requires_any": [], "roofed": [], "open_sky": ["jade"], "requires_blocks": {"cut_stone": 5}, "roof_reach": 4, "capacity": {}},
+		{"id": "sect_gate", "requires": {"banner": 2}, "requires_any": [], "roofed": [], "requires_blocks": {"lacquered_pillar": 2}, "roof_reach": 4, "capacity": {}},
+		{"id": "ancestral_hall", "requires": {"tablet": 2, "incense": 1}, "requires_any": [], "roofed": ["tablet"], "roof_reach": 4, "capacity": {"tablets": "tablet"}},
+		{"id": "precept_stele", "requires": {"stele": 1}, "requires_any": [], "roofed": [], "open_sky": ["stele"], "requires_blocks": {"cut_stone": 4}, "roof_reach": 4, "capacity": {}},
+		{"id": "bell_tower", "requires": {"bell": 1}, "requires_any": [], "roofed": ["bell"], "roof_reach": 4, "capacity": {}},
+		{"id": "lecture_hall", "requires": {"lectern": 1, "bench": 4}, "requires_any": [], "roofed": ["lectern"], "roof_reach": 4, "min_roofed_floor": 12, "capacity": {"seats": "bench"}}
+	],
+	"renovations": [
+		{"id": "store_library", "name": "Scripture shelves in the storehouse", "on": "storehouse", "gives": "library", "adds": {"scripture_shelf": 2, "lectern": 1}, "needs": {}},
+		{"id": "hall_lectern", "name": "A lectern in the hall", "on": "hall", "gives": "lecture_hall", "adds": {"lectern": 1, "bench": 2}, "needs": {}},
+		{"id": "home_infirmary", "name": "A medicine cabinet in the home", "on": "dwelling", "gives": "infirmary", "adds": {"medicine_cabinet": 1}, "needs": {"bed": 2}},
+		{"id": "hall_tablets", "name": "Tablets in the meditation hall", "on": "meditation_hall", "gives": "ancestral_hall", "adds": {"memorial_tablet": 2, "incense_burner": 1}, "needs": {}}
 	],
 	"starters": [
 		{
@@ -153,6 +169,161 @@
 			"layers": [
 				["SSSSS", "SSSSS", "SSSSS", "SSSSS", "SSSSS"],
 				["O...O", ".....", ".....", ".....", "O...O"]
+			]
+		},
+		{
+			"id": "scripture_pavilion",
+			"name": "Scripture Pavilion",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "L": "lacquered_pillar", "P": "planks", "D": "door", "S": "scripture_shelf", "E": "lectern", "W": "paper_screen", "R": "roof_tiles"},
+			"entrance": [3, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPPDPPL", "P.....P", "PS.E.SP", "PS...SP", "PS...SP", "LPPPPPL"],
+				["LPPDPPL", "W.....W", "PS...SP", "W.....W", "PS...SP", "LPPPPPL"],
+				["RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR"]
+			]
+		},
+		{
+			"id": "seclusion_cell",
+			"name": "Seclusion Cell",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "L": "lacquered_pillar", "P": "planks", "D": "door", "M": "meditation_mat", "I": "incense_burner", "W": "paper_screen", "R": "roof_tiles"},
+			"entrance": [2, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPDPL", "P...P", "P.M.P", "PI..P", "LPPPL"],
+				["LPDPL", "P...P", "W...W", "P...P", "LPPPL"],
+				["RRRRR", "RRRRR", "RRRRR", "RRRRR", "RRRRR"]
+			]
+		},
+		{
+			"id": "thunder_chamber",
+			"name": "Thunder Chamber",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "S": "cut_stone", "D": "door", "A": "tribulation_array", "T": "thunder_spire"},
+			"entrance": [2, 0, 0],
+			"meta": {},
+			"layers": [
+				["SSDSS", "S...S", "S.A.S", "S...S", "SSSSS"],
+				["SSDSS", "S...S", "S...S", "S...S", "SSSSS"],
+				["SSSSS", "SSSSS", "SSTSS", "SSSSS", "SSSSS"]
+			]
+		},
+		{
+			"id": "house_of_healing",
+			"name": "House of Healing",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "L": "log", "P": "planks", "D": "door", "B": "bed", "K": "medicine_cabinet", "W": "paper_screen", "T": "thatch"},
+			"entrance": [3, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPPDPPL", "P.....P", "PB.K.BP", "P.....P", "LPPPPPL"],
+				["LPPDPPL", "W.....W", "P.....P", "W.....W", "LPPPPPL"],
+				["TTTTTTT", "TTTTTTT", "TTTTTTT", "TTTTTTT", "TTTTTTT"]
+			]
+		},
+		{
+			"id": "jade_array",
+			"name": "Jade Array",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "S": "cut_stone", "J": "spirit_jade"},
+			"entrance": [2, 1, 0],
+			"meta": {},
+			"layers": [
+				["SSSSS", "SSSSS", "SSSSS", "SSSSS", "SSSSS"],
+				["J...J", ".....", ".....", ".....", "J...J"]
+			]
+		},
+		{
+			"id": "mountain_gate",
+			"name": "Mountain Gate",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "S": "cut_stone", "P": "lacquered_pillar", "B": "sect_banner", "R": "roof_tiles"},
+			"entrance": [2, 1, 1],
+			"meta": {},
+			"layers": [
+				["SSSSS", "SSSSS"],
+				["PB.BP", "....."],
+				["P...P", "....."],
+				["RRRRR", "....."]
+			]
+		},
+		{
+			"id": "hall_of_ancestors",
+			"name": "Hall of Ancestors",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "L": "lacquered_pillar", "P": "planks", "D": "door", "X": "memorial_tablet", "I": "incense_burner", "W": "paper_screen", "R": "roof_tiles"},
+			"entrance": [3, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPPDPPL", "P.....P", "P.....P", "P.XIX.P", "LPPPPPL"],
+				["LPPDPPL", "P.....P", "W.....W", "P.....P", "LPPPPPL"],
+				["RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR"]
+			]
+		},
+		{
+			"id": "precept_stele",
+			"name": "Precept Stele",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "S": "cut_stone", "T": "precept_stele"},
+			"entrance": [1, 1, 0],
+			"meta": {},
+			"layers": [
+				["SSS", "SSS", "SSS"],
+				["...", ".T.", "..."]
+			]
+		},
+		{
+			"id": "bell_pavilion",
+			"name": "Bell Pavilion",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "L": "log", "B": "bronze_bell", "R": "roof_tiles"},
+			"entrance": [1, 0, 0],
+			"meta": {},
+			"layers": [
+				["L.L", ".B.", "L.L"],
+				["L.L", "...", "L.L"],
+				["RRR", "RRR", "RRR"]
+			]
+		},
+		{
+			"id": "lecture_hall",
+			"name": "Lecture Hall",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "L": "lacquered_pillar", "P": "planks", "D": "door", "N": "bench", "E": "lectern", "W": "paper_screen", "R": "roof_tiles"},
+			"entrance": [3, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPPDPPL", "PNN.NNP", "P.....P", "PNN.NNP", "P..E..P", "LPPPPPL"],
+				["LPPDPPL", "W.....W", "P.....P", "W.....W", "P.....P", "LPPPPPL"],
+				["RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR"]
+			]
+		},
+		{
+			"id": "tiled_meditation_hall",
+			"name": "Tiled Meditation Hall",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "L": "lacquered_pillar", "P": "planks", "D": "door", "M": "meditation_mat", "I": "incense_burner", "W": "paper_screen", "R": "roof_tiles"},
+			"entrance": [3, 0, 0],
+			"meta": {},
+			"layers": [
+				["LPPDPPL", "P.....P", "P.M.M.P", "P..I..P", "P.M.M.P", "LPPPPPL"],
+				["LPPDPPL", "W.....W", "P.....P", "W.....W", "P.....P", "LPPPPPL"],
+				["RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR"]
+			]
+		},
+		{
+			"id": "disciples_lodge",
+			"name": "Disciples' Lodge",
+			"author": "wandering cultivators",
+			"legend": {".": "air", "C": "cobble", "L": "lacquered_pillar", "D": "door", "B": "bed", "W": "paper_screen", "R": "roof_tiles"},
+			"entrance": [3, 0, 0],
+			"meta": {},
+			"layers": [
+				["LCCDCCL", "C.....C", "CB.B.BC", "C.....C", "CB...BC", "LCCCCCL"],
+				["LCCDCCL", "W.....W", "C.....C", "W.....W", "C.....C", "LCCCCCL"],
+				["RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR", "RRRRRRR"]
 			]
 		},
 		{

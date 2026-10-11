@@ -4,6 +4,7 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 
 const Need = Personality.Need
 
@@ -73,8 +74,11 @@ static func _health(sim: RefCounted, agent: RefCounted) -> void:
 	if change >= 0.0 and agent.need(Need.FOOD) > 10.0:
 		var rate: float = Balance.number("health.regen_per_day")
 		if agent.activity == "recovering":
-			rate *= 2.0
+			rate *= Balance.number("halls.infirmary_factor") if SectHalls.in_infirmary(sim, agent) else 2.0
 		change += rate
+	# Rest in an infirmary slowly mends a foundation a failed trial cracked.
+	if agent.activity in ["recovering", "sleeping"] and SectHalls.cracked(agent) and SectHalls.in_infirmary(sim, agent):
+		SectHalls.mend(sim, agent, calendar.per_tick(Balance.number("halls.foundation_mend")))
 	agent.health.hp = clampf(float(agent.health.hp) + calendar.per_tick(change), 0.0, 100.0)
 
 

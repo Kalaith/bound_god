@@ -45,6 +45,13 @@ static func die(sim: RefCounted, agent: RefCounted, cause: String) -> void:
 		elif other.beliefs.relations.has(agent.id):
 			Mind.add(other, "death_witness", day_ticks, agent.id)
 	sim.chronicle_event("death", agent.settlement_id, {"name": agent.full_name()}, cause, [agent.id])
+	# A sect remembers its dead (a reason to raise an ancestral hall).
+	if sim.sects != null and not agent.cultivation.is_empty() and int(agent.cultivation.sect_id) >= 0:
+		var sect: Dictionary = sim.sects.get_sect(int(agent.cultivation.sect_id))
+		if not sect.is_empty():
+			sect["mourned"] = int(sect.get("mourned", 0)) + 1
+			if cause == "cause_tribulation":
+				sect["lost_to_heaven"] = int(sect.get("lost_to_heaven", 0)) + 1
 	_legacy(sim, agent)
 
 

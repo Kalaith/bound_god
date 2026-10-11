@@ -2,6 +2,8 @@ extends RefCounted
 ## Owns all world state. No nodes, no physics, no global RNG, no clock:
 ## `Sim.create(seed).run_ticks(n)` runs headless. Randomness comes only from
 ## `rng`; player commands go through `apply_command` between ticks.
+const SectHalls = preload("res://scripts/sim/sect_halls.gd")
+const Renovations = preload("res://scripts/sim/renovations.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const VoxelWorld = preload("res://scripts/world/voxel_world.gd")
@@ -430,6 +432,7 @@ func step() -> void:
 		settlement_life.refresh_jobs(self)
 	if threats != null:
 		threats.step(self)
+		SectHalls.ring(self)
 	if tribulations != null:
 		tribulations.step(self)
 	_refresh_site_buckets()
@@ -480,6 +483,8 @@ func forget_template_cache(id: String) -> void:
 
 ## A design's display name: offered copies first, then the starters.
 func template_name(id: String) -> String:
+	if Renovations.is_renovation(id):
+		return Renovations.name_of(id)
 	if god.offered.has(id):
 		return str(god.offered[id].get("name", id))
 	if settlements.designs.has(id):

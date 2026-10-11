@@ -7,6 +7,7 @@ const Population = preload("res://scripts/sim/population.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const Perception = preload("res://scripts/sim/perception.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
+const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 
 var raid_hooks: RefCounted = null
 
@@ -83,6 +84,8 @@ func _migrants(sim: RefCounted) -> void:
 		var names: Array = []
 		var seekers: Array = []
 		var seek_chance: float = Balance.number("cultivation.seeker_chance") * (sim.qi.density(sim, settlement.center) if sim.qi != null else 0.0)
+		# A mountain gate is seen from the road: seekers of the Way turn in.
+		seek_chance = minf(seek_chance * SectHalls.seek_factor(sim, id), 1.0)
 		for i in range(count):
 			var agent: RefCounted = Generation.adult(sim.rng, sim.agents.size())
 			if sim.rng.randf() < seek_chance:

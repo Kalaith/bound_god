@@ -8,6 +8,16 @@ const Personality = preload("res://scripts/agents/personality.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
 const Construction = preload("res://scripts/sim/construction.gd")
 const Blueprints = preload("res://scripts/sim/blueprints.gd")
+const Renovations = preload("res://scripts/sim/renovations.gd")
+
+## Why a sect raised each of its halls (M19b), by purpose.
+const SECT_HALL_CAUSES: Dictionary = {
+	"library": "cause_sect_needs_library", "meditation_room": "cause_sect_needs_meditation_room",
+	"tribulation_chamber": "cause_sect_needs_tribulation_chamber", "infirmary": "cause_sect_needs_infirmary",
+	"spirit_array": "cause_sect_needs_spirit_array", "sect_gate": "cause_sect_needs_sect_gate",
+	"ancestral_hall": "cause_sect_needs_ancestral_hall", "precept_stele": "cause_sect_needs_precept_stele",
+	"bell_tower": "cause_sect_needs_bell_tower", "lecture_hall": "cause_sect_needs_lecture_hall",
+}
 
 
 static func apply(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
@@ -74,7 +84,8 @@ static func _cause(sim: RefCounted, agent: RefCounted, purpose: String) -> Strin
 			return "cause_sect_needs_hall"
 		"tribulation_ground":
 			return "cause_sect_needs_ground"
-	return "cause_npc"
+	# The sect's halls (M19b), each with its own reason.
+	return str(SECT_HALL_CAUSES.get(purpose, "cause_npc"))
 
 
 static func _deliver(sim: RefCounted, agent: RefCounted, action: Dictionary) -> void:
@@ -133,6 +144,10 @@ static func _place(sim: RefCounted, agent: RefCounted, action: Dictionary) -> vo
 
 
 static func _complete(sim: RefCounted, site: Dictionary) -> void:
+	if Renovations.is_renovation(str(site.template_id)):
+		sim.construction.release(int(site.id))
+		Renovations.complete(sim, site)
+		return
 	var template: RefCounted = sim.template(site.template_id)
 	var layout: Array = []
 	for entry in template.placement(int(site.rotation)):

@@ -73,10 +73,13 @@ static func ground_at(sim: RefCounted, cell: Vector3i) -> Dictionary:
 	return entry if not entry.is_empty() and entry.functions.has("tribulation_ground") else {}
 
 
-## A ground counts as the tree's sanctuary within the sanctuary's reach.
+## A ground, or a tribulation chamber (M19b), counts as the tree's sanctuary
+## within the sanctuary's reach.
 static func ground_sanctuary(sim: RefCounted, cell: Vector3i) -> bool:
 	var tree: Vector3i = sim.features.get("sacred_tree", NONE)
-	if tree.x < 0 or ground_at(sim, cell).is_empty():
+	var entry: Dictionary = sim.structures.containing(cell)
+	var chamber: bool = not entry.is_empty() and entry.functions.has("tribulation_chamber")
+	if tree.x < 0 or (ground_at(sim, cell).is_empty() and not chamber):
 		return false
 	return Vector2(cell.x - tree.x, cell.z - tree.z).length() <= Balance.number("cultivation.sanctuary_reach")
 

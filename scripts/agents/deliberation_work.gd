@@ -14,6 +14,7 @@ const Construction = preload("res://scripts/sim/construction.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const DeliberationFood = preload("res://scripts/agents/deliberation_food.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
+const SectHallWants = preload("res://scripts/sim/sect_hall_wants.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -172,12 +173,7 @@ static func means_believed(sim: RefCounted, agent: RefCounted, template: RefCoun
 ## Open sites that need materials brought: a field is tilled from the ground
 ## where it lies, so it never keeps builders from a home.
 static func _open_sites(sim: RefCounted, settlement_id: int) -> int:
-	var count: int = 0
-	for id in sim.construction.in_settlement(settlement_id):
-		var template: RefCounted = sim.template(sim.construction.get_site(id).template_id)
-		if template == null or not template.bill.is_empty():
-			count += 1
-	return count
+	return SectHallWants.open_sites(sim, settlement_id, false)
 
 
 ## Whether a site for `purpose` is already open in the settlement.
@@ -233,7 +229,6 @@ static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float
 	var sect_only: bool = agent.personality.leadership <= 0.2 and agent.personality.diligence <= 0.3
 	if (sect_only and not SectPlaces.leads(sim, agent)) or _founding(sim, agent):
 		return
-	var busy: bool = _open_sites(sim, agent.settlement_id) >= Balance.integer("construction.max_open_sites")
 	var id: int = agent.settlement_id
 	var wants: Array = []
 	# Full chests, not bins: a granary has no room for wood or berries.
@@ -253,14 +248,14 @@ static func _propose(sim: RefCounted, agent: RefCounted, out: Array, base: float
 	if Standing.food_days(sim, id) < Balance.number("construction.garden_food_days") and int(have.get("garden", 0)) < gardens_wanted:
 		wants.append(["garden", "reason_food_low", 0.8])
 	wants.append_array(DeliberationFood.wants(sim, id, people, have))
-	var sect_wants: Array = SectPlaces.wants(sim, id, have, agent)
+	var sect_wants: Array = SectHallWants.all(sim, id, have, agent)
 	if sect_only:
 		wants = sect_wants
 	else:
 		wants.append_array(sect_wants)
 	for want in wants:
 		var design: RefCounted = known_design(sim, agent, want[0])
-		if design == null or not means_believed(sim, agent, design) or (busy and not design.bill.is_empty()):
+		if design == null or not means_believed(sim, agent, design) or (SectHallWants.busy(sim, id, want[0]) and not design.bill.is_empty()):
 			continue
 		if _site_open_for(sim, id, want[0]):
 			continue

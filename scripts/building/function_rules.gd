@@ -9,7 +9,8 @@ const Qi = preload("res://scripts/sim/qi.gd")
 ## Every function a structure can have, in a fixed order: goal targets and
 ## saved proposals refer to a function by its index here, so only append.
 const FUNCTIONS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary",
-	"meditation_hall", "tribulation_ground"]
+	"meditation_hall", "tribulation_ground", "library", "meditation_room", "tribulation_chamber", "infirmary", "spirit_array", "sect_gate",
+	"ancestral_hall", "precept_stele", "bell_tower", "lecture_hall"]
 
 
 static func evaluate(world: RefCounted, cells: Dictionary) -> Dictionary:
@@ -27,6 +28,9 @@ static func evaluate(world: RefCounted, cells: Dictionary) -> Dictionary:
 		for kind in rule.requires:
 			if components.get(kind, []).size() < int(rule.requires[kind]):
 				valid = false
+		# A meditation room holds one mat: more and it is a hall.
+		for kind in rule.get("at_most", {}):
+			valid = valid and components.get(kind, []).size() <= int(rule.at_most[kind])
 		if not rule.requires_any.is_empty():
 			var any: bool = false
 			for kind in rule.requires_any:

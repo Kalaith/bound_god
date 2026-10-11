@@ -197,7 +197,7 @@ Detailed after M18 ahead of its fresh-player sessions (the key test's human half
 
 **Goal:** a sect grows into a compound of its own: ten more kinds of building, each doing one real thing for its Way, raised by its people's judgement, and older buildings turned to new uses by adding what they lack. The god can raise or alter any of them by hand inside the zone; a function still comes only from components.
 
-- **Blocks** (atlas grows to 8 × 10, new tiles painted at the end so old ones keep their look): scripture shelf, lectern, incense burner, medicine cabinet, memorial tablet, bronze bell, tribulation array (a carved disc one sits on), thunder spire (set into a roof), spirit jade, precept stele, sect banner, and three for the look of a sect: roof tiles, lacquered pillar, paper screen. Each furniture block is a component and an anchor; spirit jade, stele and banner stand on a cut-stone platform as formation stones do.
+- **Blocks** (atlas grows to 8 × 9, new tiles painted at the end so old ones keep their look): scripture shelf, lectern, incense burner, medicine cabinet, memorial tablet, bronze bell, tribulation array (a carved disc one sits on), thunder spire (set into a roof), spirit jade, precept stele, sect banner, and three for the look of a sect: roof tiles, lacquered pillar, paper screen. Each furniture block is a component and an anchor; spirit jade, stele and banner stand on a cut-stone platform as formation stones do.
 - **Functions** (appended to `FunctionRules.FUNCTIONS`; one new rule key `at_most`):
 
 | Function | Components | Effect |

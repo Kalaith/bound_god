@@ -1,6 +1,6 @@
 extends SceneTree
 ## Headless scenario runner for the simulation (kept out of the exported game).
-## Run: Godot --headless --path . --script res://tools/sim_checks.gd [-- --only=<text>] [--long]
+## Run: Godot --headless --path . --script res://tools/sim_checks.gd [-- --only=<text>] [--module=<file text>] [--long]
 ## Every `check_*` method of the modules below returns "" on success or a
 ## failure message. Prints PASS/FAIL per scenario and exits non-zero on failure.
 ## Long-run scenarios (`long_check_*`, minutes each) run only with --long.
@@ -31,6 +31,7 @@ const MODULES: Array[String] = [
 	"res://tools/checks/checks_tree.gd",
 	"res://tools/checks/checks_meditation.gd",
 	"res://tools/checks/checks_architecture.gd",
+	"res://tools/checks/checks_halls.gd",
 	"res://tools/checks/checks_campaign.gd",
 	"res://tools/checks/checks_generations.gd",
 ]
@@ -38,15 +39,20 @@ const MODULES: Array[String] = [
 
 func _init() -> void:
 	var only: String = ""
+	var module_only: String = ""
 	var long: bool = false
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--only="):
 			only = argument.trim_prefix("--only=")
+		if argument.begins_with("--module="):
+			module_only = argument.trim_prefix("--module=")
 		long = long or argument == "--long"
 	var failures: int = 0
 	var count: int = 0
 	var started: int = Time.get_ticks_msec()
 	for path in MODULES:
+		if not module_only.is_empty() and not path.contains(module_only):
+			continue
 		var script: Variant = load(path)
 		if not script is GDScript or not (script as GDScript).can_instantiate():
 			failures += 1

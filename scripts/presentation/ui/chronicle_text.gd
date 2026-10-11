@@ -18,7 +18,8 @@ static func cause(value: String) -> String:
 
 ## A value may itself be a label key ("cause_raid", "standing_village",
 ## "resource_berries"); it is worded on display, so saved entries never hold
-## translated text. A resource is worded in lower case inside a sentence.
+## translated text. A resource, a function or a threat is worded in lower
+## case inside a sentence.
 static func word(value: Variant) -> Variant:
 	if value is String and value.begins_with("sect_name|"):
 		var parts: PackedStringArray = value.split("|")
@@ -27,7 +28,7 @@ static func word(value: Variant) -> Variant:
 			or value.begins_with("technique_") or value.begins_with("rank_") or value.begins_with("insight_")
 			or value.begins_with("unlock_") or value.begins_with("phase_")) and Text.has(value):
 		return Text.label(value)
-	if value is String and value.begins_with("resource_") and Text.has(value):
+	if value is String and (value.begins_with("resource_") or value.begins_with("function_") or value.begins_with("threat_")) and Text.has(value):
 		return Text.label(value).to_lower()
 	return value
 

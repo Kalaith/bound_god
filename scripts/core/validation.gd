@@ -29,11 +29,12 @@ const AMBITION_KINDS: Array[String] = [
 const IMPLEMENTED_EFFECTS: Array[String] = ["whisper", "bless_growth", "kindle", "veil_of_fog", "mend", "bless_cultivation", "shield_trial", "defy_heaven", "nurture"]
 ## Kept in step with FunctionRules.FUNCTIONS (not preloaded: the rules load data).
 const FUNCTION_IDS: Array[String] = ["dwelling", "storehouse", "workshop", "shrine", "shelter", "hall", "garden", "field", "kitchen", "granary",
-	"meditation_hall", "tribulation_ground"]
+	"meditation_hall", "tribulation_ground", "library", "meditation_room", "tribulation_chamber", "infirmary", "spirit_array", "sect_gate",
+	"ancestral_hall", "precept_stele", "bell_tower", "lecture_hall"]
 const BALANCE_SECTIONS: Array[String] = [
 	"time", "needs", "agents", "social", "mood", "health", "work", "construction", "world",
 	"settlements", "food", "farming", "population", "faith", "shrines", "miracle_costs", "threats", "decay", "avatar",
-	"cultivation",
+	"cultivation", "halls",
 ]
 
 
@@ -229,8 +230,11 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 			if not components.has(key):
 				errors.append("templates: " + rule.id + " names unknown component " + str(key))
 		for key in rule.capacity:
-			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots", "furrows", "cooks", "grain", "mats", "formations"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
+			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots", "furrows", "cooks", "grain", "mats", "formations", "shelves", "cots", "tablets"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
 				errors.append("templates: unknown capacity mapping")
+		for key in rule.get("at_most", {}):
+			if not rule.requires.has(key) or not _number(rule.at_most[key]) or float(rule.at_most[key]) < float(rule.requires[key]):
+				errors.append("templates: " + rule.id + " caps a component it does not require, or below what it requires")
 		for name in rule.get("requires_blocks", {}):
 			if not names.has(name) or not _number(rule.requires_blocks[name]):
 				errors.append("templates: " + rule.id + " requires unknown block " + str(name))
@@ -245,6 +249,19 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 	for id in FUNCTION_IDS:
 		if not seen.has(id):
 			errors.append("templates: function rule missing: " + id)
+	for renovation in data.get("renovations", []):
+		var shaped: bool = renovation is Dictionary and renovation.get("id") is String and renovation.get("name") is String
+		if not shaped or not renovation.get("adds") is Dictionary or renovation.adds.is_empty() or not renovation.get("needs") is Dictionary:
+			errors.append("templates: malformed renovation")
+			continue
+		if not FUNCTION_IDS.has(renovation.get("on")) or not FUNCTION_IDS.has(renovation.get("gives")):
+			errors.append("templates: renovation " + renovation.id + " names an unknown function")
+		for name in renovation.adds:
+			if not names.has(name) or not _number(renovation.adds[name]) or int(renovation.adds[name]) <= 0:
+				errors.append("templates: renovation " + renovation.id + " adds an unknown block " + str(name))
+		for key in renovation.needs:
+			if not components.has(key) or not _number(renovation.needs[key]):
+				errors.append("templates: renovation " + renovation.id + " needs an unknown component " + str(key))
 	var limits: Variant = data.get("limits", {}).get("max_size")
 	if not limits is Array or limits.size() != 3:
 		errors.append("templates: limits.max_size must be [x, y, z]")

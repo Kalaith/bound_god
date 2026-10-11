@@ -11,6 +11,7 @@ extends RefCounted
 ## says what to do), so the god can watch it happen.
 const Balance = preload("res://scripts/core/balance.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
+const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Beliefs = preload("res://scripts/agents/beliefs.gd")
@@ -50,8 +51,7 @@ static func hour(sim: RefCounted, agent: RefCounted, hours: int = 1) -> int:
 	var rate: float = CultivationState.rate(c, qi)
 	if int(c.blessed_until) > sim.calendar.tick:
 		rate *= Balance.number("cultivation.bless_factor")
-	if not SectPlaces.of(sim, agent.settlement_id, "meditation_hall").is_empty():
-		rate *= Balance.number("cultivation.hall_factor")
+	rate *= SectHalls.abstract_factor(sim, agent)
 	c.progress = minf(float(c.progress) + rate * share, needed)
 	c.hours = float(c.hours) + share
 	if float(c.progress) < needed:
@@ -85,9 +85,11 @@ static func _settlement_qi(sim: RefCounted, agent: RefCounted) -> float:
 	var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))
 	var settlement: Dictionary = sim.settlements.get_settlement(agent.settlement_id)
 	var home: Vector3i = settlement.get("center", agent.cell)
+	# A spirit-gathering array is a cultivation place as dense as the ring.
+	var array: float = Balance.number("halls.array_qi") if SectHalls.has(sim, agent.settlement_id, "spirit_array") else 0.0
 	if tree.x >= 0 and Vector2(home.x - tree.x, home.z - tree.z).length() <= Balance.number("cultivation.sanctuary_reach"):
-		return sim.qi.density(sim, tree + Vector3i(3, 0, 3))
-	return sim.qi.density(sim, home)
+		return maxf(sim.qi.density(sim, tree + Vector3i(3, 0, 3)), array)
+	return maxf(sim.qi.density(sim, home), array)
 
 
 ## After waiting at the peak as long as their nature allows, they go.
@@ -107,6 +109,7 @@ static func _maybe_trial(sim: RefCounted, agent: RefCounted) -> int:
 ## Daily: teaching, sects, fruit and courtship.
 static func day(sim: RefCounted) -> void:
 	_teach(sim)
+	SectHalls.abstract_day(sim)
 	_found(sim)
 	_fruit(sim)
 	_court(sim)

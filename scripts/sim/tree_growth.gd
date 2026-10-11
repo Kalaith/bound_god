@@ -216,6 +216,7 @@ func leave_relic(sim: RefCounted, agent: RefCounted) -> void:
 	sim.chronicle_event("relic_left", _tree_place(sim), {"name": agent.full_name()}, "cause_great_cultivator", [agent.id])
 
 
-## What the relics add to a trial's preparation in the sanctuary.
-func relic_preparation() -> float:
-	return minf(float(relics.size()), Balance.number("cultivation.relics_most")) * Balance.number("cultivation.relic_preparation")
+## What the relics add to a trial's preparation in the sanctuary; `extra`
+## more relics count where an ancestral hall's tablets keep them.
+func relic_preparation(extra: int = 0) -> float:
+	return minf(float(relics.size()), Balance.number("cultivation.relics_most") + extra) * Balance.number("cultivation.relic_preparation")

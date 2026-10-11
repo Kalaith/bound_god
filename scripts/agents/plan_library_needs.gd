@@ -7,6 +7,7 @@ const H = preload("res://scripts/agents/plan_helpers.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Food = preload("res://scripts/sim/food.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
+const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 
 const Op = Plans.Op
 const T = Plans.T
@@ -161,6 +162,9 @@ static func flee(sim: RefCounted, agent: RefCounted) -> Array:
 
 static func care(sim: RefCounted, agent: RefCounted) -> Array:
 	var plans: Array = []
+	var infirmary: int = SectHalls.infirmary(sim, agent)
+	if infirmary >= 0:
+		plans.append(H.option("infirmary_rest", 0.9, [_structure(infirmary), Plans.step(Op.RECOVER, {"ticks": 240})]))
 	var bed: int = agent.home if sim.structures.entries.has(agent.home) else H.nearest_structure(sim, agent, func(s: Dictionary) -> bool:
 		return int(s.capacity.get("beds", 0)) > 0)
 	if bed >= 0:
@@ -177,6 +181,10 @@ static func care(sim: RefCounted, agent: RefCounted) -> Array:
 
 static func relax(sim: RefCounted, agent: RefCounted) -> Array:
 	var plans: Array = []
+	# A sect member would rather hear the Way expounded.
+	var lecture: int = SectHalls.lecture_hall(sim, agent)
+	if lecture >= 0:
+		plans.append(H.option("attend_lecture", 0.95, [_structure(lecture), Plans.step(Op.RELAX, {"ticks": 60})]))
 	var hall: int = H.nearest_structure(sim, agent, func(s: Dictionary) -> bool: return s.functions.has("hall"))
 	if hall >= 0 and H.distance(sim.structures.entries[hall].anchor, agent.cell) < 40.0:
 		plans.append(H.option("gather_in_the_hall", 0.8, [_structure(hall), Plans.step(Op.RELAX, {"ticks": 60})]))

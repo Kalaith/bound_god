@@ -4,11 +4,16 @@ const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const DIRECTIONS: Array[Vector3i] = [Vector3i.LEFT, Vector3i.RIGHT, Vector3i.UP, Vector3i.DOWN, Vector3i.FORWARD, Vector3i.BACK]
 ## Furniture: components a room holds and the probe passes through.
-const FURNITURE: Array[String] = ["bed", "chest", "hearth", "workbench", "altar", "table", "bench", "lantern", "granary_bin", "mat"]
+const FURNITURE: Array[String] = ["bed", "chest", "hearth", "workbench", "altar", "table", "bench", "lantern", "granary_bin", "mat",
+	"scripture", "lectern", "incense", "medicine", "tablet", "bell", "array"]
 ## Components a structure is found from: furniture that gives a room its use,
 ## and planters and farmland, whose connected beds make a garden or a field
 ## under the open sky.
-const ANCHORS: Array[String] = ["bed", "chest", "altar", "hearth", "workbench", "table", "planter", "farmland", "granary_bin", "mat", "formation"]
+const ANCHORS: Array[String] = ["bed", "chest", "altar", "hearth", "workbench", "table", "planter", "farmland", "granary_bin", "mat", "formation",
+	"scripture", "lectern", "incense", "medicine", "tablet", "bell", "array", "jade", "stele", "banner"]
+## Components that stand on a cut-stone platform under the sky: a trial
+## ground's formation stones, an array's jade, a stele, a gate's banners.
+const PLATFORM: Array[String] = ["formation", "jade", "stele", "banner"]
 ## Bed components: probed as connected beds, not as rooms.
 const BEDS: Array[String] = ["planter", "farmland"]
 
@@ -35,7 +40,7 @@ static func permeable(world: RefCounted, cell: Vector3i) -> bool:
 static func probe(world: RefCounted, seed: Vector3i) -> Dictionary:
 	if Registry.component(world.get_block(seed)) in BEDS:
 		return beds(world, seed)
-	if Registry.component(world.get_block(seed)) == "formation":
+	if Registry.component(world.get_block(seed)) in PLATFORM:
 		return platform(world, seed)
 	var limits: Array = Data.template_limits().max_size
 	var limit := Vector3i(int(limits[0]), int(limits[1]), int(limits[2]))
@@ -135,8 +140,8 @@ static func beds(world: RefCounted, seed: Vector3i) -> Dictionary:
 	return {"closed": false, "inside": inside, "cells": inside.duplicate(), "reads": reads}
 
 
-## A trial ground: the cut stone joined side by side under a formation stone,
-## and the formation stones standing on it. Its inside is the platform and
+## A platform (a trial ground, an array, a stele, a gate): the cut stone
+## joined side by side under its seed, and what stands on it. Its inside is the platform and
 ## the cell above each stone of it.
 static func platform(world: RefCounted, seed: Vector3i) -> Dictionary:
 	var stone: int = Registry.id("cut_stone")

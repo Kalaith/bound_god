@@ -11,6 +11,7 @@ const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 const FruitChoice = preload("res://scripts/agents/fruit_choice.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
+const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -31,6 +32,7 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	_breakthrough(sim, agent, out)
 	_witness(sim, agent, out)
 	_share_fruit(sim, agent, out)
+	_convalesce(sim, agent, out)
 
 
 ## The densest spot round the tree this person can sit in that nobody else
@@ -52,20 +54,31 @@ static func spot(sim: RefCounted, agent: RefCounted) -> Vector3i:
 		for nurtured in sim.tree_growth.nurtured:
 			var at: Vector3i = nurtured.cell
 			cells.append(H.ring_cell(sim, Vector3(at.x + 0.5, at.y, at.z + 0.5), agent.id, 0.5, float(nurtured.radius) * 0.7))
+	# So are the sect's spirit-gathering arrays in their settlement.
+	for entry in SectHalls.of(sim, agent.settlement_id, "spirit_array"):
+		var jades: Array = entry.components.get("jade", [])
+		var middle := Vector3.ZERO
+		for jade in jades:
+			middle += Vector3(jade) / jades.size()
+		cells.append(H.ring_cell(sim, middle + Vector3(0.5, 0.0, 0.5), agent.id, 0.5, 2.0))
 	cells.append(SectPlaces.hall_mat(sim, agent))
+	cells.append(SectHalls.room_mat(sim, agent))
 	for cell in cells:
 		if cell.x < 0 or _taken(sim, agent, cell):
 			continue
-		var qi: float = sitting_qi(sim, cell)
+		var qi: float = sitting_qi(sim, cell, agent)
 		if qi > best_qi:
 			best = cell
 			best_qi = qi
 	return best
 
 
-## The qi a sitting at a cell is worth: the field, helped by a hall.
-static func sitting_qi(sim: RefCounted, cell: Vector3i) -> float:
+## The qi a sitting at a cell is worth: the field, helped by a hall (or, for
+## one already on the Way, a meditation room).
+static func sitting_qi(sim: RefCounted, cell: Vector3i, agent: RefCounted = null) -> float:
 	var qi: float = sim.qi.density(sim, cell)
+	if agent != null:
+		return qi * SectHalls.sitting_factor(sim, agent, cell)
 	return qi * Balance.number("cultivation.hall_factor") if SectPlaces.in_hall(sim, cell) else qi
 
 
@@ -83,7 +96,7 @@ static func _cultivate(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	var cell: Vector3i = spot(sim, agent)
 	if cell.x < 0:
 		return
-	var qi: float = sitting_qi(sim, cell)
+	var qi: float = sitting_qi(sim, cell, agent)
 	var utility: float = (Balance.number("cultivation.utility_base") + Balance.number("cultivation.utility_drive") * drive) \
 		* (0.4 + 0.6 * qi) * (1.0 + Balance.number("cultivation.realm_bonus") * realm) * agent.capacity()
 	# A long walk to the tree weighs against it.
@@ -196,10 +209,13 @@ static func _breakthrough(sim: RefCounted, agent: RefCounted, out: Array) -> voi
 	out.append(_candidate(Kind.BREAKTHROUGH, utility, "reason_at_peak", -1, prep * 100.0))
 
 
-## Where to face Heaven: their settlement's tribulation ground when it has
-## one; otherwise the tree's sanctuary when it can be reached, unless a loner
-## would rather be alone with it, near home.
+## Where to face Heaven: their settlement's tribulation chamber, then its
+## ground, when it has one; otherwise the tree's sanctuary when it can be
+## reached, unless a loner would rather be alone with it, near home.
 static func trial_site(sim: RefCounted, agent: RefCounted) -> Vector3i:
+	var chamber: Vector3i = SectHalls.chamber_cell(sim, agent)
+	if chamber.x >= 0:
+		return chamber
 	var ground: Dictionary = SectPlaces.ground(sim, agent.settlement_id)
 	if not ground.is_empty():
 		var stand: Vector3i = SectPlaces.ground_cell(sim, ground)
@@ -259,3 +275,11 @@ static func _share_fruit(sim: RefCounted, agent: RefCounted, out: Array) -> void
 		return
 	if FruitChoice.wants_fruit(sim, agent):
 		out.append(_candidate(Kind.SHARE_FRUIT, 0.45 + 0.2 * float(agent.cultivation.drive), "reason_take_fruit", agent.id))
+
+
+## A cultivator whose foundation a failed trial cracked goes to rest in their
+## settlement's infirmary, where it mends.
+static func _convalesce(sim: RefCounted, agent: RefCounted, out: Array) -> void:
+	if not SectHalls.cracked(agent) or SectHalls.infirmary(sim, agent) < 0 or Schedule.is_sleep_time(sim, agent):
+		return
+	out.append(_candidate(Kind.SEEK_CARE, Balance.number("halls.convalesce_utility") * (0.6 + 0.4 * float(agent.cultivation.drive)), "reason_mend_foundation"))

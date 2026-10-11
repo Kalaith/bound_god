@@ -6,6 +6,7 @@ extends RefCounted
 ## materials are left lying.
 const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const Data = preload("res://scripts/core/data.gd")
 
 const NONE := Vector3i(-1, -1, -1)
 
@@ -67,7 +68,7 @@ func next_entry(id: int) -> Array:
 ## hearth, an altar, a mat) are never swapped, so a building keeps its function.
 ## Where each make-do resource is gathered (as JobBoard names places).
 const SITE_OF: Dictionary = {"stone": "rock", "thatch": "grass"}
-const MAKE_DO: Dictionary = {"stone": ["cobble", "cut_stone", "stone"], "thatch": ["thatch"]}
+const MAKE_DO: Dictionary = {"stone": ["cobble", "cut_stone", "stone", "roof_tiles"], "thatch": ["thatch"]}
 ## Why a site made do, by the resource it lacked.
 const MAKE_DO_CAUSE: Dictionary = {"stone": "cause_no_stone", "thatch": "cause_no_grass"}
 
@@ -77,12 +78,17 @@ static func is_walling(block: int) -> bool:
 
 
 ## Swaps the plain `resource` blocks still to be placed in `order` (from
-## `from` on) for planks; returns how many blocks changed.
+## `from` on) for planks; returns how many blocks changed. Blocks a function
+## counts (a trial ground's or a chamber's cut stone) are never swapped.
 static func in_planks(order: Array, from: int, resource: String) -> int:
 	var changed: int = 0
 	var names: Array = MAKE_DO.get(resource, [])
+	var counted: Dictionary = {}
+	for rule in Data.function_rules():
+		counted.merge(rule.get("requires_blocks", {}))
 	for index in range(from, order.size()):
-		if Registry.block_name(int(order[index][1])) in names:
+		var name: String = Registry.block_name(int(order[index][1]))
+		if name in names and not counted.has(name):
 			order[index][1] = Registry.id("planks")
 			changed += 1
 	return changed

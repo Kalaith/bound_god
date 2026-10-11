@@ -12,6 +12,7 @@ const Data = preload("res://scripts/core/data.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
+const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 
 const DOCTRINE: Array[String] = ["openness", "martial", "secrecy", "mercy", "ambition"]
 const RANKS: Array[String] = ["disciple", "elder", "master"]
@@ -156,6 +157,7 @@ func daily(sim: RefCounted) -> void:
 			_succeed(sim, sect)
 		_rank(sim, sect)
 		_drift(sim, sect)
+		_copy(sim, sect)
 		_study(sim, sect)
 
 
@@ -188,7 +190,8 @@ func _drift(sim: RefCounted, sect: Dictionary) -> void:
 		count += weight
 	if count == 0:
 		return
-	var rate: float = Balance.number("cultivation.doctrine_drift")
+	# Precepts carved on a stele hold the doctrine steady.
+	var rate: float = Balance.number("cultivation.doctrine_drift") * SectHalls.drift_factor(sim, int(sect.settlement_id))
 	for key in DOCTRINE:
 		sect.doctrine[key] = clampf(float(sect.doctrine[key]) + (float(sum[key]) / count - float(sect.doctrine[key])) * rate, 0.0, 1.0)
 
@@ -223,6 +226,9 @@ func _study(sim: RefCounted, sect: Dictionary) -> void:
 	if manuals.is_empty():
 		return
 	var chance: float = Balance.number("cultivation.manual_chance")
+	# A library keeps the manuals where anyone may read them.
+	if SectHalls.has(sim, int(sect.settlement_id), "library"):
+		chance = minf(chance * Balance.number("halls.library_study_factor"), 1.0)
 	var members: Array = sect.members.keys()
 	members.sort()
 	for id in members:
@@ -236,10 +242,29 @@ func _study(sim: RefCounted, sect: Dictionary) -> void:
 			break
 
 
+## With a library, a living member's techniques are copied into the sect's
+## manuals now and then, without waiting for their death.
+func _copy(sim: RefCounted, sect: Dictionary) -> void:
+	if not SectHalls.has(sim, int(sect.settlement_id), "library"):
+		return
+	if not sect.has("manuals"):
+		sect["manuals"] = []
+	var members: Array = sect.members.keys()
+	members.sort()
+	for id in members:
+		var member: RefCounted = sim.agents[id]
+		for technique in member.cultivation.techniques:
+			if sect.manuals.has(technique) or sim.rng.randf() >= Balance.number("halls.library_copy_chance"):
+				continue
+			sect.manuals.append(technique)
+			sim.chronicle_event("manual_copied", int(sect.settlement_id), {"name": member.full_name(), "technique": "technique_" + str(technique), "sect": name_key(sect)},
+				"cause_library", [id])
+
+
 ## Cultivators living where a sect stands may choose to join it, the more
 ## readily the more open it is.
 func _recruit(sim: RefCounted, sect: Dictionary) -> void:
-	var chance: float = Balance.number("cultivation.join_chance") * (0.5 + float(sect.doctrine.openness))
+	var chance: float = Balance.number("cultivation.join_chance") * (0.5 + float(sect.doctrine.openness)) * SectHalls.join_factor(sim, int(sect.settlement_id))
 	for agent_id in sim.settlements.entries.get(int(sect.settlement_id), {}).get("residents", []):
 		var agent: RefCounted = sim.agents[agent_id]
 		if not agent.is_present() or agent.cultivation.is_empty() or int(agent.cultivation.sect_id) >= 0:

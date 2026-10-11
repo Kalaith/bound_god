@@ -12,6 +12,7 @@ extends RefCounted
 ##        scorched: int, state: "warning"|"storm"|"done", outcome: String}
 const Balance = preload("res://scripts/core/balance.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
+const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
@@ -149,8 +150,14 @@ func _begin(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 	trial.site = agent.cell
 	trial.sanctuary = in_sanctuary(sim, agent.cell)
 	trial.preparation = preparation(sim, agent)
-	if bool(trial.sanctuary) and sim.tree_growth != null:
-		trial.preparation = minf(float(trial.preparation) + sim.tree_growth.relic_preparation(), 1.0)
+	# The relics steady a trial in the sanctuary, or at home where an
+	# ancestral hall keeps their memory (each tablet keeps one more).
+	if sim.tree_growth != null and SectHalls.relics_help(sim, agent, agent.cell, bool(trial.sanctuary)):
+		trial.preparation = minf(float(trial.preparation) + sim.tree_growth.relic_preparation(SectHalls.relic_extra(sim, agent.settlement_id)), 1.0)
+	# A tribulation chamber's array drinks some of Heaven's anger.
+	if not SectHalls.chamber_at(sim, agent.cell).is_empty():
+		trial["chamber"] = true
+		trial.severity = maxf(float(trial.severity) - Balance.number("halls.chamber_severity"), 0.05)
 	# A spirit fruit kept for this moment is eaten now.
 	if bool(agent.cultivation.get("fruit", false)):
 		agent.cultivation.fruit = false
@@ -187,6 +194,12 @@ func _strike(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 	var column := Vector2i(agent.cell.x, agent.cell.z)
 	if not at_person:
 		column += Vector2i(sim.rng.randi_range(-radius, radius), sim.rng.randi_range(-radius, radius))
+	# In a tribulation chamber the spire takes every strike.
+	var spire: Vector3i = SectHalls.spire(SectHalls.chamber_at(sim, agent.cell))
+	if spire.x >= 0:
+		events.append({"kind": "strike", "trial": trial.id, "cell": spire + Vector3i.UP, "tick": sim.calendar.tick})
+		trial["drawn"] = int(trial.get("drawn", 0)) + 1
+		return
 	# On a tribulation ground the formation stones draw what would scorch.
 	var stones: Array = SectPlaces.ground_at(sim, agent.cell).get("components", {}).get("formation", [])
 	if not at_person and not stones.is_empty():
@@ -264,6 +277,9 @@ func _resolve(sim: RefCounted, trial: Dictionary, agent: RefCounted) -> void:
 			sim.chronicle_event("trial_passed", agent.settlement_id, {"name": agent.full_name(), "realm": _realm_key(agent)}, where, [agent.id])
 		"injured":
 			agent.health.hp = maxf(float(agent.health.hp) - float(outcomes.injury_damage) * float(trial.severity), 1.0)
+			# What the foundation was before it cracked, for an infirmary to mend towards.
+			if not agent.cultivation.has("sound_foundation"):
+				agent.cultivation["sound_foundation"] = float(agent.cultivation.foundation)
 			agent.cultivation.foundation = maxf(float(agent.cultivation.foundation) - float(outcomes.injury_crack), 0.05)
 			agent.cultivation.progress = CultivationState.needed(agent.cultivation) * float(outcomes.injury_progress)
 			agent.cultivation.peak_tick = -1
@@ -294,6 +310,8 @@ static func _advance(sim: RefCounted, agent: RefCounted, foundation: float, flaw
 	c.progress = 0.0
 	c.peak_tick = -1
 	c.foundation = foundation
+	# A new realm lays a new foundation: an old crack no longer matters.
+	c.erase("sound_foundation")
 	if flawed:
 		var outcomes: Dictionary = Data.tribulations().outcomes
 		c.flawed = true

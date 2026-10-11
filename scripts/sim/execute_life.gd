@@ -8,6 +8,7 @@ const Mind = preload("res://scripts/agents/mind.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")
 const ExecuteDefence = preload("res://scripts/sim/execute_defence.gd")
 const Food = preload("res://scripts/sim/food.gd")
+const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail
@@ -85,7 +86,13 @@ static func _relax(sim: RefCounted, agent: RefCounted, ticks: int, step_ticks: i
 	var hall: bool = sim.structures.entries.get(agent.inside, {}).get("functions", []).has("hall")
 	var factor: float = Balance.number("needs.hall_recreation_factor") if hall else 1.0
 	agent.change_need(Need.RECREATION, sim.calendar.per_tick(Balance.number("needs.recreation_gain_per_day") * 0.8 * factor))
+	# In a lecture hall a sect member hears the Way expounded.
+	var lecture: bool = SectHalls.in_lecture(sim, agent)
+	if lecture:
+		SectHalls.listen(sim, agent, 1.0 / sim.calendar.ticks_per_hour())
 	if step_ticks >= ticks or agent.need(Need.RECREATION) >= 96.0:
+		if lecture and int(agent.cultivation.get("sect_id", -1)) >= 0:
+			Mind.add(agent, "heard_the_way", sim.calendar.ticks_per_day)
 		if hall:
 			Mind.add(agent, "gathered_in_hall", sim.calendar.ticks_per_day)
 		agent.inside = -1
@@ -97,6 +104,8 @@ static func _recover(sim: RefCounted, agent: RefCounted, ticks: int, step_ticks:
 	enter_here(sim, agent)
 	agent.activity = "recovering"
 	var healed: bool = float(agent.health.hp) >= Balance.number("health.care_threshold") + 10.0 and not agent.health.ill
+	# A cracked foundation keeps them in the infirmary's care a while longer.
+	healed = healed and not (SectHalls.cracked(agent) and SectHalls.in_infirmary(sim, agent))
 	if healed or step_ticks >= ticks:
 		agent.inside = -1
 		return Plans.DONE

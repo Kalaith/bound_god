@@ -8,6 +8,7 @@ const SiteFinder = preload("res://scripts/building/site_finder.gd")
 const Blueprints = preload("res://scripts/sim/blueprints.gd")
 const DeliberationWork = preload("res://scripts/agents/deliberation_work.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
+const Renovations = preload("res://scripts/sim/renovations.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail
@@ -43,6 +44,14 @@ static func _mark_site(sim: RefCounted, agent: RefCounted, step: Dictionary, ste
 		var settlement: Dictionary = sim.settlements.get_settlement(agent.settlement_id)
 		if design == null or settlement.is_empty():
 			return Fail.NO_SITE
+		# A building that stands already and needs only a few things added
+		# comes before a new one.
+		var renovation: Dictionary = Renovations.option(sim, agent.settlement_id, str(step.function))
+		if not renovation.is_empty():
+			agent.activity = "building"
+			sim.effects.action("mark_site", agent.id, {"template_id": Renovations.PREFIX + str(renovation.renovation.id), "origin": renovation.order[0][0],
+				"rotation": 0, "order": renovation.order, "purpose": step.purpose})
+			return Plans.RUNNING
 		# The god's blueprint for this function, while its spot is free, first.
 		var proposal: Dictionary = Blueprints.proposal(sim, agent, str(step.function))
 		if not proposal.is_empty():
