@@ -44,6 +44,8 @@ static func check(data: Dictionary, labels: Dictionary, traits: Array) -> Array[
 				last = float(realm.progress_needed)
 			if not _number(realm.get("lifespan_bonus")) or float(realm.lifespan_bonus) < 0.0:
 				errors.append("cultivation: realm " + realm.id + " needs a lifespan_bonus")
+			if not _number(realm.get("endurance")) or float(realm.endurance) <= 0.0 or float(realm.endurance) > 1.0:
+				errors.append("cultivation: realm " + realm.id + " needs an endurance in (0, 1]")
 			if not labels.has("realm_" + realm.id):
 				errors.append("cultivation: realm " + realm.id + " has no label")
 	_table("talent", data.get("talent"), errors)

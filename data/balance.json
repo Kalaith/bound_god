@@ -34,7 +34,7 @@
 		"break_chance_per_day": 0.6, "break_ticks": 90, "departure_threshold": 12.0, "departure_days": 6.0, "settle_days": 10
 	},
 	"health": {
-		"regen_per_day": 4.0, "starvation_damage_per_day": 14.0, "exposure_damage_per_day": 6.0,
+		"regen_per_day": 4.0, "starvation_damage_per_day": 14.0, "exposure_damage_per_day": 6.0, "tree_ward": 0.6,
 		"care_threshold": 70.0, "old_age_years": 88.0, "old_age_spread": 10.0, "old_age_per_year": 0.12
 	},
 	"work": {

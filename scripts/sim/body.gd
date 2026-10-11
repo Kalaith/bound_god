@@ -5,6 +5,7 @@ const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
+const Data = preload("res://scripts/core/data.gd")
 
 const Need = Personality.Need
 
@@ -39,6 +40,20 @@ static func day_exposure(sim: RefCounted) -> float:
 	return exposed
 
 
+## How slowly hunger and cold wear on someone: a cultivator's body needs
+## less as their realm rises (the realm's endurance, 1 for a mortal).
+static func endurance(agent: RefCounted) -> float:
+	return float(Data.realm(int(agent.cultivation.get("realm", 0))).get("endurance", 1.0))
+
+
+## What starving or freezing costs someone in health, as a share of the full
+## damage: their endurance, and the sacred tree's qi where they are, which
+## keeps the worst off those who live in its shade.
+static func ward(sim: RefCounted, agent: RefCounted) -> float:
+	var qi: float = sim.qi.density(sim, agent.cell) if sim.qi != null else 0.0
+	return endurance(agent) * (1.0 - Balance.number("health.tree_ward") * qi)
+
+
 static func _decay(sim: RefCounted, agent: RefCounted) -> void:
 	var calendar: RefCounted = sim.calendar
 	var rates: Dictionary = Balance.dict("needs.decay_per_day")
@@ -46,6 +61,8 @@ static func _decay(sim: RefCounted, agent: RefCounted) -> void:
 		if need == Need.REST and agent.activity == "sleeping":
 			continue
 		var rate: float = float(rates[Personality.NEEDS[need]]) * agent.personality.need_decay[need]
+		if need == Need.FOOD:
+			rate *= endurance(agent)
 		agent.change_need(need, -calendar.per_tick(rate))
 	agent.change_need(Need.SAFETY, calendar.per_tick(Balance.number("needs.safety_recovery_per_day")))
 	_shelter(sim, agent)
@@ -54,6 +71,7 @@ static func _decay(sim: RefCounted, agent: RefCounted) -> void:
 static func _shelter(sim: RefCounted, agent: RefCounted) -> void:
 	var calendar: RefCounted = sim.calendar
 	var covered: float = cover(sim, agent)
+	var hardy: float = endurance(agent)
 	var gain: float = Balance.number("needs.shelter_gain_per_day")
 	var exposed: float = day_exposure(sim)
 	if covered >= 1.0:
@@ -63,7 +81,7 @@ static func _shelter(sim: RefCounted, agent: RefCounted) -> void:
 	elif calendar.is_daylight():
 		# Rain, storm, snow and the winter cold wear on whoever is out in them.
 		var day_loss: float = Balance.number("needs.shelter_loss_per_night_hour") * 24.0 * exposed
-		agent.change_need(Need.SHELTER, -calendar.per_tick(day_loss * agent.personality.need_decay[Need.SHELTER] * (1.0 - covered)))
+		agent.change_need(Need.SHELTER, -calendar.per_tick(day_loss * hardy * agent.personality.need_decay[Need.SHELTER] * (1.0 - covered)))
 	else:
 		var loss: float = Balance.number("needs.shelter_loss_per_night_hour") * 24.0
 		if calendar.is_winter():
@@ -72,7 +90,7 @@ static func _shelter(sim: RefCounted, agent: RefCounted) -> void:
 			loss *= 1.0 + sim.weather.exposure()
 		if agent.activity == "sleeping":
 			loss *= 0.8
-		agent.change_need(Need.SHELTER, -calendar.per_tick(loss * agent.personality.need_decay[Need.SHELTER] * (1.0 - covered)))
+		agent.change_need(Need.SHELTER, -calendar.per_tick(loss * hardy * agent.personality.need_decay[Need.SHELTER] * (1.0 - covered)))
 
 
 static func _health(sim: RefCounted, agent: RefCounted) -> void:
@@ -87,6 +105,8 @@ static func _health(sim: RefCounted, agent: RefCounted) -> void:
 		change -= Balance.number("health.exposure_damage_per_day")
 		if not Mind.has(agent, "exposed"):
 			Mind.add(agent, "exposed", day)
+	if change < 0.0:
+		change *= ward(sim, agent)
 	if change >= 0.0 and agent.need(Need.FOOD) > 10.0:
 		var rate: float = Balance.number("health.regen_per_day")
 		if agent.activity == "recovering":

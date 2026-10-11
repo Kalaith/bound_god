@@ -258,3 +258,37 @@ func check_the_sky_is_saved():
 	if old.weather.kind != "clear":
 		return "an old world did not start under a clear sky"
 	return ""
+
+
+## Hunger and cold cost less in the tree's shade, and less again to a
+## cultivator, whose body also needs less food; nobody is spared entirely.
+func check_the_tree_and_cultivation_help_people_endure_hunger_and_cold():
+	var sim: RefCounted = _flat()
+	var agent: RefCounted = sim.agents[0]
+	var tree: Vector3i = sim.features.sacred_tree
+	var loss := func(cell: Vector3i, realm: int) -> float:
+		agent.cell = cell
+		agent.cultivation.realm = realm
+		agent.health.hp = 100.0
+		agent.needs[Need.FOOD] = 0.0
+		agent.needs[Need.SHELTER] = 0.0
+		for i in range(sim.calendar.ticks_per_day):
+			Body._health(sim, agent)
+		return 100.0 - float(agent.health.hp)
+	var far: float = loss.call(Vector3i(2, 5, 2) if tree.x > 32 else Vector3i(61, 5, 61), 0)
+	var near: float = loss.call(Vector3i(tree.x + 3, 5, tree.z), 0)
+	var cultivator: float = loss.call(Vector3i(tree.x + 3, 5, tree.z), 1)
+	if not (far > near and near > cultivator and cultivator > 0.0):
+		return "a day starving and frozen cost %.1f far off, %.1f by the tree, %.1f to a cultivator there" % [far, near, cultivator]
+	agent.cultivation.realm = 0
+	agent.needs[Need.FOOD] = 100.0
+	for i in range(sim.calendar.ticks_per_day / 4):
+		Body._decay(sim, agent)
+	var mortal_hunger: float = 100.0 - agent.need(Need.FOOD)
+	agent.cultivation.realm = 2
+	agent.needs[Need.FOOD] = 100.0
+	for i in range(sim.calendar.ticks_per_day / 4):
+		Body._decay(sim, agent)
+	if 100.0 - agent.need(Need.FOOD) >= mortal_hunger * 0.5:
+		return "a Foundation cultivator grew hungry as fast as a mortal (%.1f vs %.1f)" % [100.0 - agent.need(Need.FOOD), mortal_hunger]
+	return ""

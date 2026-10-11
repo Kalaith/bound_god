@@ -30,7 +30,8 @@ static func hour(sim: RefCounted, agent: RefCounted, forage: Dictionary = {}, st
 	var working: bool = at_work(k, agent)
 	var decay: PackedFloat32Array = agent.personality.need_decay
 	var needs: PackedFloat32Array = agent.needs
-	needs[Need.FOOD] = clampf(needs[Need.FOOD] - float(k.food) * decay[Need.FOOD], 0.0, 100.0)
+	var hardy: float = Body.endurance(agent)
+	needs[Need.FOOD] = clampf(needs[Need.FOOD] - float(k.food) * decay[Need.FOOD] * hardy, 0.0, 100.0)
 	if sleeping:
 		needs[Need.REST] = clampf(needs[Need.REST] + (float(k.bed_rest) if agent.home >= 0 else float(k.ground_rest)), 0.0, 100.0)
 		agent.activity = "sleeping"
@@ -42,7 +43,7 @@ static func hour(sim: RefCounted, agent: RefCounted, forage: Dictionary = {}, st
 	needs[Need.RECREATION] = clampf(needs[Need.RECREATION] - float(k.recreation) * decay[Need.RECREATION] + leisure, 0.0, 100.0)
 	needs[Need.SAFETY] = clampf(needs[Need.SAFETY] + float(k.safety), 0.0, 100.0)
 	agent.needs = needs
-	_shelter(k, agent, sleeping)
+	_shelter(k, agent, sleeping, hardy)
 	if agent.need(Need.FOOD) < EAT_BELOW:
 		_eat(sim, agent, forage)
 	_health(sim, k, agent)
@@ -103,19 +104,19 @@ static func at_work(k: Dictionary, agent: RefCounted) -> bool:
 
 ## A home is a roof; the homeless lose shelter by night as the detailed body
 ## does under foliage (half cover), and get it back by day.
-static func _shelter(k: Dictionary, agent: RefCounted, sleeping: bool) -> void:
+static func _shelter(k: Dictionary, agent: RefCounted, sleeping: bool, hardy: float = 1.0) -> void:
 	var gain: float = float(k.shelter_gain)
 	if agent.home >= 0:
 		agent.change_need(Need.SHELTER, gain)
 	elif bool(k.daylight) and float(k.day_exposure) <= 0.0:
 		agent.change_need(Need.SHELTER, gain * 0.25 * 1.5)
 	elif bool(k.daylight):
-		agent.change_need(Need.SHELTER, -float(k.day_exposure) * int(k.step) * agent.personality.need_decay[Need.SHELTER] * 0.5)
+		agent.change_need(Need.SHELTER, -float(k.day_exposure) * int(k.step) * hardy * agent.personality.need_decay[Need.SHELTER] * 0.5)
 	else:
 		var loss: float = float(k.shelter_loss) * int(k.step)
 		if sleeping:
 			loss *= 0.8
-		agent.change_need(Need.SHELTER, -loss * agent.personality.need_decay[Need.SHELTER] * 0.5)
+		agent.change_need(Need.SHELTER, -loss * hardy * agent.personality.need_decay[Need.SHELTER] * 0.5)
 
 
 ## One portion: carried food first, then the best the chests hold.
@@ -166,6 +167,8 @@ static func _health(sim: RefCounted, k: Dictionary, agent: RefCounted) -> void:
 		change -= float(k.expose)
 		if not Mind.has(agent, "exposed"):
 			Mind.add(agent, "exposed", day)
+	if change < 0.0:
+		change *= Body.ward(sim, agent)
 	if change >= 0.0 and agent.need(Need.FOOD) > 10.0:
 		if float(agent.health.hp) >= 100.0:
 			return
