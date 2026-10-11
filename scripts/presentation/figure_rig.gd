@@ -39,11 +39,12 @@ func build(colours: Dictionary, style: int, as_spirit: bool) -> void:
 	pose_root.add_child(hips)
 	hips.position.y = HIP_HEIGHT
 	hips.add_child(torso)
-	if not spirit:
-		for leg in [leg_l, leg_r]:
-			var side: float = 1.0 if leg == leg_l else -1.0
-			leg.position = Vector3(0.095 * side, 0, 0)
-			hips.add_child(leg)
+	# The legs always join the hips so the tree frees them; a spirit's stay bare.
+	for leg in [leg_l, leg_r]:
+		var side: float = 1.0 if leg == leg_l else -1.0
+		leg.position = Vector3(0.095 * side, 0, 0)
+		hips.add_child(leg)
+		if not spirit:
 			_part(leg, "leg", colours.trousers, Vector3.ZERO)
 			_part(leg, "foot", colours.straw, Vector3(0, -0.62, 0.035), Vector3(0.9, 0.5, 1.5))
 	_part(torso, "robe" if spirit else "jacket", colours.jacket, Vector3.ZERO)
