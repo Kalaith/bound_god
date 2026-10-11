@@ -4,7 +4,7 @@ extends RefCounted
 ## the torso and head lean forward with positive x, `arm_*_z` lifts an arm
 ## away from the body. `lie` and `root` lay a sleeper down or seat a person.
 
-const HANDWORK: Array[String] = ["working", "building", "breaking", "reaping", "sowing", "tending", "gardening", "cooking"]
+const HANDWORK: Array[String] = ["working", "building", "breaking", "reaping", "sowing", "tending", "gardening", "cooking", "refining", "forging"]
 
 
 static func target(activity: String, time: float, stride: float, speed: float, spirit: bool, carrying: bool) -> Dictionary:
@@ -72,7 +72,7 @@ static func _walking(pose: Dictionary, activity: String, stride: float, speed: f
 static func _handwork(pose: Dictionary, activity: String, time: float) -> Dictionary:
 	var beat: float = sin(time * 5.0)
 	match activity:
-		"building", "breaking", "working":
+		"building", "breaking", "working", "forging":
 			# A mallet or axe brought down and lifted again.
 			var strike: float = pow(beat * 0.5 + 0.5, 2.0)
 			pose.merge({"torso_x": 0.12 + strike * 0.18, "arm_r_x": -2.3 + strike * 1.7, "arm_r_z": 0.05,
@@ -80,7 +80,7 @@ static func _handwork(pose: Dictionary, activity: String, time: float) -> Dictio
 		"reaping":
 			pose.merge({"torso_x": 0.4, "torso_y": beat * 0.3, "arm_l_x": -1.0, "arm_r_x": -1.0, "arm_l_z": -0.1 + beat * 0.35,
 				"arm_r_z": -0.1 - beat * 0.35, "head_x": 0.25, "head_y": 0.0}, true)
-		"cooking":
+		"cooking", "refining":
 			pose.merge({"torso_x": 0.15, "arm_r_x": -0.9 + sin(time * 4.0) * 0.15, "arm_r_z": -0.15 + cos(time * 4.0) * 0.2,
 				"arm_l_x": -0.6, "head_x": 0.3, "head_y": 0.0}, true)
 		_:

@@ -39,6 +39,12 @@ func _ready() -> void:
 	_materials[1].set_shader_parameter("block_variation", 0.08)
 
 
+## Snow lying on the ground and roofs (0 to 1), for the weather view.
+func set_snow(amount: float) -> void:
+	for material in _materials:
+		material.set_shader_parameter("snow_cover", amount)
+
+
 ## Mesh every chunk using worker threads; blocks until done.
 func build_all(target: RefCounted) -> void:
 	world = target

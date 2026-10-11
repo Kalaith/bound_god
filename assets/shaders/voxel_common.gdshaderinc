@@ -16,6 +16,8 @@ uniform float wash_strength = 0.08;
 uniform vec2 glow_tile_a = vec2(-1.0);
 uniform vec2 glow_tile_b = vec2(-1.0);
 uniform float glow_strength = 0.1;
+// Snow lying on upward faces through a snowy winter (0 none, 1 deep).
+uniform float snow_cover = 0.0;
 
 float hash3(vec3 p) {
 	p = fract(p * vec3(443.897, 441.423, 437.195));
@@ -76,6 +78,15 @@ float edge_ink(float cube, float view_distance, vec3 world_pos, vec3 world_norma
 	// Open ground keeps only a whisper of its grid; walls and steps read clearer.
 	float facing = n.y > 0.5 ? 0.55 : 1.0;
 	return line * brush * fade * facing * edge_strength;
+}
+
+// Snow settles on what faces the sky, thinnest at the patchy edges.
+vec3 snowed(vec3 albedo, vec3 world_pos, vec3 world_normal) {
+	if (snow_cover <= 0.0 || world_normal.y < 0.5) {
+		return albedo;
+	}
+	float lying = smoothstep(0.25, 0.75, value_noise(world_pos * 0.45) + snow_cover - 0.5);
+	return mix(albedo, vec3(0.93, 0.93, 0.95), lying * snow_cover);
 }
 
 float sacred_glow(vec2 uv, vec4 texel) {

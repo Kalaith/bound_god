@@ -24,6 +24,7 @@ const CaptureTree = preload("res://scripts/presentation/capture_tree.gd")
 const CaptureMeditation = preload("res://scripts/presentation/capture_meditation.gd")
 const CaptureArchitecture = preload("res://scripts/presentation/capture_architecture.gd")
 const CaptureHalls = preload("res://scripts/presentation/capture_halls.gd")
+const CaptureSeasons = preload("res://scripts/presentation/capture_seasons.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -83,6 +84,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 		return
 	if scenario.begins_with("halls_"):
 		CaptureHalls.arrange(main, shot, scenario)
+		return
+	if scenario.begins_with("seasons_"):
+		CaptureSeasons.arrange(main, shot, scenario)
 		return
 	if scenario.begins_with("onboarding_"):
 		CaptureOnboarding.arrange(main, shot, scenario)

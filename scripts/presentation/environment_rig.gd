@@ -23,6 +23,9 @@ var world_environment := WorldEnvironment.new()
 ## The ink-and-paper overlay, carried in front of the camera.
 var paper := MeshInstance3D.new()
 var _hour: float = 10.0
+## How much the weather greys the sky (0 clear, 1 storm) and a lightning flash.
+var _dim: float = 0.0
+var _flash: float = 0.0
 
 
 func _ready() -> void:
@@ -107,6 +110,13 @@ func apply_graphics(values: Dictionary) -> void:
 	sun.shadow_enabled = bool(values.get("shadows", true))
 
 
+## The weather view greys the sky and mist and lights it with flashes.
+func set_weather(dim: float, flash: float) -> void:
+	_dim = clampf(dim, 0.0, 1.0)
+	_flash = clampf(flash, 0.0, 1.0)
+	set_hour(_hour)
+
+
 ## Veil of Fog thickens the air where the god hides people.
 func set_veil(active: bool) -> void:
 	environment.volumetric_fog_enabled = active
@@ -134,3 +144,22 @@ func set_hour(hour: float) -> void:
 	sky_material.ground_bottom_color = sky_material.sky_horizon_color.darkened(0.15)
 	environment.ambient_light_energy = lerpf(0.3, 0.5, t)
 	environment.fog_light_color = NIGHT_MIST.lerp(DAY_MIST, t).lerp(DUSK, glow * 0.6)
+	_apply_weather(t)
+
+
+## Cloud mutes the sun and greys the sky toward the mist; a flash lights all.
+func _apply_weather(daylight: float) -> void:
+	if _dim <= 0.0 and _flash <= 0.0:
+		environment.fog_density = 0.0028
+		return
+	# Storm cloud is heavier and darker than a rain sky.
+	var grey := Color("9ea3a6").darkened(maxf(_dim - 0.6, 0.0) * 1.1).lerp(Color("3b4048"), 1.0 - daylight)
+	sun.light_energy *= 1.0 - 0.75 * _dim
+	environment.ambient_light_energy *= 1.0 - 0.35 * maxf(_dim - 0.6, 0.0) / 0.4
+	sky_material.sky_top_color = sky_material.sky_top_color.lerp(grey, _dim * 0.8)
+	sky_material.sky_horizon_color = sky_material.sky_horizon_color.lerp(grey.lightened(0.15), _dim * 0.7)
+	sky_material.ground_horizon_color = sky_material.sky_horizon_color
+	environment.fog_light_color = environment.fog_light_color.lerp(grey, _dim * 0.6)
+	environment.fog_density = 0.0028 * (1.0 + 2.5 * _dim)
+	environment.ambient_light_energy += _flash * 1.2
+	sky_material.sky_top_color = sky_material.sky_top_color.lerp(Color("e8eef5"), _flash * 0.8)

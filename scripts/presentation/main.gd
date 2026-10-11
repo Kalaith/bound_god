@@ -7,6 +7,7 @@ const Session = preload("res://scripts/presentation/session.gd")
 const Sim = preload("res://scripts/sim/sim.gd")
 const SaveStore = preload("res://scripts/core/save_store.gd")
 const WorldView = preload("res://scripts/presentation/world_view.gd")
+const WeatherView = preload("res://scripts/presentation/weather_view.gd")
 const Avatar = preload("res://scripts/presentation/avatar.gd")
 const CameraRig = preload("res://scripts/presentation/camera_rig.gd")
 const BuildController = preload("res://scripts/presentation/build_controller.gd")
@@ -47,6 +48,7 @@ const TITLE_SCENE: String = "res://scenes/title.tscn"
 var rig: Node3D
 var sim: RefCounted
 var world_view: Node3D
+var weather_view: Node3D
 var avatar: CharacterBody3D
 var camera_rig: Node3D
 var builder: Node3D
@@ -185,6 +187,12 @@ func _start() -> void:
 	lantern_lights.sim = sim
 	lantern_lights.camera = camera_rig.camera
 	add_child(lantern_lights)
+	weather_view = WeatherView.new()
+	weather_view.sim = sim
+	weather_view.camera = camera_rig.camera
+	weather_view.rig = rig
+	weather_view.world_view = world_view
+	add_child(weather_view)
 	inspector = Inspector.new()
 	inspector.sim = sim
 	ui_layer.add_child(inspector)
@@ -317,6 +325,7 @@ func _process(_delta: float) -> void:
 func _clock_text() -> String:
 	var calendar: RefCounted = sim.calendar
 	var text: String = Text.format("hud_day", {"day": calendar.day(), "season": Text.label("season_" + calendar.season_name()), "clock": calendar.clock_text()})
+	text += " · " + Text.label("weather_" + sim.weather.kind)
 	text += "  " + Text.label("hud_speed_%d" % driver.speed_index)
 	if driver.busy:
 		text += "  " + Text.label("hud_busy")

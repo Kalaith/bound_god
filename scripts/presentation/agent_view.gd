@@ -21,7 +21,7 @@ const ELDER_AGE: float = 58.0
 const GLYPHS: Dictionary = {
 	"sleeping": "z Z", "talking": "...", "fleeing": "!", "fighting": "x", "breaking": "@", "recovering": "+",
 	"praying": "^", "building": "#", "eating": "o", "working": "*", "waiting": "?", "sheltering": "~",
-	"sowing": ".:.", "reaping": "/", "tending": "%", "cooking": "&", "gardening": "*",
+	"sowing": ".:.", "reaping": "/", "tending": "%", "cooking": "&", "gardening": "*", "refining": "o~", "forging": "T",
 	"cultivating": "( )", "teaching": ">>", "learning": "<<", "proclaiming": "!!", "facing_heaven": "/|\\",
 }
 ## Jade motes that rise round someone cultivating.
