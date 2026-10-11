@@ -126,11 +126,15 @@ static func _weigh_leader(sim: RefCounted, id: int) -> int:
 	return best
 
 
-## Daily: start the most pressing project there is room and a design for.
+## Daily: start the most pressing project there is room and a design for,
+## one for the village and one for its sect (whose cultivators build their
+## halls beside the village's work, as in the detailed world).
 static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
 	var tried: Dictionary = record.get("no_site", {})
+	var started: Dictionary = {}
 	for want in wants(sim, id):
-		if int(want[2]) < 0:
+		var sect: bool = SectHallWants.PURPOSES.has(str(want[1]))
+		if int(want[2]) < 0 or started.has(sect):
 			continue
 		var design: RefCounted = design_for(sim, id, str(want[0]))
 		if design == null or _open_for(sim, id, str(want[1])):
@@ -141,14 +145,16 @@ static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
 		var renovation: Dictionary = Renovations.option(sim, id, str(want[0]))
 		if not renovation.is_empty():
 			_renovate(sim, id, renovation, want)
-			return
+			started[sect] = true
+			continue
 		# The god's blueprint for this function, while its spot is free, first.
 		var proposal: Dictionary = _blueprint(sim, id, str(want[0]))
 		if not proposal.is_empty():
 			design = proposal.template
 			_mark(sim, id, design, proposal.choice, want)
 			Blueprints.taken(sim, int(proposal.blueprint), sim.agents[int(want[2])])
-			return
+			started[sect] = true
+			continue
 		var failed: Array = tried.get(design.id, [-1, 0, -1, -1])
 		var ground: Array = [int(sim.structures.version), sim.construction.reserved.size()]
 		# Nothing built, fallen or reserved since it last failed: it would fail again.
@@ -163,7 +169,7 @@ static func day(sim: RefCounted, id: int, record: Dictionary) -> void:
 			continue
 		tried.erase(design.id)
 		_mark(sim, id, design, choice, want)
-		return
+		started[sect] = true
 
 
 static func _mark(sim: RefCounted, id: int, design: RefCounted, choice: Dictionary, want: Array) -> void:

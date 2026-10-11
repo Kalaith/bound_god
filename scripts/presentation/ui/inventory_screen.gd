@@ -10,11 +10,15 @@ const Text = preload("res://scripts/core/text.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 
-## Block families, so related blocks sit together in the grid.
+## Block families, so related blocks sit together in the grid, each under
+## its heading label.
 const FAMILIES: Array = [
-	["planks", "log", "thatch", "cobble", "cut_stone", "glass", "fence"],
-	["storage_chest", "bed", "door", "workbench", "hearth", "altar"],
-	["berry_bush", "dirt", "grass", "stone", "sand", "gravel"],
+	["inventory_family_walls", ["planks", "log", "thatch", "cobble", "cut_stone", "glass", "fence", "roof_tiles", "lacquered_pillar", "paper_screen"]],
+	["inventory_family_furniture", ["storage_chest", "bed", "door", "workbench", "hearth", "altar", "table", "bench", "planter", "lantern",
+		"granary_bin", "farmland"]],
+	["inventory_family_sect", ["meditation_mat", "formation_stone", "scripture_shelf", "lectern", "incense_burner", "medicine_cabinet",
+		"memorial_tablet", "bronze_bell", "tribulation_array", "thunder_spire", "spirit_jade", "precept_stele", "sect_banner"]],
+	["inventory_family_ground", ["berry_bush", "dirt", "grass", "stone", "sand", "gravel"]],
 ]
 
 var sim: RefCounted
@@ -36,21 +40,31 @@ func _ready() -> void:
 	panel.anchor_bottom = 0.5
 	panel.offset_left = -690
 	panel.offset_right = 690
-	panel.offset_top = -290
-	panel.offset_bottom = 290
+	panel.offset_top = -420
+	panel.offset_bottom = 420
 	add_child(panel)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 12)
 	panel.add_child(column)
 	column.add_child(Style.heading(Text.label("inventory_title"), 30, Style.GOLD))
 	column.add_child(Style.wrapped(Text.label("inventory_hint"), 18, Style.MUTED))
+	# The families scroll; the hotbar and its buttons stay in view below.
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 520)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(scroll)
+	var families := VBoxContainer.new()
+	families.add_theme_constant_override("separation", 8)
+	families.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(families)
 	for family in FAMILIES:
+		families.add_child(Style.label(Text.label(str(family[0])), 19, Style.MUTED))
 		var grid := GridContainer.new()
 		grid.columns = 7
 		grid.add_theme_constant_override("h_separation", 8)
 		grid.add_theme_constant_override("v_separation", 8)
-		column.add_child(grid)
-		for name in family:
+		families.add_child(grid)
+		for name in family[1]:
 			var block: int = Registry.id(name)
 			var button: Button = _block_button(block)
 			button.pressed.connect(func() -> void: _put(block))
