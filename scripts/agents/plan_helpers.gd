@@ -3,6 +3,7 @@ extends RefCounted
 ## friends nearby and wandering, all read from beliefs and visible state.
 const Balance = preload("res://scripts/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
+const Homes = preload("res://scripts/sim/homes.gd")
 
 
 static func distance(a: Vector3i, b: Vector3i) -> float:
@@ -28,8 +29,8 @@ static func nearest_structure(sim: RefCounted, agent: RefCounted, wanted: Callab
 	return best
 
 
-static func free_beds(entry: Dictionary) -> int:
-	return int(entry.capacity.get("beds", 0)) - entry.residents.size()
+static func free_beds(sim: RefCounted, entry: Dictionary) -> int:
+	return Homes.free_beds(sim, entry)
 
 
 ## Up to three believed sites of a kind with no recent failure, nearest first.

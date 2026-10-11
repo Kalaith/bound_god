@@ -8,6 +8,7 @@ const Registry = preload("res://scripts/world/block_registry.gd")
 const Food = preload("res://scripts/sim/food.gd")
 const Standing = preload("res://scripts/sim/standing.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
+const Homes = preload("res://scripts/sim/homes.gd")
 
 const Op = Plans.Op
 const T = Plans.T
@@ -73,11 +74,11 @@ static func sleep(sim: RefCounted, agent: RefCounted) -> Array:
 	if agent.partner >= 0:
 		var partner_home: int = sim.agents[agent.partner].home
 		var entry: Dictionary = sim.structures.entries.get(partner_home, {})
-		if partner_home != agent.home and not entry.is_empty() and H.free_beds(entry) > 0 and sim.settlements.at_cell(entry.anchor) == agent.settlement_id:
+		if partner_home != agent.home and not entry.is_empty() and Homes.has_room(sim, entry, agent) and sim.settlements.at_cell(entry.anchor) == agent.settlement_id:
 			plans.append(H.option("partner_bed", 1.5, [_structure(partner_home), Plans.step(Op.SLEEP, {"structure": partner_home})]))
 	if home.is_empty():
 		var bed: int = H.nearest_structure(sim, agent, func(s: Dictionary) -> bool:
-			return s.functions.has("dwelling") and H.free_beds(s) > 0 and sim.settlements.at_cell(s.anchor) == agent.settlement_id)
+			return s.functions.has("dwelling") and H.free_beds(sim, s) > 0 and sim.settlements.at_cell(s.anchor) == agent.settlement_id)
 		if bed >= 0:
 			plans.append(H.option("free_bed", 0.8, [_structure(bed), Plans.step(Op.SLEEP, {"structure": bed})]))
 	var shelter: int = H.nearest_structure(sim, agent, func(s: Dictionary) -> bool:

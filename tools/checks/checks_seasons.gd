@@ -2,7 +2,7 @@ extends RefCounted
 ## M20 Seasons and weather: the sky follows its season and its own stream,
 ## wears on whoever is out in it, waters the fields (a dry spell stalls
 ## them), makes a trial fiercer in a thunderstorm and is waited out, can be
-## calmed by the god, and is saved.
+## calmed by the god, and is saved; meditated years are written as one line.
 const Sim = preload("res://scripts/sim/sim.gd")
 const SimState = preload("res://scripts/sim/sim_state.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
@@ -17,6 +17,7 @@ const Movement = preload("res://scripts/sim/movement.gd")
 const WorkPace = preload("res://scripts/sim/work_pace.gd")
 const AbstractWorld = preload("res://scripts/sim/abstract/abstract_world.gd")
 const AbstractPeople = preload("res://scripts/sim/abstract/abstract_people.gd")
+const Meditation = preload("res://tools/checks/meditation.gd")
 
 const Need = Personality.Need
 
@@ -291,4 +292,28 @@ func check_the_tree_and_cultivation_help_people_endure_hunger_and_cold():
 		Body._decay(sim, agent)
 	if 100.0 - agent.need(Need.FOOD) >= mortal_hunger * 0.5:
 		return "a Foundation cultivator grew hungry as fast as a mortal (%.1f vs %.1f)" % [100.0 - agent.need(Need.FOOD), mortal_hunger]
+	return ""
+
+
+## While the god meditates the sky is written as one line a year, not a
+## line for every storm, first snow and dry spell.
+func check_meditated_weather_is_one_line_a_year():
+	var sim: RefCounted = Sim.create(11)
+	var from: int = sim.chronicle.entries.size()
+	Meditation.meditate(sim, float(sim.calendar.days_per_season * 4) * 2.0 + 1.0)
+	var years: Dictionary = {}
+	var storms: int = 0
+	for i in range(from, sim.chronicle.entries.size()):
+		var entry: Dictionary = sim.chronicle.entries[i]
+		if str(entry.kind) in ["thunderstorm", "drought", "first_snow"]:
+			return "a %s was chronicled on its own while the god meditated (day %d)" % [entry.kind, int(entry.day)]
+		if str(entry.kind) == "weather_year":
+			if years.has(int(entry.args.year)):
+				return "year %d's sky was written twice" % int(entry.args.year)
+			years[int(entry.args.year)] = true
+			storms += int(entry.args.storms)
+	if years.size() < 2 or storms == 0:
+		return "two meditated years left %d weather lines and %d storms" % [years.size(), storms]
+	if not sim.weather.tally.is_empty():
+		return "the sky's tally was left unwritten on waking"
 	return ""

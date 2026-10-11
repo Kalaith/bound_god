@@ -248,6 +248,8 @@
 		"chronicle_insult": "{a} insulted {b}.",
 		"chronicle_reconciled": "{a} and {b} made peace.",
 		"chronicle_partnership": "{a} and {b} became partners.",
+		"chronicle_moved_in_together": "{a} moved in with {b}.",
+		"cause_partners": "partners belong under one roof",
 		"chronicle_birth": "{name} was born to {a} and {b}.",
 		"chronicle_ambition": "{name} fulfilled their ambition: {ambition}.",
 		"chronicle_mental_break": "{name} lost control.",

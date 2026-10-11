@@ -33,6 +33,8 @@ static func die(sim: RefCounted, agent: RefCounted, cause: String) -> void:
 	agent.path.clear()
 	agent.activity = "idle"
 	sim.set_home(agent, -1)
+	if sim.settlements.entries.has(agent.settlement_id):
+		sim.settlements.entries[agent.settlement_id].residents.erase(agent.id)
 	var day_ticks: int = sim.calendar.ticks_per_day
 	for other in sim.agents:
 		if other.id == agent.id or not other.is_present():
@@ -96,7 +98,7 @@ static func _births(sim: RefCounted) -> void:
 		var other: RefCounted = sim.agents[agent.partner]
 		if not other.is_present() or other.partner != agent.id or other.is_child or agent.home < 0 or agent.home != other.home:
 			continue
-		if sim.present_count() >= Balance.integer("population.cap"):
+		if sim.present_count() >= Balance.integer("population.birth_cap"):
 			return
 		if sim.rng.randf() >= Balance.number("social.child_chance_per_day"):
 			continue

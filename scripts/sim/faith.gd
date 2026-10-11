@@ -233,9 +233,10 @@ func hourly(sim: RefCounted) -> void:
 
 
 ## Daily: condition decays, shrines wake and sleep with their support, renown
-## is counted, and people's faith drifts.
+## is counted, people's faith drifts and old prayers are forgotten.
 func daily(sim: RefCounted) -> void:
 	var threshold: float = Balance.number("shrines.active_support")
+	_forget_old_prayers(sim)
 	for id in ids():
 		var shrine: Dictionary = shrines[id]
 		if shrine.state == "fallen":
@@ -277,6 +278,17 @@ func daily(sim: RefCounted) -> void:
 
 
 # --- Prayer -------------------------------------------------------------------
+
+## Prayers older than a few days leave the god's feed and the shrine's
+## memory (support counts only recent ones), so years of meditation do not
+## leave a long-dead plea at the top of the feed.
+func _forget_old_prayers(sim: RefCounted) -> void:
+	var oldest: int = sim.calendar.tick - sim.calendar.ticks_for_days(Balance.number("shrines.prayer_keep_days"))
+	for id in ids():
+		for list in [shrines[id].prayers, feed.get(id, [])]:
+			while not list.is_empty() and int(list[0].tick) < oldest:
+				list.pop_front()
+
 
 ## A finished prayer: Favour for the shrine, a line in the god's feed.
 func record_prayer(sim: RefCounted, agent: RefCounted, shrine_id: int, intent: Dictionary) -> void:

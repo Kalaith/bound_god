@@ -15,6 +15,7 @@ const EffectsCultivation = preload("res://scripts/sim/effects_cultivation.gd")
 const DesignsLore = preload("res://scripts/sim/designs_lore.gd")
 const Woods = preload("res://scripts/sim/woods.gd")
 const Text = preload("res://scripts/core/text.gd")
+const Homes = preload("res://scripts/sim/homes.gd")
 
 const Need = Personality.Need
 
@@ -222,9 +223,7 @@ static func _pick_up(sim: RefCounted, agent: RefCounted, action: Dictionary) -> 
 ## A bed in a dwelling becomes this person's home if one is free.
 static func _claim_bed(sim: RefCounted, agent: RefCounted, id: int) -> void:
 	var entry: Dictionary = sim.structures.entries.get(id, {})
-	if entry.is_empty() or entry.residents.has(agent.id):
-		return
-	if int(entry.capacity.get("beds", 0)) - entry.residents.size() <= 0:
+	if not Homes.has_room(sim, entry, agent):
 		return
 	sim.set_home(agent, id)
 

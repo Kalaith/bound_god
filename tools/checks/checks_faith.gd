@@ -145,3 +145,26 @@ func check_the_tree_holds_a_small_circle_that_grows_with_support():
 	if small > Balance.number("shrines.tree_min_radius") + 0.5 or large <= small + 4.0:
 		return "the tree's reach did not follow its support (%.1f unsupported, %.1f supported)" % [small, large]
 	return ""
+
+
+## Prayers leave the god's feed after a few days, so a plea from long ago is
+## not shown as if it were fresh.
+func check_old_prayers_expire():
+	var sim: RefCounted = _flat()
+	var agent: RefCounted = sim.agents[0]
+	_believe(agent, 60.0)
+	var said: int = sim.calendar.tick
+	sim.faith.record_prayer(sim, agent, 1, {"kind": "food", "level": 20.0})
+	if sim.faith.feed[1].size() != 1:
+		return "the prayer did not reach the feed"
+	sim.run_ticks(sim.calendar.ticks_for_days(Balance.number("shrines.prayer_keep_days") - 1.0))
+	var kept: bool = false
+	for prayer in sim.faith.feed[1]:
+		kept = kept or (int(prayer.agent) == agent.id and int(prayer.tick) == said)
+	if not kept:
+		return "a recent prayer was forgotten too soon"
+	sim.run_ticks(sim.calendar.ticks_for_days(2.0))
+	for prayer in sim.faith.feed[1] + sim.faith.shrines[1].prayers:
+		if sim.calendar.tick - int(prayer.tick) > sim.calendar.ticks_for_days(Balance.number("shrines.prayer_keep_days") + 1.0):
+			return "a prayer from day %d is still remembered on day %d" % [int(prayer.tick) / sim.calendar.ticks_per_day + 1, sim.calendar.day()]
+	return ""

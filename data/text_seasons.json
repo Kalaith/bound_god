@@ -9,6 +9,7 @@
 		"chronicle_first_snow": "The first snow of the winter fell on the valley.",
 		"chronicle_thunderstorm": "A thunderstorm rolled over the valley.",
 		"chronicle_drought": "No rain had fallen for {days} days, and {count} crops stood still in the fields.",
+		"chronicle_weather_year": "The sky of year {year}, while the god meditated: thunderstorms {storms}, droughts {droughts}.",
 		"cause_winter": "winter had come",
 		"cause_summer_heat": "the summer's heat",
 		"cause_no_rain": "the sky stayed dry",

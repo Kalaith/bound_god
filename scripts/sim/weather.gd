@@ -19,6 +19,9 @@ var last_wet_day: int = 1
 var snow_noted_year: int = 0
 ## Whether the current dry spell has been chronicled as a drought.
 var drought_noted: bool = false
+## While the god meditates the sky is tallied, not chronicled spell by
+## spell: {year, storms, droughts, days}, written as one line a year.
+var tally: Dictionary = {}
 var rng := RandomNumberGenerator.new()
 
 
@@ -77,8 +80,40 @@ func dry_days(sim: RefCounted) -> int:
 func hourly(sim: RefCounted) -> void:
 	if is_wet():
 		_watered(sim)
+	if not tally.is_empty() and (not sim.meditating or int(tally.year) != sim.calendar.year()):
+		flush(sim)
 	if sim.calendar.tick >= until_tick:
 		_roll(sim)
+
+
+## The meditated sky of a year (or the part of it just spent), in one line.
+func flush(sim: RefCounted) -> void:
+	if tally.is_empty():
+		return
+	# A year broken by waking keeps one line: the rest is added to it.
+	for i in range(sim.chronicle.entries.size() - 1, -1, -1):
+		var entry: Dictionary = sim.chronicle.entries[i]
+		if str(entry.kind) != "weather_year":
+			continue
+		if int(entry.args.year) == int(tally.year):
+			entry.args.storms = int(entry.args.storms) + int(tally.storms)
+			entry.args.droughts = int(entry.args.droughts) + int(tally.droughts)
+			tally = {}
+			return
+		break
+	if int(tally.storms) + int(tally.droughts) > 0:
+		sim.chronicle_event("weather_year", _place(sim), {"year": int(tally.year), "storms": int(tally.storms), "droughts": int(tally.droughts)}, "")
+	tally = {}
+
+
+## Counted toward the year's line while the god meditates; false in play.
+func _tallied(sim: RefCounted, what: String) -> bool:
+	if not sim.meditating:
+		return false
+	if tally.is_empty():
+		tally = {"year": sim.calendar.year(), "storms": 0, "droughts": 0}
+	tally[what] = int(tally[what]) + 1
+	return true
 
 
 func _watered(sim: RefCounted) -> void:
@@ -106,8 +141,9 @@ func _roll(sim: RefCounted) -> void:
 		_watered(sim)
 	if kind == "snow" and snow_noted_year != sim.calendar.year():
 		snow_noted_year = sim.calendar.year()
-		sim.chronicle_event("first_snow", _place(sim), {}, "cause_winter")
-	elif kind == "thunderstorm" and was != kind:
+		if not sim.meditating:
+			sim.chronicle_event("first_snow", _place(sim), {}, "cause_winter")
+	elif kind == "thunderstorm" and was != kind and not _tallied(sim, "storms"):
 		sim.chronicle_event("thunderstorm", _place(sim), {}, "cause_summer_heat" if sim.calendar.season_name() == "summer" else "")
 
 
@@ -125,6 +161,8 @@ func note_drought(sim: RefCounted, settlement_id: int, crops: int) -> void:
 	if drought_noted:
 		return
 	drought_noted = true
+	if _tallied(sim, "droughts"):
+		return
 	sim.chronicle_event("drought", settlement_id, {"days": dry_days(sim), "count": crops}, "cause_no_rain")
 
 
@@ -134,7 +172,7 @@ static func _place(sim: RefCounted) -> int:
 
 func to_dict() -> Dictionary:
 	return {"kind": kind, "until_tick": until_tick, "last_wet_day": last_wet_day, "snow_noted_year": snow_noted_year,
-		"drought_noted": drought_noted, "rng_state": rng.state, "rng_seed": rng.seed}
+		"drought_noted": drought_noted, "rng_state": rng.state, "rng_seed": rng.seed, "tally": tally.duplicate()}
 
 
 func from_dict(sim: RefCounted, state: Dictionary) -> void:
@@ -148,3 +186,4 @@ func from_dict(sim: RefCounted, state: Dictionary) -> void:
 	drought_noted = bool(state.drought_noted)
 	rng.seed = int(state.rng_seed)
 	rng.state = int(state.rng_state)
+	tally = state.get("tally", {}).duplicate()

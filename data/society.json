@@ -36,6 +36,7 @@
 		{"id": "strange_voice", "text": "Heard a voice with nobody there", "mood": -2, "days": 1.0, "max_stack": 1},
 		{"id": "shrine_fell", "text": "Their shrine fell", "mood": -10, "days": 6.0, "max_stack": 1},
 		{"id": "home_built", "text": "Raised a home with their own hands", "mood": 10, "days": 8.0, "max_stack": 1},
+		{"id": "moved_in", "text": "Moved in with their partner", "mood": 6, "days": 6.0, "max_stack": 1},
 		{"id": "raided", "text": "Raiders came to their home", "mood": -10, "days": 4.0, "max_stack": 1},
 		{"id": "lost_home", "text": "Lost their home", "mood": -8, "days": 4.0, "max_stack": 1},
 		{"id": "heard_of_god", "text": "Heard of a god in the valley", "mood": 2, "days": 2.0, "max_stack": 1},
