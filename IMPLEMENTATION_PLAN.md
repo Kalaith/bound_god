@@ -102,7 +102,7 @@ Each milestone ends with a runnable game, new `sim_checks` scenarios for its sim
 | C. The cultivation slice | M15 Qi and cultivators · M16 Breakthroughs and tribulations · M17 The tree learns · M18 Meditation and generations | Built headlessly; the key test's fresh-player sessions are open |
 | D. A living sect | M19 Sect architecture and living designs · M19b The sect's halls · M20 Seasons, weather and herbs · M20b The sect's alchemy | M19 built headlessly (not played; seekers do not yet bring the sect designs); M19b built headlessly (not played); M20 built headlessly (not played); M20b built headlessly (not played) |
 | E. A wider world | M21 Branches and sacred sites · M22 Regions, other sects and outsiders | M21 and M22 built headlessly (not played) |
-| F. A whole game | M23 Campaign shape · M24 Look, sound and feel · M25 Release | M23 built headlessly (not played); M24 built (seen in captures, not heard or played) |
+| F. A whole game | M23 Campaign shape · M24 Look, sound and feel · M25 Release | M23 built headlessly (not played); M24 built (seen in captures, not heard or played); M25 detailed |
 
 Stage C is detailed below; stages D–F are outlined and will be detailed after M18's key test, since what players feel there should shape them.
 
@@ -352,9 +352,19 @@ Detailed after M18 ahead of its fresh-player sessions (the key test's human half
 
 **Exit:** music plays and changes between day, night, a storm and meditation (checked by reading the director's state in a capture run); each miracle shows its own effect in a capture; at 150 % UI scale and in the pseudo-language every screen still fits at 720p (captures); the pad tour reaches and closes every screen; the check finds no missing label and no literal player-facing text. Checks: locale overrides and the pseudo-language; label coverage across presentation; settings saved and migrated. Captures: each miracle, a storm with rain, the settings screen's new rows, the pseudo-language at 720p, the 150 % scale.
 
-### Stage F outline (to be detailed after M24)
+### M25 — Release
 
-- **M25 Release:** soak, saves from every schema, performance on a lower-spec machine, onboarding final, credits and licences, closed beta, 1.0 build.
+**Goal:** a 1.0 build that holds together: a long soak without errors, every save that ever shipped still loading, onboarding that covers the whole game, credits and licences in the build, performance measured, and the Windows build made and smoke-tested. What needs people (the closed beta, fresh-player playtests, a lower-spec machine) is prepared and recorded, not faked.
+
+- **Soak** (`tools/soak.gd`, also a long check): a campaign meditates 200 years from seed 11 in spans, with a detailed day played after every 25 years and a save and load midway; it must end without a script error, with every region populated or chronicled empty, no negative stock, nobody in the detailed days stuck in one plan for two days, and the chronicle, ages and saga intact. Its timings are recorded.
+- **Saves from every schema:** a fixture from the last pre-regions build (schema 5, M20b, made from that commit in a worktree) loads as a campaign, gains its neighbours and continues a day; a fixture of the current campaign format is added for the future; the older fixtures keep loading.
+- **Onboarding, final pass:** contextual prompts for what later milestones added (a branch founded, a shrine in another land and the Lands panel, a guest waiting, the ward and the realm opening, the saga), each dismissible and shown once per world.
+- **Credits and licences:** a Credits screen on the title (the game; Godot Engine's licence and third-party notices, from the engine; the fonts' SIL Open Font Licence), and the licence texts written beside the build.
+- **Performance:** a profile capture at 60 people in the active region at 1×, 3× and 10× (frame and simulation time) and meditation timings with regions; the key test's minute budget met or its miss documented with the measured costs.
+- **The 1.0 build:** version 1.0.0; `publish.ps1 -BuildOnly` makes the Windows build; a smoke test of the exported build (boots to the title, a new world rises, it saves, loads and quits cleanly). Publishing stays a separate authorisation.
+- **Needs people (recorded):** the closed beta, the fresh-player playtests of M13 and M18 (kit in `docs/playtests/`), a lower-spec machine.
+
+**Exit:** the soak passes and its numbers are recorded; every fixture loads; the prompts appear in their moments (captures); the Credits screen shows the licences; the profile numbers are recorded; the 1.0 build exists and passes its smoke test. The human items stay open in `PROGRESS.md`.
 
 ## 5. Verification
 
