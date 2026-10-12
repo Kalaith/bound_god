@@ -102,7 +102,7 @@ Each milestone ends with a runnable game, new `sim_checks` scenarios for its sim
 | C. The cultivation slice | M15 Qi and cultivators · M16 Breakthroughs and tribulations · M17 The tree learns · M18 Meditation and generations | Built headlessly; the key test's fresh-player sessions are open |
 | D. A living sect | M19 Sect architecture and living designs · M19b The sect's halls · M20 Seasons, weather and herbs · M20b The sect's alchemy | M19 built headlessly (not played; seekers do not yet bring the sect designs); M19b built headlessly (not played); M20 built headlessly (not played); M20b built headlessly (not played) |
 | E. A wider world | M21 Branches and sacred sites · M22 Regions, other sects and outsiders | M21 and M22 built headlessly (not played) |
-| F. A whole game | M23 Campaign shape · M24 Look, sound and feel · M25 Release | M23 built headlessly (not played) |
+| F. A whole game | M23 Campaign shape · M24 Look, sound and feel · M25 Release | M23 built headlessly (not played); M24 detailed |
 
 Stage C is detailed below; stages D–F are outlined and will be detailed after M18's key test, since what players feel there should shape them.
 
@@ -337,9 +337,23 @@ Detailed after M18 ahead of its fresh-player sessions (the key test's human half
 
 **Exit:** a new world can begin without neighbours and without outlaws; in a 50-year meditation from seed 11 the chronicle holds at least three named ages with causes and at least three deeds; Close the book shows an epilogue whose numbers agree with the statistics; the exported chronicle holds every age and every region's entries; with the formation an outlaw inside the ward falls back and a wolf stays out; with the realm open an expedition goes in, gathers, and comes out (or is lost, chronicled). Checks: options reach the campaign; an age turns on each rule; each deed's detector; statistics against a known chronicle; the epilogue on fading; export; the ward; an expedition in and out; saves. Captures: the title options, the saga screen, the epilogue, the chronicle with ages, the ward's edge, the hidden realm.
 
-### Stage F outline (to be detailed after M23)
+### M24 — Look, sound and feel
 
-- **M24 Look, sound and feel:** the ink-and-pastel direction carried to every screen, tribulation and miracle effects, figure poses, music, accessibility, full gamepad navigation, localisation readiness.
+**Goal:** the game looks, sounds and handles like one finished thing: a synthesised score that follows the hour, the season and the moment; each miracle and trial seen and heard; every screen in the same ink-and-pastel hand, readable larger, in safer colours and with captions; every screen reachable and closable from a gamepad; and text ready for other languages. Presentation only: nothing here changes the simulation.
+
+- **Music** (`presentation/music_director.gd`, synthesised at start, no audio files): a slow generative score of plucked pentatonic notes (a guqin-like voice: a few partials with a fast pluck and long decay) over a soft drone, its scale, register, tempo and density chosen by the moment: dawn, day, dusk and night; winter sparser and lower; a storm or a trial over a pinned person tenser (a lower drone, a held minor second); meditation a bell every few bars; a raid low drums. Phrases are drawn from a seeded stream so the score never loops audibly. On the Music bus with the wind.
+- **Sound** (`audio_director.gd`): thunder for each strike of Heaven's lightning (near or far by distance), a rain loop under rain and storm, the bronze bell when a bell tower rings, drums when a raid begins.
+- **Miracle effects** (`presentation/miracle_effects.gd`): each miracle its own sign where it is worked, from the event's miracle id: Bless Growth green motes rising from the ground, Kindle embers, Veil of Fog a slow grey bank, Mend pale sparks along the repaired blocks, Shield the Trial a translucent dome over the storm, Defy Heaven a gold column and burst, Nurture a ring of blue motes, Calm the Sky a widening clear ripple, Ripen Fruit gold motes in the crown, Bless Cultivation a soft halo; the ring flash stays.
+- **Figure poses:** the activities added since M19 get poses (receiving a guest, looting, mourning at a ruin, stepping into the roots), and an outlaw is drawn in a darker robe with a hood.
+- **Accessibility** (settings): UI scale (85–150 %, `content_scale_factor`), a colour-safe palette (warnings, harm and good news in blue/orange/white instead of red/green), high-contrast panels (darker, opaque, a brighter border), captions for sounds that matter (a line under the clock: thunder, the bell, a prayer heard, raiders' drums), and the existing reduce-motion switch also stilling falling leaves, motes and the camera's bob.
+- **Gamepad navigation:** every screen and panel takes focus on a control when it opens and closes on the pad's back button (`ui_cancel`) as well as Esc; lists and buttons are reachable with the d-pad; a debug `pad_tour` capture opens each screen in turn and reports which control has focus and whether back closes it.
+- **Localisation readiness:** text catalogs may be overridden per language (`data/locale/<code>/*.json`, the same keys); a language setting (English and a pseudo-language for layout testing that accents and lengthens every label by a third); a check that every label used by the code exists and that no presentation script sets player-facing text from a string literal.
+- **The ink-and-pastel hand:** panels on a faint paper wash with a hand-drawn border, headings in the brush font, and the HUD, inspector and screens checked at 1080p and 720p.
+
+**Exit:** music plays and changes between day, night, a storm and meditation (checked by reading the director's state in a capture run); each miracle shows its own effect in a capture; at 150 % UI scale and in the pseudo-language every screen still fits at 720p (captures); the pad tour reaches and closes every screen; the check finds no missing label and no literal player-facing text. Checks: locale overrides and the pseudo-language; label coverage across presentation; settings saved and migrated. Captures: each miracle, a storm with rain, the settings screen's new rows, the pseudo-language at 720p, the 150 % scale.
+
+### Stage F outline (to be detailed after M24)
+
 - **M25 Release:** soak, saves from every schema, performance on a lower-spec machine, onboarding final, credits and licences, closed beta, 1.0 build.
 
 ## 5. Verification
