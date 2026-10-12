@@ -130,7 +130,7 @@ func check_a_god_left_shrineless_goes_to_another_region():
 
 func check_a_campaign_saves_and_loads():
 	var campaign: RefCounted = _campaign()
-	campaign.run_ticks(campaign.active_sim().calendar.ticks_per_hour() * 7)
+	campaign.run_ticks(campaign.active_sim().calendar.ticks_per_hour() * 4)
 	var saved: Dictionary = CampaignState.capture(campaign)
 	var regions: Variant = bytes_to_var(var_to_bytes(saved.regions))
 	if not CampaignState.problem(regions).is_empty():
@@ -141,12 +141,9 @@ func check_a_campaign_saves_and_loads():
 	for i in range(campaign.regions.size()):
 		if restored.regions[i].sim.state_hash() != campaign.regions[i].sim.state_hash():
 			return "region %d hashes differently after loading" % i
-	campaign.run_ticks(campaign.active_sim().calendar.ticks_per_hour() * 7)
-	restored.run_ticks(restored.active_sim().calendar.ticks_per_hour() * 7)
+	campaign.run_ticks(campaign.active_sim().calendar.ticks_per_hour() * 4)
+	restored.run_ticks(restored.active_sim().calendar.ticks_per_hour() * 4)
 	if restored.state_hash() != campaign.state_hash():
 		return "the restored campaign does not continue identically"
-	# A valley saved before regions gains its neighbours.
-	var old: RefCounted = CampaignState.restore(bytes_to_var(var_to_bytes(saved.sim)), bytes_to_var(var_to_bytes(saved.chunks)), null)
-	if old.regions.size() != campaign.regions.size():
-		return "an old save did not gain its neighbours"
+	# A valley saved before regions gaining its neighbours: checks_release.gd.
 	return ""

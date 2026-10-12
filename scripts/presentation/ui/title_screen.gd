@@ -9,6 +9,9 @@ const Capture = preload("res://scripts/presentation/capture.gd")
 const SaveStore = preload("res://scripts/core/save_store.gd")
 const SettingsStore = preload("res://scripts/core/settings_store.gd")
 const SettingsScreen = preload("res://scripts/presentation/ui/settings_screen.gd")
+const PageScreen = preload("res://scripts/presentation/ui/page_screen.gd")
+const CreditsText = preload("res://scripts/presentation/ui/credits_text.gd")
+const Smoke = preload("res://scripts/presentation/smoke.gd")
 
 const MAIN_SCENE: String = "res://scenes/main.tscn"
 
@@ -23,6 +26,7 @@ var notice: Label
 var errors: Array[String] = []
 var settings := SettingsStore.new()
 var settings_screen: Control
+var credits_screen: Control
 var _menu: VBoxContainer
 var _heading: Label
 var _tagline: Label
@@ -38,6 +42,9 @@ func _ready() -> void:
 	_build()
 	resized.connect(_layout)
 	_layout()
+	if Smoke.requested():
+		_smoke()
+		return
 	var request: Dictionary = Capture.request()
 	if not request.is_empty():
 		_start_capture(request)
@@ -95,6 +102,9 @@ func _build() -> void:
 	var settings_button: Button = Style.button(Text.label("title_settings"))
 	settings_button.pressed.connect(_open_settings)
 	_menu.add_child(settings_button)
+	var credits_button: Button = Style.button(Text.label("title_credits"))
+	credits_button.pressed.connect(open_credits)
+	_menu.add_child(credits_button)
 	var quit_button: Button = Style.button(Text.label("title_quit"))
 	quit_button.pressed.connect(func() -> void: get_tree().quit())
 	_menu.add_child(quit_button)
@@ -143,8 +153,33 @@ func _open_settings() -> void:
 		new_button.grab_focus())
 
 
+## The release smoke test (smoke.gd): straight into a new world on its own slot.
+func _smoke() -> void:
+	if not errors.is_empty():
+		print("SMOKE FAIL: data errors: %s" % str(errors))
+		get_tree().quit(1)
+		return
+	Session.mode = "new"
+	Session.seed = 7
+	Session.slot = Smoke.SLOT
+	get_tree().change_scene_to_file.call_deferred(MAIN_SCENE)
+
+
+## The Credits page (M25): the game, the fonts, the engine's licence.
+func open_credits() -> void:
+	if not is_instance_valid(credits_screen):
+		credits_screen = PageScreen.new()
+		add_child(credits_screen)
+		credits_screen.chosen.connect(func(_id: String) -> void:
+			credits_screen.hide()
+			new_button.grab_focus())
+	credits_screen.open(Text.label("credits_title"), CreditsText.lines(), [["close", "credits_close"]])
+
+
 func _start_capture(request: Dictionary) -> void:
-	if str(request.scenario) == "title":
+	if str(request.scenario) in ["title", "credits"]:
+		if str(request.scenario) == "credits":
+			open_credits()
 		var shot: Node = Capture.new()
 		shot.configure(request)
 		add_child(shot)

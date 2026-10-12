@@ -138,6 +138,10 @@ function New-PublishBuild($Info, [string]$RequestedGodot) {
     }
     Invoke-PublishGodot $godot @('--headless', '--path', $Info.Root, '--export-release', 'Windows Desktop', "$directory/windows/$($Info.Exe)") "$directory/windows-export.log"
     if (-not (Test-Path -LiteralPath "$directory/windows/$($Info.Exe)" -PathType Leaf)) { throw 'Windows export missing.' }
+    # The licence texts ship beside the executable (tools/write_licences.gd makes them).
+    foreach ($licence in Get-ChildItem -LiteralPath (Join-Path $Info.Root 'licences') -Filter '*.txt' -File -ErrorAction SilentlyContinue) {
+        Copy-Item -LiteralPath $licence.FullName -Destination "$directory/windows/" -Force
+    }
     Compress-Archive -Path "$directory/windows/*" -DestinationPath "$directory/$($Info.Slug)_windows.zip"
     $records = @()
     foreach ($file in Get-ChildItem -LiteralPath $directory -Recurse -File | Where-Object { $_.Extension -ne '.log' }) {

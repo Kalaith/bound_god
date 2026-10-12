@@ -31,7 +31,8 @@ func check_qi_falls_off_with_distance():
 
 ## A save from before cultivation (schema 4) loads with everyone given a
 ## spiritual root (the same on every load), plays on and saves as schema 5.
-func check_the_fields_save_loads_through_migration():
+## Long since M25, like the schema-3 check (the schema-5 fixture runs by default).
+func long_check_the_fields_save_loads_through_migration():
 	var file := FileAccess.open_compressed("res://tools/fixtures/save_v4_fields.zst", FileAccess.READ, FileAccess.COMPRESSION_ZSTD)
 	if file == null:
 		return "the fields fixture save is missing"

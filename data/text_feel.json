@@ -1,6 +1,16 @@
 {
 	"schema_version": 1,
 	"labels": {
+		"title_credits": "Credits",
+		"credits_title": "Credits",
+		"credits_close": "Close",
+		"credits_game": "The Bound God",
+		"credits_made": "Version {version}. Made by Kalaith, with Claude. Music and sound are synthesised in the game.",
+		"credits_fonts": "Fonts",
+		"credits_fonts_licence": "Both fonts are used under the SIL Open Font License, Version 1.1.",
+		"credits_engine": "Made with Godot Engine",
+		"credits_third_party": "Godot Engine's third-party notices",
+		"credits_beside": "These notices are also in the text files beside the game.",
 		"action_move_left": "Move left",
 		"action_move_right": "Move right",
 		"action_move_forward": "Move forward",

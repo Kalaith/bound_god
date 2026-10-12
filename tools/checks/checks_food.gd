@@ -122,8 +122,9 @@ func check_people_eat_the_best_food_they_believe_is_stored():
 
 
 ## A save from before fields (schema 3) loads with its food dated the day
-## it loads, keeps its people and plays on for a day.
-func check_the_village_save_loads_through_migration():
+## it loads, keeps its people and plays on for a day. Long since M25: the
+## schema-5 fixture (checks_release.gd) runs the newer migrations by default.
+func long_check_the_village_save_loads_through_migration():
 	var file := FileAccess.open_compressed("res://tools/fixtures/save_v3_village.zst", FileAccess.READ, FileAccess.COMPRESSION_ZSTD)
 	if file == null:
 		return "the village fixture save is missing"

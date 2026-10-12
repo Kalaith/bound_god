@@ -4,6 +4,7 @@ extends RefCounted
 ## chronicle after ten days.
 const Data = preload("res://scripts/core/data.gd")
 const Template = preload("res://scripts/building/template.gd")
+const CaptureSixty = preload("res://scripts/presentation/capture_sixty.gd")
 
 
 static func arrange(main: Node3D, shot: Node, scenario: String) -> void:
@@ -11,6 +12,14 @@ static func arrange(main: Node3D, shot: Node, scenario: String) -> void:
 	if scenario == "time_loaded":
 		print("TIME loaded day=%d people=%d hash=%d" % [sim.calendar.day(), sim.present_count(), sim.state_hash()])
 		shot.shoot_after(30)
+		return
+	if scenario == "time_sixty":
+		var tree: Vector3i = sim.features.sacred_tree
+		main.avatar.global_position = Vector3(tree.x + 0.5, tree.y + 0.1, tree.z + 7.5)
+		var sixty: Node = CaptureSixty.new()
+		sixty.main = main
+		sixty.shot = shot
+		main.add_child(sixty)
 		return
 	if scenario == "time_profile":
 		sim.run_ticks(sim.calendar.ticks_per_day * 3)

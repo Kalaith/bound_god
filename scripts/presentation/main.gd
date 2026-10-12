@@ -17,6 +17,7 @@ const QiOverlay = preload("res://scripts/presentation/qi_overlay.gd")
 const Hud = preload("res://scripts/presentation/ui/hud.gd")
 const Text = preload("res://scripts/core/text.gd")
 const CaptureScenes = preload("res://scripts/presentation/capture_scenes.gd")
+const Smoke = preload("res://scripts/presentation/smoke.gd")
 const DesignTool = preload("res://scripts/presentation/design_tool.gd")
 const BlueprintTool = preload("res://scripts/presentation/blueprint_tool.gd")
 const LibraryScreen = preload("res://scripts/presentation/ui/template_library_screen.gd")
@@ -341,6 +342,10 @@ func _start() -> void:
 	screens.pad_ready()
 	_sync_zone()
 	_loading.hide()
+	if Smoke.requested():
+		var smoke: Node = Smoke.new()
+		smoke.main = self
+		add_child(smoke)
 	if capture_request.is_empty():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	else:

@@ -1,6 +1,12 @@
 {
 	"schema_version": 1,
 	"labels": {
+		"prompt_guest": "A guest waits to be received by the sect's master. Whether they stay is the master's judgement; a whisper may sway it, nothing more.",
+		"prompt_branch": "The {sect} is a branch of your sect, grown from a cutting of the tree. You can reach its people only near its shrine; it keeps its own ways.",
+		"prompt_lands": "There are lands beyond the valley. At a shrine press E and open the Lands to see who lives there and to go where a shrine stands.",
+		"prompt_ward": "The tree has grown a warding formation. Near its trunk wolves will not come, and outlaws who step inside fall back; T shows the tree's gifts.",
+		"prompt_realm": "A hidden realm has opened in the tree's roots. Cultivators may go in on expeditions; what they bring back, and whether they return, is theirs.",
+		"prompt_saga": "A new age is written in the chronicle. Press Esc and open the Saga to read the valley's story in ages and deeds.",
 		"age_first": "the Age of First Seeds",
 		"age_sect": "the Age of the {arg}",
 		"age_master": "the Age of {arg}",

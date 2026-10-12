@@ -4,7 +4,6 @@ extends RefCounted
 ## the world, falling back to the first-steps guide. A prompt only points; it
 ## never acts. The player dismisses one with its key and it does not come
 ## back in this world (the ids are kept in the god's state).
-## Later milestones add their own rules here (cultivation, trials, the tree).
 const Text = preload("res://scripts/core/text.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
@@ -13,6 +12,8 @@ const Standing = preload("res://scripts/sim/standing.gd")
 const Guide = preload("res://scripts/presentation/ui/guide.gd")
 const Sects = preload("res://scripts/sim/sects.gd")
 const Tribulations = preload("res://scripts/sim/tribulations.gd")
+const Branches = preload("res://scripts/sim/branches.gd")
+const Guests = preload("res://scripts/sim/guests.gd")
 
 const Need = Personality.Need
 
@@ -74,7 +75,42 @@ static func contextual(sim: RefCounted) -> Array:
 	if sim.sects != null and sim.features.has("sacred_tree") and not sim.sects.entries.is_empty():
 		result.append(_say("prompt_sect", {"sect": Sects.name_of(sim.sects.entries[sim.sects.ids()[0]])}))
 		result.append(_say("prompt_meditate", {}))
+	result.append_array(_later(sim))
 	return result
+
+
+## The prompts for what came after the sect (M25): a guest waiting, a branch,
+## the other lands, the ward, the realm and the saga.
+static func _later(sim: RefCounted) -> Array:
+	var result: Array = []
+	if sim.sects != null:
+		for settlement_id in sim.settlements.ids():
+			if not Guests.waiting(sim, int(settlement_id)).is_empty():
+				result.append(_say("prompt_guest", {}))
+				break
+		for id in sim.sects.ids():
+			if Branches.is_branch(sim.sects.entries[id]):
+				result.append(_say("prompt_branch", {"sect": Sects.name_of(sim.sects.entries[id])}))
+				break
+	if int(sim.region_id) != 0 or not sim.abroad.is_empty() or not sim.traders.is_empty():
+		result.append(_say("prompt_lands", {}))
+	if sim.tree_growth != null and sim.tree_growth.has_unlock("warding_formation"):
+		result.append(_say("prompt_ward", {}))
+	if bool(sim.sanctuary.get("realm", false)):
+		result.append(_say("prompt_realm", {}))
+	if _new_age(sim):
+		result.append(_say("prompt_saga", {}))
+	return result
+
+
+## A second age has begun, or a deed is done, lately in the chronicle.
+static func _new_age(sim: RefCounted) -> bool:
+	var entries: Array = sim.chronicle.entries
+	for i in range(entries.size() - 1, maxi(-1, entries.size() - 41), -1):
+		var kind: String = str(entries[i].kind)
+		if kind == "deed_done" or (kind == "age_began" and int(entries[i].day) > 1):
+			return true
+	return false
 
 
 ## A trial someone in the presence has called and not yet faced.
