@@ -18,7 +18,8 @@ func daily(sim: RefCounted) -> void:
 	var every: int = Balance.integer("population.migrant_roll_days")
 	if day >= first and (day - first) % every == 0:
 		_migrants(sim)
-	if raid_hooks != null:
+	# A world begun without outlaws has none (M23 new-world options).
+	if raid_hooks != null and sim.options.get("outlaws", true):
 		raid_hooks.daily(sim)
 
 

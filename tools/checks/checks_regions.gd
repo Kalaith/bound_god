@@ -83,7 +83,7 @@ func check_frozen_regions_keep_step():
 
 
 func check_the_god_steps_into_another_region_and_back():
-	var campaign: RefCounted = Campaign.create(11)
+	var campaign: RefCounted = Campaign.create(11, {"neighbours": 1})
 	var home: RefCounted = campaign.active_sim()
 	var tree: Dictionary = home.faith.current(home)
 	tree.favour = 60.0
@@ -118,12 +118,12 @@ func check_the_god_steps_into_another_region_and_back():
 
 
 func check_a_god_left_shrineless_goes_to_another_region():
-	var campaign: RefCounted = Campaign.create(11)
+	var campaign: RefCounted = Campaign.create(11, {"neighbours": 1})
 	var home: RefCounted = campaign.active_sim()
-	var altar: int = _altar(campaign, 2)
+	var altar: int = _altar(campaign, 1)
 	home.god.dormant = true
 	campaign.sync()
-	if campaign.active != 2 or campaign.sim_of(2).god.active_shrine_id != altar:
+	if campaign.active != 1 or campaign.sim_of(1).god.active_shrine_id != altar:
 		return "a dormant god did not go to the active shrine in another region (active %d)" % campaign.active
 	return ""
 

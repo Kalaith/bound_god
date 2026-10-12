@@ -213,7 +213,9 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 		return
 	for chest in features.get("hamlet", {}).get("chests", []):
 		settlements.chests[chest] = {}
-	if region_id > 0:
+	if region_id > 0 and str(Regions.archetype(str(setup_options.archetype)).get("kind", "")) == "realm":
+		RegionSeed.found_realm(self, Regions.archetype(str(setup_options.archetype)))
+	elif region_id > 0:
 		RegionSeed.found(self, Regions.archetype(str(setup_options.archetype)))
 	else:
 		Population.found(self, setup_options)
@@ -572,12 +574,26 @@ func pursuers(goal_key: int) -> Array:
 ## How many may live here before migrants stop coming: the valley's cap, or
 ## a neighbouring region's (M22).
 func migrant_cap() -> int:
+	if is_realm():
+		return 0
 	return Balance.integer("population.cap") if region_id == 0 else int(Regions.number("region_cap"))
+
+
+## Whether this world is the hidden realm, where nobody settles (M23).
+func is_realm() -> bool:
+	return str(Regions.archetype(str(options.get("archetype", ""))).get("kind", "")) == "realm"
 
 
 ## How many may live here before no more children are born.
 func birth_cap() -> int:
+	if is_realm():
+		return 0
 	return Balance.integer("population.birth_cap") if region_id == 0 else int(Regions.number("region_cap")) + int(Regions.number("region_birth_margin"))
+
+
+## The world's pace of hunger and cold, chosen at a new world (M23).
+func pace() -> float:
+	return float(options.get("pace", 1.0))
 
 
 func present_count() -> int:

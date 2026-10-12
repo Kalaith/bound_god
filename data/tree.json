@@ -30,7 +30,9 @@
 		{"id": "deep_roots", "requires": {"insight": "drought", "amount": 5.0, "maturity": 12.0}, "effect": "deep_roots"},
 		{"id": "sheltering_canopy", "requires": {"insight": "winter", "amount": 8.0, "maturity": 40.0}, "effect": "sheltering_canopy"},
 		{"id": "awakening_fruit", "requires": {"insight": "mortality", "amount": 5.0, "maturity": 40.0, "unlock": "spirit_fruit"}, "effect": "awakening_fruit"},
-		{"id": "root_network", "requires": {"insight": "teaching", "amount": 10.0, "maturity": 100.0}, "effect": "root_network"}
+		{"id": "root_network", "requires": {"insight": "teaching", "amount": 10.0, "maturity": 100.0}, "effect": "root_network"},
+		{"id": "warding_formation", "requires": {"insight": "mortality", "amount": 8.0, "maturity": 40.0}, "effect": "warding_formation"},
+		{"id": "root_realm", "requires": {"maturity": 100.0, "unlock": "root_network"}, "effect": "root_realm"}
 	],
 	"fruit": {
 		"per_season": 3,
@@ -47,6 +49,19 @@
 	},
 	"canopy": {
 		"reach": 10.0
+	},
+	"warding": {
+		"reach": 18.0
+	},
+	"realm": {
+		"party": 3,
+		"expedition_days": 4,
+		"lost_chance": 0.02,
+		"haul": {"frost_lotus": 1, "thunder_root": 1, "ginseng": 2},
+		"provisions": 4,
+		"qi": 1.0,
+		"pull": 0.5,
+		"abstract_chance": 0.08
 	},
 	"roots": {
 		"qi": 0.45,

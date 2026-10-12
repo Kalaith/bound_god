@@ -11,6 +11,10 @@ const LEAF := Color("8fc4b5")
 
 ## The tree's base cell (the trunk is two by two from here).
 var base := Vector3i.ZERO
+## The world, to show the warding formation's edge once the tree has it (M23).
+var sim: RefCounted = null
+var _ward: MeshInstance3D
+var _ward_check: float = 0.0
 
 
 func _ready() -> void:
@@ -18,6 +22,37 @@ func _ready() -> void:
 	_rope(trunk + Vector3(0, 2.6, 0))
 	_motes(trunk + Vector3(0, 10.0, 0))
 	_leaves(trunk + Vector3(0, 9.0, 0))
+	_ward_ring(trunk)
+
+
+## The warding formation's edge: a faint gold line on the ground.
+func _ward_ring(trunk: Vector3) -> void:
+	var reach: float = float(load("res://scripts/core/data.gd").tree_growth().warding.reach)
+	var torus := TorusMesh.new()
+	torus.inner_radius = reach - 0.12
+	torus.outer_radius = reach + 0.12
+	torus.rings = 96
+	torus.ring_segments = 4
+	_ward = MeshInstance3D.new()
+	_ward.mesh = torus
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(0.95, 0.82, 0.45, 0.55)
+	_ward.material_override = material
+	_ward.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_ward.position = Vector3(trunk.x, trunk.y + 0.15, trunk.z)
+	_ward.scale = Vector3(1.0, 0.2, 1.0)
+	_ward.visible = false
+	add_child(_ward)
+
+
+func _process(delta: float) -> void:
+	_ward_check -= delta
+	if _ward_check > 0.0 or sim == null or _ward == null:
+		return
+	_ward_check = 1.0
+	_ward.visible = sim.tree_growth != null and sim.tree_growth.has_unlock("warding_formation")
 
 
 func _rope(center: Vector3) -> void:

@@ -31,6 +31,25 @@ static func found(sim: RefCounted, archetype: Dictionary) -> void:
 	_sect(sim, id, people, Regions.faction(str(archetype.faction)))
 
 
+## The hidden realm (M23): nobody lives there; a camp for visitors, a chest
+## for what they bring, and the root heart (a cutting of the tree, a shrine
+## the god can step through to once visitors' prayers wake it).
+static func found_realm(sim: RefCounted, archetype: Dictionary) -> void:
+	var home: Dictionary = sim.features.home
+	var camp: Vector3i = sim.nav.nearest_walkable(home.center, 4)
+	var id: int = sim.settlements.create(Text.label(str(home.name)), home.center, camp, sim.calendar.tick)
+	var chest: Vector3i = sim.nav.surface(camp.x + 2, camp.z)
+	if chest.x >= 0 and sim.voxels.get_block(chest) == 0:
+		sim.set_block(chest, Registry.id("storage_chest"), 0, "region")
+	var heart: Vector3i = sim.features.heart
+	if sim.voxels.get_block(heart) == 0:
+		sim.set_block(heart, Registry.id("spirit_cutting"), 0, "region")
+		var shrine: Dictionary = sim.faith.get_shrine(int(sim.faith.by_cell.get(heart, -1)))
+		if not shrine.is_empty():
+			shrine.name = Text.label("shrine_root_heart")
+	sim.settlements.entries[id]["realm"] = true
+
+
 ## The starting buildings, each where the site finder would put it.
 static func _buildings(sim: RefCounted, id: int, archetype: Dictionary) -> void:
 	for design in archetype.buildings:

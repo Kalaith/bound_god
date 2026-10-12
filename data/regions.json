@@ -20,6 +20,14 @@
 		"values": {"berries": 1.0, "grain": 1.2, "meal": 1.8, "wood": 0.8, "stone": 0.8, "thatch": 0.5, "ore": 2.0, "herb": 3.0, "ginseng": 6.0, "tools": 6.0, "frost_lotus": 9.0, "thunder_root": 7.0, "pill": 10.0}
 	},
 	"home_goods": {"berries": 10, "wood": 8, "herb": 3},
+	"realm": {
+		"id": "root_realm",
+		"kind": "realm",
+		"name": "region_root_realm",
+		"settlement": "place_root_hollow",
+		"well_qi": 1.0,
+		"size": [64, 40, 64]
+	},
 	"archetypes": [
 		{
 			"id": "bamboo_marsh",

@@ -13,6 +13,10 @@ const SettingsScreen = preload("res://scripts/presentation/ui/settings_screen.gd
 const MAIN_SCENE: String = "res://scenes/main.tscn"
 
 var seed_input: LineEdit
+## New-world options (M23): neighbouring regions, outlaws, pace.
+var _neighbours: OptionButton
+var _outlaws: OptionButton
+var _pace: OptionButton
 var continue_button: Button
 var new_button: Button
 var notice: Label
@@ -82,6 +86,12 @@ func _build() -> void:
 	new_button = Style.button(Text.label("title_new_world"), continue_button.disabled)
 	new_button.pressed.connect(_new_world)
 	row.add_child(new_button)
+	var options := HBoxContainer.new()
+	options.add_theme_constant_override("separation", 10)
+	_menu.add_child(options)
+	_neighbours = _choice(options, ["title_neighbours_0", "title_neighbours_1", "title_neighbours_2"], 2)
+	_outlaws = _choice(options, ["title_outlaws_on", "title_outlaws_off"], 0)
+	_pace = _choice(options, ["title_pace_gentle", "title_pace_usual", "title_pace_harsh"], 1)
 	var settings_button: Button = Style.button(Text.label("title_settings"))
 	settings_button.pressed.connect(_open_settings)
 	_menu.add_child(settings_button)
@@ -92,9 +102,22 @@ func _build() -> void:
 	_menu.add_child(notice)
 
 
+## A drop-down of label keys with one chosen.
+func _choice(parent: Container, keys: Array, chosen: int) -> OptionButton:
+	var button := OptionButton.new()
+	for key in keys:
+		button.add_item(Text.label(str(key)))
+	button.select(chosen)
+	button.add_theme_font_size_override("font_size", 18)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(button)
+	return button
+
+
 func _new_world() -> void:
 	var text: String = seed_input.text.strip_edges()
 	Session.mode = "new"
+	Session.options = {"neighbours": _neighbours.selected, "outlaws": _outlaws.selected == 0, "pace": [0.8, 1.0, 1.2][_pace.selected]}
 	Session.seed = int(text) if text.is_valid_int() else abs(text.hash()) % 1000000 + 1
 	Session.seed = maxi(Session.seed, 1)
 	get_tree().change_scene_to_file(MAIN_SCENE)

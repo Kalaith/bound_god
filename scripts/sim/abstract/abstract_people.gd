@@ -75,18 +75,18 @@ static func context(sim: RefCounted, step: int = 1) -> Dictionary:
 	_context_tick = key
 	var per_hour: float = float(step) / 24.0
 	var rates: Dictionary = Balance.dict("needs.decay_per_day")
-	var loss: float = Balance.number("needs.shelter_loss_per_night_hour")
+	var loss: float = Balance.number("needs.shelter_loss_per_night_hour") * sim.pace()
 	if sim.calendar.is_winter():
 		loss *= Balance.number("needs.shelter_winter_factor")
 	if sim.weather != null:
 		loss *= 1.0 + sim.weather.exposure()
 	_context = {
 		"step": step, "hour": sim.calendar.hour(), "daylight": sim.calendar.is_daylight(), "ticks": sim.calendar.ticks_per_hour() * step,
-		"food": float(rates.food) * per_hour, "rest": float(rates.rest) * per_hour, "social": float(rates.social) * per_hour,
+		"food": float(rates.food) * per_hour * sim.pace(), "rest": float(rates.rest) * per_hour, "social": float(rates.social) * per_hour,
 		"recreation": float(rates.recreation) * per_hour, "safety": Balance.number("needs.safety_recovery_per_day") * per_hour,
 		"bed_rest": Balance.number("needs.bed_rest_per_day") * per_hour, "ground_rest": Balance.number("needs.ground_rest_per_day") * per_hour,
 		"shelter_gain": Balance.number("needs.shelter_gain_per_day") * per_hour, "shelter_loss": loss,
-		"day_exposure": Body.day_exposure(sim) * Balance.number("needs.shelter_loss_per_night_hour"),
+		"day_exposure": Body.day_exposure(sim) * Balance.number("needs.shelter_loss_per_night_hour") * sim.pace(),
 		"starve": Balance.number("health.starvation_damage_per_day") * per_hour, "expose": Balance.number("health.exposure_damage_per_day") * per_hour,
 		"regen": Balance.number("health.regen_per_day") * per_hour, "departure": Balance.number("mood.departure_threshold"),
 		"sleep_hour": Balance.number("time.sleep_hour"), "dawn_hour": Balance.number("time.dawn_hour"),

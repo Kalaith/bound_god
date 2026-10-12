@@ -135,7 +135,7 @@ func check_bless_growth_hurries_crops():
 ## People who know a field and have seed in their stores sow it in spring,
 ## weed it and reap the ripe grain into the stores; the first harvest is
 ## chronicled with who reaped it, and the seed comes back.
-func check_people_sow_weed_and_reap_a_field():
+func long_check_people_sow_weed_and_reap_a_field():
 	var sim: RefCounted = _flat()
 	var camp: Vector3i = sim.settlements.entries[1].camp
 	for i in range(2):

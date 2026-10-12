@@ -21,6 +21,11 @@ static func cause(value: String) -> String:
 ## translated text. A resource, a function or a threat is worded in lower
 ## case inside a sentence.
 static func word(value: Variant) -> Variant:
+	# An age, kept as "age:<name>|<arg>" (ages.gd).
+	if value is String and value.begins_with("age:"):
+		var parts: PackedStringArray = value.trim_prefix("age:").split("|", true, 1)
+		var named: String = Text.format(parts[0], {"arg": word(parts[1]) if parts.size() > 1 else ""})
+		return named.substr(0, 1).to_upper() + named.substr(1)
 	if value is String and value.begins_with("sect_name|"):
 		var parts: PackedStringArray = value.split("|")
 		if parts.size() < 3:

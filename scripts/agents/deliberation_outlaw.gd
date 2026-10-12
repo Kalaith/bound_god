@@ -7,6 +7,7 @@ extends RefCounted
 const Balance = preload("res://scripts/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Outlaws = preload("res://scripts/sim/outlaws.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
 const Kind = Goals.Kind
 
@@ -21,6 +22,9 @@ static func fall_back(sim: RefCounted, agent: RefCounted) -> String:
 	var band: Dictionary = sim.raids.bands.get(int(o.band), {})
 	if band.is_empty() or str(band.get("state", "")) == "over":
 		return "cause_raid_over"
+	# The tree's formation turns them back (M23).
+	if TreeAbilities.warded(sim, agent.cell):
+		return "cause_formation"
 	if float(agent.health.hp) < Balance.number("threats.outlaw_flee_hp"):
 		return "cause_outlaw_hurt"
 	var odds: Array = Outlaws.odds(sim, agent)

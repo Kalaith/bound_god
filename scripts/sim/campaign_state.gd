@@ -27,7 +27,10 @@ static func capture(campaign: RefCounted) -> Dictionary:
 			entry.model = {"from_tick": model.from_tick, "step": model.step, "records": model.records.duplicate(true)}
 		regions.append(entry)
 	return {"sim": home.sim, "chunks": home.chunks, "regions": {"schema_version": SCHEMA, "active": campaign.active, "seed": campaign.world_seed, "regions": regions,
-		"travellers": campaign.travellers.duplicate(true), "relations": campaign.relations.to_dict(), "shared_day": campaign._shared_day}}
+		"travellers": campaign.travellers.duplicate(true), "relations": campaign.relations.to_dict(), "shared_day": campaign._shared_day,
+		"options": campaign.options.duplicate(true), "ages": campaign.ages.duplicate(true), "deeds": campaign.deeds.duplicate(),
+		"chronicle_read": campaign.chronicle_read.duplicate(), "kinds_seen": campaign.kinds_seen.duplicate(), "book_closed": campaign.book_closed,
+		"realm": campaign.realm}}
 
 
 ## Why a campaign's region file cannot be restored, or "".
@@ -53,6 +56,7 @@ static func restore(state: Dictionary, chunks: Dictionary, regions: Variant) -> 
 	if not regions is Dictionary:
 		# A valley saved before regions: its neighbours come from the seed.
 		campaign.add_neighbours()
+		load("res://scripts/sim/ages.gd").begin(campaign)
 		return campaign
 	for entry in regions.regions:
 		var id: int = int(entry.id)
@@ -70,4 +74,13 @@ static func restore(state: Dictionary, chunks: Dictionary, regions: Variant) -> 
 	campaign.travellers = regions.get("travellers", [])
 	campaign.relations.from_dict(regions.get("relations", {}))
 	campaign._shared_day = int(regions.get("shared_day", -1))
+	# The saga came with M23; older campaigns begin their first age on load.
+	campaign.options = regions.get("options", {})
+	campaign.ages = regions.get("ages", [])
+	campaign.deeds = regions.get("deeds", {})
+	campaign.chronicle_read = regions.get("chronicle_read", {})
+	campaign.kinds_seen = regions.get("kinds_seen", {})
+	campaign.book_closed = bool(regions.get("book_closed", false))
+	campaign.realm = int(regions.get("realm", -1))
+	load("res://scripts/sim/ages.gd").begin(campaign)
 	return campaign

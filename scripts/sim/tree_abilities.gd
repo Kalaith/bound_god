@@ -6,7 +6,10 @@ extends RefCounted
 ## - awakening fruit: a spirit fruit eaten by a mortal deepens their talent
 ##   or their drive (never a realm);
 ## - root network: the tree's qi and the god's reach run along worn paths
-##   joined to the tree, as far as feet have worn them.
+##   joined to the tree, as far as feet have worn them;
+## - warding formation (M23): wolves keep out of a circle round the trunk
+##   and outlaws inside it fall back;
+## - root realm (M23): the hidden realm in the roots opens (campaign.gd).
 const Data = preload("res://scripts/core/data.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
@@ -26,6 +29,17 @@ static func has(sim: RefCounted, id: String) -> bool:
 ## Whether the tree's roots water a field at `cell` through a dry spell.
 static func watered(sim: RefCounted, cell: Vector3i) -> bool:
 	return has(sim, "deep_roots") and sim.qi != null and sim.qi.density(sim, cell) >= float(_settings("deep_roots").qi)
+
+
+# --- Warding formation (M23) ------------------------------------------------------
+
+## Whether the tree's formation wards `cell`: wolves will not enter, and
+## outlaws inside fall back.
+static func warded(sim: RefCounted, cell: Vector3i) -> bool:
+	if not has(sim, "warding_formation"):
+		return false
+	var tree: Vector3i = sim.features.get("sacred_tree", Vector3i(-1, -1, -1))
+	return tree.x >= 0 and Vector2(cell.x - tree.x, cell.z - tree.z).length() <= float(_settings("warding").reach)
 
 
 # --- Sheltering canopy ----------------------------------------------------------

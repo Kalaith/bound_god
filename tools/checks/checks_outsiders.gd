@@ -6,6 +6,7 @@ const Sim = preload("res://scripts/sim/sim.gd")
 const Campaign = preload("res://scripts/sim/campaign.gd")
 const Balance = preload("res://scripts/core/balance.gd")
 const Regions = preload("res://scripts/sim/regions.gd")
+const Text = preload("res://scripts/core/text.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const EffectsApply = preload("res://scripts/sim/effects_apply.gd")
 const Branches = preload("res://scripts/sim/branches.gd")
@@ -36,7 +37,7 @@ static func _arrive_now(campaign: RefCounted) -> void:
 
 
 func check_a_leaver_arrives_in_another_region():
-	var campaign: RefCounted = Campaign.create(11)
+	var campaign: RefCounted = Campaign.create(11, {"neighbours": 1})
 	var home: RefCounted = campaign.active_sim()
 	var leaver: RefCounted = home.agents[0]
 	var name: String = leaver.full_name()
@@ -334,11 +335,28 @@ func long_check_fifty_years_of_the_lands():
 					"sect_split", "relation_friendly", "relation_hostile", "school_taken", "schism"]:
 				kinds[entry.kind] = int(kinds.get(entry.kind, 0)) + 1
 		counts[region.name] = {"people": people, "events": kinds}
-		if people == 0:
+		# Nobody lives in the hidden realm; visitors come and go (M23).
+		if people == 0 and int(region.id) != int(campaign.realm):
 			return "%s emptied in fifty years" % region.name
 		if people > cap:
 			return "%s holds %d people, past its cap" % [region.name, people]
 	print("      %s; %d people in all; %.1f s" % [str(counts), total, (Time.get_ticks_msec() - began) / 1000.0])
 	if total > int(Regions.number("world_cap")):
 		return "the world holds %d, past its cap" % total
+	# M23's exit rides on the same fifty years: ages, deeds, epilogue, export.
+	var SagaText = load("res://scripts/presentation/ui/saga_text.gd")
+	var ChronicleExport = load("res://scripts/presentation/ui/chronicle_export.gd")
+	var ages: Array = campaign.ages.map(func(a: Dictionary) -> String: return "%s(%s) day %d" % [a.name, a.arg, a.day])
+	print("      ages %s; deeds %s" % [str(ages), str(campaign.deeds)])
+	if campaign.ages.size() < 3 or campaign.deeds.size() < 3:
+		return "fifty years made %d ages and %d deeds" % [campaign.ages.size(), campaign.deeds.size()]
+	var stats: Dictionary = load("res://scripts/sim/statistics.gd").of(campaign)
+	var epilogue: String = "
+".join(SagaText.epilogue(campaign, false))
+	if not epilogue.contains(Text.format("saga_stat", {"name": Text.label("stat_births"), "value": int(stats.births)})):
+		return "the epilogue's numbers do not agree with the statistics"
+	var written: String = ChronicleExport.markdown(campaign)
+	for age in campaign.ages:
+		if not written.contains(SagaText._sentence(SagaText.age_name(age))):
+			return "the export lacks %s" % SagaText.age_name(age)
 	return ""

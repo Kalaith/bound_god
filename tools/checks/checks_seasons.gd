@@ -297,7 +297,7 @@ func check_the_tree_and_cultivation_help_people_endure_hunger_and_cold():
 
 ## While the god meditates the sky is written as one line a year, not a
 ## line for every storm, first snow and dry spell.
-func check_meditated_weather_is_one_line_a_year():
+func long_check_meditated_weather_is_one_line_a_year():
 	var sim: RefCounted = Sim.create(11)
 	var from: int = sim.chronicle.entries.size()
 	Meditation.meditate(sim, float(sim.calendar.days_per_season * 4) * 2.0 + 1.0)

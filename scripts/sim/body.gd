@@ -69,7 +69,7 @@ static func _decay(sim: RefCounted, agent: RefCounted) -> void:
 	for need in [Need.FOOD, Need.REST, Need.SOCIAL, Need.RECREATION]:
 		if need == Need.REST and agent.activity == "sleeping":
 			continue
-		var rate: float = float(rates[Personality.NEEDS[need]]) * agent.personality.need_decay[need]
+		var rate: float = float(rates[Personality.NEEDS[need]]) * agent.personality.need_decay[need] * (sim.pace() if need == Need.FOOD else 1.0)
 		if need == Need.FOOD:
 			rate *= endurance(agent)
 		agent.change_need(need, -calendar.per_tick(rate))
@@ -89,10 +89,10 @@ static func _shelter(sim: RefCounted, agent: RefCounted) -> void:
 		agent.change_need(Need.SHELTER, calendar.per_tick(gain * 0.25 * (1.0 + covered)))
 	elif calendar.is_daylight():
 		# Rain, storm, snow and the winter cold wear on whoever is out in them.
-		var day_loss: float = Balance.number("needs.shelter_loss_per_night_hour") * 24.0 * exposed
+		var day_loss: float = Balance.number("needs.shelter_loss_per_night_hour") * 24.0 * exposed * sim.pace()
 		agent.change_need(Need.SHELTER, -calendar.per_tick(day_loss * hardy * agent.personality.need_decay[Need.SHELTER] * (1.0 - covered)))
 	else:
-		var loss: float = Balance.number("needs.shelter_loss_per_night_hour") * 24.0
+		var loss: float = Balance.number("needs.shelter_loss_per_night_hour") * 24.0 * sim.pace()
 		if calendar.is_winter():
 			loss *= Balance.number("needs.shelter_winter_factor")
 		if sim.weather != null:

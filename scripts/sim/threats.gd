@@ -12,6 +12,7 @@ const Movement = preload("res://scripts/sim/movement.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Outlaws = preload("res://scripts/sim/outlaws.gd")
+const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 
 ## id -> {id, kind, cell, position, previous_position, path, hp, state, target,
 ##        home, carry, band, aggressive, targets_altar, settlement_id, next_think}
@@ -112,7 +113,7 @@ func _move(sim: RefCounted, entry: Dictionary) -> void:
 	while not entry.path.is_empty() and float(entry.budget) >= 1.0:
 		var next: Vector3i = entry.path[0]
 		# Wolves will not walk into lantern light.
-		if not sim.nav.is_walkable(next) or (entry.kind == "wolf" and sim.is_lit(next)):
+		if not sim.nav.is_walkable(next) or (entry.kind == "wolf" and (sim.is_lit(next) or TreeAbilities.warded(sim, next))):
 			entry.path.clear()
 			break
 		entry.budget = float(entry.budget) - 1.0

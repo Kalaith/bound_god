@@ -5,6 +5,8 @@ signal resume
 signal save
 signal settings
 signal title
+signal saga
+signal close_book
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 
@@ -22,14 +24,14 @@ func _ready() -> void:
 	panel.anchor_bottom = 0.5
 	panel.offset_left = -260
 	panel.offset_right = 260
-	panel.offset_top = -230
-	panel.offset_bottom = 230
+	panel.offset_top = -290
+	panel.offset_bottom = 290
 	add_child(panel)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 14)
 	panel.add_child(column)
 	column.add_child(Style.heading(Text.label("game_title"), 34, Style.GOLD))
-	for entry in [["pause_resume", resume], ["pause_save", save], ["title_settings", settings], ["pause_title", title]]:
+	for entry in [["pause_resume", resume], ["pause_save", save], ["pause_saga", saga], ["pause_close_book", close_book], ["title_settings", settings], ["pause_title", title]]:
 		var button: Button = Style.button(Text.label(entry[0]), entry[0] == "pause_resume")
 		var target: Signal = entry[1]
 		button.pressed.connect(func() -> void: target.emit())

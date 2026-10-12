@@ -52,7 +52,7 @@ static func plans_for(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> A
 			plans = PlansDesigns.plans(sim, agent, goal)
 		Kind.RAID, Kind.RETREAT:
 			plans = PlansOutlaw.plans(sim, agent, goal)
-		Kind.FOUND_BRANCH, Kind.RECOVER_RELIC, Kind.SEEK_SANCTUARY, Kind.ADMIT_GUEST:
+		Kind.FOUND_BRANCH, Kind.RECOVER_RELIC, Kind.SEEK_SANCTUARY, Kind.ADMIT_GUEST, Kind.ENTER_REALM:
 			plans = PlansBranches.plans(sim, agent, goal)
 		_:
 			plans = PlansWork.plans(sim, agent, goal)

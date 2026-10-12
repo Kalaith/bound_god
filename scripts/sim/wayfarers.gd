@@ -30,6 +30,9 @@ static func daily(sim: RefCounted) -> void:
 	for id in sim.settlements.ids():
 		var settlement: Dictionary = sim.settlements.entries[id]
 		_see_off(sim, id, settlement)
+		# Nobody passes through the hidden realm (M23).
+		if bool(settlement.get("realm", false)):
+			continue
 		var rng: RandomNumberGenerator = _stream(sim, id)
 		if not settlement.has("next_wayfarer"):
 			settlement["next_wayfarer"] = sim.calendar.tick + rng.randi_range(int(gap[0]), int(gap[1])) * sim.calendar.ticks_per_day

@@ -5,9 +5,15 @@ signal closed
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const ChronicleText = preload("res://scripts/presentation/ui/chronicle_text.gd")
+const ChronicleExport = preload("res://scripts/presentation/ui/chronicle_export.gd")
+const SagaText = preload("res://scripts/presentation/ui/saga_text.gd")
 
 var sim: RefCounted
+## The campaign: its ages head the chronicle, and it is what is exported (M23).
+var campaign: RefCounted = null
+var slot: String = "world"
 var _places: OptionButton
+var _notice: Label
 var _body: RichTextLabel
 var _count: int = -1
 
@@ -36,9 +42,14 @@ func _ready() -> void:
 	_places.add_theme_font_size_override("font_size", 20)
 	_places.item_selected.connect(func(_index: int) -> void: _count = -1)
 	header.add_child(_places)
+	var export: Button = Style.button(Text.label("chronicle_export"))
+	export.pressed.connect(_export)
+	header.add_child(export)
 	var close: Button = Style.button(Text.label("design_close"))
 	close.pressed.connect(func() -> void: closed.emit())
 	header.add_child(close)
+	_notice = Style.wrapped("", 16, Style.MUTED)
+	column.add_child(_notice)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -68,14 +79,27 @@ func _process(_delta: float) -> void:
 	_count = sim.chronicle.entries.size()
 	var place: String = "" if _places.selected <= 0 else _places.get_item_text(_places.selected)
 	var lines: Array[String] = []
+	var ages: Array = campaign.ages if campaign != null else []
+	var age_index: int = ages.size() - 1
 	for i in range(sim.chronicle.entries.size() - 1, -1, -1):
 		var entry: Dictionary = sim.chronicle.entries[i]
 		if not entry.known or (not place.is_empty() and entry.place != place):
 			continue
+		# Newest first: an age's heading follows the oldest of its entries.
+		while age_index >= 0 and int(entry.tick) < int(ages[age_index].tick):
+			lines.append(Style.rich_heading(SagaText._sentence(SagaText.age_name(ages[age_index]))))
+			age_index -= 1
 		lines.append(ChronicleText.line(entry))
 		if lines.size() >= 300:
 			break
 	_body.text = "\n".join(lines) if not lines.is_empty() else Text.label("chronicle_empty")
+
+
+func _export() -> void:
+	if campaign == null:
+		return
+	var path: String = ChronicleExport.write(campaign, slot)
+	_notice.text = Text.format("chronicle_exported", {"path": path}) if not path.is_empty() else Text.label("chronicle_export_failed")
 
 
 func _unhandled_input(event: InputEvent) -> void:

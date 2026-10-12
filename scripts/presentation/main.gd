@@ -42,6 +42,10 @@ const RestOverlay = preload("res://scripts/presentation/ui/rest_overlay.gd")
 const ChronicleScreen = preload("res://scripts/presentation/ui/chronicle_screen.gd")
 const AudioDirector = preload("res://scripts/presentation/audio_director.gd")
 const PauseMenu = preload("res://scripts/presentation/ui/pause_menu.gd")
+const PageScreen = preload("res://scripts/presentation/ui/page_screen.gd")
+const SagaText = preload("res://scripts/presentation/ui/saga_text.gd")
+const Statistics = preload("res://scripts/sim/statistics.gd")
+const Style = preload("res://scripts/presentation/ui/style.gd")
 const SettingsScreen = preload("res://scripts/presentation/ui/settings_screen.gd")
 const SettingsStore = preload("res://scripts/core/settings_store.gd")
 const Prompts = preload("res://scripts/presentation/ui/prompts.gd")
@@ -77,6 +81,8 @@ var world_io: Node
 var rest_overlay: Control
 var chronicle_screen: Control
 var pause_menu: Control
+## The Saga screen and the epilogue (M23).
+var page: Control
 var settings_screen: Control
 ## The prompt shown now: {id, text} or {}.
 var _prompt_now: Dictionary = {}
@@ -119,7 +125,7 @@ func _start() -> void:
 			_loading.text = Text.format("save_load_failed", {"error": SaveStore.last_error})
 			return
 	else:
-		campaign = Campaign.create(Session.seed)
+		campaign = Campaign.create(Session.seed, Session.options)
 	Session.campaign = null
 	sim = campaign.active_sim()
 	var generated: int = Time.get_ticks_msec()
@@ -142,6 +148,7 @@ func _start() -> void:
 	if sim.features.has("sacred_tree"):
 		var aura: Node3D = SacredAura.new()
 		aura.base = tree
+		aura.sim = sim
 		add_child(aura)
 	avatar = Avatar.new()
 	add_child(avatar)
@@ -278,6 +285,8 @@ func _start() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
 	chronicle_screen = ChronicleScreen.new()
 	chronicle_screen.sim = sim
+	chronicle_screen.campaign = campaign
+	chronicle_screen.slot = Session.slot
 	ui_layer.add_child(chronicle_screen)
 	chronicle_screen.closed.connect(func() -> void:
 		chronicle_screen.hide()
@@ -306,6 +315,11 @@ func _start() -> void:
 		world_io.save()
 		get_tree().change_scene_to_file(TITLE_SCENE))
 	pause_menu.settings.connect(_open_settings)
+	pause_menu.saga.connect(open_saga)
+	pause_menu.close_book.connect(func() -> void: open_epilogue(false))
+	page = PageScreen.new()
+	ui_layer.add_child(page)
+	page.chosen.connect(_page_chosen)
 	_sync_zone()
 	_loading.hide()
 	if capture_request.is_empty():
@@ -348,6 +362,44 @@ func _process(_delta: float) -> void:
 		_guide_left = 1.0
 		_prompt_now = Prompts.current(sim, library_screen.library, _show_guide)
 	hud.refresh(_hud_state())
+	# The god has faded: the epilogue tells the story (and the world goes on).
+	if _guide_left == 1.0 and not campaign.book_closed and campaign.faded():
+		open_epilogue(true)
+
+
+## The Saga: the ages, the deeds and the numbers.
+func open_saga() -> void:
+	pause_menu.hide()
+	var lines: Array = []
+	lines.append(Style.rich_heading(Text.label("saga_ages")))
+	lines.append_array(SagaText.ages(campaign))
+	lines.append("")
+	lines.append(Style.rich_heading(Text.label("saga_deeds")))
+	lines.append_array(SagaText.deeds(campaign))
+	lines.append("")
+	lines.append(Style.rich_heading(Text.label("saga_numbers")))
+	lines.append_array(SagaText.numbers(Statistics.of(campaign)))
+	page.open(Text.label("saga_title"), lines, [["close", "design_close"]])
+	builder.enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+## The epilogue, when the god fades or the player closes the book.
+func open_epilogue(faded: bool) -> void:
+	pause_menu.hide()
+	campaign.book_closed = true
+	page.open(Text.label("epilogue_title"), SagaText.epilogue(campaign, faded), [["watch", "epilogue_watch"], ["leave", "epilogue_leave"]])
+	builder.enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _page_chosen(id: String) -> void:
+	page.hide()
+	if id == "leave":
+		world_io.save()
+		get_tree().change_scene_to_file(TITLE_SCENE)
+		return
+	resume_world_input()
 
 
 func _clock_text() -> String:

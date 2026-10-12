@@ -18,6 +18,7 @@ const Movement = preload("res://scripts/sim/movement.gd")
 const Branches = preload("res://scripts/sim/branches.gd")
 const Regions = preload("res://scripts/sim/regions.gd")
 const Guests = preload("res://scripts/sim/guests.gd")
+const Expeditions = preload("res://scripts/sim/expeditions.gd")
 
 
 ## Takes what every world has sent out and puts it on the road.
@@ -32,6 +33,8 @@ static func drain(campaign: RefCounted) -> void:
 				continue
 			if str(record.kind) == "leaver":
 				to = _roomiest(campaign, int(region.id))
+			if to == -2:
+				to = int(campaign.realm)
 			if to < 0 or to >= campaign.regions.size() or to == int(region.id):
 				continue
 			var trip: Dictionary = record.duplicate(true)
@@ -39,7 +42,9 @@ static func drain(campaign: RefCounted) -> void:
 				trip["relation"] = campaign.relations.score(campaign, int(region.id), int(record.sect.id), 0, valley_sect(campaign))
 			trip["from"] = int(region.id)
 			trip["region"] = to
-			trip["arrive"] = sim.calendar.tick + sim.calendar.ticks_for_days(Regions.number("travel_days"))
+			# The realm in the roots lies a step away, not a road (M23).
+			var road: bool = not str(record.kind) in ["expedition", "expedition_home"]
+			trip["arrive"] = sim.calendar.tick + (sim.calendar.ticks_for_days(Regions.number("travel_days")) if road else 0)
 			campaign.travellers.append(trip)
 		sim.outbound.clear()
 
@@ -50,7 +55,8 @@ static func _roomiest(campaign: RefCounted, from: int) -> int:
 	var room: int = 0
 	for region in campaign.regions:
 		var id: int = int(region.id)
-		if id == from:
+		# Nobody settles in the hidden realm (M23).
+		if id == from or id == int(campaign.realm):
 			continue
 		var left: int = int(Regions.number("region_cap")) - region.sim.present_count()
 		if left > room:
@@ -70,11 +76,18 @@ static func arrive(campaign: RefCounted) -> void:
 		if str(trip.kind) == "returning":
 			Guests.come_home(sim, trip)
 			continue
+		if str(trip.kind) == "expedition_home":
+			Expeditions.come_home(sim, trip)
+			continue
 		var agent: RefCounted = _person(sim, trip.record)
 		if str(trip.kind) == "emigrant":
 			_settle_abroad(campaign, sim, agent, trip)
 		elif str(trip.kind) == "guest":
 			_guest(sim, agent, trip)
+		elif str(trip.kind) == "expedition":
+			var camp: Vector3i = sim.settlements.entries[1].camp
+			Population.arrive(sim, agent, sim.nav.nearest_walkable(camp, 5), 1, "")
+			Expeditions.arrive(sim, agent, trip)
 		else:
 			_newcomer(campaign, sim, agent, trip)
 		if campaign.is_frozen(int(trip.region)) and agent.is_present():
@@ -136,6 +149,8 @@ static func share_sanctuary(campaign: RefCounted) -> void:
 	var renown: int = int(campaign.sim_of(0).god.renown)
 	var valley: int = valley_sect(campaign)
 	for region in campaign.regions.slice(1):
+		if int(region.id) == int(campaign.realm):
+			continue
 		var sim: RefCounted = region.sim
 		var known: bool = renown >= int(Guests.config().renown_known)
 		for agent in sim.agents:
@@ -153,12 +168,15 @@ static func share_sanctuary(campaign: RefCounted) -> void:
 static func share_traders(campaign: RefCounted) -> void:
 	for region in campaign.regions:
 		var sim: RefCounted = region.sim
+		if int(region.id) == int(campaign.realm):
+			sim.traders = []
+			continue
 		var here: Dictionary = sim.sects.in_settlement(1) if sim.sects != null else {}
 		if int(region.id) == 0:
 			here = sim.sects.get_sect(valley_sect(campaign))
 		var list: Array = []
 		for other in campaign.regions:
-			if int(other.id) == int(region.id) or other.sim.present_count() == 0:
+			if int(other.id) == int(region.id) or int(other.id) == int(campaign.realm) or other.sim.present_count() == 0:
 				continue
 			var sect: Dictionary = other.sim.sects.get_sect(valley_sect(campaign)) if int(other.id) == 0 else other.sim.sects.in_settlement(1)
 			var score: float = 0.0

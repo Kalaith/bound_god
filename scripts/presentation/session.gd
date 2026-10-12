@@ -6,6 +6,8 @@ extends RefCounted
 static var mode: String = "new"
 static var seed: int = 1
 static var slot: String = "world"
+## New-world options from the title screen (M23): neighbours, threats, pace.
+static var options: Dictionary = {}
 ## The running campaign, kept across the scene change when the god steps
 ## into another region (M22): the scene is rebuilt round its active region.
 static var campaign: RefCounted = null

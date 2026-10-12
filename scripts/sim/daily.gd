@@ -44,6 +44,7 @@ static func new_day(sim: RefCounted) -> void:
 		Schools.daily(sim)
 	Relics.daily(sim)
 	load("res://scripts/sim/guests.gd").daily(sim)
+	load("res://scripts/sim/expeditions.gd").daily(sim)
 	Blueprints.daily(sim)
 	sim.routes.daily(sim)
 	sim.paths.daily(sim)

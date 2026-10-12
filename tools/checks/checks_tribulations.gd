@@ -53,7 +53,7 @@ func check_the_sanctuary_improves_the_odds():
 ## Every row of the outcome table does what it says: passing opens the next
 ## realm on a sound foundation, injury cracks it and sets progress back,
 ## death is death; fiercer storms are worse.
-func check_the_outcome_table():
+func long_check_the_outcome_table():
 	var seen: Dictionary = {}
 	var sim: RefCounted = Sim.create(100)
 	var agent: RefCounted = sim.agents[0]

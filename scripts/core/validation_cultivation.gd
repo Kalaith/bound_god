@@ -157,7 +157,7 @@ static func check_tribulations(data: Dictionary, realms: int, blocks: Dictionary
 
 ## Unlock effects sim/tree_growth.gd and sim/tree_abilities.gd implement;
 ## the catalog may not name others.
-const UNLOCK_EFFECTS: Array[String] = ["spirit_fruit", "spirit_herbs", "deep_roots", "sheltering_canopy", "awakening_fruit", "root_network"]
+const UNLOCK_EFFECTS: Array[String] = ["spirit_fruit", "spirit_herbs", "deep_roots", "sheltering_canopy", "awakening_fruit", "root_network", "warding_formation", "root_realm"]
 ## What the tree learns from besides trials; sim/tree_growth.gd hooks each.
 const LESSONS: Array[String] = ["winter", "drought", "teaching", "death"]
 

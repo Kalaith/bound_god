@@ -16,6 +16,7 @@ const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const Elixirs = preload("res://scripts/sim/elixirs.gd")
 const Branches = preload("res://scripts/sim/branches.gd")
 const Guests = preload("res://scripts/sim/guests.gd")
+const Expeditions = preload("res://scripts/sim/expeditions.gd")
 
 const Kind = Goals.Kind
 const Need = Personality.Need
@@ -35,6 +36,9 @@ static func add(sim: RefCounted, agent: RefCounted, out: Array) -> void:
 	_found_sect(sim, agent, out)
 	_branch(sim, agent, out)
 	_receive_guest(sim, agent, out)
+	var realm: Dictionary = Expeditions.wants(sim, agent)
+	if not realm.is_empty():
+		out.append(_candidate(Kind.ENTER_REALM, float(realm.utility), "reason_enter_realm"))
 	_breakthrough(sim, agent, out)
 	_witness(sim, agent, out)
 	_share_fruit(sim, agent, out)

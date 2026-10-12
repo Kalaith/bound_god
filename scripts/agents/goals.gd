@@ -21,6 +21,7 @@ enum Kind {
 	FOUND_BRANCH, RECOVER_RELIC,
 	SEEK_SANCTUARY, ADMIT_GUEST,
 	RAID, RETREAT,
+	ENTER_REALM,
 }
 
 const NAMES: Array[String] = [
@@ -41,6 +42,7 @@ const NAMES: Array[String] = [
 	"found_branch", "recover_relic",
 	"seek_sanctuary", "admit_guest",
 	"raid", "retreat",
+	"enter_realm",
 ]
 
 const SURVIVAL: Array[int] = [Kind.EAT, Kind.SLEEP, Kind.TAKE_SHELTER, Kind.FLEE, Kind.SEEK_CARE]

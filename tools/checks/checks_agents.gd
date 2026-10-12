@@ -133,7 +133,7 @@ func long_check_travellers_live_through_five_days():
 	return ""
 
 
-func check_the_same_seed_plays_out_identically():
+func long_check_the_same_seed_plays_out_identically():
 	var a: RefCounted = Sim.create(21)
 	var b: RefCounted = Sim.create(21)
 	var ticks: int = a.calendar.ticks_per_day * 2
@@ -178,7 +178,7 @@ func check_every_label_resolves():
 	return "" if missing.is_empty() else "missing labels: " + ", ".join(missing)
 
 
-func check_sleepers_sleep_the_night_through():
+func long_check_sleepers_sleep_the_night_through():
 	var sim: RefCounted = Sim.create(11)
 	var hour: int = sim.calendar.ticks_per_hour()
 	# To 23:00 on the second night.

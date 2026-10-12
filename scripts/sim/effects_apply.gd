@@ -76,7 +76,9 @@ static func apply(sim: RefCounted) -> void:
 				Outlaws.leave(sim, agent)
 			"emigrate":
 				# A target below nothing is a guest setting out for the tree.
-				if int(action.target) < 0:
+				if int(action.target) == -2:
+					load("res://scripts/sim/expeditions.gd").set_out(sim, agent)
+				elif int(action.target) < 0:
 					load("res://scripts/sim/guests.gd").set_out(sim, agent)
 				else:
 					Branches.emigrate(sim, agent, int(action.target), int(action.cause))

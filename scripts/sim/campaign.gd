@@ -14,6 +14,9 @@ const Balance = preload("res://scripts/core/balance.gd")
 const Miracles = preload("res://scripts/sim/miracles.gd")
 const Travel = preload("res://scripts/sim/travel.gd")
 const Relations = preload("res://scripts/sim/relations.gd")
+const Ages = preload("res://scripts/sim/ages.gd")
+const Deeds = preload("res://scripts/sim/deeds.gd")
+const FaithState = preload("res://scripts/agents/faith_state.gd")
 
 var world_seed: int = 1
 ## Array of {id, archetype, name, sim}, index == id; region 0 is the valley.
@@ -28,25 +31,43 @@ var travellers: Array = []
 var relations: RefCounted = Relations.new()
 ## The day the regions last shared what they know of each other.
 var _shared_day: int = -1
+## How the world was begun (new-world options, M23).
+var options: Dictionary = {}
+## The named ages so far (ages.gd), oldest first.
+var ages: Array = []
+## Deed id -> the day it was done (deeds.gd).
+var deeds: Dictionary = {}
+## Region id -> how many of its chronicle entries the saga has read.
+var chronicle_read: Dictionary = {}
+## Chronicle kind -> times seen (and "valley:<kind>" for the valley's).
+var kinds_seen: Dictionary = {}
+## The book is closed (the epilogue was read); the world may go on.
+var book_closed: bool = false
+## The hidden realm's region id, or -1 while the roots keep it shut (M23).
+var realm: int = -1
 
 
 static func create(seed: int, options: Dictionary = {}) -> RefCounted:
 	var campaign = load("res://scripts/sim/campaign.gd").new()
 	campaign.world_seed = maxi(seed, 1)
+	campaign.options = options.duplicate(true)
 	var home: RefCounted = Sim.create(seed, options)
 	campaign.regions.append({"id": 0, "archetype": "", "name": "region_home_valley", "sim": home})
 	if options.get("regions", true) and options.get("world", "valley") == "valley":
-		campaign.add_neighbours()
+		campaign.add_neighbours(int(options.get("neighbours", Regions.number("count"))))
+	Ages.begin(campaign)
 	return campaign
 
 
 ## The neighbouring regions, generated from the seed, frozen from the start.
-func add_neighbours() -> void:
+func add_neighbours(count: int = -1) -> void:
 	var home: RefCounted = regions[0].sim
 	var archetypes: Array = Regions.archetypes()
-	for i in range(mini(int(Regions.number("count")), archetypes.size())):
+	if count < 0:
+		count = int(Regions.number("count"))
+	for i in range(mini(count, archetypes.size())):
 		var archetype: Dictionary = archetypes[i]
-		var sim: RefCounted = Sim.create(world_seed, {"region": i + 1, "archetype": str(archetype.id)})
+		var sim: RefCounted = Sim.create(world_seed, {"region": i + 1, "archetype": str(archetype.id), "outlaws": options.get("outlaws", true), "pace": options.get("pace", 1.0)})
 		sim.calendar.tick = home.calendar.tick
 		sim.settlements.today = sim.calendar.day()
 		regions.append({"id": i + 1, "archetype": str(archetype.id), "name": str(archetype.name), "sim": sim})
@@ -94,6 +115,9 @@ func sync() -> void:
 		Travel.share_grounds(self)
 		Travel.share_sanctuary(self)
 		Travel.share_traders(self)
+		_realm()
+		Ages.daily(self)
+		Deeds.daily(self)
 	_expulsion()
 
 
@@ -218,6 +242,39 @@ func _expulsion() -> void:
 	if best.is_empty():
 		return
 	_move(int(best.region), int(best.shrine.id), "cause_low_support")
+
+
+## The hidden realm opens once the tree has grown the unlock (M23): a small
+## hand-built world of its own, frozen like any region the god is not in.
+func _realm() -> void:
+	var home: RefCounted = sim_of(0)
+	if realm >= 0:
+		home.sanctuary["realm"] = true
+		return
+	if home.tree_growth == null or not home.tree_growth.has_unlock("root_realm"):
+		return
+	var archetype: Dictionary = Regions.config().realm
+	var size: Array = archetype.size
+	realm = regions.size()
+	var sim: RefCounted = Sim.create(world_seed, {"region": realm, "archetype": str(archetype.id), "size": Vector3i(int(size[0]), int(size[1]), int(size[2])), "threats": false})
+	sim.calendar.tick = home.calendar.tick
+	sim.settlements.today = sim.calendar.day()
+	regions.append({"id": realm, "archetype": str(archetype.id), "name": str(archetype.name), "sim": sim})
+	freeze(realm)
+	home.sanctuary["realm"] = true
+	var tree_place: int = home.settlements.at_cell(home.features.get("sacred_tree", Vector3i.ZERO))
+	home.chronicle_event("realm_opened", tree_place, {}, "cause_realm_opened")
+
+
+## The god has faded: dormant, and nobody anywhere believes in it.
+func faded() -> bool:
+	if not active_sim().god.dormant:
+		return false
+	for region in regions:
+		for agent in region.sim.agents:
+			if agent.is_present() and agent.faith.get("knows", false) and FaithState.is_believer(agent.faith):
+				return false
+	return true
 
 
 ## A fingerprint of every region.

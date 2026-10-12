@@ -28,6 +28,7 @@ const CaptureSeasons = preload("res://scripts/presentation/capture_seasons.gd")
 const CaptureAlchemy = preload("res://scripts/presentation/capture_alchemy.gd")
 const CaptureBranches = preload("res://scripts/presentation/capture_branches.gd")
 const CaptureRegions = preload("res://scripts/presentation/capture_regions.gd")
+const CaptureSaga = preload("res://scripts/presentation/capture_saga.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -41,6 +42,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 	# Before the clock is set: a region capture runs across a scene rebuild.
 	if scenario.begins_with("region_"):
 		CaptureRegions.arrange(main, shot, scenario)
+		return
+	if scenario == "saga_realm":
+		CaptureSaga.arrange(main, shot, scenario)
 		return
 	if not request.has("load"):
 		sim.calendar.tick = sim.calendar.ticks_per_day * 10 / 24
@@ -97,6 +101,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 		return
 	if scenario.begins_with("alchemy_"):
 		CaptureAlchemy.arrange(main, shot, scenario)
+		return
+	if scenario.begins_with("saga_"):
+		CaptureSaga.arrange(main, shot, scenario)
 		return
 	if scenario.begins_with("branch_"):
 		CaptureBranches.arrange(main, shot, scenario)

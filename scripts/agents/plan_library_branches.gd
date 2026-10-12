@@ -19,6 +19,11 @@ static func plans(sim: RefCounted, agent: RefCounted, goal: Dictionary) -> Array
 		return _recover(sim, agent, int(goal.target))
 	if int(goal.kind) == Goals.Kind.ADMIT_GUEST:
 		return [H.option("receive_the_guest", 1.0, [Plans.go_to(Plans.target(T.AGENT, int(goal.target))), Plans.step(Op.RECEIVE_GUEST, {"guest": int(goal.target)})])]
+	if int(goal.kind) == Goals.Kind.ENTER_REALM:
+		var trunk: Vector3i = sim.nav.nearest_walkable(sim.features.get("sacred_tree", agent.cell) + Vector3i(1, 0, 3), 3)
+		if trunk.x < 0:
+			return []
+		return [H.option("step_into_the_roots", 1.0, H.free_hands(agent) + [Plans.go_cell(trunk), Plans.step(Op.EMIGRATE, {"target": -2, "cause": 0})])]
 	if int(goal.kind) == Goals.Kind.SEEK_SANCTUARY:
 		var edge: Vector3i = PlansSocial.valley_edge(sim, agent)
 		if edge.x < 0:

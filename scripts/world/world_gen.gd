@@ -61,8 +61,11 @@ func valley() -> Dictionary:
 	return {"sites": sites, "features": features}
 
 
-## A neighbouring region's world from its archetype (M22).
+## A neighbouring region's world from its archetype (M22), or the hidden
+## realm's hand-built world (M23).
 func region(archetype: Dictionary) -> Dictionary:
+	if str(archetype.get("kind", "")) == "realm":
+		return load("res://scripts/world/world_gen_realm.gd").generate(self, archetype)
 	return load("res://scripts/world/world_gen_region.gd").generate(self, archetype)
 
 

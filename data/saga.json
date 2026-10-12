@@ -1,0 +1,32 @@
+{
+	"schema_version": 1,
+	"ages": {
+		"first": "age_first",
+		"famine_deaths": 4,
+		"famine_days": 10,
+		"rules": [
+			{"kind": "sect_founded", "name": "age_sect", "arg": "sect", "once": true},
+			{"kind": "sect_master", "name": "age_master", "arg": "name"},
+			{"kind": "tree_grew", "name": "age_phase", "arg": "phase"},
+			{"kind": "sect_split", "name": "age_split", "arg": "sect"},
+			{"kind": "schism", "name": "age_split", "arg": "sect"},
+			{"kind": "branch_founded_abroad", "name": "age_far_branch", "arg": "sect", "once": true, "any_region": true},
+			{"kind": "god_dormant", "name": "age_dormant", "arg": ""},
+			{"kind": "realm_opened", "name": "age_realm", "arg": "", "once": true},
+			{"kind": "famine", "name": "age_famine", "arg": ""}
+		]
+	},
+	"deeds": [
+		{"id": "first_sect", "check": "sect_at_tree"},
+		{"id": "branch_abroad", "check": "chronicle", "kind": "branch_founded_abroad"},
+		{"id": "core_formation", "check": "realm", "realm": 3},
+		{"id": "seven_relics", "check": "relics", "count": 7},
+		{"id": "defied_heaven", "check": "chronicle", "kind": "trial_defied"},
+		{"id": "century", "check": "years", "years": 100},
+		{"id": "three_masters", "check": "chronicle_count", "kind": "sect_master", "count": 3},
+		{"id": "world_tree", "check": "phase", "phase": "world_tree"},
+		{"id": "guest_welcomed", "check": "chronicle", "kind": "guest_admitted"},
+		{"id": "raid_repelled", "check": "chronicle", "kind": "raid_turned_back"},
+		{"id": "hidden_realm", "check": "chronicle", "kind": "realm_entered"}
+	]
+}

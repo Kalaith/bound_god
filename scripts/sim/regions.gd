@@ -16,6 +16,9 @@ static func archetype(id: String) -> Dictionary:
 	for entry in archetypes():
 		if str(entry.id) == id:
 			return entry
+	# The hidden realm (M23) is a region of its own kind, not a neighbour.
+	if str(config().get("realm", {}).get("id", "")) == id:
+		return config().realm
 	return {}
 
 
