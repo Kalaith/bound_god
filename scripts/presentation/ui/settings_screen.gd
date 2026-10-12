@@ -1,14 +1,24 @@
 extends Control
-## Settings over the title or the valley: sound, display, graphics, keys and
-## pad buttons. It edits the SettingsStore directly and saves on every change;
-## the world keeps running behind it (it never pauses the simulation).
+## Settings over the title or the valley: sound, display, graphics,
+## accessibility, keys and pad buttons. It edits the SettingsStore directly
+## and saves on every change; the world keeps running behind it (it never
+## pauses the simulation). Every word comes from the text catalogs (M24).
 signal close_requested
 signal title_requested
 signal changed
 
 const Style = preload("res://scripts/presentation/ui/style.gd")
+const Text = preload("res://scripts/core/text.gd")
 const Keys = preload("res://scripts/core/key_bindings.gd")
 const Pad = preload("res://scripts/core/pad_bindings.gd")
+
+## Sliders (settings key), toggles by section heading (settings key).
+const SLIDERS: Array[String] = ["master", "music", "effects", "look_sensitivity"]
+const TOGGLES: Array = [
+	["settings_display", ["muted", "invert_look", "fullscreen", "show_guide"]],
+	["settings_graphics", ["ssao", "glow", "shadows", "ink"]],
+	["settings_access", ["reduce_motion", "colour_safe", "high_contrast", "captions", "pseudo_language"]],
+]
 
 var store: RefCounted
 var show_title_button: bool = false
@@ -38,7 +48,7 @@ func _ready() -> void:
 	var body := VBoxContainer.new()
 	body.add_theme_constant_override("separation", 12)
 	panel.add_child(body)
-	body.add_child(Style.heading("Settings", 34))
+	body.add_child(Style.heading(Text.label("settings_title"), 34))
 	tabs = TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tabs.add_theme_font_size_override("font_size", 18)
@@ -52,79 +62,85 @@ func _ready() -> void:
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 12)
 	body.add_child(actions)
-	close_button = Style.button("Back   ·   Esc", true)
+	close_button = Style.button(Text.label("settings_back"), true)
 	close_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	close_button.pressed.connect(func() -> void:
 		cancel_capture()
 		close_requested.emit())
 	actions.add_child(close_button)
 	if show_title_button:
-		var title := Style.button("Save and return to title")
+		var title := Style.button(Text.label("settings_to_title"))
 		title.pressed.connect(func() -> void: title_requested.emit())
 		actions.add_child(title)
 	resized.connect(_layout)
+	visibility_changed.connect(func() -> void:
+		if visible and close_button != null:
+			close_button.grab_focus.call_deferred())
 	_layout()
 	refresh()
 
 
 func _build_general() -> void:
 	var scroll := ScrollContainer.new()
-	scroll.name = "Sound, display, graphics"
+	scroll.name = Text.label("settings_tab_general")
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	tabs.add_child(scroll)
 	var rows := VBoxContainer.new()
 	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rows.add_theme_constant_override("separation", 8)
 	scroll.add_child(rows)
-	rows.add_child(Style.heading("Sound", 20, Style.LEAF))
-	for entry in [["master", "Master volume"], ["music", "Music"], ["effects", "Effects"], ["look_sensitivity", "Look sensitivity"]]:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 14)
-		var name_label: Label = Style.label(entry[1], 18)
-		name_label.custom_minimum_size.x = 200
-		row.add_child(name_label)
-		var slider := HSlider.new()
-		slider.min_value = 0
-		slider.max_value = 100
-		slider.step = 1
-		slider.custom_minimum_size = Vector2(240, 40)
-		slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var key: String = entry[0]
-		slider.value_changed.connect(func(value: float) -> void: _set_value(key, value / 100.0))
-		row.add_child(slider)
-		sliders[key] = slider
-		rows.add_child(row)
-	for entry in [["muted", "Mute all sound"], ["invert_look", "Invert vertical look"], ["fullscreen", "Fullscreen   ·   F11"],
-			["reduce_motion", "Reduce motion"], ["show_guide", "Show first-steps guide"], ["ssao", "Ambient occlusion (SSAO)"], ["glow", "Glow"], ["shadows", "Sun shadows"], ["ink", "Ink outlines and paper"]]:
-		if entry[0] == "ssao":
-			rows.add_child(Style.heading("Graphics", 20, Style.LEAF))
-		var toggle := CheckButton.new()
-		toggle.text = entry[1]
-		toggle.add_theme_font_size_override("font_size", 18)
-		toggle.custom_minimum_size.y = 44
-		var key: String = entry[0]
-		toggle.toggled.connect(func(value: bool) -> void: _set_value(key, value))
-		rows.add_child(toggle)
-		toggles[key] = toggle
+	rows.add_child(Style.heading(Text.label("settings_sound"), 20, Style.LEAF))
+	for key in SLIDERS:
+		_slider(rows, key)
+	for section in TOGGLES:
+		rows.add_child(Style.heading(Text.label(str(section[0])), 20, Style.LEAF))
+		if str(section[0]) == "settings_access":
+			_slider(rows, "ui_scale")
+		for key in section[1]:
+			var toggle := CheckButton.new()
+			toggle.text = Text.label("setting_" + str(key))
+			toggle.add_theme_font_size_override("font_size", 18)
+			toggle.custom_minimum_size.y = 44
+			toggle.toggled.connect(func(value: bool) -> void: _set_value(str(key), value))
+			rows.add_child(toggle)
+			toggles[key] = toggle
+
+
+func _slider(rows: VBoxContainer, key: String) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	var name_label: Label = Style.label(Text.label("setting_" + key), 18)
+	name_label.custom_minimum_size.x = 200
+	row.add_child(name_label)
+	var slider := HSlider.new()
+	slider.min_value = 0
+	slider.max_value = 100
+	slider.step = 1
+	slider.custom_minimum_size = Vector2(240, 40)
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.value_changed.connect(func(value: float) -> void: _set_value(key, value / 100.0))
+	row.add_child(slider)
+	sliders[key] = slider
+	rows.add_child(row)
 
 
 func _build_keys() -> void:
 	var scroll := ScrollContainer.new()
-	scroll.name = "Keys and pad"
+	scroll.name = Text.label("settings_tab_keys")
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	tabs.add_child(scroll)
 	var holder := VBoxContainer.new()
 	holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	holder.add_theme_constant_override("separation", 8)
 	scroll.add_child(holder)
-	holder.add_child(Style.wrapped("Click a binding, then press a key. Esc, Tab, Shift, mouse buttons and 1-9 stay fixed.", 16, Style.MUTED))
+	holder.add_child(Style.wrapped(Text.label("settings_keys_help"), 16, Style.MUTED))
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 10)
 	grid.add_theme_constant_override("v_separation", 4)
 	holder.add_child(grid)
 	for action in Keys.ACTIONS:
-		var name_label: Label = Style.label(Keys.ACTIONS[action], 17)
+		var name_label: Label = Style.label(Text.label("action_" + action), 17)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(name_label)
 		var pair: Array = []
@@ -135,13 +151,13 @@ func _build_keys() -> void:
 			grid.add_child(button)
 			pair.append(button)
 		key_buttons[action] = pair
-	holder.add_child(Style.heading("Gamepad buttons", 20, Style.LEAF))
+	holder.add_child(Style.heading(Text.label("settings_pad"), 20, Style.LEAF))
 	var pad_grid := GridContainer.new()
 	pad_grid.columns = 2
 	pad_grid.add_theme_constant_override("h_separation", 10)
 	holder.add_child(pad_grid)
 	for action in Pad.ACTIONS:
-		var name_label: Label = Style.label(Pad.ACTIONS[action], 17)
+		var name_label: Label = Style.label(Text.label("action_" + action), 17)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		pad_grid.add_child(name_label)
 		var button: Button = Style.button("", false, 16)
@@ -152,12 +168,12 @@ func _build_keys() -> void:
 	var resets := HBoxContainer.new()
 	resets.add_theme_constant_override("separation", 10)
 	holder.add_child(resets)
-	var reset_keys: Button = Style.button("Restore default keys", false, 16)
+	var reset_keys: Button = Style.button(Text.label("settings_reset_keys"), false, 16)
 	reset_keys.pressed.connect(func() -> void:
 		store.reset_keys()
 		_save())
 	resets.add_child(reset_keys)
-	var reset_pad: Button = Style.button("Restore default buttons", false, 16)
+	var reset_pad: Button = Style.button(Text.label("settings_reset_pad"), false, 16)
 	reset_pad.pressed.connect(func() -> void:
 		store.reset_pad()
 		_save())
@@ -174,10 +190,10 @@ func refresh() -> void:
 	for action in key_buttons:
 		for slot in range(2):
 			var waiting: bool = capture_action == action and capture_slot == slot and not capture_pad
-			key_buttons[action][slot].text = "Press a key…" if waiting else Keys.key_name(int(store.key_bindings[action][slot]))
+			key_buttons[action][slot].text = Text.label("settings_press_key") if waiting else Keys.key_name(int(store.key_bindings[action][slot]))
 	for action in pad_buttons:
 		var waiting: bool = capture_action == action and capture_pad
-		pad_buttons[action].text = "Press a button…" if waiting else Pad.button_name(int(store.pad_bindings[action]))
+		pad_buttons[action].text = Text.label("settings_press_button") if waiting else Pad.button_name(int(store.pad_bindings[action]))
 
 
 func _set_value(key: String, value: Variant) -> void:
@@ -193,11 +209,21 @@ func _save() -> void:
 	changed.emit()
 
 
+## A binding error from the stores ("key|value|action"), worded.
+static func _error(error: String) -> String:
+	if error.is_empty():
+		return ""
+	var parts: PackedStringArray = error.split("|")
+	if parts.size() < 3:
+		return Text.label(parts[0])
+	return Text.format(parts[0], {"0": parts[1], "1": Text.label("action_" + parts[2])})
+
+
 func _begin_capture(action: String, slot: int, pad: bool) -> void:
 	capture_action = action
 	capture_slot = slot
 	capture_pad = pad
-	notice.text = "Press a %s for %s. Esc cancels." % ["gamepad button" if pad else "key", (Pad.ACTIONS if pad else Keys.ACTIONS)[action]]
+	notice.text = Text.format("settings_capture_pad" if pad else "settings_capture_key", {"action": Text.label("action_" + action)})
 	refresh()
 
 
@@ -217,7 +243,7 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 	if capture_pad and event is InputEventJoypadButton and event.pressed:
-		notice.text = store.rebind_pad(capture_action, event.button_index)
+		notice.text = _error(store.rebind_pad(capture_action, event.button_index))
 		capture_action = ""
 		_save()
 		get_viewport().set_input_as_handled()
@@ -232,7 +258,7 @@ func _input(event: InputEvent) -> void:
 		var error: String = store.rebind(capture_action, capture_slot, code)
 		capture_action = ""
 		_save()
-		notice.text = error
+		notice.text = _error(error)
 
 
 func _layout() -> void:

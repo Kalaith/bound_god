@@ -13,16 +13,32 @@ const BODY: Font = preload("res://assets/fonts/ZenKakuGothicNew-Medium.ttf")
 const UTILITY: Font = preload("res://assets/fonts/ZenKakuGothicNew-Bold.ttf")
 
 const INK := Color("1a1714")
-const PANEL := Color(0.11, 0.1, 0.085, 0.86)
+static var PANEL := Color(0.11, 0.1, 0.085, 0.86)
 const PANEL_SOLID := Color("1e1b17")
-const BORDER := Color("a08a62")
+static var BORDER := Color("a08a62")
 const LEAF := Color("bccb98")
 const GOLD := Color("e2bf7c")
 const WHITE := Color("f2ebdc")
 const MUTED := Color("b8ad99")
-const WARN := Color("eda57c")
-const BAD := Color("e07a6a")
-const GOOD := Color("a9d39a")
+static var WARN := Color("eda57c")
+static var BAD := Color("e07a6a")
+static var GOOD := Color("a9d39a")
+## Panels drawn opaque with a brighter border (accessibility, M24).
+static var high_contrast: bool = false
+## Reduce motion (accessibility): no falling leaves or motes, no sky flashes.
+static var reduce_motion: bool = false
+
+
+## The accessibility palette (M24): colour-safe swaps harm and good news
+## from red and green to orange and blue; high contrast makes panels opaque
+## with a bright border.
+static func set_palette(colour_safe: bool, contrast: bool) -> void:
+	WARN = Color("f0b35a") if colour_safe else Color("eda57c")
+	BAD = Color("ff8c1a") if colour_safe else Color("e07a6a")
+	GOOD = Color("7fb6ff") if colour_safe else Color("a9d39a")
+	high_contrast = contrast
+	PANEL = Color(0.06, 0.055, 0.05, 1.0) if contrast else Color(0.11, 0.1, 0.085, 0.86)
+	BORDER = Color("f2e2b0") if contrast else Color("a08a62")
 const FAITH := Color("a9e2d2")
 
 
@@ -93,9 +109,13 @@ static func button(text: String, primary: bool = false, size: int = 21) -> Butto
 
 static func panel_box(alpha: float = 0.9, radius: int = 12, margin: int = 18) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
-	box.bg_color = Color(PANEL, alpha)
-	box.border_color = Color(BORDER, 0.55)
-	box.set_border_width_all(1)
+	box.bg_color = Color(PANEL, 1.0 if high_contrast else alpha)
+	box.border_color = Color(BORDER, 1.0 if high_contrast else 0.55)
+	box.set_border_width_all(2 if high_contrast else 1)
+	# A soft shadow, as a print mounted on board (M24's ink-and-pastel hand).
+	box.shadow_color = Color(0.0, 0.0, 0.0, 0.32)
+	box.shadow_size = 6
+	box.shadow_offset = Vector2(2, 3)
 	# Squarer corners than a modern card: closer to a mounted print.
 	box.set_corner_radius_all(mini(radius, 6))
 	box.content_margin_left = margin

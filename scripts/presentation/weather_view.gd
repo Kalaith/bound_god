@@ -4,6 +4,7 @@ extends Node3D
 ## thunderstorm, and snow that settles on the ground and roofs through a
 ## snowy winter and melts away after it. Reads the sim; changes nothing.
 
+const Style = preload("res://scripts/presentation/ui/style.gd")
 const RAIN_COLOUR := Color(0.78, 0.82, 0.88, 0.45)
 const SNOW_COLOUR := Color(0.97, 0.97, 1.0, 0.9)
 ## Greying of the sky by kind of weather.
@@ -108,7 +109,7 @@ func _process(delta: float) -> void:
 	_snow.amount_ratio = clampf(snow, 0.0, 1.0)
 	_lightning(kind, delta)
 	if rig != null:
-		rig.set_weather(dim, _flash)
+		rig.set_weather(dim, 0.0 if Style.reduce_motion else _flash)
 
 
 ## Snow lies deeper while it falls in winter and melts once winter is past.

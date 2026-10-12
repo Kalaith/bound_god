@@ -47,12 +47,12 @@ static func valid(mapping: Variant) -> bool:
 
 static func change_error(mapping: Dictionary, action: String, button: int) -> String:
 	if not ACTIONS.has(action):
-		return "Unknown binding."
+		return "bind_unknown"
 	if not allowed(button):
-		return "That button cannot be assigned."
+		return "bind_button_fixed"
 	for other in ACTIONS:
 		if other != action and int(mapping[other]) == button:
-			return "%s is already assigned to %s. Choose another button." % [button_name(button), ACTIONS[other]]
+			return "bind_button_taken|%s|%s" % [button_name(button), other]
 	return ""
 
 

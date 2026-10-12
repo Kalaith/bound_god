@@ -41,11 +41,11 @@ const WorldIO = preload("res://scripts/presentation/world_io.gd")
 const RestOverlay = preload("res://scripts/presentation/ui/rest_overlay.gd")
 const ChronicleScreen = preload("res://scripts/presentation/ui/chronicle_screen.gd")
 const AudioDirector = preload("res://scripts/presentation/audio_director.gd")
+const MusicDirector = preload("res://scripts/presentation/music_director.gd")
+const MiracleEffects = preload("res://scripts/presentation/miracle_effects.gd")
 const PauseMenu = preload("res://scripts/presentation/ui/pause_menu.gd")
 const PageScreen = preload("res://scripts/presentation/ui/page_screen.gd")
-const SagaText = preload("res://scripts/presentation/ui/saga_text.gd")
-const Statistics = preload("res://scripts/sim/statistics.gd")
-const Style = preload("res://scripts/presentation/ui/style.gd")
+const ScreensController = preload("res://scripts/presentation/screens_controller.gd")
 const SettingsScreen = preload("res://scripts/presentation/ui/settings_screen.gd")
 const SettingsStore = preload("res://scripts/core/settings_store.gd")
 const Prompts = preload("res://scripts/presentation/ui/prompts.gd")
@@ -81,8 +81,13 @@ var world_io: Node
 var rest_overlay: Control
 var chronicle_screen: Control
 var pause_menu: Control
+var music: Node
+var audio: Node
+## Captions for sounds that matter (accessibility, M24).
+var _captions: bool = false
 ## The Saga screen and the epilogue (M23).
 var page: Control
+var screens: Node
 var settings_screen: Control
 ## The prompt shown now: {id, text} or {}.
 var _prompt_now: Dictionary = {}
@@ -304,9 +309,19 @@ func _start() -> void:
 	var preferences: RefCounted = SettingsStore.new()
 	preferences.load_settings()
 	_apply_settings(preferences)
-	var audio: Node = AudioDirector.new()
+	audio = AudioDirector.new()
 	audio.sim = sim
+	audio.caption = func(key: String) -> void:
+		if _captions:
+			hud.flash(Text.label(key))
 	add_child(audio)
+	var signs: Node3D = MiracleEffects.new()
+	signs.sim = sim
+	add_child(signs)
+	music = MusicDirector.new()
+	music.sim = sim
+	music.driver = driver
+	add_child(music)
 	pause_menu = PauseMenu.new()
 	ui_layer.add_child(pause_menu)
 	pause_menu.resume.connect(_close_pause)
@@ -319,7 +334,11 @@ func _start() -> void:
 	pause_menu.close_book.connect(func() -> void: open_epilogue(false))
 	page = PageScreen.new()
 	ui_layer.add_child(page)
-	page.chosen.connect(_page_chosen)
+	screens = ScreensController.new()
+	screens.main = self
+	add_child(screens)
+	page.chosen.connect(screens.page_chosen)
+	screens.pad_ready()
 	_sync_zone()
 	_loading.hide()
 	if capture_request.is_empty():
@@ -356,6 +375,8 @@ func _process(_delta: float) -> void:
 	rig.set_hour(sim.calendar.hour())
 	avatar.camera_yaw = camera_rig.yaw
 	overlays.update_avatar(avatar.global_position)
+	if audio != null:
+		audio.listener = avatar.global_position
 	_sync_zone()
 	_guide_left -= _delta
 	if _guide_left <= 0.0:
@@ -367,39 +388,13 @@ func _process(_delta: float) -> void:
 		open_epilogue(true)
 
 
-## The Saga: the ages, the deeds and the numbers.
+## The Saga screen and the epilogue live in the screens controller.
 func open_saga() -> void:
-	pause_menu.hide()
-	var lines: Array = []
-	lines.append(Style.rich_heading(Text.label("saga_ages")))
-	lines.append_array(SagaText.ages(campaign))
-	lines.append("")
-	lines.append(Style.rich_heading(Text.label("saga_deeds")))
-	lines.append_array(SagaText.deeds(campaign))
-	lines.append("")
-	lines.append(Style.rich_heading(Text.label("saga_numbers")))
-	lines.append_array(SagaText.numbers(Statistics.of(campaign)))
-	page.open(Text.label("saga_title"), lines, [["close", "design_close"]])
-	builder.enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	screens.open_saga()
 
 
-## The epilogue, when the god fades or the player closes the book.
 func open_epilogue(faded: bool) -> void:
-	pause_menu.hide()
-	campaign.book_closed = true
-	page.open(Text.label("epilogue_title"), SagaText.epilogue(campaign, faded), [["watch", "epilogue_watch"], ["leave", "epilogue_leave"]])
-	builder.enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-
-
-func _page_chosen(id: String) -> void:
-	page.hide()
-	if id == "leave":
-		world_io.save()
-		get_tree().change_scene_to_file(TITLE_SCENE)
-		return
-	resume_world_input()
+	screens.open_epilogue(faded)
 
 
 func _clock_text() -> String:
@@ -533,6 +528,7 @@ func _apply_settings(store: RefCounted) -> void:
 	camera_rig.look_sensitivity = float(store.values.get("look_sensitivity", camera_rig.look_sensitivity))
 	camera_rig.invert_look = bool(store.values.get("invert_look", camera_rig.invert_look))
 	_show_guide = bool(store.values.get("show_guide", true))
+	_captions = bool(store.values.get("captions", false))
 	_guide_left = 0.0
 
 

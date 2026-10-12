@@ -30,9 +30,10 @@ const FILES: Dictionary = {
 	"text_branches": "res://data/text_branches.json",
 	"text_regions": "res://data/text_regions.json",
 	"text_saga": "res://data/text_saga.json",
+	"text_feel": "res://data/text_feel.json",
 }
 ## Text catalogs, split by responsibility; their labels share one namespace.
-const TEXT_FILES: Array[String] = ["text", "text_agents", "text_ui", "text_cultivation", "text_sect", "text_seasons", "text_alchemy", "text_branches", "text_regions", "text_saga"]
+const TEXT_FILES: Array[String] = ["text", "text_agents", "text_ui", "text_cultivation", "text_sect", "text_seasons", "text_alchemy", "text_branches", "text_regions", "text_saga", "text_feel"]
 
 static var _files: Dictionary = {}
 static var _blocks_by_id: Array = []
@@ -74,7 +75,44 @@ static func labels() -> Dictionary:
 	if _labels.is_empty():
 		for name in TEXT_FILES:
 			_labels.merge(file(name).get("labels", {}))
+		if locale != "en":
+			override_labels(_labels, locale_labels(locale))
 	return _labels
+
+
+## The language text is shown in (M24): "en" uses the catalogs as they are;
+## another code overlays `data/locale/<code>/*.json` (the same keys).
+static var locale: String = "en"
+
+
+## Every label a language's catalogs give: {key: text}.
+static func locale_labels(code: String) -> Dictionary:
+	var result: Dictionary = {}
+	var folder: String = "res://data/locale/%s" % code
+	if not DirAccess.dir_exists_absolute(folder):
+		return result
+	var files: PackedStringArray = DirAccess.get_files_at(folder)
+	files.sort()
+	for name in files:
+		if not name.ends_with(".json"):
+			continue
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(folder.path_join(name)))
+		if parsed is Dictionary and parsed.get("labels") is Dictionary:
+			result.merge(parsed.labels, true)
+	return result
+
+
+## A language's labels laid over the English ones: only keys English has,
+## so a stray key cannot add text the game never asks for.
+static func override_labels(base: Dictionary, overrides: Dictionary) -> void:
+	for key in overrides:
+		if base.has(key) and overrides[key] is String:
+			base[key] = overrides[key]
+
+
+static func set_locale(code: String) -> void:
+	locale = code
+	_labels.clear()
 
 
 # --- Blocks -----------------------------------------------------------------

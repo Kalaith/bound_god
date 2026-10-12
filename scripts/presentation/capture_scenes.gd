@@ -29,6 +29,7 @@ const CaptureAlchemy = preload("res://scripts/presentation/capture_alchemy.gd")
 const CaptureBranches = preload("res://scripts/presentation/capture_branches.gd")
 const CaptureRegions = preload("res://scripts/presentation/capture_regions.gd")
 const CaptureSaga = preload("res://scripts/presentation/capture_saga.gd")
+const CaptureFeel = preload("res://scripts/presentation/capture_feel.gd")
 
 
 static func arrange(main: Node3D, request: Dictionary) -> void:
@@ -104,6 +105,9 @@ static func arrange(main: Node3D, request: Dictionary) -> void:
 		return
 	if scenario.begins_with("saga_"):
 		CaptureSaga.arrange(main, shot, scenario)
+		return
+	if scenario.begins_with("feel_"):
+		CaptureFeel.arrange(main, shot, scenario)
 		return
 	if scenario.begins_with("branch_"):
 		CaptureBranches.arrange(main, shot, scenario)

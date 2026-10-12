@@ -63,18 +63,18 @@ static func valid(mapping: Variant) -> bool:
 
 static func change_error(mapping: Dictionary, action: String, slot: int, code: int) -> String:
 	if not ACTIONS.has(action) or slot < 0 or slot > 1:
-		return "Unknown binding."
+		return "bind_unknown"
 	if code == 0 and slot == 0:
-		return "Keep a primary key for every action."
+		return "bind_keep_primary"
 	if code != 0 and not allowed(code):
-		return "Choose a single key. Esc and Tab are reserved for navigation."
+		return "bind_single_key"
 	if code != 0:
 		for other in ACTIONS:
 			for other_slot in range(2):
 				if other == action and other_slot == slot:
 					continue
 				if int(mapping[other][other_slot]) == code:
-					return "%s is already assigned to %s. Choose another key." % [key_name(code), ACTIONS[other]]
+					return "bind_key_taken|%s|%s" % [key_name(code), other]
 	return ""
 
 

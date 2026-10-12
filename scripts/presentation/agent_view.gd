@@ -64,6 +64,12 @@ func setup(agent: RefCounted) -> void:
 		"accent": COLLAR,
 		"straw": STRAW,
 	}
+	# An outlaw wears a dark, dusty robe and a hood-dark head (M24).
+	if agent.backstory.has("outlaw"):
+		colours.jacket = Color("3a3430")
+		colours.trim = Color("1f1b18")
+		colours.sash = Color("6b2f2a")
+		colours.hair = Color("1a1716")
 	figure.build(colours, look / 5, false)
 	figure.elder = elder
 	if agent.is_child:

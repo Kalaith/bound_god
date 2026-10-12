@@ -13,6 +13,7 @@ const DEFAULTS: Dictionary = {
 	"fullscreen": false, "reduce_motion": false,
 	"ssao": true, "glow": true, "shadows": true, "ink": true,
 	"show_guide": true,
+	"ui_scale": 0.23, "colour_safe": false, "high_contrast": false, "captions": false, "pseudo_language": false,
 }
 var values: Dictionary = DEFAULTS.duplicate()
 var key_bindings: Dictionary = Keys.defaults()
@@ -137,6 +138,14 @@ func apply_all(_tree: SceneTree) -> void:
 		var mode: int = DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
 		if DisplayServer.window_get_mode() != mode and (fullscreen or DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN):
 			DisplayServer.window_set_mode(mode)
+	# Accessibility and language (M24).
+	var Text = load("res://scripts/core/text.gd")
+	Text.pseudo = bool(values.pseudo_language)
+	var StyleScript = load("res://scripts/presentation/ui/style.gd")
+	StyleScript.set_palette(bool(values.colour_safe), bool(values.high_contrast))
+	StyleScript.reduce_motion = bool(values.reduce_motion)
+	if _tree != null and _tree.root != null:
+		_tree.root.content_scale_factor = ui_scale()
 	for bus in ["Master", "Music", "Effects"]:
 		var index: int = AudioServer.get_bus_index(bus)
 		if index < 0:
@@ -144,6 +153,11 @@ func apply_all(_tree: SceneTree) -> void:
 		var level: float = float(values[bus.to_lower()])
 		AudioServer.set_bus_volume_db(index, linear_to_db(maxf(level, 0.0001)))
 		AudioServer.set_bus_mute(index, bool(values.muted) or level <= 0.001)
+
+
+## The UI scale: 85 % to 150 %, from the 0..1 setting.
+func ui_scale() -> float:
+	return 0.85 + 0.65 * float(values.get("ui_scale", 0.23))
 
 
 func rebind(action: String, slot: int, code: int) -> String:

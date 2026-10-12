@@ -4,6 +4,7 @@ extends Node3D
 ## drifting down. Decoration only; it reads where the tree stands and never
 ## touches the sim.
 
+const Style = preload("res://scripts/presentation/ui/style.gd")
 const ROPE := Color("cdb27a")
 const PAPER := Color("f3eee2")
 const MOTE := Color("d9fff0")
@@ -14,6 +15,8 @@ var base := Vector3i.ZERO
 ## The world, to show the warding formation's edge once the tree has it (M23).
 var sim: RefCounted = null
 var _ward: MeshInstance3D
+## The drifting motes and leaves, stilled when motion is reduced.
+var _drift: Array = []
 var _ward_check: float = 0.0
 
 
@@ -52,6 +55,8 @@ func _process(delta: float) -> void:
 	if _ward_check > 0.0 or sim == null or _ward == null:
 		return
 	_ward_check = 1.0
+	for particles in _drift:
+		particles.emitting = not Style.reduce_motion
 	_ward.visible = sim.tree_growth != null and sim.tree_growth.has_unlock("warding_formation")
 
 
@@ -83,6 +88,7 @@ func _rope(center: Vector3) -> void:
 
 func _motes(center: Vector3) -> void:
 	var motes := GPUParticles3D.new()
+	_drift.append(motes)
 	motes.amount = 70
 	motes.lifetime = 9.0
 	motes.preprocess = 9.0
@@ -119,6 +125,7 @@ func _motes(center: Vector3) -> void:
 
 func _leaves(center: Vector3) -> void:
 	var leaves := GPUParticles3D.new()
+	_drift.append(leaves)
 	leaves.amount = 10
 	leaves.lifetime = 12.0
 	leaves.preprocess = 12.0
