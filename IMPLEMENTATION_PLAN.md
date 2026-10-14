@@ -30,10 +30,10 @@ Out of scope for 1.0 (**Later**): online template sharing, multiplayer, rival go
 | Built-ins first | `ArrayMesh`/`SurfaceTool`, `ConcavePolygonShape3D`, `AStar3D`, `FastNoiseLite`, `RandomNumberGenerator`, `WorkerThreadPool`, `GPUParticles3D`, `AudioStreamGenerator`, `FileAccess`/`DirAccess`. |
 | Scripts | `extends RefCounted` for pure logic, `Node`/`Node3D` only for presentation. `const X = preload("res://…")`, no `class_name` sprawl. Static typing. Tabs, LF, UTF-8. |
 | Data | All tuning in `data/*.json` with `schema_version`, validated at startup. Missing or mistyped keys fail fast; no silent defaults. |
-| File size | **Hard limit 800 lines per file** (scripts, scenes, data, docs); aim ≤ 600 in scripts. Split by responsibility; never compact formatting. |
+| Size | **Hard limits: 800 lines per file** (scripts, scenes, data, docs) **and 400 lines per function.** Split by responsibility; never compact formatting. |
 | Resolution | Authored at **1920×1080** (`canvas_items`, `expand`), readable at 1280×720. |
 | Saves | `user://`, staged writes, `.bak` recovery, `.corrupt` quarantine, schema migrations with fixtures (`core/save_migrations.gd`, `tools/fixtures/`). Newer-version saves are refused cleanly. |
-| Commits | Commit after every complete, working step; each commit boots and passes checks. Publishing needs separate authorisation. |
+| Commits | Commit after every complete, working step; checks do not gate commits, the full set runs when a milestone or major feature is finished. Publishing needs separate authorisation. |
 
 Determinism (binding): simulation code never touches the scene tree, physics, `Time`, `OS` or global `randi()`/`randf()`; all randomness from `sim.rng` or a sub-stream seeded from it; comparators tie-break on stable ids; iterate sorted keys when dictionary order matters; document dictionary key and value types in comments.
 

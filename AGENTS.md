@@ -38,7 +38,6 @@ Reference, read when relevant:
 - Built-in engine features to reach for: ArrayMesh, AStar3D, FastNoiseLite, RandomNumberGenerator, WorkerThreadPool.
 - The shared WebHatchery Godot toolkit (`../godot_toolkit`) is linked in as `res://addons/hatchery/` by `..\godot_toolkit\tools\Link-Toolkit.ps1 -ProjectDir .` (a junction, ignored by Git). It is plain preloaded GDScript, not an editor plugin. Bound God uses its balance facade (`core/balance.gd`), text catalog, JSON and data-rule helpers, key and pad bindings and the settings store, the slot store for world saves, synth and voice pool, and the check runner. The game keeps its policy in `scripts/core/` (`settings_store.gd`: settings, actions and how they reach the engine; `save_store.gd`: the world-save files; `text.gd`: the catalog list). Change toolkit code in `../godot_toolkit` under its own AGENTS.md, and run its checks as well as these.
 - Target resolution **1920×1080** (`canvas_items` stretch, `expand` aspect). Author UI at 1080p; it must stay readable at 1280×720.
-- Soft script target: ≤ 600 lines.
 - The simulation (`scripts/agents`, `scripts/sim`, `scripts/world`, `scripts/building`) is `RefCounted` data and logic. It also never touches physics. All randomness comes from `sim.rng`. Comparators tie-break on stable ids (`sort_custom` is not stable).
 - Agents never mutate the world directly; they push into `Effects`, applied once at the end of the tick.
 - Presentation lives in `scripts/presentation`.
@@ -87,7 +86,7 @@ This section is identical in the AGENTS.md of every WebHatchery Godot project (`
 - Static typing everywhere: variables, parameters and return types.
 - Load dependencies with `const X = preload("res://...")`.
 - Tabs, LF, UTF-8, final newline (`.editorconfig`).
-- Split scripts by responsibility before they grow; each project sets its soft target above. The hard limit is below.
+- Split scripts by responsibility before they grow. Size limits are below.
 - Simulation and rules code never touches the scene tree, `Time`, `OS` or the global `randi()`/`randf()`. All randomness comes from an owned `RandomNumberGenerator`, so the same seed gives the same result. Presentation reads that state and sends commands; it never changes it any other way.
 - Balance numbers and catalogs live in JSON under `data/` with stable ids (and `schema_version` where a catalog has one), validated at startup. Missing or mistyped data fails fast: report it, never silently default in code.
 - Keep every catalog (upgrades, parts, miracles, blocks and so on) bounded to implemented effects. Do not add entries the code does not support.
@@ -96,20 +95,21 @@ This section is identical in the AGENTS.md of every WebHatchery Godot project (`
 ### Verification
 
 - Do not create a `tests/` directory, test frameworks or test addons. Automated checks, where a project has them, are headless scripts in `tools/`, kept out of the exported game.
-- Before every commit that touches scripts or data, run the project's checks (if any) and a parse/import check (`--headless --editor --quit`).
+- Checks do not gate commits. Run the full set (the project's checks, if any, and a parse/import check with `--headless --editor --quit`) when a major feature or milestone is finished, and fix what they find before calling it done.
 - Headless checks do not verify visuals, audio, input or feel. Verify anything visual by running the game (`Run.ps1`) and looking at it.
 - Say plainly what was and was not checked.
 
-### File size limit (hard rule)
+### Size limits (hard rule)
 
-- **No file may exceed 800 lines**: scripts, scenes, data, docs and text catalogs. Check before every commit with `git ls-files -co --exclude-standard | grep -E '\.(gd|tscn|json|md)$' | xargs wc -l | sort -n | tail`.
-- When a change would push a file past 800 lines, or a file is already over, **bring it below 800 in the same change** by moving a cohesive responsibility (HUD, settings wiring, area building, save validation, layout, a catalog section and so on) into its own file and having the original delegate to or load it.
-- **Never shrink a file by deleting blank lines, joining statements, removing comments, minifying or packing several entries onto one line.** Blank lines between functions and the existing comment density stay as they are. Line count comes down by moving content, not by squeezing it.
+- **No function may exceed 400 lines.**
+- **No file may exceed 800 lines**: scripts, scenes, data, docs and text catalogs. Check with `git ls-files -co --exclude-standard | grep -E '\.(gd|tscn|json|md)$' | xargs wc -l | sort -n | tail`.
+- When a change would push a function or file past its limit, or one is already over, **bring it below the limit in the same change**. Split a long function into well-named helpers; shrink a file by moving a cohesive responsibility (HUD, settings wiring, area building, save validation, layout, a catalog section and so on) into its own file and having the original delegate to or load it.
+- **Never shrink a function or file by deleting blank lines, joining statements, removing comments, minifying or packing several entries onto one line.** Blank lines between functions and the existing comment density stay as they are. Line count comes down by moving content, not by squeezing it.
 - Keep public members that other scripts use working, either in place or through a delegating function.
 
 ### Commits
 
-- Commit early and often: after every complete, working step (a system, a fix, a data pass), not at the end of a milestone. Each commit leaves the project booting and its checks passing.
+- Commit early and often: after every complete, working step (a system, a fix, a data pass), not at the end of a milestone. Commits do not wait on checks (see Verification).
 - Commit **all pending project changes**, including modified, added and deleted files you did not make yourself. Do not leave user changes or another agent's changes uncommitted because you did not touch them: review and preserve their contents, include them in the validation, and finish with a clean working tree.
 - Existing ignore rules still apply to generated files, local tooling and credentials. Never force-add ignored files or commit secrets.
 - Do not push or publish unless the user asks.
