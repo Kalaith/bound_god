@@ -2,7 +2,7 @@
 
 > Version 0.3 · 2026-10-10 (cultivation-sect direction) · Godot 4.2.2 (GDScript, Forward+ renderer, Windows)
 >
-> Sources: `docs/design/sacred_tree_cultivation_design.md` (the current direction: a tree spirit guarding a cultivation sect), `docs/design/bound_god_game_concept.md` (the original bound-god vision, still the base for faith, shrines and templates), `docs/reference/npc_system_guide.md` (the Final Landing BDI agent system the people are ported from). Look and type: `docs/design/art_direction.md`, `docs/design/font_direction.md`, concept images in `docs/art/`. Implementation is planned in `IMPLEMENTATION_PLAN.md`; what is built is recorded in `PROGRESS.md`.
+> Sources: the cultivation-sect brief and the original bound-god concept (both retired; their decisions are carried here, and they remain in Git history), `docs/reference/npc_system_guide.md` (the Final Landing BDI agent system the people are ported from). Look and type: `docs/design/art_direction.md`, `docs/design/font_direction.md`, concept images in `docs/art/`. What is built is recorded in `PROGRESS.md`; how the simulation is shaped, in `docs/reference/architecture.md`.
 >
 > Markings: **Decision** is a call made and built on. **Leaning** is the working answer, changeable without rework. **Tuning** is a number or threshold left to balance passes and playtests. **Later** is a direction kept but deferred. **Open** is a design question still unanswered.
 
@@ -146,7 +146,7 @@ A structure's function comes from what it contains, never from its name. Rules l
 
 **Leaning (cultivation):** sect functions follow the same rule. A **meditation hall** (roofed, mats, in qi above a threshold), a **training ground** (open, level, a marked area), a **tribulation ground** (an open platform, formation stones, at a distance from housing: protection comes from formations and placement, not grandeur), and an **alchemy room** (furnace, roofed). Exact components: **Tuning** when each lands.
 
-**Leaning (M19b, the sect's halls):** a grown sect also raises a **scripture library** (shelves and a lectern: techniques copied into manuals and studied), a **meditation room** (one mat and incense: closed-door cultivation for one), a **tribulation chamber** (a sealed stone room with an array and a thunder spire: a gentler storm that scorches nothing), an **infirmary** (beds and medicine: healing and a mended foundation), a **spirit-gathering array** (spirit jade on stone: dense qi away from the trunk), a **mountain gate** (pillars and banners: seekers come and join), an **ancestral hall** (tablets and incense: the relics' help at home), a **precept stele** (steady doctrine), a **bell tower** (a warning everyone hears) and a **lecture hall** (a lectern and benches: leisure spent listening to the Way). Existing buildings can be **renovated** into these by adding what they lack. Components and effects: `IMPLEMENTATION_PLAN.md` M19b; numbers **Tuning**.
+**Leaning (M19b, the sect's halls):** a grown sect also raises a **scripture library** (shelves and a lectern: techniques copied into manuals and studied), a **meditation room** (one mat and incense: closed-door cultivation for one), a **tribulation chamber** (a sealed stone room with an array and a thunder spire: a gentler storm that scorches nothing), an **infirmary** (beds and medicine: healing and a mended foundation), a **spirit-gathering array** (spirit jade on stone: dense qi away from the trunk), a **mountain gate** (pillars and banners: seekers come and join), an **ancestral hall** (tablets and incense: the relics' help at home), a **precept stele** (steady doctrine), a **bell tower** (a warning everyone hears) and a **lecture hall** (a lectern and benches: leisure spent listening to the Way). Existing buildings can be **renovated** into these by adding what they lack. Components and effects: `data/` and `PROGRESS.md` (M19b); numbers **Tuning**.
 
 ### 5.4 Offering, blueprints and spread
 
@@ -369,7 +369,7 @@ From the shrine menu, the god transfers to another active shrine. The old place 
 
 **Decision (brief):** **meditation** extends rest to years. The sect does not pause. Important events interrupt it: a followed person's breakthrough or danger of death, a shrine destroyed, war, an unfamiliar phenomenon, a favoured disciple's return. The player then reads a concise **chronicle** of who advanced, who died, what was built or lost, which techniques arose and why the politics changed. Favour regeneration and other limits on what meditation can skip: **Tuning**, set so that skipping a century is never free.
 
-**Leaning:** spans beyond a season run the **abstract settlement model** (plan §3.1): population, food, buildings, faith, cultivation progress and events advance in hourly steps by the same rules as the detailed sim, so years pass in seconds; the region materialises in full on return.
+**Leaning:** spans beyond a season run the **abstract settlement model** (`docs/reference/architecture.md` §1): population, food, buildings, faith, cultivation progress and events advance in hourly steps by the same rules as the detailed sim, so years pass in seconds; the region materialises in full on return.
 
 ### 13.3 The chronicle
 
@@ -430,7 +430,7 @@ Do not start with hundreds of techniques, a long realm ladder, many factions or 
 
 ### 17.3 After the slice
 
-Sect architecture and living designs, seasons and weather (storms feed tribulations), herbs and alchemy, branches and regions, other sects and outsiders, the tree's wider growth (root networks, formations, hidden realms), campaign shape and epilogue, finish and release. Sequenced in `IMPLEMENTATION_PLAN.md`.
+Sect architecture and living designs, seasons and weather (storms feed tribulations), herbs and alchemy, branches and regions, other sects and outsiders, the tree's wider growth (root networks, formations, hidden realms), campaign shape and epilogue, finish and release. All built for 1.0 (`PROGRESS.md`).
 
 **Later (after 1.0):** online template sharing, multiplayer, rival gods, other platforms.
 
@@ -454,4 +454,4 @@ Settled by play and data, not by design: the qi curve; realm count, durations an
 | What happens when the sect collapses or the last shrine is lost? | Dormancy and recovery through survivors (§10.5); the tree is never destroyed |
 | How do good, ruthless, forbidden and mixed traditions emerge? | Doctrine drift from leaders' choices (§6.5); no morality paths |
 
-*Status: v0.3. The vertical slice and village economy are built; the cultivation slice is next. Agreed direction from the brief is marked Decision; everything numeric is Tuning.*
+*Status: v0.3, built in full as version 1.0.0. Agreed direction from the cultivation brief is marked Decision; everything numeric is Tuning.*

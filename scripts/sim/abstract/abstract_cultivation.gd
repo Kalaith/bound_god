@@ -1,5 +1,5 @@
 extends RefCounted
-## Abstract cultivation and company (plan §3.1). Each hour a person with a
+## Abstract cultivation and company (architecture §1). Each hour a person with a
 ## drive to cultivate spends a share of it in meditation, in the qi of their
 ## spot by the tree (or their settlement's), by the detailed rate; a mortal
 ## who crosses the threshold enters Qi Refining; one at a realm's peak waits

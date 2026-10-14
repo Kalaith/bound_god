@@ -4,7 +4,7 @@ extends SceneTree
 ## Fills Tree Hollow to `people` detailed residents with stores and the
 ## village designs, lets them settle for `warm` days, then times every phase
 ## of each tick for `days` days and reports the cost per tick and what that
-## means per frame at 1x, 3x and 10x (60 fps, plan §3.3 budget 4 ms).
+## means per frame at 1x, 3x and 10x (60 fps, architecture §3 budget 4 ms).
 const Sim = preload("res://scripts/sim/sim.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Balance = preload("res://addons/hatchery/core/balance.gd")

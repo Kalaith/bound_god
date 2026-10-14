@@ -36,9 +36,9 @@ When a cultivator faces a heavenly tribulation beneath your branches, the tree l
 
 ## Where it stands
 
-Version 0.12. The original vertical slice (voxel valley, templates, people with minds of their own, faith, shrines, miracles, food, threats, saves) is built, and so is the cultivation slice: qi, cultivators and realms, breakthroughs and lightning tribulations, the tree's insights and unlocks, meditation over years with a chronicle, and a sect that founds itself and raises its own halls (libraries, seclusion rooms, thunder chambers, infirmaries, mountain gates and more).
+Version 1.0.0. The original vertical slice (voxel valley, templates, people with minds of their own, faith, shrines, miracles, food, threats, saves) is built, and so is the cultivation slice: qi, cultivators and realms, breakthroughs and lightning tribulations, the tree's insights and unlocks, meditation over years with a chronicle, and a sect that founds itself and raises its own halls (libraries, seclusion rooms, thunder chambers, infirmaries, mountain gates and more). Seasons and weather, herbs and alchemy, branches and regions, other sects and outsiders, the campaign shape (ages, deeds and an epilogue), and the look, sound and feel are built too.
 
-Next come seasons and weather, crafts and alchemy, branches and regions, other sects and outsiders, the campaign shape and the finish toward 1.0. `PROGRESS.md` records what is built in detail and `IMPLEMENTATION_PLAN.md` sequences what comes next.
+The 1.0.0 Windows build is made and passes its smoke test; it has not been published. What it still needs is people: a closed beta, fresh-player playtests and play by hand. `PROGRESS.md` records what is built in detail.
 
 ## Controls
 
@@ -116,7 +116,7 @@ Visual changes are verified with in-game captures written to `docs/verification/
 ## Documents
 
 - [`GAME_DESIGN.md`](GAME_DESIGN.md): the design, with its decisions, leanings and open questions
-- [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md): milestones and exit criteria
 - [`PROGRESS.md`](PROGRESS.md): what is built, decisions taken while building, known issues
 - [`AGENTS.md`](AGENTS.md): conventions and invariants for anyone working on the code
-- [`docs/design/`](docs/design/): the cultivation brief, the original concept, art and font direction
+- [`docs/design/`](docs/design/): art and font direction
+- [`docs/reference/`](docs/reference/): architecture notes and the Final Landing NPC system the people are ported from

@@ -3,7 +3,7 @@
 Use these notes to record how a new player experiences the game. Two kits:
 
 - `TEMPLATE.md`: the village slice's first playable moment (GAME_DESIGN.md §17.1). The M13 target is for at least two of three fresh players to reach it in under an hour without help.
-- `TEMPLATE_CULTIVATION.md`: the cultivation slice and its key test (GAME_DESIGN.md §17.2), from M18. Targets: a sect forms and the player witnesses a first tribulation within two hours (plan §1.1), and at least two of three players say they cared what happened to their disciple. The slice is long: run it as one sitting of up to two hours, and let the player meditate when they choose; if they never meditate by the end, note it and ask them to try it for the last ten minutes.
+- `TEMPLATE_CULTIVATION.md`: the cultivation slice and its key test (GAME_DESIGN.md §17.2), from M18. Targets: a sect forms and the player witnesses a first tribulation within two hours, and at least two of three players say they cared what happened to their disciple. The slice is long: run it as one sitting of up to two hours, and let the player meditate when they choose; if they never meditate by the end, note it and ask them to try it for the last ten minutes.
 
 The game now speaks to a new player through prompts in the top-left panel (`H` puts one away for that world). Record which prompts appeared, whether the player read them, and which they put away unread; do not reset them between steps.
 

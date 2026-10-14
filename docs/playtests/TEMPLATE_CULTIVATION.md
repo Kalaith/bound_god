@@ -1,6 +1,6 @@
 # Fresh player session: the cultivation slice
 
-Use for sessions from M18 on (GAME_DESIGN.md §17.2, the key test; plan §1.1: a sect forms and a first tribulation is witnessed within two hours, guided only by the game).
+Use for sessions from M18 on (GAME_DESIGN.md §17.2, the key test: a sect forms and a first tribulation is witnessed within two hours, guided only by the game).
 
 Tester code (no real names):
 

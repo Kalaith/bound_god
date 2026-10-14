@@ -1,5 +1,5 @@
 extends RefCounted
-## One abstract hour of a frozen person (plan §3.1): the same needs, food
+## One abstract hour of a frozen person (architecture §1): the same needs, food
 ## values, damage and mood rules as the detailed body, applied in hour-sized
 ## steps without plans or paths. Sleep comes in the sleep hours, company and
 ## leisure in the free hours, food from the settlement's chests (the best

@@ -147,7 +147,7 @@ func setup(seed: int, setup_options: Dictionary) -> void:
 	options.erase("restoring")
 	world_seed = maxi(seed, 1)
 	region_id = int(setup_options.get("region", 0))
-	# A neighbouring region draws from its own stream (plan §3.1, M22).
+	# A neighbouring region draws from its own stream (architecture §1, M22).
 	rng.seed = world_seed if region_id == 0 else hash([world_seed, region_id, "region"])
 	calendar = Calendar.new()
 	# The first morning: the travellers arrive soon after dawn.

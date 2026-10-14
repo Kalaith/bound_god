@@ -5,16 +5,14 @@ This repository holds The Bound God, a third-person voxel game in Godot in which
 Read before working:
 
 - `GAME_DESIGN.md`: what the game is. Respect its pillars and its Decision / Leaning / Tuning / Later / Open markings.
-- `IMPLEMENTATION_PLAN.md`: definition of done, conventions, architecture changes and milestones (the cultivation slice M15–M18 in detail, M19–M25 outlined) with exit criteria. Work milestone by milestone. For what is already built, the code and `PROGRESS.md` are the reference.
-- `PROGRESS.md`: where work stands, decisions taken while building, known issues.
+- `PROGRESS.md`: where work stands, what is built, decisions taken while building, known issues and what is next. With the code, it is the reference for what is built.
 
 Reference, read when relevant:
 
-- `docs/design/sacred_tree_cultivation_design.md`: the brief for the cultivation-sect direction. The GDD carries its decisions.
-- `docs/design/bound_god_game_concept.md`: the original concept. Do not edit it.
+- `docs/reference/architecture.md`: the abstract settlement model, data catalogs, performance budget and verification rules. Code comments cite it as "architecture §N".
 - `docs/design/art_direction.md`, `docs/design/font_direction.md` and `docs/art/`: the look and the type.
-- `docs/reference/npc_system_guide.md`: the Final Landing BDI agent system the people are ported from. Its formulas and values apply unless the plan or `PROGRESS.md` says otherwise. The Rust source is in `D:\WebHatchery\RustGames\finallanding\src` (read only).
-- `docs/playtests/`: how to run and record fresh-player sessions, and past findings.
+- `docs/reference/npc_system_guide.md`: the Final Landing BDI agent system the people are ported from. Its formulas and values apply unless `PROGRESS.md` or the architecture notes say otherwise. The Rust source is in `D:\WebHatchery\RustGames\finallanding\src` (read only).
+- `docs/playtests/`: how to run and record fresh-player sessions.
 
 `docs/` carries a `.gdignore`: Godot does not import it and the export excludes it. Keep design notes, reference images and captures there, not in the project root.
 
@@ -49,7 +47,7 @@ Reference, read when relevant:
 
 ## Project checks
 
-- The checks live in `tools/sim_checks.gd` (on the toolkit's `testing/check_runner.gd`), a headless scenario runner for the simulation (`--headless --path . --script res://tools/sim_checks.gd`). It prints PASS/FAIL and exits non-zero on failure. Add a scenario when a simulation feature lands, in the style of the existing scenarios in `tools/checks/` (plan §5).
+- The checks live in `tools/sim_checks.gd` (on the toolkit's `testing/check_runner.gd`), a headless scenario runner for the simulation (`--headless --path . --script res://tools/sim_checks.gd`). It prints PASS/FAIL and exits non-zero on failure. Add a scenario when a simulation feature lands, in the style of the existing scenarios in `tools/checks/` (architecture §4).
 
 ## Commit voice
 

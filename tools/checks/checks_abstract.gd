@@ -1,5 +1,5 @@
 extends RefCounted
-## The abstract settlement model (plan §3.1): frozen people thaw whole, and
+## The abstract settlement model (architecture §1): frozen people thaw whole, and
 ## a year passes in hourly steps by the detailed rules, cheaply.
 const Sim = preload("res://scripts/sim/sim.gd")
 const Generation = preload("res://scripts/agents/generation.gd")
@@ -47,7 +47,7 @@ func check_frozen_people_thaw_whole():
 
 
 ## A year of a settlement in hourly steps: twelve people with a field and
-## some stores. It must be cheap (plan §3.3: < 0.2 ms an hour a settlement;
+## some stores. It must be cheap (architecture §3: < 0.2 ms an hour a settlement;
 ## checked here against 1 ms to leave room for slower machines), keep stock
 ## whole and give every death a cause; it reports how the year went.
 func check_a_year_passes_abstractly():

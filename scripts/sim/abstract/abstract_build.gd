@@ -1,5 +1,5 @@
 extends RefCounted
-## Abstract construction (plan §3.1): what a settlement's people would build,
+## Abstract construction (architecture §1): what a settlement's people would build,
 ## built by labour-hours instead of walking builders. Each day a settlement
 ## short of a building it knows how to make (a home for the homeless, the
 ## food buildings its leaders would propose, a storehouse, a hall, a garden)

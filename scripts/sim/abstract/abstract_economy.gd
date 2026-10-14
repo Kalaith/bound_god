@@ -1,5 +1,5 @@
 extends RefCounted
-## One abstract hour of a settlement's food (plan §3.1). The same rates as
+## One abstract hour of a settlement's food (architecture §1). The same rates as
 ## the detailed world, without the walking: bushes ripen a berry a day (two in
 ## a planter's tended soil; only planters in winter) and are picked by
 ## whoever works; fields are sown when a crop could still ripen, grow a stage

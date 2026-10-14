@@ -1,5 +1,5 @@
 extends RefCounted
-## The abstract settlement model (plan §3.1): time passes in hourly steps
+## The abstract settlement model (architecture §1): time passes in hourly steps
 ## with people frozen out of the BDI cycle. Begin freezes everyone; each hour
 ## advances the calendar, each person's body and each settlement's food by
 ## the detailed rules; each day runs the systems that do not touch blocks
