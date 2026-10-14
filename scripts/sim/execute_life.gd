@@ -1,7 +1,7 @@
 extends RefCounted
 ## Life steps: eating, sleeping, shelter, relaxing, recovering, hiding,
 ## waiting, mental breaks, scouting and defence.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")

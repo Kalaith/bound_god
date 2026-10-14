@@ -4,7 +4,7 @@ extends RefCounted
 ## haul and threats near home. Nothing on it is assigned; people read it.
 const Crafts = preload("res://scripts/sim/crafts.gd")
 const Alchemy = preload("res://scripts/sim/alchemy.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Food = preload("res://scripts/sim/food.gd")
 const Crops = preload("res://scripts/sim/crops.gd")
 const Woods = preload("res://scripts/sim/woods.gd")

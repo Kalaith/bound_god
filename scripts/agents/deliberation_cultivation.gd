@@ -4,7 +4,7 @@ extends RefCounted
 ## has students of their own. All compete in the ordinary utility contest,
 ## so a sect that only meditates goes hungry.
 const DeliberationCrafts = preload("res://scripts/agents/deliberation_crafts.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")

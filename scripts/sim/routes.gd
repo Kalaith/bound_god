@@ -9,7 +9,7 @@ extends RefCounted
 ## (paths.gd) and the tree's roots can follow it. While the valley passes
 ## abstractly the wear is held at what the traffic would keep it at, and the
 ## paths are laid when it materialises. Runs the same in both fidelities.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 
 ## "a:b" (settlement ids, a < b) -> {cells: Array of Vector2i, day: int found, worn: bool}

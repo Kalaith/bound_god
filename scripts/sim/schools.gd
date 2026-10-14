@@ -8,7 +8,7 @@ extends RefCounted
 ## A branch whose doctrine lies far from its parent's, while its master
 ## thinks ill of the parent's master (or very far, whatever they think),
 ## breaks away: no parent, no traffic between them. All chronicled.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 
 ## School id per doctrine weight; the order breaks ties.

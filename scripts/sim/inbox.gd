@@ -2,7 +2,7 @@ extends RefCounted
 ## The receiving side of every message protocol. Messages pushed in tick N
 ## arrive at the end of N and are read here in N+1, before deliberation.
 ## Returns true when a message demands an urgent rethink.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const InboxSocial = preload("res://scripts/sim/inbox_social.gd")
 const InboxFaith = preload("res://scripts/sim/inbox_faith.gd")

@@ -1,6 +1,6 @@
 extends RefCounted
 ## Daily rhythms: work hours and sleep time, shifted for night owls.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 
 static func is_work_hours(sim: RefCounted, agent: RefCounted) -> bool:

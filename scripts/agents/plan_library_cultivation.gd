@@ -2,7 +2,7 @@ extends RefCounted
 ## Cultivation plans: sit in the densest qi to hand (or where one stands),
 ## ask a teacher and wait to be taught, go and teach a student who asked,
 ## and gather one's students under the tree to found a sect.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")

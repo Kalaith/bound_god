@@ -4,7 +4,7 @@ extends RefCounted
 ## `rng`; player commands go through `apply_command` between ticks.
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const Renovations = preload("res://scripts/sim/renovations.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const VoxelWorld = preload("res://scripts/world/voxel_world.gd")
 const WorldGen = preload("res://scripts/world/world_gen.gd")

@@ -4,7 +4,7 @@ extends RefCounted
 ## against how many of the band remain, whether the place is veiled from
 ## them, and whether there is anything left to do. The ordinary needs keep
 ## their pull on survival only (a raid lasts hours, not days).
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Outlaws = preload("res://scripts/sim/outlaws.gd")
 const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")

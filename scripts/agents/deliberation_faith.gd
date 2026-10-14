@@ -1,7 +1,7 @@
 extends RefCounted
 ## Faith candidates: praying, tending a shrine, restoring a fallen one,
 ## telling others of the god, and answering the god's requests.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const FaithState = preload("res://scripts/agents/faith_state.gd")

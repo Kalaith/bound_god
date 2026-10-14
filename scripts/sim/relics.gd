@@ -8,7 +8,7 @@ extends RefCounted
 ## RECOVER_RELIC), chronicled with where they came from.
 ## A relic is {name, realm, tick, shrine: shrine id, lost: bool, carried: agent id or -1};
 ## older relics without `shrine` lie at the tree.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const FaithState = preload("res://scripts/agents/faith_state.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")
 const Mind = preload("res://scripts/agents/mind.gd")

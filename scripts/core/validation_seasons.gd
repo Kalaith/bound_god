@@ -3,15 +3,12 @@ extends RefCounted
 ## and a label, every season weighs only known kinds with sensible spells,
 ## snow falls only in winter and rain never does.
 const Calendar = preload("res://scripts/sim/calendar.gd")
-
-
-static func _number(value: Variant) -> bool:
-	return (value is float or value is int) and is_finite(float(value))
+const DataRules = preload("res://addons/hatchery/core/data_rules.gd")
 
 
 static func check_weather(data: Dictionary, labels: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
-	if not _number(data.get("schema_version")) or int(data.schema_version) != 1:
+	if not DataRules.finite(data.get("schema_version")) or int(data.schema_version) != 1:
 		errors.append("weather: schema_version must be 1")
 	var kinds: Dictionary = {}
 	var list: Variant = data.get("kinds")
@@ -25,9 +22,9 @@ static func check_weather(data: Dictionary, labels: Dictionary) -> Array[String]
 		kinds[entry.id] = entry
 		var label: String = "weather[" + entry.id + "]"
 		for key in ["exposure", "trial"]:
-			if not _number(entry.get(key)) or float(entry[key]) < 0.0 or float(entry[key]) > 2.0:
+			if not DataRules.finite(entry.get(key)) or float(entry[key]) < 0.0 or float(entry[key]) > 2.0:
 				errors.append(label + ": " + key + " must be a number from 0 to 2")
-		if not _number(entry.get("work")) or float(entry.work) <= 0.0 or float(entry.work) > 1.5:
+		if not DataRules.finite(entry.get("work")) or float(entry.work) <= 0.0 or float(entry.work) > 1.5:
 			errors.append(label + ": work must be a positive pace")
 		if not entry.get("wet") is bool:
 			errors.append(label + ": wet must be true or false")
@@ -54,14 +51,14 @@ static func check_weather(data: Dictionary, labels: Dictionary) -> Array[String]
 				errors.append(label + ": snow falls only in winter")
 			if spell.kind == "rain" and season == "winter":
 				errors.append(label + ": rain does not fall in winter")
-			if not _number(spell.get("weight")) or float(spell.weight) <= 0.0:
+			if not DataRules.finite(spell.get("weight")) or float(spell.weight) <= 0.0:
 				errors.append(label + ": weights must be positive")
 			var hours: Variant = spell.get("hours")
-			if not hours is Array or hours.size() != 2 or not _number(hours[0]) or not _number(hours[1]) \
+			if not hours is Array or hours.size() != 2 or not DataRules.finite(hours[0]) or not DataRules.finite(hours[1]) \
 					or int(hours[0]) < 1 or int(hours[1]) < int(hours[0]):
 				errors.append(label + ": hours must be [least, most] from 1")
-	if not _number(data.get("trial_wait")) or float(data.trial_wait) < 0.0 or float(data.trial_wait) > 1.0:
+	if not DataRules.finite(data.get("trial_wait")) or float(data.trial_wait) < 0.0 or float(data.trial_wait) > 1.0:
 		errors.append("weather: trial_wait must be from 0 to 1")
-	if not _number(data.get("calm_hours")) or int(data.calm_hours) < 1:
+	if not DataRules.finite(data.get("calm_hours")) or int(data.calm_hours) < 1:
 		errors.append("weather: calm_hours must be at least 1")
 	return errors

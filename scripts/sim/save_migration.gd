@@ -1,7 +1,7 @@
 extends RefCounted
 ## Brings saves from older schemas up to the current one before they load.
 const Registry = preload("res://scripts/world/block_registry.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 
 

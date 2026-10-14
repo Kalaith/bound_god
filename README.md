@@ -73,6 +73,12 @@ The game is built with **Godot 4.2.2** (GDScript, Forward+ renderer) and runs on
 
 Or open `project.godot` in the Godot 4.2.2 editor and press Play.
 
+The game uses the shared WebHatchery Godot toolkit (`../godot_toolkit`) as `res://addons/hatchery/`. After cloning, link it once (a directory junction, not committed here):
+
+```powershell
+..\godot_toolkit	ools\Link-Toolkit.ps1 -ProjectDir .
+```
+
 ### Checks
 
 The simulation is deterministic and runs headless, so its scenarios are checked without a window:
@@ -87,7 +93,7 @@ Visual changes are verified with in-game captures written to `docs/verification/
 
 ### Building and publishing
 
-`publish.ps1` exports the Windows build and deploys it with a download page; `-BuildOnly` only builds and `-DryRun` changes nothing. `publish-itch.ps1` pushes the last build to itch. Exports need the standard (non-mono) Godot 4.2.2 console editor that matches the installed export templates.
+`publish.ps1` (the shared toolkit publisher) exports the Windows build and deploys it with a download page; `-BuildOnly` only builds and `-DryRun` changes nothing. `publish-itch.ps1` pushes the last build to itch. Exports need the standard (non-mono) Godot 4.2.2 console editor that matches the installed export templates.
 
 ## How it is built
 
@@ -104,6 +110,7 @@ Visual changes are verified with in-game captures written to `docs/verification/
 | `data/` | Catalogs, balance and text |
 | `assets/` | Block atlas, fonts, shaders, UI theme and icon |
 | `tools/` | Headless checks, profiling and atlas tools (excluded from the export) |
+| `addons/hatchery/` | The shared toolkit, linked from `../godot_toolkit` (not committed) |
 | `docs/` | Design notes, art direction, playtests and verification captures (not imported by Godot) |
 
 ## Documents

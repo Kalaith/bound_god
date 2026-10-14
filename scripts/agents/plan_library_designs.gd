@@ -1,7 +1,7 @@
 extends RefCounted
 ## Plans for designs: work one out by the settlement's hall (or round its
 ## camp), a sitting at a time; or walk to the valley's rim and set out.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")

@@ -5,7 +5,7 @@ extends RefCounted
 ## spot while it is still free; otherwise they find their own, and a
 ## blueprint nobody takes for a season fades. Kept in the god's state:
 ## {id, template_id, origin, rotation, settlement_id, laid_tick}.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const SiteFinder = preload("res://scripts/building/site_finder.gd")
 
 

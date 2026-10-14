@@ -8,7 +8,7 @@ signal hotbar_changed(slots: Array, selected: int)
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 ## Block families, so related blocks sit together in the grid, each under
 ## its heading label.

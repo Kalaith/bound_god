@@ -7,7 +7,7 @@ extends SceneTree
 ## means per frame at 1x, 3x and 10x (60 fps, plan §3.3 budget 4 ms).
 const Sim = preload("res://scripts/sim/sim.gd")
 const Data = preload("res://scripts/core/data.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Template = preload("res://scripts/building/template.gd")
 const Stores = preload("res://tools/checks/stores.gd")
 const Generation = preload("res://scripts/agents/generation.gd")

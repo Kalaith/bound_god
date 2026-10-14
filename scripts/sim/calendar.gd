@@ -2,7 +2,7 @@ extends RefCounted
 ## Simulation time. 720 ticks a day, 10-day seasons, 4 seasons a year. Rates
 ## are authored per day and converted with per_tick, so changing the tick
 ## rate never retunes the game.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 const SEASONS: Array[String] = ["spring", "summer", "autumn", "winter"]
 

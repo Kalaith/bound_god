@@ -6,7 +6,7 @@ extends RefCounted
 ## healing and a mended foundation, an array's qi, a gate's seekers, the
 ## ancestors' relics, a stele's steady doctrine, a bell's warning and a
 ## lecture's teaching. What a sect would build is in sect_hall_wants.gd.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const Mind = preload("res://scripts/agents/mind.gd")

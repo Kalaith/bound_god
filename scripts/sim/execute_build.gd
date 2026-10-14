@@ -2,7 +2,7 @@ extends RefCounted
 ## Building steps: marking a site, delivering materials, placing blocks one
 ## at a time (walking between them), and repairing a known building.
 const WorkPace = preload("res://scripts/sim/work_pace.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const SiteFinder = preload("res://scripts/building/site_finder.gd")

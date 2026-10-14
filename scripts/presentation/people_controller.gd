@@ -3,7 +3,7 @@ extends Node
 ## the crosshair (or the mouse when it is free), opens the inspector, and
 ## Follow turns the overlook camera on them, still bound to the zone.
 const Text = preload("res://scripts/core/text.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 var sim: RefCounted
 var views: Node3D

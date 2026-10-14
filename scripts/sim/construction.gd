@@ -4,7 +4,7 @@ extends RefCounted
 ## cells are reserved so the god and other sites avoid them. A site with no
 ## progress for `construction.abandon_days` is abandoned and its delivered
 ## materials are left lying.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Data = preload("res://scripts/core/data.gd")
 

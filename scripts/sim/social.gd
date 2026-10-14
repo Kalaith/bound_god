@@ -2,7 +2,7 @@ extends RefCounted
 ## Resolves conversations with both people at hand: small talk (with gossip,
 ## sightings and designs passed on), insults and fights, flirting, making
 ## peace, comfort, and stories of the god. Bond changes reach the chronicle.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")

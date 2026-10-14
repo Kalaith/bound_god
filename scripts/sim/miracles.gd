@@ -3,7 +3,7 @@ extends RefCounted
 ## stands, paid from the Favour of that shrine; whispering to one person;
 ## transferring to another active shrine; and the avatar's position, which
 ## people can see. Every miracle is a visible event people interpret.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const FaithState = preload("res://scripts/agents/faith_state.gd")

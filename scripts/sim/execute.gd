@@ -1,7 +1,7 @@
 extends RefCounted
 ## Runs one tick of the current plan step, and recovers when a step fails:
 ## failure corrects beliefs so the next plan does not repeat the mistake.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Movement = preload("res://scripts/sim/movement.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")

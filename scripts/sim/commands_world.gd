@@ -2,7 +2,7 @@ extends RefCounted
 ## The god's commands beyond block edits: offering a design at the shrine
 ## and moving materials between the divine stock and a storage chest.
 ## Neither asks anyone to do anything; they change what people know and have.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Blueprints = preload("res://scripts/sim/blueprints.gd")
 const Template = preload("res://scripts/building/template.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")

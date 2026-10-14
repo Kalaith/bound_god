@@ -2,10 +2,8 @@ extends RefCounted
 ## M24 Look, sound and feel: localisation readiness (no literal player text
 ## in presentation, language overrides, the pseudo-language, action labels)
 ## and the new settings.
-const Data = preload("res://scripts/core/data.gd")
 const Text = preload("res://scripts/core/text.gd")
-const Keys = preload("res://scripts/core/key_bindings.gd")
-const Pad = preload("res://scripts/core/pad_bindings.gd")
+const TextCatalog = preload("res://addons/hatchery/core/text_catalog.gd")
 const SettingsStore = preload("res://scripts/core/settings_store.gd")
 
 
@@ -27,7 +25,7 @@ func check_no_literal_player_text_in_presentation():
 
 
 func check_every_action_has_words():
-	for action in Keys.ACTIONS.keys() + Pad.ACTIONS.keys():
+	for action in SettingsStore.KEY_ACTIONS.keys() + SettingsStore.PAD_ACTIONS.keys():
 		if not Text.has("action_" + str(action)):
 			return "action %s has no label" % action
 	for key in SettingsStore.DEFAULTS:
@@ -37,12 +35,24 @@ func check_every_action_has_words():
 
 
 func check_a_language_lays_over_english():
-	var base: Dictionary = {"a": "Tree", "b": "Hollow"}
-	Data.override_labels(base, {"a": "Arbre", "z": "stray"})
-	if base.a != "Arbre" or base.b != "Hollow" or base.has("z"):
+	var root: String = "user://checks/text"
+	DirAccess.make_dir_recursive_absolute(root + "/fr")
+	var english := FileAccess.open(root + "/text.json", FileAccess.WRITE)
+	english.store_string(JSON.stringify({"schema_version": 1, "labels": {"a": "Tree", "b": "Hollow"}}))
+	english.close()
+	var french := FileAccess.open(root + "/fr/text.json", FileAccess.WRITE)
+	french.store_string(JSON.stringify({"schema_version": 1, "labels": {"a": "Arbre", "z": "stray"}}))
+	french.close()
+	var catalog: RefCounted = TextCatalog.new([root + "/text.json"])
+	catalog.locale_root = root
+	catalog.set_locale("fr")
+	var base: Dictionary = catalog.labels().duplicate()
+	catalog.set_locale("xx")
+	var none: Dictionary = catalog.labels().duplicate()
+	if base.get("a") != "Arbre" or base.get("b") != "Hollow" or base.has("z"):
 		return "overrides gave %s" % str(base)
-	if not Data.locale_labels("xx").is_empty():
-		return "a language with no folder gave labels"
+	if none.get("a") != "Tree":
+		return "a language with no folder changed the labels: %s" % str(none)
 	return ""
 
 
@@ -69,8 +79,8 @@ func check_new_settings_default_and_validate():
 	store.values.ui_scale = 1.0
 	if absf(store.ui_scale() - 1.5) > 0.01:
 		return "the largest interface scale is %.2f" % store.ui_scale()
-	if not store.valid({"schema": 1, "values": {"ui_scale": 0.5, "captions": true}}):
+	if not store.file.accepts({"schema": 1, "values": {"ui_scale": 0.5, "captions": true}}):
 		return "a file with the new settings is refused"
-	if store.valid({"schema": 1, "values": {"captions": 3}}):
+	if store.file.accepts({"schema": 1, "values": {"captions": 3}}):
 		return "a mistyped setting is accepted"
 	return ""

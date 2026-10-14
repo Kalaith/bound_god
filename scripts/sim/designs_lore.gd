@@ -16,7 +16,7 @@ extends RefCounted
 ## nothing and cannot be met) until their day of return, kept in the
 ## settlement's record (`trips`). They bring back designs for what the
 ## settlement wants then, of any author, learned by everyone living there.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const AbstractBuild = preload("res://scripts/sim/abstract/abstract_build.gd")
 const SectHallWants = preload("res://scripts/sim/sect_hall_wants.gd")

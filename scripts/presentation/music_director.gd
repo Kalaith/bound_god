@@ -5,7 +5,10 @@ extends Node
 ## or a trial; meditation; a raid), and the mood chooses the scale, register,
 ## tempo and how often a note falls. Phrases come from a seeded stream so the
 ## score never loops audibly. Reads the simulation only; plays on the Music bus.
-const RATE: int = 22050
+const Synth = preload("res://addons/hatchery/audio/synth.gd")
+const VoicePool = preload("res://addons/hatchery/audio/voice_pool.gd")
+const RATE: int = Synth.RATE
+const PLUCK_PEAK: float = 20000.0 / 32767.0
 
 ## Semitone steps of the scales the moods use, from the drone's root.
 const SCALES: Dictionary = {
@@ -36,8 +39,7 @@ var _bell: AudioStreamWAV
 var _drum: AudioStreamWAV
 var _drones: Dictionary = {}
 var _drone := AudioStreamPlayer.new()
-var _voices: Array = []
-var _next_voice: int = 0
+var _voices: Node
 var _beat_left: float = 0.0
 var _beats: int = 0
 var _last_step: int = 4
@@ -52,25 +54,14 @@ func _ready() -> void:
 	_drone.bus = &"Music"
 	_drone.volume_db = -20.0
 	add_child(_drone)
-	for i in range(6):
-		var player := AudioStreamPlayer.new()
-		player.bus = &"Music"
-		add_child(player)
-		_voices.append(player)
+	_voices = VoicePool.new()
+	_voices.bus = &"Music"
+	add_child(_voices)
 
 
 ## A plucked string: a few partials, a sharp attack, a long decay.
 func _pluck(hz: float) -> AudioStreamWAV:
-	var seconds: float = 2.4
-	var count: int = int(seconds * RATE)
-	var data := PackedByteArray()
-	data.resize(count * 2)
-	for i in range(count):
-		var t: float = float(i) / RATE
-		var value: float = sin(TAU * hz * t) * 0.6 + sin(TAU * hz * 2.0 * t) * 0.25 * exp(-t * 3.0) + sin(TAU * hz * 3.0 * t) * 0.12 * exp(-t * 6.0)
-		value *= exp(-t * 1.6) * minf(t * 900.0, 1.0)
-		data.encode_s16(i * 2, int(clampf(value, -1.0, 1.0) * 20000.0))
-	return _stream(data)
+	return Synth.pluck(hz, 2.4, 1.6, PLUCK_PEAK)
 
 
 func _ring(hz: float, seconds: float) -> AudioStreamWAV:
@@ -116,11 +107,7 @@ func _drone_loop(ratios: Array, wobble: float) -> AudioStreamWAV:
 
 
 func _stream(data: PackedByteArray) -> AudioStreamWAV:
-	var stream := AudioStreamWAV.new()
-	stream.format = AudioStreamWAV.FORMAT_16_BITS
-	stream.mix_rate = RATE
-	stream.data = data
-	return stream
+	return Synth.stream(data)
 
 
 ## The mood the moment asks for.
@@ -179,8 +166,4 @@ func _process(delta: float) -> void:
 
 
 func _play(stream: AudioStreamWAV, volume_db: float) -> void:
-	var player: AudioStreamPlayer = _voices[_next_voice]
-	_next_voice = (_next_voice + 1) % _voices.size()
-	player.stream = stream
-	player.volume_db = volume_db
-	player.play()
+	_voices.play(stream, volume_db)

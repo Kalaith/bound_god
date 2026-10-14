@@ -2,7 +2,7 @@ extends RefCounted
 ## Deterministic valley generation from the world seed. Writes blocks into a
 ## VoxelWorld and returns resource sites and fixed features; draws randomness
 ## only from the RandomNumberGenerator it is given.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Template = preload("res://scripts/building/template.gd")

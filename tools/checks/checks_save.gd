@@ -4,6 +4,9 @@ extends RefCounted
 const Sim = preload("res://scripts/sim/sim.gd")
 const SimState = preload("res://scripts/sim/sim_state.gd")
 const SaveStore = preload("res://scripts/core/save_store.gd")
+const Campaign = preload("res://scripts/sim/campaign.gd")
+const CampaignState = preload("res://scripts/sim/campaign_state.gd")
+const WorldIO = preload("res://scripts/presentation/world_io.gd")
 
 
 func check_a_saved_world_continues_identically():
@@ -32,22 +35,42 @@ func check_a_save_survives_the_store_and_a_damaged_file():
 	var slot: String = "verification_m11"
 	var payload: Dictionary = {"meta.json": SaveStore.json_bytes({"schema_version": 1, "seed": sim.world_seed, "day": sim.calendar.day()}),
 		"sim.bin": var_to_bytes(saved.sim), "chunks.bin": var_to_bytes(saved.chunks), "templates.json": SaveStore.json_bytes(sim.god.offered)}
-	if not SaveStore.write(slot, payload) or not SaveStore.write(slot, payload):
-		return "the save could not be written: " + SaveStore.last_error
+	if not SaveStore.worlds.write(slot, payload) or not SaveStore.worlds.write(slot, payload):
+		return "the save could not be written: " + SaveStore.worlds.last_error
 	# Readable bytes that are not a world: the store must fall back to the backup.
-	var file := FileAccess.open(SaveStore.folder(slot) + "sim.bin", FileAccess.WRITE)
+	var file := FileAccess.open(SaveStore.worlds.folder(slot) + "sim.bin", FileAccess.WRITE)
 	file.store_buffer(var_to_bytes("damaged"))
 	file.close()
-	var files: Dictionary = SaveStore.read(slot, func(name: String, bytes: PackedByteArray) -> bool:
+	var files: Dictionary = SaveStore.worlds.read(slot, func(name: String, bytes: PackedByteArray) -> bool:
 		return name.ends_with(".json") or bytes_to_var(bytes) is Dictionary)
 	if files.is_empty():
-		return "a damaged save did not fall back to its backup: " + SaveStore.last_error
+		return "a damaged save did not fall back to its backup: " + SaveStore.worlds.last_error
 	var restored: RefCounted = SimState.restore(bytes_to_var(files["sim.bin"]), bytes_to_var(files["chunks.bin"]))
 	if restored.state_hash() != sim.state_hash():
 		return "the recovered save differs from what was written"
-	for name in DirAccess.get_files_at(SaveStore.folder(slot)):
-		DirAccess.remove_absolute(SaveStore.folder(slot) + name)
-	DirAccess.remove_absolute(SaveStore.folder(slot))
+	for name in DirAccess.get_files_at(SaveStore.worlds.folder(slot)):
+		DirAccess.remove_absolute(SaveStore.worlds.folder(slot) + name)
+	DirAccess.remove_absolute(SaveStore.worlds.folder(slot))
+	return ""
+
+
+## The lands beyond and the saga come back through the slot, not from the seed.
+func check_a_campaign_survives_the_store():
+	var campaign: RefCounted = Campaign.create(11, {"neighbours": 1})
+	campaign.book_closed = true
+	var saved: Dictionary = CampaignState.capture(campaign)
+	var slot: String = "verification_campaign"
+	var payload: Dictionary = {"meta.json": SaveStore.json_bytes({"schema_version": SimState.SCHEMA}),
+		"sim.bin": var_to_bytes(saved.sim), "chunks.bin": var_to_bytes(saved.chunks),
+		"regions.bin": var_to_bytes(saved.regions), "templates.json": SaveStore.json_bytes(campaign.regions[0].sim.god.offered)}
+	if not SaveStore.worlds.write(slot, payload):
+		return "the campaign could not be written: " + SaveStore.worlds.last_error
+	var back: RefCounted = WorldIO.load_slot(slot)
+	SaveStore.worlds.delete(slot)
+	if back == null:
+		return "the campaign did not load: " + SaveStore.worlds.last_error
+	if back.regions.size() != campaign.regions.size() or not back.book_closed:
+		return "the campaign came back as %d regions, book closed %s" % [back.regions.size(), back.book_closed]
 	return ""
 
 

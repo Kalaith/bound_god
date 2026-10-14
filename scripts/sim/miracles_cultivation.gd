@@ -3,7 +3,7 @@ extends RefCounted
 ## day of one person's own practice; Shield the Trial lowers the severity of
 ## a storm already called, never to nothing; Defy Heaven turns aside a death
 ## that storm would bring, and the breakthrough it leaves is imperfect.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 
 

@@ -4,7 +4,7 @@ extends RefCounted
 ## flatness, distance to the centre and an entrance facing home. Rejects
 ## overlaps, uneven ground (more than one block), water and cells other
 ## sites or buildings hold, and requires a path from the door to the stores.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Data = preload("res://scripts/core/data.gd")
 const FunctionRules = preload("res://scripts/building/function_rules.gd")

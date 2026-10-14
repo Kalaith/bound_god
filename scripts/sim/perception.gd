@@ -2,7 +2,7 @@ extends RefCounted
 ## What a person notices, every `perception_interval` ticks staggered by id:
 ## resource sites, people, their store's stock, structures, threats, and the
 ## god. Writes beliefs only; returns true when something demands a rethink.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Beliefs = preload("res://scripts/agents/beliefs.gd")

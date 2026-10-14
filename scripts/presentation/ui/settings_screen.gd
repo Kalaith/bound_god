@@ -9,8 +9,9 @@ signal changed
 
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
-const Keys = preload("res://scripts/core/key_bindings.gd")
-const Pad = preload("res://scripts/core/pad_bindings.gd")
+const SettingsStore = preload("res://scripts/core/settings_store.gd")
+const Keys = preload("res://addons/hatchery/input/key_bindings.gd")
+const Pad = preload("res://addons/hatchery/input/pad_bindings.gd")
 
 ## Sliders (settings key), toggles by section heading (settings key).
 const SLIDERS: Array[String] = ["master", "music", "effects", "look_sensitivity"]
@@ -139,7 +140,7 @@ func _build_keys() -> void:
 	grid.add_theme_constant_override("h_separation", 10)
 	grid.add_theme_constant_override("v_separation", 4)
 	holder.add_child(grid)
-	for action in Keys.ACTIONS:
+	for action in SettingsStore.KEY_ACTIONS:
 		var name_label: Label = Style.label(Text.label("action_" + action), 17)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(name_label)
@@ -156,7 +157,7 @@ func _build_keys() -> void:
 	pad_grid.columns = 2
 	pad_grid.add_theme_constant_override("h_separation", 10)
 	holder.add_child(pad_grid)
-	for action in Pad.ACTIONS:
+	for action in SettingsStore.PAD_ACTIONS:
 		var name_label: Label = Style.label(Text.label("action_" + action), 17)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		pad_grid.add_child(name_label)

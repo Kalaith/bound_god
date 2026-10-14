@@ -3,7 +3,7 @@ extends RefCounted
 ## what is open) and cooking at a kitchen. Each reads the person's beliefs
 ## and the visible job board.
 const Crafts = preload("res://scripts/sim/crafts.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")

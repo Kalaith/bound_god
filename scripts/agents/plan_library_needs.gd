@@ -1,7 +1,7 @@
 extends RefCounted
 ## Plans for bodily needs: eating, sleeping, shelter, safety, care and rest.
 ## Each goal ends with a cheap plan that always applies.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")

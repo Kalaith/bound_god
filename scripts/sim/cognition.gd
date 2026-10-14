@@ -2,7 +2,7 @@ extends RefCounted
 ## The deliberation cycle: when to reconsider, whether to switch goals, and
 ## choosing or replacing a plan. Commitment keeps people finishing what they
 ## start; a rival goal must beat the current one by a margin.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Mind = preload("res://scripts/agents/mind.gd")

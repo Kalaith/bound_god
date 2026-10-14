@@ -1,7 +1,7 @@
 extends RefCounted
 ## Work plans: gathering, hauling, building, repairing, and marking out a
 ## new site. Each reads the person's beliefs and the visible job board.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")

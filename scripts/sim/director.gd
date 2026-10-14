@@ -1,7 +1,7 @@
 extends RefCounted
 ## The world's pressures from outside: migrants drawn to settlements worth
 ## living in, and later raiders drawn to wealth. Every arrival has a cause.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Generation = preload("res://scripts/agents/generation.gd")
 const Population = preload("res://scripts/sim/population.gd")
 const Standing = preload("res://scripts/sim/standing.gd")

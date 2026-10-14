@@ -10,7 +10,7 @@ extends RefCounted
 ## they did; blows on the stand-in wound the outlaw, and the outlaw strikes
 ## back at whoever fights them. backstory.outlaw = {band, target, altar,
 ## proxy, home, looted, desecrated}.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Generation = preload("res://scripts/agents/generation.gd")
 const Movement = preload("res://scripts/sim/movement.gd")

@@ -2,7 +2,7 @@ extends RefCounted
 ## Faith plans: praying at the shrine they attend or where they stand,
 ## tending a shrine, restoring a fallen altar, telling the god's story and
 ## answering a request.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")

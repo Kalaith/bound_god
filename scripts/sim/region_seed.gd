@@ -5,7 +5,7 @@ extends RefCounted
 ## people with the archetype's culture and a share of cultivators of their
 ## faction's path, and their sect, founded long before the god woke. They
 ## have never heard of the god. Randomness from the region's own stream.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")

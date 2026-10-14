@@ -11,7 +11,7 @@ extends RefCounted
 ## road home and the relation's change are the campaign's (`sim.outbound`).
 ## A guest's record: backstory.guest = {region, home, sect, relation,
 ## admitted: -1 undecided | 0 refused | 1 admitted, trials: count on arrival, day}.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Regions = preload("res://scripts/sim/regions.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const Mind = preload("res://scripts/agents/mind.gd")

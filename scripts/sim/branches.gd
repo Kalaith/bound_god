@@ -7,7 +7,7 @@ extends RefCounted
 ## own choice (goal FOUND_BRANCH) and is chronicled with its cause.
 ## A branch sect is an ordinary sect with `parent` (the sect it came from,
 ## -1 once it breaks away) and `branch` (the place's label key).
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Mind = preload("res://scripts/agents/mind.gd")

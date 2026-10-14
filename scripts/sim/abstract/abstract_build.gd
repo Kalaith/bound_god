@@ -10,7 +10,7 @@ extends RefCounted
 ## finished (then the same completion as a builder's last block) or when the
 ## valley materialises.
 const Crafts = preload("res://scripts/sim/crafts.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Standing = preload("res://scripts/sim/standing.gd")

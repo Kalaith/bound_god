@@ -9,7 +9,7 @@ extends RefCounted
 ## hands out the tree's fruit, and neighbours grow fond and pair off.
 ## A pinned person's trial stops meditation instead (unless a protect rule
 ## says what to do), so the god can watch it happen.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Guests = preload("res://scripts/sim/guests.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")

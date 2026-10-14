@@ -1,7 +1,7 @@
 extends RefCounted
 ## Social plans: conversations of each kind, helping someone who asked,
 ## mental breaks, and moving to another settlement or leaving the valley.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")

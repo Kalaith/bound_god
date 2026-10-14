@@ -11,7 +11,7 @@ extends RefCounted
 const Template = preload("res://scripts/building/template.gd")
 const Construction = preload("res://scripts/sim/construction.gd")
 const Text = preload("res://scripts/core/text.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 
 static func daily(sim: RefCounted) -> void:

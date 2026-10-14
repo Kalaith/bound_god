@@ -4,7 +4,7 @@ extends RefCounted
 ## threshold turns to path, which navigation prefers slightly; a path walked
 ## so little that its wear falls away grasses over again. Only the detailed
 ## world walks: while abstract, paths keep as they were.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 
 ## Vector2i column -> wear (kept while it is above nothing or the ground is path)

@@ -3,7 +3,7 @@ extends RefCounted
 const VoxelWorld = preload("res://scripts/world/voxel_world.gd")
 const WorldGen = preload("res://scripts/world/world_gen.gd")
 const Mesher = preload("res://scripts/world/chunk_mesher.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 
 func _valley(seed: int) -> Array:

@@ -2,7 +2,7 @@ extends RefCounted
 ## Defence and scouting steps.
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 const Op = Plans.Op
 const Fail = Plans.Fail

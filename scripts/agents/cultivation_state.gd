@@ -12,7 +12,7 @@ extends RefCounted
 ##  elixir_factor, pill, warding, longevity, alchemist}
 ## Most people have little talent; would-be cultivators drawn by the tree's
 ## qi arrive with more of it and a stronger drive.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 
 

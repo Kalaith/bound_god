@@ -10,7 +10,7 @@ extends RefCounted
 const Sim = preload("res://scripts/sim/sim.gd")
 const AbstractWorld = preload("res://scripts/sim/abstract/abstract_world.gd")
 const Regions = preload("res://scripts/sim/regions.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Miracles = preload("res://scripts/sim/miracles.gd")
 const Travel = preload("res://scripts/sim/travel.gd")
 const Relations = preload("res://scripts/sim/relations.gd")

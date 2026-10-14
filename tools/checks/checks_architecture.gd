@@ -4,7 +4,7 @@ extends RefCounted
 ## proposing them, blueprints, devised homes and worn paths.
 const Sim = preload("res://scripts/sim/sim.gd")
 const Data = preload("res://scripts/core/data.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Template = preload("res://scripts/building/template.gd")
 const Build = preload("res://tools/checks/build.gd")
 const Meditation = preload("res://tools/checks/meditation.gd")

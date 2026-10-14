@@ -3,7 +3,7 @@ extends RefCounted
 ## actions in push order (lowest id first when two want the same thing),
 ## then conversations, then message delivery to inboxes.
 const Crafts = preload("res://scripts/sim/crafts.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Beliefs = preload("res://scripts/agents/beliefs.gd")

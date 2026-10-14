@@ -8,7 +8,7 @@ extends RefCounted
 ## (`next_wayfarer`, `guests`). Their comings draw on a stream of their own,
 ## seeded from the world, the settlement and the day, so the valley's other
 ## chances fall as they would without them.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Generation = preload("res://scripts/agents/generation.gd")
 const Population = preload("res://scripts/sim/population.gd")
 const Lore = preload("res://scripts/sim/designs_lore.gd")

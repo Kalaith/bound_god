@@ -4,7 +4,7 @@ extends RefCounted
 ## the shrine's believers, who each decide whether to take them; a taken
 ## request is an ordinary intention that can fail, be abandoned or succeed.
 ## Boons are paid from the shrine's Favour on success.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const FaithState = preload("res://scripts/agents/faith_state.gd")

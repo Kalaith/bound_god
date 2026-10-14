@@ -3,7 +3,7 @@ extends CharacterBody3D
 ## by itself. It is bound: after moving it is pushed back inside the presence
 ## zone of its shrine (`zone_center`, `zone_radius`). Movement never waits on
 ## the simulation or the UI, except for modal screens that take focus.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const FigureRig = preload("res://scripts/presentation/figure_rig.gd")
 ## A spirit in pale robes: jade-white silk bordered in jade, a gold sash,
 ## ink-black hair and a faint gold halo.

@@ -5,7 +5,7 @@ extends RefCounted
 ## of, retreat) and turn back when defenders outnumber them. Both walk the
 ## same navigation grid as people. Their harm goes straight to the sim.
 const Schools = preload("res://scripts/sim/schools.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Movement = preload("res://scripts/sim/movement.gd")

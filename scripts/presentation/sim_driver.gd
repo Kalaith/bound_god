@@ -5,7 +5,7 @@ extends Node
 ## spiralling. Resting runs many days behind an overlay with a larger budget.
 signal rest_finished(summary_from_tick: int)
 signal region_changed
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const AbstractWorld = preload("res://scripts/sim/abstract/abstract_world.gd")
 const DeliberationCultivation = preload("res://scripts/agents/deliberation_cultivation.gd")
 

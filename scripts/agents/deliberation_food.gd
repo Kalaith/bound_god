@@ -3,7 +3,7 @@ extends RefCounted
 ## food buildings a settlement lacks. Like all work, its pull comes from the
 ## settlement's culture weight, the person's aptitude and how much there is
 ## to do, never from an assignment.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")

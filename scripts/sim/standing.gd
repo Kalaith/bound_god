@@ -3,7 +3,7 @@ extends RefCounted
 ## only from what it has (people, homes, food in its chests, the functions
 ## standing in its area and a living shrine). A village is the self-sustaining
 ## state the first steps grow toward. Rises and falls are chronicled.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Food = preload("res://scripts/sim/food.gd")
 
 const LEVELS: Array[String] = ["camp", "hamlet", "village"]

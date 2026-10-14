@@ -2,7 +2,7 @@ extends RefCounted
 ## Faith inside people, changed only by experience and read through their
 ## nature: seeing the god, witnessing miracles, answered and unheard prayers,
 ## stories, the devotion of friends, and slow neglect.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const FaithState = preload("res://scripts/agents/faith_state.gd")
 const Personality = preload("res://scripts/agents/personality.gd")

@@ -6,7 +6,7 @@ const SaveStore = preload("res://scripts/core/save_store.gd")
 const SimState = preload("res://scripts/sim/sim_state.gd")
 const CampaignState = preload("res://scripts/sim/campaign_state.gd")
 const Text = preload("res://scripts/core/text.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 var sim: RefCounted
 ## Every region is saved together (M22).
@@ -19,9 +19,9 @@ var played_seconds: float = 0.0
 var _last_dawn_day: int = -1
 
 
-## A restored campaign from `slot_name`, or null with SaveStore.last_error set.
+## A restored campaign from `slot_name`, or null with SaveStore.worlds.last_error set.
 static func load_slot(slot_name: String) -> RefCounted:
-	var files: Dictionary = SaveStore.read(slot_name, func(name: String, bytes: PackedByteArray) -> bool:
+	var files: Dictionary = SaveStore.worlds.read(slot_name, func(name: String, bytes: PackedByteArray) -> bool:
 		if name.ends_with(".json"):
 			return SaveStore.parse_json(bytes) is Dictionary
 		return bytes_to_var(bytes) is Dictionary)
@@ -34,7 +34,7 @@ static func load_slot(slot_name: String) -> RefCounted:
 	if problem.is_empty() and regions != null:
 		problem = CampaignState.problem(regions)
 	if not problem.is_empty():
-		SaveStore.last_error = Text.label(problem)
+		SaveStore.worlds.last_error = Text.label(problem)
 		return null
 	return CampaignState.restore(state, chunks, regions)
 
@@ -52,9 +52,9 @@ func save(reason: String = "save_done") -> bool:
 	}
 	var payload: Dictionary = {"meta.json": SaveStore.json_bytes(meta), "sim.bin": var_to_bytes(saved.sim),
 		"chunks.bin": var_to_bytes(saved.chunks), "regions.bin": var_to_bytes(saved.regions), "templates.json": SaveStore.json_bytes(sim.god.offered)}
-	var ok: bool = SaveStore.write(slot, payload)
+	var ok: bool = SaveStore.worlds.write(slot, payload)
 	if hud != null:
-		hud.flash(Text.label(reason) if ok else SaveStore.last_error, not ok)
+		hud.flash(Text.label(reason) if ok else SaveStore.worlds.last_error, not ok)
 	return ok
 
 

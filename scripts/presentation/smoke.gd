@@ -29,10 +29,10 @@ func _run() -> String:
 		return "the new world has nobody in it"
 	main.world_io.slot = SLOT
 	if not main.world_io.save():
-		return "saving failed: " + SaveStore.last_error
+		return "saving failed: " + SaveStore.worlds.last_error
 	var back: RefCounted = WorldIO.load_slot(SLOT)
 	if back == null:
-		return "loading failed: " + SaveStore.last_error
+		return "loading failed: " + SaveStore.worlds.last_error
 	var again: RefCounted = back.active_sim()
 	if again.calendar.tick != sim.calendar.tick or again.present_count() != sim.present_count() or back.regions.size() != main.campaign.regions.size():
 		return "the loaded world differs (tick %d/%d, people %d/%d)" % [again.calendar.tick, sim.calendar.tick, again.present_count(), sim.present_count()]
@@ -40,7 +40,7 @@ func _run() -> String:
 
 
 func _finish(problem: String) -> void:
-	var folder: String = SaveStore.folder(SLOT)
+	var folder: String = SaveStore.worlds.folder(SLOT)
 	for file in DirAccess.get_files_at(folder):
 		DirAccess.remove_absolute(folder + file)
 	DirAccess.remove_absolute(folder)

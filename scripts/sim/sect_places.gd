@@ -3,7 +3,7 @@ extends RefCounted
 ## a mat goes faster, and tribulation grounds, where a trial counts as the
 ## tree's sanctuary within its reach and formation stones draw the lightning.
 ## Both are ordinary structures; this only finds them and their parts.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 const NONE := Vector3i(-1, -1, -1)
 

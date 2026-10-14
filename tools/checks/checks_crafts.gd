@@ -4,7 +4,7 @@ extends RefCounted
 ## forged at an anvil; who wants the furnace and the anvil; the abstract
 ## counterparts.
 const Sim = preload("res://scripts/sim/sim.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const EffectsApply = preload("res://scripts/sim/effects_apply.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
 const Personality = preload("res://scripts/agents/personality.gd")

@@ -1,7 +1,7 @@
 extends RefCounted
 ## Helpers shared by the plan library files: nearest places, known sites,
 ## friends nearby and wandering, all read from beliefs and visible state.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Homes = preload("res://scripts/sim/homes.gd")
 

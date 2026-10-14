@@ -21,3 +21,6 @@ Desktop.ini
 
 # Local diagnostic probes, never committed.
 tools/scratch/
+
+# The shared godot_toolkit, linked in by ../godot_toolkit/tools/Link-Toolkit.ps1.
+addons/hatchery/

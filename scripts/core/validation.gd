@@ -3,11 +3,13 @@ extends RefCounted
 ## headless runner can feed a deliberately broken copy; `run()` checks the
 ## shipped files. An empty result means the data is sound.
 const Data = preload("res://scripts/core/data.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Text = preload("res://scripts/core/text.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const ValidationFood = preload("res://scripts/core/validation_food.gd")
 const ValidationCultivation = preload("res://scripts/core/validation_cultivation.gd")
 const ValidationSeasons = preload("res://scripts/core/validation_seasons.gd")
 const ValidationAlchemy = preload("res://scripts/core/validation_alchemy.gd")
+const DataRules = preload("res://addons/hatchery/core/data_rules.gd")
 
 ## Code records these thoughts by id, so the catalog must hold them.
 const REQUIRED_THOUGHTS: Array[String] = [
@@ -57,27 +59,20 @@ static func run() -> Array[String]:
 	var trait_ids: Array = []
 	for entry in Data.traits():
 		trait_ids.append(entry.get("id"))
-	errors.append_array(ValidationCultivation.check(Data.file("cultivation"), Data.labels(), trait_ids))
-	errors.append_array(ValidationCultivation.check_tribulations(Data.file("tribulations"), Data.realms().size(), Data.file("blocks"), Data.labels()))
-	errors.append_array(ValidationCultivation.check_tree(Data.file("tree"), Data.file("tribulations"), Data.labels()))
-	errors.append_array(ValidationSeasons.check_weather(Data.file("weather"), Data.labels()))
-	errors.append_array(ValidationAlchemy.check(Data.file("alchemy"), Data.file("recipes"), Data.file("blocks"), Data.labels(), FUNCTION_IDS))
-	var seen: Dictionary = {}
+	errors.append_array(ValidationCultivation.check(Data.file("cultivation"), Text.catalog.labels(), trait_ids))
+	errors.append_array(ValidationCultivation.check_tribulations(Data.file("tribulations"), Data.realms().size(), Data.file("blocks"), Text.catalog.labels()))
+	errors.append_array(ValidationCultivation.check_tree(Data.file("tree"), Data.file("tribulations"), Text.catalog.labels()))
+	errors.append_array(ValidationSeasons.check_weather(Data.file("weather"), Text.catalog.labels()))
+	errors.append_array(ValidationAlchemy.check(Data.file("alchemy"), Data.file("recipes"), Data.file("blocks"), Text.catalog.labels(), FUNCTION_IDS))
 	for name in Data.TEXT_FILES:
 		errors.append_array(check_text(Data.file(name)))
-		for key in Data.file(name).get("labels", {}):
-			if seen.has(key):
-				errors.append("text: label " + str(key) + " is defined in both " + seen[key] + " and " + name)
-			seen[key] = name
+	# Keys defined in two catalogs.
+	errors.append_array(Text.catalog.problems())
 	return errors
 
 
-static func _number(value: Variant) -> bool:
-	return (value is float or value is int) and is_finite(float(value))
-
-
 static func _schema(data: Dictionary, name: String, errors: Array[String]) -> void:
-	if not _number(data.get("schema_version")) or int(data.schema_version) != 1:
+	if not DataRules.finite(data.get("schema_version")) or int(data.schema_version) != 1:
 		errors.append(name + ": schema_version must be 1")
 
 
@@ -99,7 +94,7 @@ static func check_blocks(data: Dictionary) -> Array[String]:
 			errors.append("blocks: an entry is not an object")
 			continue
 		var label: String = "blocks[" + str(entry.get("name", "?")) + "]"
-		if not _number(entry.get("id")) or int(entry.id) < 0 or int(entry.id) > 255:
+		if not DataRules.finite(entry.get("id")) or int(entry.id) < 0 or int(entry.id) > 255:
 			errors.append(label + ": id must be 0..255")
 			continue
 		if ids.has(int(entry.id)):
@@ -113,18 +108,18 @@ static func check_blocks(data: Dictionary) -> Array[String]:
 				errors.append(label + ": " + key + " must be true or false")
 		if not entry.get("resource") is String or (entry.resource != "" and not resources.has(entry.resource)):
 			errors.append(label + ": unknown resource " + str(entry.get("resource")))
-		if not _number(entry.get("yield")):
+		if not DataRules.finite(entry.get("yield")):
 			errors.append(label + ": yield must be a number")
 		if not shapes.has(entry.get("shape")):
 			errors.append(label + ": unknown shape " + str(entry.get("shape")))
 		for key in ["atlas", "atlas_top", "atlas_bottom", "atlas_empty"]:
 			if key == "atlas" or entry.has(key):
 				var tile: Variant = entry.get(key)
-				if not tile is Array or tile.size() != 2 or not _number(tile[0]) or not _number(tile[1]) \
+				if not tile is Array or tile.size() != 2 or not DataRules.finite(tile[0]) or not DataRules.finite(tile[1]) \
 						or int(tile[0]) >= int(size[0]) or int(tile[1]) >= int(size[1]):
 					errors.append(label + ": " + key + " is outside the atlas")
 		for tile in entry.get("atlas_stages", []):
-			if not tile is Array or tile.size() != 2 or not _number(tile[0]) or not _number(tile[1]) \
+			if not tile is Array or tile.size() != 2 or not DataRules.finite(tile[0]) or not DataRules.finite(tile[1]) \
 					or int(tile[0]) >= int(size[0]) or int(tile[1]) >= int(size[1]):
 				errors.append(label + ": a growth stage tile is outside the atlas")
 		if entry.has("component") and not components.has(entry.component):
@@ -175,7 +170,7 @@ static func check_people(data: Dictionary) -> Array[String]:
 			errors.append("people: ambition ids must be unique strings")
 			continue
 		ambition_ids[entry.id] = true
-		if not AMBITION_KINDS.has(entry.get("kind")) or not _number(entry.get("target")):
+		if not AMBITION_KINDS.has(entry.get("kind")) or not DataRules.finite(entry.get("target")):
 			errors.append("people: ambition " + entry.id + " needs a known kind and a target")
 	if ambition_ids.is_empty():
 		errors.append("people: at least one ambition is required")
@@ -202,7 +197,7 @@ static func check_society(data: Dictionary) -> Array[String]:
 			errors.append("society: thought ids must be unique strings")
 			continue
 		ids[entry.id] = true
-		if not _number(entry.get("mood")) or not _number(entry.get("days")) or not _number(entry.get("max_stack")) \
+		if not DataRules.finite(entry.get("mood")) or not DataRules.finite(entry.get("days")) or not DataRules.finite(entry.get("max_stack")) \
 				or not entry.get("text") is String:
 			errors.append("society: thought " + entry.id + " needs text, mood, days and max_stack")
 	for required in REQUIRED_THOUGHTS:
@@ -220,7 +215,7 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 		names[entry.get("name")] = true
 	var seen: Dictionary = {}
 	for rule in data.get("functions", []):
-		if not rule is Dictionary or not rule.get("requires") is Dictionary or not rule.get("requires_any") is Array or not rule.get("roofed") is Array or not rule.get("capacity") is Dictionary or not _number(rule.get("roof_reach")):
+		if not rule is Dictionary or not rule.get("requires") is Dictionary or not rule.get("requires_any") is Array or not rule.get("roofed") is Array or not rule.get("capacity") is Dictionary or not DataRules.finite(rule.get("roof_reach")):
 			errors.append("templates: malformed function rule")
 			continue
 		if not FUNCTION_IDS.has(rule.get("id")):
@@ -228,7 +223,7 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 			continue
 		seen[rule.id] = true
 		for key in rule.get("requires", {}):
-			if not _number(rule.requires[key]) or float(rule.requires[key]) <= 0:
+			if not DataRules.finite(rule.requires[key]) or float(rule.requires[key]) <= 0:
 				errors.append("templates: component count must be positive")
 			if not components.has(key):
 				errors.append("templates: " + rule.id + " requires unknown component " + key)
@@ -239,18 +234,18 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 			if not key in ["beds", "stock", "workers", "sleepers", "seats", "plots", "furrows", "cooks", "grain", "mats", "formations", "shelves", "cots", "tablets", "furnaces", "anvils", "mortars", "herb_beds"] or not (rule.capacity[key] in components or rule.capacity[key] == "roofed_floor"):
 				errors.append("templates: unknown capacity mapping")
 		for key in rule.get("at_most", {}):
-			if not rule.requires.has(key) or not _number(rule.at_most[key]) or float(rule.at_most[key]) < float(rule.requires[key]):
+			if not rule.requires.has(key) or not DataRules.finite(rule.at_most[key]) or float(rule.at_most[key]) < float(rule.requires[key]):
 				errors.append("templates: " + rule.id + " caps a component it does not require, or below what it requires")
 		for name in rule.get("requires_blocks", {}):
-			if not names.has(name) or not _number(rule.requires_blocks[name]):
+			if not names.has(name) or not DataRules.finite(rule.requires_blocks[name]):
 				errors.append("templates: " + rule.id + " requires unknown block " + str(name))
 		for other in rule.get("apart_from", {}):
-			if not FUNCTION_IDS.has(other) or not _number(rule.apart_from[other]):
+			if not FUNCTION_IDS.has(other) or not DataRules.finite(rule.apart_from[other]):
 				errors.append("templates: " + rule.id + " keeps apart from unknown function " + str(other))
-		if rule.has("qi_at_least") and (not _number(rule.qi_at_least) or rule.requires.is_empty()):
+		if rule.has("qi_at_least") and (not DataRules.finite(rule.qi_at_least) or rule.requires.is_empty()):
 			errors.append("templates: " + rule.id + " has a qi threshold but no component to measure it at")
 		for key in ["sky_or_tree_within", "min_roofed_floor"]:
-			if rule.has(key) and (not _number(rule[key]) or float(rule[key]) < 0):
+			if rule.has(key) and (not DataRules.finite(rule[key]) or float(rule[key]) < 0):
 				errors.append("templates: invalid " + key)
 	for id in FUNCTION_IDS:
 		if not seen.has(id):
@@ -263,20 +258,20 @@ static func check_templates(data: Dictionary, blocks: Dictionary) -> Array[Strin
 		if not FUNCTION_IDS.has(renovation.get("on")) or not FUNCTION_IDS.has(renovation.get("gives")):
 			errors.append("templates: renovation " + renovation.id + " names an unknown function")
 		for name in renovation.adds:
-			if not names.has(name) or not _number(renovation.adds[name]) or int(renovation.adds[name]) <= 0:
+			if not names.has(name) or not DataRules.finite(renovation.adds[name]) or int(renovation.adds[name]) <= 0:
 				errors.append("templates: renovation " + renovation.id + " adds an unknown block " + str(name))
 		for key in renovation.needs:
-			if not components.has(key) or not _number(renovation.needs[key]):
+			if not components.has(key) or not DataRules.finite(renovation.needs[key]):
 				errors.append("templates: renovation " + renovation.id + " needs an unknown component " + str(key))
 	var limits: Variant = data.get("limits", {}).get("max_size")
 	if not limits is Array or limits.size() != 3:
 		errors.append("templates: limits.max_size must be [x, y, z]")
 	else:
 		for value in limits:
-			if not _number(value) or float(value) < 1 or float(value) != floor(float(value)):
+			if not DataRules.finite(value) or float(value) < 1 or float(value) != floor(float(value)):
 				errors.append("templates: size limits must be positive integers")
 	for key in ["max_palette", "max_file_bytes"]:
-		if not _number(data.get("limits", {}).get(key)) or float(data.limits[key]) < 1:
+		if not DataRules.finite(data.get("limits", {}).get(key)) or float(data.limits[key]) < 1:
 			errors.append("templates: missing or invalid " + key)
 	for starter in data.get("starters", []):
 		var label: String = "templates: starter " + str(starter.get("id"))
@@ -327,7 +322,7 @@ static func check_miracles(data: Dictionary) -> Array[String]:
 		if entry.get("aspect") != "" and not aspects.has(entry.get("aspect")):
 			errors.append("miracles: " + entry.id + " has an unknown aspect")
 		for key in ["cost", "radius", "renown_required"]:
-			if not _number(entry.get(key)):
+			if not DataRules.finite(entry.get(key)):
 				errors.append("miracles: " + entry.id + " needs a numeric " + key)
 	return errors
 

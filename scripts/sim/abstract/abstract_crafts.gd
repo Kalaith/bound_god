@@ -3,7 +3,7 @@ extends RefCounted
 ## `abstract_alchemy.gd`'s (M20b); where a smithy stands, ore and wood are
 ## forged into tools while hands lack them. Tools in the stores quicken the
 ## settlement's labour and wear out with it.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Crafts = preload("res://scripts/sim/crafts.gd")
 const Kitchens = preload("res://scripts/sim/kitchens.gd")
 const AbstractPeople = preload("res://scripts/sim/abstract/abstract_people.gd")

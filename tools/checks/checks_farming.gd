@@ -14,7 +14,7 @@ const Generation = preload("res://scripts/agents/generation.gd")
 const Population = preload("res://scripts/sim/population.gd")
 const DeliberationFood = preload("res://scripts/agents/deliberation_food.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const ExecuteFaith = preload("res://scripts/sim/execute_faith.gd")
 
 

@@ -76,7 +76,7 @@ func _build() -> void:
 		return
 	continue_button = Style.button(Text.label("title_continue"), true)
 	continue_button.pressed.connect(_continue)
-	continue_button.disabled = not SaveStore.exists(Session.slot)
+	continue_button.disabled = not SaveStore.worlds.exists(Session.slot)
 	_menu.add_child(continue_button)
 	_menu.add_child(Style.label(Text.label("title_seed"), 16, Style.GOLD))
 	var row := HBoxContainer.new()
@@ -134,7 +134,7 @@ func _new_world() -> void:
 
 
 func _continue() -> void:
-	if not SaveStore.exists(Session.slot):
+	if not SaveStore.worlds.exists(Session.slot):
 		notice.text = Text.label("title_no_save")
 		return
 	Session.mode = "load"

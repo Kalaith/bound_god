@@ -1,7 +1,7 @@
 extends RefCounted
 ## The first people and places: the tree hollow where two travellers arrive,
 ## and the ridge hamlet of miners who have never heard of the god.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Generation = preload("res://scripts/agents/generation.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Movement = preload("res://scripts/sim/movement.gd")

@@ -1,6 +1,6 @@
 extends RefCounted
 ## Births, ageing, deaths and departures.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Relics = preload("res://scripts/sim/relics.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Data = preload("res://scripts/core/data.gd")

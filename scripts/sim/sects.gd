@@ -7,7 +7,7 @@ extends RefCounted
 ## id -> {id, name: {adjective, noun} label keys, settlement_id, founded_tick, founder,
 ##        master, members: {agent id: rank}, doctrine: {openness, martial, secrecy, mercy, ambition},
 ##        manuals: Array of technique ids its dead teachers left}
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Mind = preload("res://scripts/agents/mind.gd")

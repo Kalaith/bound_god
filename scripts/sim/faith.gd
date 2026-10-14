@@ -4,7 +4,7 @@ extends RefCounted
 ## Support (devotion of recent worshippers) makes it active; Favour from
 ## prayers pays for miracles there; condition decays unless tended. Losing
 ## the shrine the god stands at expels the avatar, or leaves the god dormant.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Text = preload("res://scripts/core/text.gd")
 const FaithPeople = preload("res://scripts/sim/faith_people.gd")

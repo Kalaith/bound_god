@@ -4,6 +4,7 @@ extends RefCounted
 ## recipe that makes each and a label; alchemy buildings that are functions
 ## with rising tiers; the toxicity and refining numbers.
 const Calendar = preload("res://scripts/sim/calendar.gd")
+const DataRules = preload("res://addons/hatchery/core/data_rules.gd")
 
 const GROWS: Array[String] = ["deep_qi", "shade", "scar", "waterside"]
 const USES: Array[String] = ["trial", "sitting", "heal", "cleanse", "longevity"]
@@ -13,17 +14,13 @@ const NEEDED: Array[String] = ["healing_draught", "awakening_tea", "pill", "qi_p
 const USE_KEYS: Dictionary = {"trial": ["preparation", "severity"], "sitting": ["factor", "days"], "heal": ["heal", "mend"], "cleanse": [], "longevity": ["years"]}
 
 
-static func _number(value: Variant) -> bool:
-	return (value is float or value is int) and is_finite(float(value))
-
-
 static func _share(value: Variant) -> bool:
-	return _number(value) and float(value) >= 0.0 and float(value) <= 1.0
+	return DataRules.finite(value) and float(value) >= 0.0 and float(value) <= 1.0
 
 
 static func check(data: Dictionary, recipes: Dictionary, blocks: Dictionary, labels: Dictionary, functions: Array) -> Array[String]:
 	var errors: Array[String] = []
-	if not _number(data.get("schema_version")) or int(data.schema_version) != 1:
+	if not DataRules.finite(data.get("schema_version")) or int(data.schema_version) != 1:
 		errors.append("alchemy: schema_version must be 1")
 	var resources: Array = blocks.get("resources", [])
 	var block_names: Dictionary = {}
@@ -33,8 +30,8 @@ static func check(data: Dictionary, recipes: Dictionary, blocks: Dictionary, lab
 	_elixirs(data, recipes, resources, labels, errors)
 	_halls(data, functions, blocks.get("components", []), errors)
 	var garden: Variant = data.get("garden")
-	if not garden is Dictionary or not _share(garden.get("qi")) or not _number(garden.get("ripen")) or float(garden.ripen) < 1.0 \
-			or not _number(garden.get("per_day")) or int(garden.per_day) < 1:
+	if not garden is Dictionary or not _share(garden.get("qi")) or not DataRules.finite(garden.get("ripen")) or float(garden.ripen) < 1.0 \
+			or not DataRules.finite(garden.get("per_day")) or int(garden.per_day) < 1:
 		errors.append("alchemy: garden needs qi (0-1), ripen (1+) and per_day (1+)")
 	var toxicity: Variant = data.get("toxicity")
 	if not toxicity is Dictionary:
@@ -53,7 +50,7 @@ static func check(data: Dictionary, recipes: Dictionary, blocks: Dictionary, lab
 		var bonus: Variant = refining.get("tier_bonus")
 		if not bonus is Array or bonus.size() != 5:
 			errors.append("alchemy.refining: tier_bonus needs one share per tier 0-4")
-		if not _number(refining.get("alchemist_level")) or not _number(refining.get("alchemist_pull")):
+		if not DataRules.finite(refining.get("alchemist_level")) or not DataRules.finite(refining.get("alchemist_pull")):
 			errors.append("alchemy.refining: alchemist_level and alchemist_pull must be numbers")
 	return errors
 
@@ -64,7 +61,7 @@ static func _herbs(data: Dictionary, resources: Array, block_names: Dictionary, 
 		errors.append("alchemy: herb_search is missing")
 	else:
 		for key in ["reach", "tries", "water_reach", "waterside_reach"]:
-			if not _number(search.get(key)) or float(search[key]) < 1.0:
+			if not DataRules.finite(search.get(key)) or float(search[key]) < 1.0:
 				errors.append("alchemy.herb_search: " + key + " must be at least 1")
 	var list: Variant = data.get("herbs")
 	if not list is Array or list.is_empty():
@@ -87,7 +84,7 @@ static func _herbs(data: Dictionary, resources: Array, block_names: Dictionary, 
 		if not _share(entry.get("qi")):
 			errors.append(label + ": qi must be from 0 to 1")
 		for key in ["ripen_days", "most", "per_day"]:
-			if not _number(entry.get(key)) or int(entry[key]) < 1:
+			if not DataRules.finite(entry.get(key)) or int(entry[key]) < 1:
 				errors.append(label + ": " + key + " must be at least 1")
 		var seasons: Variant = entry.get("seasons")
 		if not seasons is Array or seasons.is_empty():
@@ -131,10 +128,10 @@ static func _elixirs(data: Dictionary, recipes: Dictionary, resources: Array, la
 		if not USES.has(entry.get("use")):
 			errors.append(label + ": use must be one of " + str(USES))
 			continue
-		if not _share(entry.get("toxicity")) or not _number(entry.get("priority")) or float(entry.priority) <= 0.0:
+		if not _share(entry.get("toxicity")) or not DataRules.finite(entry.get("priority")) or float(entry.priority) <= 0.0:
 			errors.append(label + ": toxicity (0-1) and a positive priority are needed")
 		for key in USE_KEYS[entry.use]:
-			if not _number(entry.get(key)) or float(entry[key]) < 0.0:
+			if not DataRules.finite(entry.get(key)) or float(entry[key]) < 0.0:
 				errors.append(label + ": " + key + " must be a number")
 		if entry.use == "sitting" and not entry.get("realm") in ["mortal", "cultivator"]:
 			errors.append(label + ": realm must be mortal or cultivator")
@@ -156,7 +153,7 @@ static func _halls(data: Dictionary, functions: Array, components: Array, errors
 			errors.append("alchemy.halls: each needs a known function")
 			continue
 		var label: String = "alchemy.halls[" + str(entry.function) + "]"
-		if not _number(entry.get("tier")) or int(entry.tier) != tier + 1:
+		if not DataRules.finite(entry.get("tier")) or int(entry.tier) != tier + 1:
 			errors.append(label + ": tiers must rise by one from 1")
 		tier = int(entry.get("tier", tier + 1))
 		var crafters: Variant = entry.get("crafters")
@@ -164,7 +161,7 @@ static func _halls(data: Dictionary, functions: Array, components: Array, errors
 			errors.append(label + ": crafters must name components")
 		else:
 			for component in crafters:
-				if not components.has(component) or not _number(crafters[component]):
+				if not components.has(component) or not DataRules.finite(crafters[component]):
 					errors.append(label + ": unknown crafter component " + str(component))
-		if not _number(entry.get("crafters_most")) or int(entry.crafters_most) < 1:
+		if not DataRules.finite(entry.get("crafters_most")) or int(entry.crafters_most) < 1:
 			errors.append(label + ": crafters_most must be at least 1")

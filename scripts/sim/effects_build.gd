@@ -1,7 +1,7 @@
 extends RefCounted
 ## Construction effects: marking a site, delivering materials, placing and
 ## repairing blocks, and finishing a building with the reason it was built.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Personality = preload("res://scripts/agents/personality.gd")

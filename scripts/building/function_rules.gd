@@ -3,7 +3,7 @@ extends RefCounted
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const RoomProbe = preload("res://scripts/world/room_probe.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Qi = preload("res://scripts/sim/qi.gd")
 
 ## Every function a structure can have, in a fixed order: goal targets and

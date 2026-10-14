@@ -5,7 +5,7 @@ extends RefCounted
 ## gains weeds, which stop its growth and halve what it yields until someone
 ## tends it. Winter kills whatever still stands. Sowing, tending and reaping
 ## are people's work, applied through Effects.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")

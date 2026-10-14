@@ -4,7 +4,7 @@ extends RefCounted
 const Text = preload("res://scripts/core/text.gd")
 const FaithState = preload("res://scripts/agents/faith_state.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const StandingText = preload("res://scripts/presentation/ui/standing_text.gd")
 

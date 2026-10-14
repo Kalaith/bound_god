@@ -2,7 +2,7 @@ extends RefCounted
 ## What counts as food and how far it goes. Each food restores a set amount
 ## of the Food need when eaten; a settlement's food days are the food in its
 ## chests against what its people eat in a day.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 
 static func is_food(resource: String) -> bool:

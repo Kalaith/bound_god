@@ -5,7 +5,7 @@ extends RefCounted
 ## own goods (a bin holds grain only). Food that spoils is kept in dated lots.
 ## The camp is where people meet and where goods are set down loose while
 ## there is no chest with room; loose goods are never counted as stock.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 

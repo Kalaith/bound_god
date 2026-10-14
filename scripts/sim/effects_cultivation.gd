@@ -2,7 +2,7 @@ extends RefCounted
 ## Cultivation effects, applied at the end of the tick: stepping into a new
 ## realm (and, for the first under the tree, comprehending its technique),
 ## a technique passed from teacher to student, and a sect founded.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")

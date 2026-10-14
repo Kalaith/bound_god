@@ -1,7 +1,13 @@
-extends RefCounted
-## Preferences never share a file or schema with earned progression.
-const Keys = preload("res://scripts/core/key_bindings.gd")
-const Pad = preload("res://scripts/core/pad_bindings.gd")
+extends "res://addons/hatchery/settings/settings_store.gd"
+## The Bound God's preferences: which settings exist, which actions rebind,
+## and how they reach the engine. Storage, validation, backups and binding
+## rules come from the shared toolkit store. Preferences never share a file
+## or schema with earned progression.
+const KeyBindings = preload("res://addons/hatchery/input/key_bindings.gd")
+const PadBindings = preload("res://addons/hatchery/input/pad_bindings.gd")
+const Levels = preload("res://addons/hatchery/audio/levels.gd")
+const Display = preload("res://addons/hatchery/settings/display.gd")
+
 ## A saved `values` dictionary missing a newer key defaults it in on load, so a
 ## single added setting cannot invalidate every existing preferences file.
 ## Numbers are fractions 0..1 (volumes, look sensitivity); graphics toggles let
@@ -15,172 +21,55 @@ const DEFAULTS: Dictionary = {
 	"show_guide": true,
 	"ui_scale": 0.23, "colour_safe": false, "high_contrast": false, "captions": false, "pseudo_language": false,
 }
-var values: Dictionary = DEFAULTS.duplicate()
-var key_bindings: Dictionary = Keys.defaults()
-var pad_bindings: Dictionary = Pad.defaults()
-var save_enabled: bool = true
-var path: String = "user://settings.json"
-var last_error: String = ""
-var writes_blocked: bool = false
+## Physical keyboard slots; gamepad and mouse events and reserved navigation stay intact.
+## Fixed, not listed: Esc (settings), Tab (overlook), Shift (sprint), mouse buttons
+## (break/place), mouse wheel and 1-9 (hotbar). Every listed action needs a default
+## key in project.godot, or saved bindings can never validate.
+const KEY_ACTIONS: Dictionary = {
+	"move_left": "Move left", "move_right": "Move right",
+	"move_forward": "Move forward", "move_back": "Move back",
+	"jump": "Jump", "interact": "Use / shrine", "inspect": "Inspect person", "inventory": "Blocks and hotbar",
+	"rotate_block": "Rotate block", "design_tool": "Design tool",
+	"zoom_in": "Zoom in", "zoom_out": "Zoom out",
+	"toggle_chronicle": "Chronicle", "toggle_settlement": "Settlement",
+	"speed_pause": "Pause time", "speed_up": "Faster time", "speed_down": "Slower time",
+	"quick_save": "Quick save", "toggle_fullscreen": "Fullscreen", "dismiss_prompt": "Dismiss prompt", "toggle_qi": "Show qi", "toggle_tree": "The sacred tree",
+}
+## One gamepad button per action; sticks, triggers and every keyboard slot stay intact.
+## Fixed, not listed: Start (settings), B (back/cancel in menus), triggers (break/place).
+## Every listed action needs a default button in project.godot.
+const PAD_ACTIONS: Dictionary = {
+	"jump": "Jump", "sprint": "Sprint", "interact": "Interact / shrine",
+	"inspect": "Inspect person", "rotate_block": "Rotate block", "overlook": "Overlook",
+	"design_tool": "Design tool", "toggle_chronicle": "Chronicle",
+	"hotbar_prev": "Previous block", "hotbar_next": "Next block",
+	"zoom_in": "Zoom in", "zoom_out": "Zoom out",
+}
+const BUSES: Dictionary = {"Master": "master", "Music": "music", "Effects": "effects"}
 
 
-func valid(data: Variant) -> bool:
-	if not data is Dictionary or not (data.get("schema") is int or data.get("schema") is float):
-		return false
-	var schema: int = int(data.schema)
-	if schema < 1 or schema > CURRENT_SCHEMA or not data.get("values") is Dictionary:
-		return false
-	var candidate: Dictionary = data.values
-	# Validate only the keys actually present; a missing key is a migration
-	# (defaulted on load), not a corrupt file.
-	for key in candidate:
-		if not DEFAULTS.has(key):
-			continue
-		if DEFAULTS[key] is bool:
-			if not candidate[key] is bool:
-				return false
-		else:
-			if not (candidate[key] is float or candidate[key] is int):
-				return false
-			var amount: float = float(candidate[key])
-			if not is_finite(amount) or amount < 0.0 or amount > 1.0:
-				return false
-	if data.has("pad_bindings") and not Pad.valid(data.pad_bindings):
-		return false
-	return not data.has("key_bindings") or Keys.valid(data.key_bindings)
+func _init(path: String = "user://settings.json") -> void:
+	super(DEFAULTS, path, CURRENT_SCHEMA)
+	keys = KeyBindings.new(KEY_ACTIONS)
+	pad = PadBindings.new(PAD_ACTIONS)
+	_reset_bindings()
 
 
-func _read(filename: String) -> Variant:
-	if not FileAccess.file_exists(filename):
-		return null
-	var parser := JSON.new()
-	return parser.data if parser.parse(FileAccess.get_file_as_string(filename)) == OK else null
-
-
-func _migrated(data: Dictionary) -> Dictionary:
-	# A present key is trusted (validated already); an absent one defaults in,
-	# so a preferences file written before a setting existed still loads.
-	var merged: Dictionary = DEFAULTS.duplicate()
-	merged.merge(data.values, true)
-	return merged
-
-
-func load_settings() -> void:
-	if not save_enabled:
-		return
-	var data: Variant = _read(path)
-	if valid(data):
-		values = _migrated(data)
-		key_bindings = Keys.normalized(data.get("key_bindings", Keys.defaults()))
-		pad_bindings = Pad.normalized(data.get("pad_bindings", Pad.defaults()))
-		return
-	# Preserve a genuinely future format rather than replacing it with an older backup.
-	if data is Dictionary and (data.get("schema") is int or data.get("schema") is float) and int(data.schema) > CURRENT_SCHEMA:
-		writes_blocked = true
-		last_error = "Settings use an unsupported version. Changes last this session."
-		return
-	var backup: Variant = _read(path + ".bak")
-	if valid(backup):
-		values = _migrated(backup)
-		key_bindings = Keys.normalized(backup.get("key_bindings", Keys.defaults()))
-		pad_bindings = Pad.normalized(backup.get("pad_bindings", Pad.defaults()))
-		last_error = "Recovered settings from backup."
-	elif FileAccess.file_exists(path) or FileAccess.file_exists(path + ".bak"):
-		writes_blocked = true
-		last_error = "Saved settings could not be read. Changes last this session."
-
-
-func save_settings() -> bool:
-	if not save_enabled:
-		return true
-	if writes_blocked:
-		return false
-	var snapshot := {"schema": CURRENT_SCHEMA, "values": values, "key_bindings": key_bindings, "pad_bindings": pad_bindings}
-	if not valid(snapshot):
-		last_error = "Settings are invalid and could not be saved."
-		return false
-	var temporary: String = path + ".tmp"
-	var file := FileAccess.open(temporary, FileAccess.WRITE)
-	if file == null:
-		return _failed()
-	file.store_string(JSON.stringify(snapshot))
-	file.flush()
-	file.close()
-	if not valid(_read(temporary)):
-		return _failed()
-	if FileAccess.file_exists(path):
-		if valid(_read(path)):
-			if DirAccess.copy_absolute(path, path + ".bak") != OK:
-				return _failed()
-		elif FileAccess.file_exists(path + ".corrupt"):
-			last_error = "A previous .corrupt recovery file already exists; damaged settings preserved. Move it aside before saving again."
-			return false
-		elif DirAccess.copy_absolute(path, path + ".corrupt") != OK:
-			return _failed()
-	if DirAccess.rename_absolute(temporary, path) != OK:
-		return _failed()
-	last_error = ""
-	return true
-
-
-func _failed() -> bool:
-	last_error = "Could not save settings. Changes last this session."
-	return false
-
-
-## Push every stored preference into the engine: bindings, window mode and the
-## master bus. Graphics toggles are read by the world environment each frame.
+## Push every stored preference into the engine: bindings, window mode, the
+## interface and the buses. Graphics toggles are read by the world environment.
 func apply_all(_tree: SceneTree) -> void:
-	Keys.apply(key_bindings)
-	Pad.apply(pad_bindings)
-	var fullscreen: bool = bool(values.fullscreen)
-	if DisplayServer.get_name() != "headless":
-		var mode: int = DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
-		if DisplayServer.window_get_mode() != mode and (fullscreen or DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN):
-			DisplayServer.window_set_mode(mode)
+	apply_bindings()
+	Display.set_fullscreen(bool(values.fullscreen))
 	# Accessibility and language (M24).
 	var Text = load("res://scripts/core/text.gd")
 	Text.pseudo = bool(values.pseudo_language)
 	var StyleScript = load("res://scripts/presentation/ui/style.gd")
 	StyleScript.set_palette(bool(values.colour_safe), bool(values.high_contrast))
 	StyleScript.reduce_motion = bool(values.reduce_motion)
-	if _tree != null and _tree.root != null:
-		_tree.root.content_scale_factor = ui_scale()
-	for bus in ["Master", "Music", "Effects"]:
-		var index: int = AudioServer.get_bus_index(bus)
-		if index < 0:
-			continue
-		var level: float = float(values[bus.to_lower()])
-		AudioServer.set_bus_volume_db(index, linear_to_db(maxf(level, 0.0001)))
-		AudioServer.set_bus_mute(index, bool(values.muted) or level <= 0.001)
+	Display.set_ui_scale(_tree, ui_scale())
+	Levels.apply_buses(values, BUSES)
 
 
 ## The UI scale: 85 % to 150 %, from the 0..1 setting.
 func ui_scale() -> float:
-	return 0.85 + 0.65 * float(values.get("ui_scale", 0.23))
-
-
-func rebind(action: String, slot: int, code: int) -> String:
-	var error: String = Keys.change_error(key_bindings, action, slot, code)
-	if error.is_empty():
-		key_bindings[action][slot] = code
-		Keys.apply(key_bindings)
-	return error
-
-
-func reset_keys() -> void:
-	key_bindings = Keys.defaults()
-	Keys.apply(key_bindings)
-
-
-func rebind_pad(action: String, button: int) -> String:
-	var error: String = Pad.change_error(pad_bindings, action, button)
-	if error.is_empty():
-		pad_bindings[action] = button
-		Pad.apply(pad_bindings)
-	return error
-
-
-func reset_pad() -> void:
-	pad_bindings = Pad.defaults()
-	Pad.apply(pad_bindings)
+	return Display.scale_from_fraction(float(values.ui_scale))

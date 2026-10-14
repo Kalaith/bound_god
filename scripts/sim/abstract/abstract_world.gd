@@ -11,7 +11,7 @@ extends RefCounted
 ## Randomness comes from the sim's rng, in settlement id order.
 const AbstractCrafts = preload("res://scripts/sim/abstract/abstract_crafts.gd")
 const Elixirs = preload("res://scripts/sim/elixirs.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Spoilage = preload("res://scripts/sim/spoilage.gd")
 const Blueprints = preload("res://scripts/sim/blueprints.gd")

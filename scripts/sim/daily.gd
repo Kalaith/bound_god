@@ -2,7 +2,7 @@ extends RefCounted
 ## Day and hour hooks: the stores' stock reaches everyone's beliefs, stale
 ## beliefs fade, opinions cool, berries regrow, saplings grow, loose leaves
 ## fall, and the larger systems take their daily and hourly turns.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Lifecycle = preload("res://scripts/sim/lifecycle.gd")
 const Spoilage = preload("res://scripts/sim/spoilage.gd")

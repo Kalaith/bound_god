@@ -1,7 +1,7 @@
 extends RefCounted
 ## Per-tick bodily change: need decay, shelter, health, thoughts and mood.
 const Schools = preload("res://scripts/sim/schools.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")

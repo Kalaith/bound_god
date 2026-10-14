@@ -128,7 +128,7 @@ func _start() -> void:
 	elif Session.mode == "load":
 		campaign = WorldIO.load_slot(Session.slot)
 		if campaign == null:
-			_loading.text = Text.format("save_load_failed", {"error": SaveStore.last_error})
+			_loading.text = Text.format("save_load_failed", {"error": SaveStore.worlds.last_error})
 			return
 	else:
 		campaign = Campaign.create(Session.seed, Session.options)

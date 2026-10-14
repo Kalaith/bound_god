@@ -6,7 +6,7 @@ extends RefCounted
 const Schools = preload("res://scripts/sim/schools.gd")
 const DeliberationCrafts = preload("res://scripts/agents/deliberation_crafts.gd")
 const Crafts = preload("res://scripts/sim/crafts.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")

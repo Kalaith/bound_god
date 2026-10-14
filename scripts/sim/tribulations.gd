@@ -10,7 +10,7 @@ extends RefCounted
 ## id -> {id, agent, kind, severity, shield, defy, site: Vector3i, sanctuary: bool,
 ##        preparation, start_tick, end_tick, strikes: Array[int] (ticks), struck: int,
 ##        scorched: int, state: "warning"|"storm"|"done", outcome: String}
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const Relics = preload("res://scripts/sim/relics.gd")

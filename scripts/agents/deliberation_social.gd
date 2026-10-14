@@ -2,7 +2,7 @@ extends RefCounted
 ## Social candidates: talking, courting, comforting, making peace, helping
 ## someone who asked, and moving to a better settlement. Formulas as Final
 ## Landing; Migrate is new.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")

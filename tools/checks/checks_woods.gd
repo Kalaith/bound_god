@@ -3,7 +3,7 @@ extends RefCounted
 ## without a trunk fall away over the hours, people plant trees where the
 ## woods near home are thin, and a crowd by the sacred tree spreads round it.
 const Sim = preload("res://scripts/sim/sim.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const SimState = preload("res://scripts/sim/sim_state.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Commands = preload("res://scripts/sim/commands.gd")

@@ -5,7 +5,7 @@ extends RefCounted
 ## beside their cultivation, the master most. A curious, hardy person may
 ## set out from the valley to bring plans back, while nobody else from
 ## there is away and it is not winter.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")

@@ -4,7 +4,7 @@ extends RefCounted
 ## makes cultivation go faster where it is dense. Queried per cell, cached
 ## per column; the cache is cleared when the field changes.
 const Data = preload("res://scripts/core/data.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 

@@ -3,6 +3,7 @@ extends RefCounted
 ## Balance numbers stay in balance.gd; this file owns blocks, people, society,
 ## templates, miracles, crops, recipes and text. Catalog shape is checked by
 ## validation.gd at startup; lookups by an unknown id return an empty Dictionary.
+const JsonIO = preload("res://addons/hatchery/core/json_io.gd")
 
 const FILES: Dictionary = {
 	"blocks": "res://data/blocks.json",
@@ -32,7 +33,8 @@ const FILES: Dictionary = {
 	"text_saga": "res://data/text_saga.json",
 	"text_feel": "res://data/text_feel.json",
 }
-## Text catalogs, split by responsibility; their labels share one namespace.
+## Text catalogs, split by responsibility; their labels share one namespace
+## (read through text.gd).
 const TEXT_FILES: Array[String] = ["text", "text_agents", "text_ui", "text_cultivation", "text_sect", "text_seasons", "text_alchemy", "text_branches", "text_regions", "text_saga", "text_feel"]
 
 static var _files: Dictionary = {}
@@ -42,7 +44,6 @@ static var _traits: Dictionary = {}
 static var _thoughts: Dictionary = {}
 static var _ambitions: Dictionary = {}
 static var _miracles: Dictionary = {}
-static var _labels: Dictionary = {}
 ## Parse errors from the last load, reported by validation.
 static var load_errors: Array[String] = []
 
@@ -50,7 +51,7 @@ static var load_errors: Array[String] = []
 static func file(name: String) -> Dictionary:
 	if not _files.has(name):
 		var path: String = FILES[name]
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
+		var parsed: Variant = JsonIO.read(path)
 		if not parsed is Dictionary:
 			load_errors.append("Data file is missing or not a JSON object: " + path)
 			parsed = {}
@@ -66,53 +67,7 @@ static func reload() -> void:
 	_thoughts.clear()
 	_ambitions.clear()
 	_miracles.clear()
-	_labels.clear()
 	load_errors.clear()
-
-
-## Every label from every text catalog.
-static func labels() -> Dictionary:
-	if _labels.is_empty():
-		for name in TEXT_FILES:
-			_labels.merge(file(name).get("labels", {}))
-		if locale != "en":
-			override_labels(_labels, locale_labels(locale))
-	return _labels
-
-
-## The language text is shown in (M24): "en" uses the catalogs as they are;
-## another code overlays `data/locale/<code>/*.json` (the same keys).
-static var locale: String = "en"
-
-
-## Every label a language's catalogs give: {key: text}.
-static func locale_labels(code: String) -> Dictionary:
-	var result: Dictionary = {}
-	var folder: String = "res://data/locale/%s" % code
-	if not DirAccess.dir_exists_absolute(folder):
-		return result
-	var files: PackedStringArray = DirAccess.get_files_at(folder)
-	files.sort()
-	for name in files:
-		if not name.ends_with(".json"):
-			continue
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(folder.path_join(name)))
-		if parsed is Dictionary and parsed.get("labels") is Dictionary:
-			result.merge(parsed.labels, true)
-	return result
-
-
-## A language's labels laid over the English ones: only keys English has,
-## so a stray key cannot add text the game never asks for.
-static func override_labels(base: Dictionary, overrides: Dictionary) -> void:
-	for key in overrides:
-		if base.has(key) and overrides[key] is String:
-			base[key] = overrides[key]
-
-
-static func set_locale(code: String) -> void:
-	locale = code
-	_labels.clear()
 
 
 # --- Blocks -----------------------------------------------------------------

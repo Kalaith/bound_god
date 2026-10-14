@@ -4,7 +4,7 @@ extends RefCounted
 ## for themselves, trade, relations between sects and schisms.
 const Sim = preload("res://scripts/sim/sim.gd")
 const Campaign = preload("res://scripts/sim/campaign.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Regions = preload("res://scripts/sim/regions.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")

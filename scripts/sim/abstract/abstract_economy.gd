@@ -9,7 +9,7 @@ extends RefCounted
 ## A settlement's record: {bushes: [ids], planted: int, ripe: float,
 ##   fields: [farmland cells], growth: int (days since sowing, -1 fallow),
 ##   weedy: bool, made: {resource: float not yet stored}}
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")
 const Food = preload("res://scripts/sim/food.gd")

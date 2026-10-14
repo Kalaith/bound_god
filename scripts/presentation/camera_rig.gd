@@ -2,7 +2,7 @@ extends Node3D
 ## Over-the-shoulder spring-arm camera that orbits with the mouse or right
 ## stick, plus an overlook mode: an elevated orbit around the active shrine,
 ## still clamped to the presence zone, with longer build reach.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 var target: Node3D
 var yaw: float = 0.0

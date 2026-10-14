@@ -11,7 +11,7 @@ extends RefCounted
 ## a batch left half done on a bench is finished by whoever sits there next. A batch may
 ## fail and lose its herbs: less often for a skilled hand and a better
 ## building. A pill pavilion's great cauldron sometimes yields one more.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")

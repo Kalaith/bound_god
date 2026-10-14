@@ -5,7 +5,7 @@ extends RefCounted
 ## then the band walks in from the valley edge. Each raid is written to the
 ## chronicle with its cause and its outcome.
 const Schools = preload("res://scripts/sim/schools.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Outlaws = preload("res://scripts/sim/outlaws.gd")

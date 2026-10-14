@@ -5,7 +5,7 @@ extends RefCounted
 ## who would follow a branch of their sect go after it. Each arrives and
 ## settles at once by the same rules (the camp's chest and the cutting are
 ## set as they arrive). People in id order, randomness from the sim's rng.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Branches = preload("res://scripts/sim/branches.gd")
 const EffectsApply = preload("res://scripts/sim/effects_apply.gd")
 const Movement = preload("res://scripts/sim/movement.gd")

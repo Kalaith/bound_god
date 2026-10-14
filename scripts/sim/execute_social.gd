@@ -1,7 +1,7 @@
 extends RefCounted
 ## Social steps: talking, sending messages, giving, waiting for help,
 ## tending someone, joining a settlement and leaving the valley.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")

@@ -2,7 +2,7 @@ extends RefCounted
 ## The slow life of settlements: job boards every 10 ticks, and each day
 ## culture weights drift, settlements grow, stalled sites are abandoned and
 ## finished buildings remember their layout so they can be repaired.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const JobBoard = preload("res://scripts/sim/job_board.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")

@@ -5,7 +5,7 @@ extends RefCounted
 ## cultivation, since they are for their own trials); a settlement's people
 ## forge tools at its smithy while it lacks them and ore and wood are to
 ## hand (weighed as work). Each is weighed from what the person believes.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Crafts = preload("res://scripts/sim/crafts.gd")
 const Alchemy = preload("res://scripts/sim/alchemy.gd")

@@ -3,7 +3,7 @@ extends RefCounted
 ## source, elders founding branches on free grounds and their followers,
 ## transfer cost and cooldown, worn routes, schools, schisms and relics.
 const Sim = preload("res://scripts/sim/sim.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Meditation = preload("res://tools/checks/meditation.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")

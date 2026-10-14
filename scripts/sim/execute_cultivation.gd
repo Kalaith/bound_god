@@ -3,7 +3,7 @@ extends RefCounted
 ## their talent, technique, foundation and the qi where they sit; reaching a
 ## realm's threshold and passing on a technique are effects, applied at the
 ## end of the tick and chronicled there.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")

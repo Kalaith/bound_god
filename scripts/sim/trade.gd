@@ -8,7 +8,7 @@ extends RefCounted
 ## lacks. Which regions send traders is the campaign's (`sim.traders`). The
 ## visits draw on a stream of their own, seeded from the world, the
 ## settlement and the day, as wayfarers' do; every trade is chronicled.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Regions = preload("res://scripts/sim/regions.gd")
 const Food = preload("res://scripts/sim/food.gd")
 const Standing = preload("res://scripts/sim/standing.gd")

@@ -1,7 +1,7 @@
 extends RefCounted
 ## Follows the path with a fractional move budget so motion is smooth at any
 ## tick rate; `position` lerps between cells for the presentation.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 
 static func center(cell: Vector3i) -> Vector3:

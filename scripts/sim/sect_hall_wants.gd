@@ -4,7 +4,7 @@ extends RefCounted
 ## from what has happened to the sect, and only its master and elders
 ## propose them (sect_places.gd decides who may). Each entry is
 ## [function, reason label, weight], most pressing first.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const SectHalls = preload("res://scripts/sim/sect_halls.gd")
 const SectPlaces = preload("res://scripts/sim/sect_places.gd")
 

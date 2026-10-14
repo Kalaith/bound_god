@@ -2,7 +2,7 @@ extends RefCounted
 ## Personality is summed from traits, never edited directly. Skills hold
 ## levels (cap 20), experience and passions, as Final Landing.
 const Data = preload("res://scripts/core/data.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 enum Need { FOOD, REST, SHELTER, SOCIAL, RECREATION, SAFETY }
 const NEEDS: Array[String] = ["food", "rest", "shelter", "social", "recreation", "safety"]

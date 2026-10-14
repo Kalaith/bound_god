@@ -2,7 +2,7 @@ extends RefCounted
 ## Check helpers for settlement stores, which now live in real chests: set a
 ## settlement's stock exactly, placing chests beside its camp when it has too
 ## few to hold the goods.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 
 

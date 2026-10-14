@@ -4,13 +4,10 @@ extends RefCounted
 ## with an implemented effect, sect names drawn from real labels, and a label
 ## for every id.
 const Data = preload("res://scripts/core/data.gd")
+const DataRules = preload("res://addons/hatchery/core/data_rules.gd")
 
 ## Where a technique can come from; sim/cultivation.gd handles each.
 const TECHNIQUE_SOURCES: Array[String] = ["tree", "teacher", "faction"]
-
-
-static func _number(value: Variant) -> bool:
-	return (value is float or value is int) and is_finite(float(value))
 
 
 static func _table(name: String, list: Variant, errors: Array[String]) -> void:
@@ -19,14 +16,14 @@ static func _table(name: String, list: Variant, errors: Array[String]) -> void:
 		return
 	for entry in list:
 		var range: Variant = entry.get("range") if entry is Dictionary else null
-		if not _number(entry.get("weight") if entry is Dictionary else null) or not range is Array or range.size() != 2 \
-				or not _number(range[0]) or not _number(range[1]) or float(range[0]) < 0.0 or float(range[1]) > 1.0 or float(range[0]) > float(range[1]):
+		if not DataRules.finite(entry.get("weight") if entry is Dictionary else null) or not range is Array or range.size() != 2 \
+				or not DataRules.finite(range[0]) or not DataRules.finite(range[1]) or float(range[0]) < 0.0 or float(range[1]) > 1.0 or float(range[0]) > float(range[1]):
 			errors.append("cultivation: " + name + " entries need a weight and a range within 0..1")
 
 
 static func check(data: Dictionary, labels: Dictionary, traits: Array) -> Array[String]:
 	var errors: Array[String] = []
-	if not _number(data.get("schema_version")) or int(data.schema_version) != 1:
+	if not DataRules.finite(data.get("schema_version")) or int(data.schema_version) != 1:
 		errors.append("cultivation: schema_version must be 1")
 	var realms: Variant = data.get("realms")
 	if not realms is Array or realms.size() < 2:
@@ -35,16 +32,16 @@ static func check(data: Dictionary, labels: Dictionary, traits: Array) -> Array[
 		var last: float = 0.0
 		for i in range(realms.size()):
 			var realm: Dictionary = realms[i] if realms[i] is Dictionary else {}
-			if not realm.get("id") is String or not _number(realm.get("order")) or int(realm.order) != i:
+			if not realm.get("id") is String or not DataRules.finite(realm.get("order")) or int(realm.order) != i:
 				errors.append("cultivation: realm %d needs an id and order %d" % [i, i])
 				continue
-			if not _number(realm.get("progress_needed")) or float(realm.progress_needed) <= last:
+			if not DataRules.finite(realm.get("progress_needed")) or float(realm.progress_needed) <= last:
 				errors.append("cultivation: realm " + realm.id + " must need more progress than the one before")
 			else:
 				last = float(realm.progress_needed)
-			if not _number(realm.get("lifespan_bonus")) or float(realm.lifespan_bonus) < 0.0:
+			if not DataRules.finite(realm.get("lifespan_bonus")) or float(realm.lifespan_bonus) < 0.0:
 				errors.append("cultivation: realm " + realm.id + " needs a lifespan_bonus")
-			if not _number(realm.get("endurance")) or float(realm.endurance) <= 0.0 or float(realm.endurance) > 1.0:
+			if not DataRules.finite(realm.get("endurance")) or float(realm.endurance) <= 0.0 or float(realm.endurance) > 1.0:
 				errors.append("cultivation: realm " + realm.id + " needs an endurance in (0, 1]")
 			if not labels.has("realm_" + realm.id):
 				errors.append("cultivation: realm " + realm.id + " has no label")
@@ -58,8 +55,8 @@ static func check(data: Dictionary, labels: Dictionary, traits: Array) -> Array[
 		errors.append("cultivation: affinities are missing")
 	else:
 		for entry in affinities:
-			if not entry is Dictionary or not entry.get("id") is String or not _number(entry.get("weight")) \
-					or not _number(entry.get("qi_bonus")) or not _number(entry.get("foundation_bonus")):
+			if not entry is Dictionary or not entry.get("id") is String or not DataRules.finite(entry.get("weight")) \
+					or not DataRules.finite(entry.get("qi_bonus")) or not DataRules.finite(entry.get("foundation_bonus")):
 				errors.append("cultivation: an affinity needs an id, a weight, qi_bonus and foundation_bonus")
 			elif not labels.has("affinity_" + entry.id):
 				errors.append("cultivation: affinity " + entry.id + " has no label")
@@ -70,20 +67,20 @@ static func check(data: Dictionary, labels: Dictionary, traits: Array) -> Array[
 		var last_distance: float = -1.0
 		var last_density: float = INF
 		for point in curve:
-			if not point is Array or point.size() != 2 or not _number(point[0]) or not _number(point[1]) \
+			if not point is Array or point.size() != 2 or not DataRules.finite(point[0]) or not DataRules.finite(point[1]) \
 					or float(point[0]) <= last_distance or float(point[1]) > last_density:
 				errors.append("cultivation: the qi curve must fall with distance")
 				break
 			last_distance = float(point[0])
 			last_density = float(point[1])
-	if not _number(data.get("qi", {}).get("floor")):
+	if not DataRules.finite(data.get("qi", {}).get("floor")):
 		errors.append("cultivation: qi.floor must be a number")
 	var techniques: Variant = data.get("techniques")
 	if not techniques is Array or techniques.is_empty():
 		errors.append("cultivation: the technique list is missing")
 	else:
 		for entry in techniques:
-			if not entry is Dictionary or not entry.get("id") is String or not _number(entry.get("progress")) or float(entry.progress) < 1.0 \
+			if not entry is Dictionary or not entry.get("id") is String or not DataRules.finite(entry.get("progress")) or float(entry.progress) < 1.0 \
 					or not TECHNIQUE_SOURCES.has(entry.get("source")):
 				errors.append("cultivation: a technique needs an id, a progress factor of at least 1 and a known source")
 			elif not labels.has("technique_" + entry.id):
@@ -106,7 +103,7 @@ static func check(data: Dictionary, labels: Dictionary, traits: Array) -> Array[
 ## ranges; odds and outcomes are numbers; scorching names real blocks.
 static func check_tribulations(data: Dictionary, realms: int, blocks: Dictionary, labels: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
-	if not _number(data.get("schema_version")) or int(data.schema_version) != 1:
+	if not DataRules.finite(data.get("schema_version")) or int(data.schema_version) != 1:
 		errors.append("tribulations: schema_version must be 1")
 	var kinds: Variant = data.get("kinds")
 	if not kinds is Array or kinds.is_empty():
@@ -117,14 +114,14 @@ static func check_tribulations(data: Dictionary, realms: int, blocks: Dictionary
 				errors.append("tribulations: a kind needs an id")
 				continue
 			var label: String = "tribulations[" + kind.id + "]"
-			if not _number(kind.get("realm_from")) or int(kind.realm_from) < 1 or int(kind.realm_from) + 1 >= realms:
+			if not DataRules.finite(kind.get("realm_from")) or int(kind.realm_from) < 1 or int(kind.realm_from) + 1 >= realms:
 				errors.append(label + ": realm_from must be a realm with a next one")
 			for key in ["severity", "strikes"]:
 				var range: Variant = kind.get(key)
-				if not range is Array or range.size() != 2 or not _number(range[0]) or not _number(range[1]) or float(range[0]) > float(range[1]):
+				if not range is Array or range.size() != 2 or not DataRules.finite(range[0]) or not DataRules.finite(range[1]) or float(range[0]) > float(range[1]):
 					errors.append(label + ": " + key + " must be a [low, high] range")
 			for key in ["talent_severity", "radius", "storm_ticks", "warning_ticks", "insight"]:
-				if not _number(kind.get(key)) or float(kind[key]) < 0.0:
+				if not DataRules.finite(kind.get(key)) or float(kind[key]) < 0.0:
 					errors.append(label + ": " + key + " must be a number")
 	for section in ["odds", "outcomes"]:
 		var values: Variant = data.get(section)
@@ -133,7 +130,7 @@ static func check_tribulations(data: Dictionary, realms: int, blocks: Dictionary
 			continue
 		for key in values:
 			var value: Variant = values[key]
-			if not (_number(value) or (value is Array and value.size() == 2 and _number(value[0]) and _number(value[1]))):
+			if not (DataRules.finite(value) or (value is Array and value.size() == 2 and DataRules.finite(value[0]) and DataRules.finite(value[1]))):
 				errors.append("tribulations: " + section + "." + str(key) + " must be a number")
 	var names: Dictionary = {}
 	for entry in blocks.get("blocks", []):
@@ -167,7 +164,7 @@ const LESSONS: Array[String] = ["winter", "drought", "teaching", "death"]
 ## or an earlier unlock), numbers where numbers belong.
 static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
-	if not _number(data.get("schema_version")) or int(data.schema_version) != 1:
+	if not DataRules.finite(data.get("schema_version")) or int(data.schema_version) != 1:
 		errors.append("tree: schema_version must be 1")
 	var kinds: Array = []
 	for kind in tribulations.get("kinds", []):
@@ -181,18 +178,18 @@ static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dicti
 			errors.append("tree: " + section + " is missing")
 			continue
 		for key in values:
-			if not _number(values[key]):
+			if not DataRules.finite(values[key]):
 				errors.append("tree: " + section + "." + str(key) + " must be a number")
 	for key in ["lesson_reach", "lesson_records"]:
-		if not _number(data.get(key)):
+		if not DataRules.finite(data.get(key)):
 			errors.append("tree: " + key + " must be a number")
 	var maturity: Variant = data.get("maturity")
-	if not maturity is Dictionary or not _number(maturity.get("per_day")) or not maturity.get("phases") is Array or maturity.phases.is_empty():
+	if not maturity is Dictionary or not DataRules.finite(maturity.get("per_day")) or not maturity.get("phases") is Array or maturity.phases.is_empty():
 		errors.append("tree: maturity needs per_day and phases")
 	else:
 		var last: float = -1.0
 		for entry in maturity.phases:
-			if not entry is Dictionary or not entry.get("id") is String or not _number(entry.get("at")) or not _number(entry.get("crown")) or float(entry.at) <= last:
+			if not entry is Dictionary or not entry.get("id") is String or not DataRules.finite(entry.get("at")) or not DataRules.finite(entry.get("crown")) or float(entry.at) <= last:
 				errors.append("tree: maturity phases need ids, rising thresholds and a crown size")
 				break
 			last = float(entry.at)
@@ -208,8 +205,8 @@ static func check_tree(data: Dictionary, tribulations: Dictionary, labels: Dicti
 				errors.append("tree: an unlock needs an id and an implemented effect")
 				continue
 			var needs: Variant = entry.get("requires")
-			var by_maturity: bool = needs is Dictionary and _number(needs.get("maturity")) and float(needs.maturity) > 0.0
-			var by_insight: bool = needs is Dictionary and kinds.has(needs.get("insight")) and _number(needs.get("amount"))
+			var by_maturity: bool = needs is Dictionary and DataRules.finite(needs.get("maturity")) and float(needs.maturity) > 0.0
+			var by_insight: bool = needs is Dictionary and kinds.has(needs.get("insight")) and DataRules.finite(needs.get("amount"))
 			if not by_maturity and not by_insight:
 				errors.append("tree: unlock " + entry.id + " must require an insight a trial or lesson can give, or the tree's maturity")
 			elif needs.has("insight") and not by_insight:
@@ -231,7 +228,7 @@ static func _check_lessons(data: Dictionary, labels: Dictionary, kinds: Array) -
 		return ["tree: lessons are missing"]
 	for entry in lessons:
 		if not entry is Dictionary or not LESSONS.has(entry.get("id")) or not entry.get("insight") is String \
-				or not _number(entry.get("first")) or not _number(entry.get("repeat_factor")):
+				or not DataRules.finite(entry.get("first")) or not DataRules.finite(entry.get("repeat_factor")):
 			errors.append("tree: a lesson needs an implemented id, an insight, first and repeat_factor")
 			continue
 		if not kinds.has(entry.insight):

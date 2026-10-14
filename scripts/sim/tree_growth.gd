@@ -9,7 +9,7 @@ extends RefCounted
 ## dense qi for a season. Everything is chronicled with its cause.
 const Data = preload("res://scripts/core/data.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const TreeAbilities = preload("res://scripts/sim/tree_abilities.gd")
 const Relics = preload("res://scripts/sim/relics.gd")
 

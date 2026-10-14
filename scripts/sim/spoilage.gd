@@ -3,7 +3,7 @@ extends RefCounted
 ## their shelf life rot in the chests, and loose food lying about rots the
 ## same way. A settlement that loses a good deal to rot hears of it once a
 ## season, so the chronicle says where the food went.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 
 static func daily(sim: RefCounted) -> void:

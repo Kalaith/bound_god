@@ -5,7 +5,7 @@ extends RefCounted
 ## leisure in the free hours, food from the settlement's chests (the best
 ## food first, berries before grain while grain is put by).
 const Schools = preload("res://scripts/sim/schools.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const Schedule = preload("res://scripts/agents/schedule.gd")

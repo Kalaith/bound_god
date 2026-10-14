@@ -5,7 +5,7 @@ extends RefCounted
 ## tools speed gathering and building and wear out with the work. (What an
 ## alchemy building refines is `alchemy.gd`'s; the first of each thing made
 ## is remembered here for both.)
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 
 const Skill = Personality.Skill

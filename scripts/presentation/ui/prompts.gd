@@ -5,7 +5,7 @@ extends RefCounted
 ## never acts. The player dismisses one with its key and it does not come
 ## back in this world (the ids are kept in the god's state).
 const Text = preload("res://scripts/core/text.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Standing = preload("res://scripts/sim/standing.gd")

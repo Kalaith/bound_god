@@ -5,7 +5,7 @@ extends RefCounted
 ## a kitchen's pot and cook it into meals. A settlement's first harvest and
 ## first meal are chronicled.
 const Crafts = preload("res://scripts/sim/crafts.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Crops = preload("res://scripts/sim/crops.gd")
 const Alchemy = preload("res://scripts/sim/alchemy.gd")
 const EffectsAlchemy = preload("res://scripts/sim/effects_alchemy.gd")

@@ -2,7 +2,7 @@ extends RefCounted
 ## M8 acceptance: prayer feeds Favour, miracles are interpreted, whispers are
 ## heard and logged, and shrines without support go quiet.
 const Sim = preload("res://scripts/sim/sim.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")

@@ -3,7 +3,7 @@ extends RefCounted
 ## after some growing days (none in winter) it rises into a tree people can
 ## fell. Leaves left with no trunk beside them fall away a few at a time, and
 ## now and then a falling leaf drops a tree seed on the ground below.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const WorldGen = preload("res://scripts/world/world_gen.gd")
 

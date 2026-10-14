@@ -2,7 +2,7 @@ extends RefCounted
 ## A person's faith: whether they know the god, devotion 0-100, what they
 ## believe the god is (five aspects), the shrine they attend and their last
 ## prayer. Kept as a plain Dictionary on the agent (see Generation.new_faith).
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 const STAGES: Array[String] = ["unaware", "aware", "curious", "believer", "devout"]
 const ASPECTS: Array[String] = ["harvest", "protection", "travel", "shadow", "wrath"]

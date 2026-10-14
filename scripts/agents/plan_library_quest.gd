@@ -2,7 +2,7 @@ extends RefCounted
 ## Plans for the god's requests and for restoring shrines: travelling to a
 ## place and telling its people of the god, bringing materials, repairing a
 ## fallen altar from its old layout, and setting up a new altar.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const H = preload("res://scripts/agents/plan_helpers.gd")

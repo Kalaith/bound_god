@@ -2,7 +2,7 @@ extends RefCounted
 ## What one person believes: a partial, decaying copy of the world. Plans
 ## read beliefs, never the true world. Every field is plain data so it saves
 ## with var_to_bytes.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 ## site id -> {kind, cell, amount, seen_tick}
 var sites: Dictionary = {}

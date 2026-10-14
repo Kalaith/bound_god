@@ -15,7 +15,7 @@ const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Data = preload("res://scripts/core/data.gd")
 const Miracles = preload("res://scripts/sim/miracles.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 var sim: RefCounted
 ## Shrines of every region are listed, each under its region's name (M22).

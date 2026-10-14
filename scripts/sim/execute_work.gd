@@ -3,7 +3,7 @@ extends RefCounted
 ## stores, foraging, harvesting, carrying, and building block by block. They
 ## push actions into Effects and read the result back on a later tick.
 const WorkPace = preload("res://scripts/sim/work_pace.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Plans = preload("res://scripts/agents/plans.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const ExecuteBuild = preload("res://scripts/sim/execute_build.gd")

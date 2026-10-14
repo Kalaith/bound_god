@@ -1,7 +1,7 @@
 extends RefCounted
 ## Social message receivers: help requests and replies, gossip, proposals,
 ## gifts and word of other places.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Goals = preload("res://scripts/agents/goals.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const Mind = preload("res://scripts/agents/mind.gd")

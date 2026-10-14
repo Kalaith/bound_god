@@ -1,6 +1,6 @@
 extends RefCounted
 ## Faith message receivers: the god's whispers and divine requests.
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 const Mind = preload("res://scripts/agents/mind.gd")
 const FaithState = preload("res://scripts/agents/faith_state.gd")
 const Personality = preload("res://scripts/agents/personality.gd")

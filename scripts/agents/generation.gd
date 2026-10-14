@@ -5,7 +5,7 @@ const Data = preload("res://scripts/core/data.gd")
 const Agent = preload("res://scripts/agents/agent.gd")
 const Personality = preload("res://scripts/agents/personality.gd")
 const CultivationState = preload("res://scripts/agents/cultivation_state.gd")
-const Balance = preload("res://scripts/core/balance.gd")
+const Balance = preload("res://addons/hatchery/core/balance.gd")
 
 
 static func _pick(rng: RandomNumberGenerator, list: Array) -> Variant:
