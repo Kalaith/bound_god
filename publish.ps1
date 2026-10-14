@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$ProjectDir = $PSScriptRoot,
+    [string]$ProjectDir = '',
+    [string]$ToolkitDir = '',
     [string]$GodotExe = '',
     [string]$EnvFile = 'D:\WebHatchery\.env',
     [string]$DeployRoot = '',
@@ -12,11 +13,16 @@ param(
     [switch]$DryRun,
     [switch]$Help
 )
+# A game's publish.ps1: copy beside project.godot. The work lives in the
+# shared godot_toolkit publisher; this file only parses the options.
 $ErrorActionPreference = 'Stop'
-. "$PSScriptRoot/tools/publishing/Publisher.ps1"
+# Windows PowerShell 5.1 leaves $PSScriptRoot empty in param defaults.
+if (-not $ProjectDir) { $ProjectDir = $PSScriptRoot }
+if (-not $ToolkitDir) { $ToolkitDir = Join-Path $PSScriptRoot '..\godot_toolkit' }
+. (Join-Path $ToolkitDir 'publishing/Publisher.ps1')
 if ($Help) {
-    Write-Host 'publish.ps1 [-Preview | -Production (-p) | -FTP] [-BuildOnly] [-SkipBuild] [-DryRun] [-GodotExe path] [-EnvFile path] [-DeployRoot path] [-ProjectDir path]'
-    Write-Host 'Default: export Windows and copy the ZIP and a download page to PREVIEW_ROOT/games/<slug>. -FTP also deploys local production. -DryRun makes no changes.'
+    Write-Host 'publish.ps1 [-Preview | -Production (-p) | -FTP] [-BuildOnly] [-SkipBuild] [-DryRun] [-GodotExe path] [-EnvFile path] [-DeployRoot path] [-ProjectDir path] [-ToolkitDir path]'
+    Write-Host 'Default: export every target in publish.json and copy to PREVIEW_ROOT/games/<slug>. -FTP also deploys local production. -DryRun makes no changes.'
     return
 }
 if ($Preview -and ($Production -or $FTP)) { throw '-Preview cannot be combined with -Production or -FTP.' }
@@ -39,8 +45,12 @@ if (-not $BuildOnly) {
     }
 }
 if ($DryRun) {
-    Write-Host "[dry-run] $(if ($SkipBuild) { 'Validate existing build' } else { 'Export Windows Desktop' }) for $($info.Slug)"
-    if (-not $BuildOnly) { Write-Host '[dry-run] Copy the verified Windows ZIP and a generated download page to the destination.' }
+    $exports = ($info.Targets | ForEach-Object { if ($_ -eq 'web') { 'Web' } else { 'Windows Desktop' } }) -join ' and '
+    Write-Host "[dry-run] $(if ($SkipBuild) { 'Validate existing build' } else { "Export $exports" }) for $($info.Slug) ($($info.Exe))"
+    if (-not $BuildOnly) {
+        $site = if ($info.Web) { 'verified web files, Apache headers and the Windows ZIP' } else { 'the verified Windows ZIP and a generated download page' }
+        Write-Host "[dry-run] Copy $site to the destination."
+    }
     if ($FTP) { Write-Host '[dry-run] Upload only this game directory; publish index.html last.' }
     if (-not $BuildOnly) { Write-Host "[dry-run] Record $($info.Slug) deployment in Project Roost for $(if ($Production) { 'production' } else { 'preview' })." }
     return
