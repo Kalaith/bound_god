@@ -120,3 +120,17 @@ Visual changes are verified with in-game captures written to `docs/verification/
 - [`AGENTS.md`](AGENTS.md): conventions and invariants for anyone working on the code
 - [`docs/design/`](docs/design/): art and font direction
 - [`docs/reference/`](docs/reference/): architecture notes and the Final Landing NPC system the people are ported from
+
+## Promoter capture
+
+Promoter uses the shared [Godot capture driver](../godot_toolkit/tools/promo/README.md); this project does not need its own capture script. Capture normal routes from the game's title screen and use its documented controls to stage publicly released features. See the [Promoter plan and update rules](../../local_apps/promoter/adapters/godot/README.md).
+
+From this project root, check whether source changes need an update video:
+
+```powershell
+$promoter = (Resolve-Path '..\..\local_apps\promoter').Path
+$project = (Resolve-Path '.').Path
+& "$promoter\scripts\godot-promo.ps1" -Mode status -ProjectRoot $project -ProjectKey bound-god
+```
+
+Keep `bound-god` as the project key for later videos. Put plans and generated media under Promoter's ignored `data/media/` directory.
