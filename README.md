@@ -134,3 +134,5 @@ $project = (Resolve-Path '.').Path
 ```
 
 Keep `bound-god` as the project key for later videos. Put plans and generated media under Promoter's ignored `data/media/` directory.
+
+Promo recording uses the shared launcher on a private Windows desktop with an isolated save/settings profile. `--promo-background` keeps pointer state logical: gameplay controls work without asking Windows to capture or confine the desktop mouse. Put the normal New World click in the plan's `setupActions` and allow world generation to finish with `settleFrames` before the gameplay shots. Keep using the shared driver rather than a copied temporary capture script. Recording uses real-time inputs and background image encoding; normal play keeps its existing display settings. See Promoter's adapter notes for performance reports and capture limitations.

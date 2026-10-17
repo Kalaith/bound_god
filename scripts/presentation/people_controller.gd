@@ -1,4 +1,5 @@
 extends Node
+const MouseCapture = preload("res://scripts/presentation/mouse_capture.gd")
 ## Selecting and following people: the inspect key picks the person under
 ## the crosshair (or the mouse when it is free), opens the inspector, and
 ## Follow turns the overlook camera on them, still bound to the zone.
@@ -43,15 +44,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not main.accepts_world_input():
 		return
 	if event.is_action_pressed("inspect") or (event is InputEventMouseButton and event.pressed \
-			and event.button_index == MOUSE_BUTTON_LEFT and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and inspector.visible):
+			and event.button_index == MOUSE_BUTTON_LEFT and MouseCapture.get_mode() != Input.MOUSE_MODE_CAPTURED and inspector.visible):
 		var viewport: Viewport = get_viewport()
 		var screen: Vector2 = viewport.get_visible_rect().size * 0.5
-		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		if MouseCapture.get_mode() != Input.MOUSE_MODE_CAPTURED:
 			screen = viewport.get_mouse_position()
 		var id: int = person_at(screen)
 		if id >= 0:
 			select(id)
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+			MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 		elif event.is_action_pressed("inspect"):
 			if inspector.visible:
 				close()

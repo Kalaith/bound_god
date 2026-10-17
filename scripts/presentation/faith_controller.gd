@@ -1,4 +1,5 @@
 extends Node
+const MouseCapture = preload("res://scripts/presentation/mouse_capture.gd")
 ## The god's side of faith in the scene: reports where the avatar stands,
 ## opens the shrine menu at an altar or the tree, sends miracles and
 ## whispers, follows the god when it is expelled or transfers, flashes
@@ -71,7 +72,7 @@ func send(command: Dictionary) -> void:
 func close_menu() -> void:
 	menu.hide()
 	main.builder.enabled = true
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED)
 
 
 ## Interact beside the shrine the god stands at opens its menu.
@@ -85,7 +86,7 @@ func try_open_menu() -> bool:
 		return false
 	menu.avatar_cell = _avatar_cell
 	main.builder.enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 	menu.open()
 	return true
 

@@ -1,4 +1,5 @@
 extends Node3D
+const MouseCapture = preload("res://scripts/presentation/mouse_capture.gd")
 ## The valley scene: builds the simulation from the session, the views that
 ## present it, and routes player input into commands.
 const EnvironmentRig = preload("res://scripts/presentation/environment_rig.gd")
@@ -263,7 +264,7 @@ func _start() -> void:
 	requests_panel.closed.connect(func() -> void:
 		requests_panel.hide()
 		builder.enabled = true
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+		MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED))
 	lands_panel = LandsPanel.new()
 	lands_panel.campaign = campaign
 	ui_layer.add_child(lands_panel)
@@ -288,7 +289,7 @@ func _start() -> void:
 	ui_layer.add_child(rest_overlay)
 	rest_overlay.finished.connect(func() -> void:
 		builder.enabled = true
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+		MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED))
 	chronicle_screen = ChronicleScreen.new()
 	chronicle_screen.sim = sim
 	chronicle_screen.campaign = campaign
@@ -297,14 +298,14 @@ func _start() -> void:
 	chronicle_screen.closed.connect(func() -> void:
 		chronicle_screen.hide()
 		builder.enabled = true
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+		MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED))
 	tree_screen = TreeScreen.new()
 	tree_screen.sim = sim
 	ui_layer.add_child(tree_screen)
 	tree_screen.closed.connect(func() -> void:
 		tree_screen.hide()
 		builder.enabled = true
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+		MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED))
 	if sim.god.dormant:
 		avatar.set_dormant(true)
 	var preferences: RefCounted = SettingsStore.new()
@@ -347,7 +348,7 @@ func _start() -> void:
 		smoke.main = self
 		add_child(smoke)
 	if capture_request.is_empty():
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED)
 	else:
 		driver.set_speed(0)
 		CaptureScenes.arrange(self, capture_request)
@@ -427,13 +428,13 @@ func _hud_state() -> Dictionary:
 		"prompt": _prompt() if accepts_world_input() else "",
 		"guide": _prompt_now.get("text", ""),
 		"hotbar_visible": not design_tool.active and not blueprint_tool.active and not library_screen.visible,
-		"crosshair": Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or not capture_request.is_empty(),
+		"crosshair": MouseCapture.get_mode() == Input.MOUSE_MODE_CAPTURED or not capture_request.is_empty(),
 	}
 
 
 ## Someone under the crosshair is inspected before a block is used.
 func _prompt() -> String:
-	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not inspector.visible:
+	if MouseCapture.get_mode() == Input.MOUSE_MODE_CAPTURED and not inspector.visible:
 		var id: int = people.aimed()
 		if id >= 0:
 			return Text.format("inspect_prompt", {"name": sim.agents[id].full_name()})
@@ -471,7 +472,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		world_io.save()
 	elif event.is_action_pressed("toggle_tree"):
 		builder.enabled = false
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 		tree_screen.open()
 	elif event.is_action_pressed("toggle_qi"):
 		qi_overlay.toggle()
@@ -483,7 +484,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_guide_left = 0.0
 	elif event.is_action_pressed("toggle_chronicle"):
 		builder.enabled = false
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 		chronicle_screen.open()
 	elif event.is_action_pressed("toggle_settlement"):
 		# The panel scrolls and has buttons, so the mouse is freed while it is open.
@@ -491,13 +492,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		settlement_panel.open(sim.settlements.at_cell(Vector3i(sim.zone_center())))
 	elif event.is_action_pressed("toggle_settings") and inspector.visible:
 		people.close()
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED)
 	elif event.is_action_pressed("toggle_settings"):
 		builder.enabled = false
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 		pause_menu.open()
-	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif event is InputEventMouseButton and event.pressed and MouseCapture.get_mode() != Input.MOUSE_MODE_CAPTURED:
+		MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("overlook"):
 		camera_rig.toggle_overlook()
@@ -509,7 +510,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _close_pause() -> void:
 	pause_menu.hide()
 	builder.enabled = true
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED)
 
 
 func _open_settings() -> void:
@@ -569,31 +570,31 @@ func open_stores_for(id: int) -> void:
 ## Screens opened from the world free the mouse and stop building.
 func pause_world_input() -> void:
 	builder.enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 
 
 func resume_world_input() -> void:
 	builder.enabled = true
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED)
 
 
 ## The lands beyond the valley (M22).
 func open_lands() -> void:
 	builder.enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 	lands_panel.open()
 
 
 func open_requests() -> void:
 	builder.enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 	requests_panel.open()
 
 
 func rest(days: float) -> void:
 	world_io.save("save_autosaved")
 	builder.enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 	rest_overlay.begin(days)
 
 
@@ -609,7 +610,7 @@ func step_into_region() -> void:
 func meditate(years: float) -> void:
 	world_io.save("save_autosaved")
 	builder.enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 	rest_overlay.begin_meditation(years)
 
 
@@ -626,7 +627,7 @@ func _open_library(design: RefCounted = null) -> void:
 	avatar.input_enabled = false
 	camera_rig.set_process_unhandled_input(false)
 	camera_rig.input_enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 	library_screen.offered = sim.god.offered
 	library_screen.open(design)
 
@@ -637,4 +638,4 @@ func _close_library() -> void:
 	avatar.input_enabled = true
 	camera_rig.set_process_unhandled_input(true)
 	camera_rig.input_enabled = true
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED)

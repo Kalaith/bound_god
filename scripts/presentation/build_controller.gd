@@ -1,4 +1,5 @@
 extends Node3D
+const MouseCapture = preload("res://scripts/presentation/mouse_capture.gd")
 ## Hands-on building around the avatar: the crosshair picks a block face with
 ## an exact voxel ray, break and place go to the simulation as commands, and
 ## the chunk re-meshes the same frame. The preview tints red with a reason
@@ -99,10 +100,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		select(selected - 1)
 	elif event.is_action_pressed("rotate_block"):
 		rotate_flip = not rotate_flip
-	elif event.is_action_pressed("break_block") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	elif event.is_action_pressed("break_block") and MouseCapture.get_mode() == Input.MOUSE_MODE_CAPTURED:
 		_act(true)
 		_repeat = REPEAT_SECONDS * 1.6
-	elif event.is_action_pressed("place_block") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	elif event.is_action_pressed("place_block") and MouseCapture.get_mode() == Input.MOUSE_MODE_CAPTURED:
 		_act(false)
 		_repeat = REPEAT_SECONDS * 1.6
 
@@ -111,7 +112,7 @@ func _process(delta: float) -> void:
 	if sim == null or camera_rig == null:
 		return
 	_update_target()
-	if not enabled or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if not enabled or MouseCapture.get_mode() != Input.MOUSE_MODE_CAPTURED:
 		return
 	var breaking: bool = Input.is_action_pressed("break_block")
 	var placing: bool = Input.is_action_pressed("place_block")

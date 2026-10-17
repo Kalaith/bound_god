@@ -1,4 +1,5 @@
 extends Node
+const MouseCapture = preload("res://scripts/presentation/mouse_capture.gd")
 ## The Saga screen and the epilogue (M23), and gamepad navigation across
 ## every screen (M24): each screen takes focus on its first button when it
 ## opens, and the pad's back button closes the topmost one.
@@ -25,7 +26,7 @@ func open_saga() -> void:
 	lines.append_array(SagaText.numbers(Statistics.of(campaign)))
 	main.page.open(Text.label("saga_title"), lines, [["close", "design_close"]])
 	main.builder.enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 
 
 ## The epilogue, when the god fades or the player closes the book.
@@ -34,7 +35,7 @@ func open_epilogue(faded: bool) -> void:
 	main.campaign.book_closed = true
 	main.page.open(Text.label("epilogue_title"), SagaText.epilogue(main.campaign, faded), [["watch", "epilogue_watch"], ["leave", "epilogue_leave"]])
 	main.builder.enabled = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	MouseCapture.set_mode(Input.MOUSE_MODE_VISIBLE)
 
 
 func page_chosen(id: String) -> void:

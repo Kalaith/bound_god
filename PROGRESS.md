@@ -1,5 +1,8 @@
 # Progress
 
+- Promo recording pointer safety (2026-10-17): presentation pointer transitions now go through `mouse_capture.gd`. Normal play delegates to Godot unchanged; `--promo-background` keeps only logical state and never writes the physical mouse mode. `promotion/background_capture_safe` opts this game into the shared recorder. The Promoter launcher uses a private Windows desktop, while the shared driver uses real-time capture, capture-only VSync disabling and bounded background JPEG encoding. Headless `tools/check_promo_input.gd -- --promo-background` verifies pointer-state separation. Earlier live off-screen footage reached 58.71 game FPS but interfered with desktop input; no live capture was rerun after the final pointer/isolation fix. See Promoter's adapter notes for the remaining live verification boundary.
+
+
 Resume from here and `git log`. Checks: `--headless --path . --script res://tools/sim_checks.gd` and `--headless --path . --editor --quit`. Visual captures: `Godot --path . --position -5000,-5000 --resolution 1920x1080 -- --capture=<scenario> --out=docs/verification/<name>.png [--frames=N]` (debug builds only; the window opens off-screen and never takes focus, at the user's request). Headless cannot capture: Godot 4.2 headless uses a dummy renderer.
 
 ## Current milestone

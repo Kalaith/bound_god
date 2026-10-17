@@ -1,4 +1,5 @@
 extends RefCounted
+const MouseCapture = preload("res://scripts/presentation/mouse_capture.gd")
 ## Debug-only captures of people and the inspector: `people_<tab>` runs the
 ## valley for a few hours, selects the first traveller and shows that tab;
 ## `people_aim` looks down on a traveller from the overlook, unselected, to
@@ -23,7 +24,7 @@ static func arrange(main: Node3D, shot: Node, scenario: String) -> void:
 	if scenario == "people_aim":
 		var rig: Node3D = main.camera_rig
 		rig.overlook = true
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		MouseCapture.set_mode(Input.MOUSE_MODE_CAPTURED)
 		print("PEOPLE aim at %s" % agent.full_name())
 		shot.shoot_after(40)
 		for _frame in range(30):

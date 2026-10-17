@@ -1,4 +1,5 @@
 extends Node3D
+const MouseCapture = preload("res://scripts/presentation/mouse_capture.gd")
 ## Over-the-shoulder spring-arm camera that orbits with the mouse or right
 ## stick, plus an overlook mode: an elevated orbit around the active shrine,
 ## still clamped to the presence zone, with longer build reach.
@@ -35,7 +36,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and mouse_look:
+	if event is InputEventMouseMotion and MouseCapture.get_mode() == Input.MOUSE_MODE_CAPTURED and mouse_look:
 		var scale: float = 0.0012 + look_sensitivity * 0.004
 		var vertical: float = -1.0 if invert_look else 1.0
 		if overlook:

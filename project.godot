@@ -202,3 +202,8 @@ environment/defaults/default_clear_color=Color(0.56, 0.7, 0.86, 1)
 [gui]
 
 theme/custom="res://assets/ui_theme.tres"
+
+[promotion]
+
+; All pointer-mode changes go through the background-safe presentation facade.
+background_capture_safe=true
