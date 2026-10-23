@@ -1,7 +1,7 @@
 extends SceneTree
 ## Writes the licence texts that ship beside the build (M25) into `licences/`:
 ## the engine's licence and third-party notices (from the engine, so they
-## match 4.2.2), the fonts' SIL Open Font Licence files and the game's
+## match 4.7.2), the fonts' SIL Open Font Licence files and the game's
 ## credits. publish.ps1 copies them next to the executable.
 ## Godot --headless --path . --script res://tools/write_licences.gd
 const CreditsText = preload("res://scripts/presentation/ui/credits_text.gd")

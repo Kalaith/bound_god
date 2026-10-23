@@ -17,7 +17,7 @@ const Pad = preload("res://addons/hatchery/input/pad_bindings.gd")
 const SLIDERS: Array[String] = ["master", "music", "effects", "look_sensitivity"]
 const TOGGLES: Array = [
 	["settings_display", ["muted", "invert_look", "fullscreen", "show_guide"]],
-	["settings_graphics", ["ssao", "glow", "shadows", "ink"]],
+	["settings_graphics", ["glow", "shadows", "ink"]],
 	["settings_access", ["reduce_motion", "colour_safe", "high_contrast", "captions", "pseudo_language"]],
 ]
 

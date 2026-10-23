@@ -1,13 +1,14 @@
-// People and the avatar: one shared material, each part tinted per instance.
+// People and the avatar: one shader, each part its own material for its tint
+// (the Compatibility renderer has no instance uniforms).
 // Flat woodblock colour with a soft two-tone terminator, a faint dye wash and
 // a darker rim toward the silhouette. Opaque, so the ink pass outlines them;
 // fading (people inside a building, the dormant god) is a dither, not alpha.
 shader_type spatial;
 render_mode specular_disabled, diffuse_lambert;
 
-instance uniform vec4 tint : source_color = vec4(1.0);
-instance uniform float fade = 1.0;
-instance uniform float glow = 0.0;
+uniform vec4 tint : source_color = vec4(1.0);
+uniform float fade = 1.0;
+uniform float glow = 0.0;
 uniform vec3 ink : source_color = vec3(0.24, 0.2, 0.17);
 uniform float rim = 0.28;
 

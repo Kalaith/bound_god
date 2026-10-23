@@ -11,8 +11,6 @@ const HIP_HEIGHT: float = 0.66
 ## Hair styles: cropped, topknot, bun, straw hat, headband, low tail.
 const STYLES: int = 6
 
-static var _material: ShaderMaterial
-
 var pose_root := Node3D.new()
 var hips := Node3D.new()
 var torso := Node3D.new()
@@ -31,9 +29,6 @@ var _fade: float = 1.0
 
 ## `colours` holds jacket, trim, sash, trousers, skin, hair, accent and straw.
 func build(colours: Dictionary, style: int, as_spirit: bool) -> void:
-	if _material == null:
-		_material = ShaderMaterial.new()
-		_material.shader = SHADER
 	spirit = as_spirit
 	add_child(pose_root)
 	pose_root.add_child(hips)
@@ -67,7 +62,7 @@ func build(colours: Dictionary, style: int, as_spirit: bool) -> void:
 		_part(head, "eye", colours.hair, Vector3(0.058 * side, 0.15, 0.148), Vector3(1.0, 1.3, 0.6))
 	_hair(colours, style)
 	cargo.mesh = Meshes.get_mesh("cargo")
-	cargo.material_override = _material
+	cargo.material_override = _new_material(Color.WHITE)
 	cargo.position = Vector3(0, 0.12, 0.27)
 	cargo.hide()
 	torso.add_child(cargo)
@@ -82,7 +77,7 @@ func _hair(colours: Dictionary, style: int) -> void:
 		_part(head, "bun", colours.hair, Vector3(0, 0.36, -0.03), Vector3(1.1, 0.9, 1.1))
 		var halo: MeshInstance3D = _part(head, "halo", colours.accent, Vector3(0, 0.2, -0.2))
 		halo.rotation.x = PI * 0.5
-		halo.set_instance_shader_parameter("glow", 0.9)
+		_param(halo, "glow", 0.9)
 		return
 	match style % STYLES:
 		1:
@@ -101,13 +96,24 @@ func _hair(colours: Dictionary, style: int) -> void:
 func _part(parent: Node3D, key: String, colour: Color, at: Vector3, size := Vector3.ONE) -> MeshInstance3D:
 	var part := MeshInstance3D.new()
 	part.mesh = Meshes.get_mesh(key)
-	part.material_override = _material
+	part.material_override = _new_material(colour)
 	part.position = at
 	part.scale = size
-	part.set_instance_shader_parameter("tint", colour)
 	parent.add_child(part)
 	_parts.append(part)
 	return part
+
+
+## Every part owns its material: the Compatibility renderer has no per-instance uniforms.
+func _new_material(colour: Color) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = SHADER
+	material.set_shader_parameter("tint", colour)
+	return material
+
+
+func _param(part: MeshInstance3D, name: String, value: Variant) -> void:
+	(part.material_override as ShaderMaterial).set_shader_parameter(name, value)
 
 
 func set_fade(value: float) -> void:
@@ -115,19 +121,19 @@ func set_fade(value: float) -> void:
 		return
 	_fade = value
 	for part in _parts:
-		part.set_instance_shader_parameter("fade", value)
+		_param(part, "fade", value)
 
 
 func set_glow(value: float) -> void:
 	for part in _parts:
 		if part.mesh != Meshes.get_mesh("halo"):
-			part.set_instance_shader_parameter("glow", value)
+			_param(part, "glow", value)
 
 
 func set_cargo(colour: Variant) -> void:
 	cargo.visible = colour != null
 	if cargo.visible:
-		cargo.set_instance_shader_parameter("tint", colour)
+		_param(cargo, "tint", colour)
 
 
 ## Ease toward the pose for `activity`; `speed` is ground speed in m/s.

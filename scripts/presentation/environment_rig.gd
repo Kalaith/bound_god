@@ -2,7 +2,7 @@ extends Node3D
 ## Sky, sun and atmosphere for the valley, tuned to read like ink and soft
 ## pastel on paper: a cream horizon under faded blue, warm mist that thickens
 ## with distance and pools in the low ground, gentle light and pale shadows.
-## The sun follows the calendar hour; graphics toggles (SSAO, glow, shadows)
+## The sun follows the calendar hour; graphics toggles (glow, shadows)
 ## come from the settings store.
 
 const DAY_TOP := Color("aebfc5")
@@ -20,8 +20,8 @@ var sky_material := ProceduralSkyMaterial.new()
 var sun := DirectionalLight3D.new()
 var moon := DirectionalLight3D.new()
 var world_environment := WorldEnvironment.new()
-## The ink-and-paper overlay, carried in front of the camera.
-var paper := MeshInstance3D.new()
+## The ink-and-paper overlay, a canvas layer under the UI.
+var paper := CanvasLayer.new()
 var _hour: float = 10.0
 ## How much the weather greys the sky (0 clear, 1 storm) and a lightning flash.
 var _dim: float = 0.0
@@ -46,10 +46,6 @@ func _ready() -> void:
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.tonemap_exposure = 0.95
 	environment.tonemap_white = 2.2
-	environment.ssao_enabled = true
-	environment.ssao_radius = 1.4
-	environment.ssao_intensity = 1.1
-	environment.ssao_power = 1.2
 	environment.glow_enabled = true
 	environment.glow_intensity = 0.45
 	environment.glow_bloom = 0.0
@@ -88,24 +84,22 @@ func _ready() -> void:
 	set_hour(_hour)
 
 
-## Hangs the ink-and-paper overlay on the camera: a full-screen quad drawn last.
-func attach_paper(camera: Camera3D) -> void:
-	var quad := QuadMesh.new()
-	quad.size = Vector2(2.0, 2.0)
+## Lays the ink-and-paper overlay over the 3D view: a full-screen rect drawn
+## above the world and below the UI layer.
+func attach_paper() -> void:
 	var material := ShaderMaterial.new()
 	material.shader = INK_PAPER
-	material.render_priority = Material.RENDER_PRIORITY_MAX
-	paper.mesh = quad
-	paper.material_override = material
-	paper.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	paper.extra_cull_margin = 16384.0
-	paper.position = Vector3(0, 0, -1.0)
-	camera.add_child(paper)
+	var cover := ColorRect.new()
+	cover.material = material
+	cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cover.set_anchors_preset(Control.PRESET_FULL_RECT)
+	paper.layer = 0
+	paper.add_child(cover)
+	add_child(paper)
 
 
 func apply_graphics(values: Dictionary) -> void:
 	paper.visible = bool(values.get("ink", true))
-	environment.ssao_enabled = bool(values.get("ssao", true))
 	environment.glow_enabled = bool(values.get("glow", true))
 	sun.shadow_enabled = bool(values.get("shadows", true))
 

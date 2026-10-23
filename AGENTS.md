@@ -4,8 +4,8 @@ This repository holds The Bound God, a third-person voxel game in Godot in which
 
 Read before working:
 
-- `GAME_DESIGN.md`: what the game is. Respect its pillars and its Decision / Leaning / Tuning / Later / Open markings.
-- `PROGRESS.md`: where work stands, what is built, decisions taken while building, known issues and what is next. With the code, it is the reference for what is built.
+- `docs/GAME_DESIGN.md`: what the game is. Respect its pillars and its Decision / Leaning / Tuning / Later / Open markings.
+- `docs/PROGRESS.md`: where work stands, what is built, decisions taken while building, known issues and what is next. With the code, it is the reference for what is built.
 
 Reference, read when relevant:
 
@@ -31,8 +31,8 @@ Reference, read when relevant:
 
 ## Project engineering
 
-- **Forward+** renderer. Windows only; no web export.
-- Godot executable for playing: `C:\Program Files\Godot\Godot_v4.2.2-stable_mono_win64_console.exe` (see `Run.ps1`).
+- **GL Compatibility** renderer (WebGL 2 web build plus Windows). No SSAO or normal buffer: the ink shader finds creases from depth alone.
+- Godot executable for playing: `C:\Program Files\Godot\Godot_v4.7.2-stable_win64_console.exe` (see `Run.ps1`).
 - Built-in engine features to reach for: ArrayMesh, AStar3D, FastNoiseLite, RandomNumberGenerator, WorkerThreadPool.
 - The shared WebHatchery Godot toolkit (`../godot_toolkit`) is linked in as `res://addons/hatchery/` by `..\godot_toolkit\tools\Link-Toolkit.ps1 -ProjectDir .` (a junction, ignored by Git). It is plain preloaded GDScript, not an editor plugin. Bound God uses its balance facade (`core/balance.gd`), text catalog, JSON and data-rule helpers, key and pad bindings and the settings store, the slot store for world saves, synth and voice pool, and the check runner. The game keeps its policy in `scripts/core/` (`settings_store.gd`: settings, actions and how they reach the engine; `save_store.gd`: the world-save files; `text.gd`: the catalog list). Change toolkit code in `../godot_toolkit` under its own AGENTS.md, and run its checks as well as these.
 - Target resolution **1920×1080** (`canvas_items` stretch, `expand` aspect). Author UI at 1080p; it must stay readable at 1280×720.
@@ -66,11 +66,11 @@ Publishing requires separate authorisation.
 - `publish.ps1` and `publish-itch.ps1` are the shared templates from `../godot_toolkit/templates/`; the work lives in `../godot_toolkit/publishing/Publisher.ps1` (override the location with `-ToolkitDir`). The download page comes from the toolkit's `publishing/download.html`; a `tools/publishing/download.html` here would override it.
 - `publish.ps1` exports the Windows build and deploys `bound_god_windows.zip` plus a download page to `PREVIEW_ROOT/games/bound_god` (or production / FTP), then records the deployment in Project Roost. `-DryRun` changes nothing; `-BuildOnly` only builds and is fine for verification.
 - `publish-itch.ps1` pushes the last build to the itch Windows channel set in `publish.json`.
-- Exports need the **standard (non-mono)** Godot 4.2.2 console editor, matching the installed export templates: pass `-GodotExe`, set `GODOT_EXE`, or place it at `exports/tooling/Godot_v4.2.2-stable_win64_console.exe`. `Run.ps1` uses the installed mono editor for playing.
+- Exports need the **standard (non-mono)** Godot 4.7.2 console editor, matching the installed export templates: pass `-GodotExe`, set `GODOT_EXE`, or install it at `C:\Program Files\Godot`. `Run.ps1` uses the same editor for playing.
 
 ## Shared WebHatchery Godot standards
 
-This section is identical in the AGENTS.md of every WebHatchery Godot project (`bound_god`, `small_following`, `spiritwright`, `godot_toolkit`). Change it in all four together; project-specific rules go in the sections above.
+This section is identical in the AGENTS.md of every WebHatchery Godot project (`auto_resolved`, `azure_dreams`, `bound_god`, `personal_best`, `small_following`, `spiritwright`, `godot_toolkit`). Change it in all seven together; project-specific rules go in the sections above.
 
 ### Working
 
@@ -80,7 +80,7 @@ This section is identical in the AGENTS.md of every WebHatchery Godot project (`
 
 ### Code
 
-- Godot **4.2.2** GDScript. The renderer is set per project (see above).
+- Godot **4.7.2** GDScript. The renderer is set per project (see above).
 - Static typing everywhere: variables, parameters and return types.
 - Load dependencies with `const X = preload("res://...")`.
 - Tabs, LF, UTF-8, final newline (`.editorconfig`).
@@ -96,6 +96,13 @@ This section is identical in the AGENTS.md of every WebHatchery Godot project (`
 - Checks do not gate commits. Run the full set (the project's checks, if any, and a parse/import check with `--headless --editor --quit`) when a major feature or milestone is finished, and fix what they find before calling it done.
 - Headless checks do not verify visuals, audio, input or feel. Verify anything visual by running the game (`Run.ps1`) and looking at it.
 - Say plainly what was and was not checked.
+
+### Verification images
+
+- There is one folder for verification images: `docs/verification/`, flat. It holds a `.gdignore` (so does `docs/`); keep both. Reference art goes in `docs/reference/` or `docs/art/`, never here.
+- Take screenshots through the toolkit's capture runner (`testing/capture_runner.gd`) or `testing/capture_paths.gd` (`CapturePaths.file(label)`). Do not pass an output directory or write captures anywhere else (`builds/`, `exports/`, OS temp, `user://`).
+- Names are stable `<label>.png`: no subfolders, timestamps, run or revision suffixes, size suffixes, `-final`/`-fix` variants or backup copies. A new capture of the same screen or state overwrites its file; add a label only for a genuinely new screen or state.
+- Capture at one window size and one UI scale per game, and look at the image before saying a visual change works.
 
 ### Size limits (hard rule)
 

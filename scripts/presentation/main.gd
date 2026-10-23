@@ -168,7 +168,7 @@ func _start() -> void:
 	camera_rig.target = avatar
 	add_child(camera_rig)
 	camera_rig.camera.current = true
-	rig.attach_paper(camera_rig.camera)
+	rig.attach_paper()
 	builder = BuildController.new()
 	builder.sim = sim
 	builder.world_view = world_view

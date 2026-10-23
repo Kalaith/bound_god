@@ -11,13 +11,13 @@ const Display = preload("res://addons/hatchery/settings/display.gd")
 ## A saved `values` dictionary missing a newer key defaults it in on load, so a
 ## single added setting cannot invalidate every existing preferences file.
 ## Numbers are fractions 0..1 (volumes, look sensitivity); graphics toggles let
-## weaker GPUs drop Forward+ effects.
+## weaker GPUs drop effects.
 const CURRENT_SCHEMA: int = 1
 const DEFAULTS: Dictionary = {
 	"master": 1.0, "music": 1.0, "effects": 1.0, "muted": false,
 	"look_sensitivity": 0.5, "invert_look": false,
 	"fullscreen": false, "reduce_motion": false,
-	"ssao": true, "glow": true, "shadows": true, "ink": true,
+	"glow": true, "shadows": true, "ink": true,
 	"show_guide": true,
 	"ui_scale": 0.23, "colour_safe": false, "high_contrast": false, "captions": false, "pseudo_language": false,
 }

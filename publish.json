@@ -2,8 +2,9 @@
   "slug": "bound_god",
   "display_name": "The Bound God",
   "description": "A small god bound to a sacred tree builds in voxels and grows through autonomous villagers who decide for themselves.",
-  "godot_version": "4.2.2",
+  "godot_version": "4.7.2",
   "executable": "TheBoundGod.exe",
   "itch_target": "kalaith/the-bound-god",
-  "itch_channels": { "windows": "windows" }
+  "targets": ["web", "windows"],
+  "itch_channels": { "html5": "html5", "windows": "windows" }
 }

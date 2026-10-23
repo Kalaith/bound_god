@@ -38,7 +38,7 @@ When a cultivator faces a heavenly tribulation beneath your branches, the tree l
 
 Version 1.0.0. The original vertical slice (voxel valley, templates, people with minds of their own, faith, shrines, miracles, food, threats, saves) is built, and so is the cultivation slice: qi, cultivators and realms, breakthroughs and lightning tribulations, the tree's insights and unlocks, meditation over years with a chronicle, and a sect that founds itself and raises its own halls (libraries, seclusion rooms, thunder chambers, infirmaries, mountain gates and more). Seasons and weather, herbs and alchemy, branches and regions, other sects and outsiders, the campaign shape (ages, deeds and an epilogue), and the look, sound and feel are built too.
 
-The 1.0.0 Windows build is made and passes its smoke test; it has not been published. What it still needs is people: a closed beta, fresh-player playtests and play by hand. `PROGRESS.md` records what is built in detail.
+The 1.0.0 Windows build is made and passes its smoke test; it has not been published. What it still needs is people: a closed beta, fresh-player playtests and play by hand. `docs/PROGRESS.md` records what is built in detail.
 
 ## Controls
 
@@ -64,14 +64,14 @@ Keyboard and mouse, with gamepad support. Keys and pad buttons can be rebound in
 
 ## Running it
 
-The game is built with **Godot 4.2.2** (GDScript, Forward+ renderer) and runs on **Windows** only; there is no web build.
+The game is built with **Godot 4.7.2** (GDScript, GL Compatibility renderer) and runs on **Windows** and in the browser (WebGL 2).
 
 ```powershell
-.\Run.ps1                                  # play, using the installed Godot 4.2.2 editor
-.\Run.ps1 -GodotExe 'C:\path\to\Godot.exe' # use a different Godot 4.2.2 executable
+.\Run.ps1                                  # play, using the installed Godot 4.7.2 editor
+.\Run.ps1 -GodotExe 'C:\path\to\Godot.exe' # use a different Godot 4.7.2 executable
 ```
 
-Or open `project.godot` in the Godot 4.2.2 editor and press Play.
+Or open `project.godot` in the Godot 4.7.2 editor and press Play.
 
 The game uses the shared WebHatchery Godot toolkit (`../godot_toolkit`) as `res://addons/hatchery/`. After cloning, link it once (a directory junction, not committed here):
 
@@ -84,16 +84,16 @@ The game uses the shared WebHatchery Godot toolkit (`../godot_toolkit`) as `res:
 The simulation is deterministic and runs headless, so its scenarios are checked without a window:
 
 ```powershell
-$godot = 'C:\Program Files\Godot\Godot_v4.2.2-stable_mono_win64_console.exe'
+$godot = 'C:\Program Files\Godot\Godot_v4.7.2-stable_win64_console.exe'
 & $godot --headless --path . --script res://tools/sim_checks.gd   # simulation scenarios, PASS/FAIL
 & $godot --headless --path . --editor --quit                      # parse and import check
 ```
 
-Visual changes are verified with in-game captures written to `docs/verification/` (see `PROGRESS.md` for the capture command).
+Visual changes are verified with in-game captures written to `docs/verification/` (see `docs/PROGRESS.md` for the capture command).
 
 ### Building and publishing
 
-`publish.ps1` (the shared toolkit publisher) exports the Windows build and deploys it with a download page; `-BuildOnly` only builds and `-DryRun` changes nothing. `publish-itch.ps1` pushes the last build to itch. Exports need the standard (non-mono) Godot 4.2.2 console editor that matches the installed export templates.
+`publish.ps1` (the shared toolkit publisher) exports the Windows build and deploys it with a download page; `-BuildOnly` only builds and `-DryRun` changes nothing. `publish-itch.ps1` pushes the last build to itch. Exports need the standard (non-mono) Godot 4.7.2 console editor that matches the installed export templates.
 
 ## How it is built
 
@@ -115,8 +115,8 @@ Visual changes are verified with in-game captures written to `docs/verification/
 
 ## Documents
 
-- [`GAME_DESIGN.md`](GAME_DESIGN.md): the design, with its decisions, leanings and open questions
-- [`PROGRESS.md`](PROGRESS.md): what is built, decisions taken while building, known issues
+- [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md): the design, with its decisions, leanings and open questions
+- [`docs/PROGRESS.md`](docs/PROGRESS.md): what is built, decisions taken while building, known issues
 - [`AGENTS.md`](AGENTS.md): conventions and invariants for anyone working on the code
 - [`docs/design/`](docs/design/): art and font direction
 - [`docs/reference/`](docs/reference/): architecture notes and the Final Landing NPC system the people are ported from
@@ -135,4 +135,4 @@ $project = (Resolve-Path '.').Path
 
 Keep `bound-god` as the project key for later videos. Put plans and generated media under Promoter's ignored `data/media/` directory.
 
-Promo recording uses the shared launcher on a private Windows desktop with an isolated save/settings profile. `--promo-background` keeps pointer state logical: gameplay controls work without asking Windows to capture or confine the desktop mouse. Put the normal New World click in the plan's `setupActions` and allow world generation to finish with `settleFrames` before the gameplay shots. Keep using the shared driver rather than a copied temporary capture script. Recording uses real-time inputs and background image encoding; normal play keeps its existing display settings. See Promoter's adapter notes for performance reports and capture limitations.
+Promo recording uses the shared launcher on a private Windows desktop with an isolated save/settings profile. `--promo-background` keeps pointer state logical: gameplay controls work without asking Windows to capture or confine the desktop mouse. Put the normal New World click in the plan's `setupActions` and allow world generation to finish with `settleFrames` before the gameplay shots. Plans may instead start in `res://scenes/main.tscn` with a `setup` object for the game's promo hook (`scripts/presentation/promo_setup.gd`): `seed` (and New World `options`) or `load` (a slot from a Promoter save fixture), `region` (stepped into by the god's normal transfer, with its usual refusals), `advanceHours` (up to 240, simulated, not skipped) and `settings` (player preferences, e.g. `{"show_guide": false}`). Hook actions: `speed` (0–3), `look` (hold the overlook on `tree`, `construction`, `newest_building`, `settlement` or a point), `inspect_builder` and `release`. For seed 4242 the first hamlet's builders raise a miner's hut on the morning of day 2, which suits a building shot. Keep using the shared driver rather than a copied temporary capture script. Recording uses real-time inputs and background image encoding; normal play keeps its existing display settings. See Promoter's adapter notes for performance reports and capture limitations.

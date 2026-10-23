@@ -1,6 +1,6 @@
 # The Bound God — Game Design Document
 
-> Version 0.3 · 2026-10-10 (cultivation-sect direction) · Godot 4.2.2 (GDScript, Forward+ renderer, Windows)
+> Version 0.3 · 2026-10-10 (cultivation-sect direction) · Godot 4.7.2 (GDScript, GL Compatibility renderer, web and Windows)
 >
 > Sources: the cultivation-sect brief and the original bound-god concept (both retired; their decisions are carried here, and they remain in Git history), `docs/reference/npc_system_guide.md` (the Final Landing BDI agent system the people are ported from). Look and type: `docs/design/art_direction.md`, `docs/design/font_direction.md`, concept images in `docs/art/`. What is built is recorded in `PROGRESS.md`; how the simulation is shaped, in `docs/reference/architecture.md`.
 >
@@ -406,11 +406,11 @@ Look and type follow `docs/design/art_direction.md` and `docs/design/font_direct
 
 ## 16. Technical constraints (summary)
 
-- Godot **4.2.2**, GDScript, **Forward+**; no plugins or GDExtensions without approval; built-ins first.
+- Godot **4.7.2**, GDScript, **GL Compatibility**; no plugins or GDExtensions without approval; built-ins first.
 - All tuning and catalogs in `data/*.json`, validated at startup, failing fast.
 - The simulation is pure `RefCounted` data, runs headless and is deterministic from one seeded RNG.
 - Saves under `user://` with staged writes, backups and schema migrations.
-- Windows only; Forward+ rules out a web export.
+- Web (WebGL 2, single-threaded export) and Windows from one project; the Compatibility renderer has no SSAO.
 
 ## 17. Scope
 
