@@ -25,9 +25,20 @@ var _built_version: int = -1
 
 
 func initialize(world: RefCounted) -> void:
-	for index in range(world.blocks.size()):
-		if Registry.component(world.blocks[index]) in ANCHORS:
-			components[world.cell_of(index)] = true
+	# Anchors are rare: find each anchor block id with the native scan, then
+	# register them in cell-index order (the order a full pass would give).
+	var blocks: PackedByteArray = world.blocks
+	var found := PackedInt32Array()
+	for id in range(Registry.components.size()):
+		if not Registry.component(id) in ANCHORS:
+			continue
+		var index: int = blocks.find(id)
+		while index != -1:
+			found.append(index)
+			index = blocks.find(id, index + 1)
+	found.sort()
+	for index in found:
+		components[world.cell_of(index)] = true
 	_rebuild(world, components.keys(), entries.keys(), 0, "world_generation")
 
 

@@ -10,6 +10,8 @@ const HORIZONTAL: Array[Vector2i] = [
 	Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1),
 ]
 const CLIMB_COST: float = 0.5
+## Vertical offsets tried for a neighbour, in preference order.
+const CLIMBS: Array[int] = [0, 1, -1]
 ## A worn path's cost to stand on, against 1 for any other ground.
 const PATH_WEIGHT: float = 0.85
 
@@ -73,13 +75,17 @@ func build() -> void:
 					count += 1
 	if count > astar.get_point_capacity():
 		astar.reserve_space(count)
-	for index in range(stand.size()):
-		if stand[index] == 1:
-			var cell: Vector3i = world.cell_of(index)
-			astar.add_point(index, Vector3(cell), _weight(cell))
-	for index in range(stand.size()):
-		if stand[index] == 0:
-			continue
+	# Standable indices in ascending order, found natively: the loops below
+	# visit only these instead of every cell of the world.
+	var points := PackedInt32Array()
+	var found: int = stand.find(1)
+	while found != -1:
+		points.append(found)
+		found = stand.find(1, found + 1)
+	for index in points:
+		var cell: Vector3i = world.cell_of(index)
+		astar.add_point(index, Vector3(cell), _weight(cell))
+	for index in points:
 		var y: int = index / stride_y
 		var rest: int = index - y * stride_y
 		var x: int = rest % size.x
@@ -90,17 +96,42 @@ func build() -> void:
 			if nx < 0 or nz < 0 or nx >= size.x or nz >= size.z:
 				continue
 			var base: int = nx + nz * size.x
-			for dy in [0, 1, -1]:
+			for dy in CLIMBS:
 				var ny: int = y + dy
 				if ny < 1 or ny >= size.y - 1:
 					continue
 				var other: int = base + ny * stride_y
 				if stand[other] == 0:
 					continue
-				if (dy != 0 or (direction.x != 0 and direction.y != 0)) and not _can_step(Vector3i(x, y, z), Vector3i(nx, ny, nz)):
+				if (dy != 0 or (direction.x != 0 and direction.y != 0)) and not _can_step_fast(x, y, z, nx, ny, nz, clear, blocks, size):
 					break
 				astar.connect_points(index, other, false)
 				break
+
+
+## `_can_step` on raw coordinates and the build's passability table, with no
+## vector allocation or helper calls: the same rules, for the full build only.
+func _can_step_fast(fx: int, fy: int, fz: int, tx: int, ty: int, tz: int, clear: PackedByteArray, blocks: PackedByteArray, size: Vector3i) -> bool:
+	var stride_y: int = size.x * size.z
+	var top: int = maxi(fy, ty)
+	if ty > fy and not _clear_at(fx, fy + 2, fz, clear, blocks, size, stride_y):
+		return false
+	if ty < fy:
+		for y in range(ty, fy + 2):
+			if not _clear_at(tx, y, tz, clear, blocks, size, stride_y):
+				return false
+	if fx != tx and fz != tz:
+		if not _clear_at(tx, top, fz, clear, blocks, size, stride_y) or not _clear_at(tx, top + 1, fz, clear, blocks, size, stride_y):
+			return false
+		if not _clear_at(fx, top, tz, clear, blocks, size, stride_y) or not _clear_at(fx, top + 1, tz, clear, blocks, size, stride_y):
+			return false
+	return true
+
+
+func _clear_at(x: int, y: int, z: int, clear: PackedByteArray, blocks: PackedByteArray, size: Vector3i, stride_y: int) -> bool:
+	if x < 0 or y < 0 or z < 0 or x >= size.x or y >= size.y or z >= size.z:
+		return false
+	return clear[blocks[x + z * size.x + y * stride_y]] == 1
 
 
 func _add_column(x: int, z: int, y_low: int, y_high: int) -> void:
