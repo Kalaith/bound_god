@@ -70,7 +70,7 @@ Publishing requires separate authorisation.
 
 ## Shared WebHatchery Godot standards
 
-This section is identical in the AGENTS.md of every WebHatchery Godot project (`auto_resolved`, `azure_dreams`, `bound_god`, `personal_best`, `small_following`, `spiritwright`, `godot_toolkit`). Change it in all seven together; project-specific rules go in the sections above.
+This section is identical in the AGENTS.md of every WebHatchery Godot project (`auto_resolved`, `bound_god`, `dreamspire`, `personal_best`, `small_following`, `spiritwright`, `godot_toolkit`). Change it in all seven together; project-specific rules go in the sections above.
 
 ### Working
 
