@@ -1,6 +1,7 @@
 extends Control
 ## Title: new world (seed), continue, load, settings, quit. Data validation
 ## runs here first; broken data is shown and the valley never rises from it.
+const TitleBackdrop = preload("res://scripts/presentation/ui/title_backdrop.gd")
 const Style = preload("res://scripts/presentation/ui/style.gd")
 const Text = preload("res://scripts/core/text.gd")
 const Validation = preload("res://scripts/core/validation.gd")
@@ -39,6 +40,7 @@ func _ready() -> void:
 	settings.apply_all(get_tree())
 	errors = Validation.run()
 	Session.data_errors = errors
+	TitleBackdrop.mount(self, true)
 	_build()
 	resized.connect(_layout)
 	_layout()
@@ -53,7 +55,7 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	_heading = Style.heading(Text.label("game_title"), 84, Style.WHITE)
+	_heading = Style.heading(Text.label("game_title"), 64, Style.WHITE)
 	add_child(_heading)
 	_tagline = Style.wrapped(Text.label("game_tagline"), 24, Style.LEAF)
 	add_child(_tagline)
@@ -193,38 +195,12 @@ func _start_capture(request: Dictionary) -> void:
 func _layout() -> void:
 	if not is_instance_valid(_menu):
 		return
-	_heading.position = Vector2(size.x * 0.07, size.y * 0.16)
-	_tagline.position = Vector2(size.x * 0.07 + 6, size.y * 0.16 + 112)
-	_tagline.size = Vector2(size.x * 0.42, 70)
+	_heading.position = Vector2(size.x * 0.60, size.y * 0.16)
+	_tagline.position = Vector2(size.x * 0.60 + 6, size.y * 0.16 + 112)
+	_tagline.size = Vector2(size.x * 0.35, 70)
 	_version_label.size = Vector2(200, 24)
 	_version_label.position = Vector2(size.x - 224, maxf(8, size.y - 32))
 	var width: float = minf(520, size.x * 0.36)
 	_menu.size = Vector2(width, 0)
-	_menu.position = Vector2(size.x * 0.07, size.y * 0.42)
+	_menu.position = Vector2(size.x * 0.60, size.y * 0.42)
 	queue_redraw()
-
-
-func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), Style.INK)
-	# Dusk sky bands above a valley line.
-	for band in range(12):
-		var t: float = band / 12.0
-		var color: Color = Color("1d3a3a").lerp(Color("c98f4f"), pow(t, 1.6))
-		draw_rect(Rect2(0, size.y * t * 0.62, size.x, size.y * 0.062 + 1), Color(color, 0.85))
-	var ridge := PackedVector2Array([Vector2(0, size.y * 0.66)])
-	for step in range(25):
-		var x: float = size.x * step / 24.0
-		ridge.append(Vector2(x, size.y * (0.58 + 0.05 * sin(step * 0.9) + 0.03 * sin(step * 2.3))))
-	ridge.append(Vector2(size.x, size.y))
-	ridge.append(Vector2(0, size.y))
-	draw_colored_polygon(ridge, Color("142019"))
-	# The sacred tree: trunk and a glowing crown, with a small light at its foot.
-	var foot := Vector2(size.x * 0.72, size.y * 0.74)
-	var scale: float = size.y / 1080.0
-	draw_rect(Rect2(foot + Vector2(-14, -230) * scale, Vector2(28, 230) * scale), Color("3b2a1f"))
-	for ring in range(5):
-		var radius: float = (150.0 - ring * 22.0) * scale
-		draw_circle(foot + Vector2(0, -280) * scale, radius, Color(Style.LEAF, 0.10 + ring * 0.06))
-	draw_circle(foot + Vector2(0, -8) * scale, 10 * scale, Color(Style.FAITH, 0.9))
-	draw_arc(foot + Vector2(0, -8) * scale, 26 * scale, 0, TAU, 48, Color(Style.FAITH, 0.35), 2.0, true)
-	draw_rect(Rect2(0, size.y * 0.74, size.x, size.y * 0.26), Color("0d1410"))
