@@ -50,6 +50,7 @@ const PageScreen = preload("res://scripts/presentation/ui/page_screen.gd")
 const ScreensController = preload("res://scripts/presentation/screens_controller.gd")
 const SettingsScreen = preload("res://scripts/presentation/ui/settings_screen.gd")
 const SettingsStore = preload("res://scripts/core/settings_store.gd")
+const Quality = preload("res://scripts/presentation/quality.gd")
 const Prompts = preload("res://scripts/presentation/ui/prompts.gd")
 const TITLE_SCENE: String = "res://scenes/title.tscn"
 
@@ -95,6 +96,10 @@ var settings_screen: Control
 var _prompt_now: Dictionary = {}
 var _show_guide: bool = true
 var _guide_left: float = 0.0
+## The sky is only recomputed when the clock has moved a little, and the HUD
+## state is rebuilt a few times a second rather than every frame.
+var _shown_hour: float = -100.0
+var _hud_left: float = 0.0
 var ui_layer := CanvasLayer.new()
 var capture_request: Dictionary = {}
 ## Set by a capture that frames its own shot: the overlook stays where it put it.
@@ -378,7 +383,10 @@ func _sync_zone() -> void:
 func _process(_delta: float) -> void:
 	if sim == null or avatar == null:
 		return
-	rig.set_hour(sim.calendar.hour())
+	var hour: float = sim.calendar.hour()
+	if absf(hour - _shown_hour) > 0.02:
+		_shown_hour = hour
+		rig.set_hour(hour)
 	avatar.camera_yaw = camera_rig.yaw
 	overlays.update_avatar(avatar.global_position)
 	if audio != null:
@@ -388,7 +396,10 @@ func _process(_delta: float) -> void:
 	if _guide_left <= 0.0:
 		_guide_left = 1.0
 		_prompt_now = Prompts.current(sim, library_screen.library, _show_guide)
-	hud.refresh(_hud_state())
+	_hud_left -= _delta
+	if _hud_left <= 0.0:
+		_hud_left = 0.1
+		hud.refresh(_hud_state())
 	# The god has faded: the epilogue tells the story (and the world goes on).
 	if _guide_left == 1.0 and not campaign.book_closed and campaign.faded():
 		open_epilogue(true)
@@ -531,6 +542,7 @@ func _open_settings() -> void:
 ## store applies itself.
 func _apply_settings(store: RefCounted) -> void:
 	rig.apply_graphics(store.values)
+	world_view.set_cheap_wash(bool(Quality.preset(str(store.values.get("quality", Quality.current))).cheap_shaders))
 	camera_rig.look_sensitivity = float(store.values.get("look_sensitivity", camera_rig.look_sensitivity))
 	camera_rig.invert_look = bool(store.values.get("invert_look", camera_rig.invert_look))
 	_show_guide = bool(store.values.get("show_guide", true))

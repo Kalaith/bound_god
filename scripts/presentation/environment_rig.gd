@@ -14,6 +14,7 @@ const DAY_MIST := Color("e2d9c4")
 const NIGHT_MIST := Color("2c3240")
 const SUN := Color("fbeedb")
 const INK_PAPER = preload("res://assets/shaders/ink_paper.gdshader")
+const Quality = preload("res://scripts/presentation/quality.gd")
 
 var environment := Environment.new()
 var sky_material := ProceduralSkyMaterial.new()
@@ -26,6 +27,7 @@ var _hour: float = 10.0
 ## How much the weather greys the sky (0 clear, 1 storm) and a lightning flash.
 var _dim: float = 0.0
 var _flash: float = 0.0
+var _paper_material: ShaderMaterial
 
 
 func _ready() -> void:
@@ -89,6 +91,7 @@ func _ready() -> void:
 func attach_paper() -> void:
 	var material := ShaderMaterial.new()
 	material.shader = INK_PAPER
+	_paper_material = material
 	var cover := ColorRect.new()
 	cover.material = material
 	cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -99,9 +102,14 @@ func attach_paper() -> void:
 
 
 func apply_graphics(values: Dictionary) -> void:
+	var tier: Dictionary = Quality.preset(str(values.get("quality", Quality.current)))
 	paper.visible = bool(values.get("ink", true))
-	environment.glow_enabled = bool(values.get("glow", true))
+	if _paper_material != null:
+		_paper_material.set_shader_parameter("cheap", bool(tier.cheap_shaders))
+	environment.glow_enabled = bool(values.get("glow", true)) and bool(tier.glow)
 	sun.shadow_enabled = bool(values.get("shadows", true))
+	sun.directional_shadow_mode = tier.shadow_mode
+	sun.directional_shadow_max_distance = float(tier.shadow_distance)
 
 
 ## The weather view greys the sky and mist and lights it with flashes.

@@ -7,6 +7,7 @@ const KeyBindings = preload("res://addons/hatchery/input/key_bindings.gd")
 const PadBindings = preload("res://addons/hatchery/input/pad_bindings.gd")
 const Levels = preload("res://addons/hatchery/audio/levels.gd")
 const Display = preload("res://addons/hatchery/settings/display.gd")
+const Quality = preload("res://scripts/presentation/quality.gd")
 
 ## A saved `values` dictionary missing a newer key defaults it in on load, so a
 ## single added setting cannot invalidate every existing preferences file.
@@ -17,7 +18,7 @@ const DEFAULTS: Dictionary = {
 	"master": 1.0, "music": 1.0, "effects": 1.0, "muted": false,
 	"look_sensitivity": 0.5, "invert_look": false,
 	"fullscreen": false, "reduce_motion": false,
-	"glow": true, "shadows": true, "ink": true,
+	"quality": "high", "glow": true, "shadows": true, "ink": true,
 	"show_guide": true,
 	"ui_scale": 0.23, "colour_safe": false, "high_contrast": false, "captions": false, "pseudo_language": false,
 }
@@ -49,7 +50,11 @@ const BUSES: Dictionary = {"Master": "master", "Music": "music", "Effects": "eff
 
 
 func _init(path: String = "user://settings.json") -> void:
-	super(DEFAULTS, path, CURRENT_SCHEMA)
+	# The quality tier starts at what suits the platform (medium in a browser).
+	var start: Dictionary = DEFAULTS.duplicate()
+	start.quality = Quality.default_tier()
+	super(start, path, CURRENT_SCHEMA)
+	choices = {"quality": Quality.TIERS}
 	keys = KeyBindings.new(KEY_ACTIONS)
 	pad = PadBindings.new(PAD_ACTIONS)
 	_reset_bindings()
@@ -67,6 +72,8 @@ func apply_all(_tree: SceneTree) -> void:
 	StyleScript.set_palette(bool(values.colour_safe), bool(values.high_contrast))
 	StyleScript.reduce_motion = bool(values.reduce_motion)
 	Display.set_ui_scale(_tree, ui_scale())
+	if _tree != null:
+		Quality.apply(str(values.quality), _tree.root)
 	Levels.apply_buses(values, BUSES)
 
 

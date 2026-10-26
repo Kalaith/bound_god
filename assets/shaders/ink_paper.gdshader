@@ -17,6 +17,8 @@ uniform float edge_threshold = 0.09;
 uniform float fold_threshold = 0.035;
 uniform float grain = 0.07;
 uniform float vignette = 0.16;
+// Cheaper look for weak GPUs: one-pixel outlines only and a single grain layer.
+uniform bool cheap = false;
 
 float hash2(vec2 p) {
 	p = fract(p * vec2(234.34, 435.345));
@@ -43,7 +45,8 @@ void fragment() {
 	float fold = 0.0;
 	// Taps one and two pixels out give silhouettes a two-pixel brush line.
 	vec2 taps[8] = vec2[](vec2(1, 0), vec2(-1, 0), vec2(0, 1), vec2(0, -1), vec2(2, 0), vec2(-2, 0), vec2(0, 2), vec2(0, -2));
-	for (int i = 0; i < 8; i++) {
+	int tap_count = cheap ? 4 : 8;
+	for (int i = 0; i < tap_count; i++) {
 		// Only the darker side of a jump is inked, so lines stay one pixel wide.
 		float jump = luma(uv + taps[i] * px) - l0;
 		edge = max(edge, smoothstep(edge_threshold, edge_threshold * 2.5, jump));
@@ -56,8 +59,12 @@ void fragment() {
 	float line = clamp(max(edge * silhouette, fold * crease) * brush, 0.0, 1.0);
 	vec3 shade = mix(vec3(1.0), ink, line);
 	// Paper: fine fibre grain and broad, soft blotches fixed to the canvas.
-	float fibre = value_noise(FRAGCOORD.xy * 0.7) * 0.6 + value_noise(FRAGCOORD.xy * vec2(0.08, 0.3)) * 0.4;
-	float blotch = value_noise(uv * vec2(5.0, 3.0));
+	float fibre = value_noise(FRAGCOORD.xy * 0.7);
+	float blotch = 0.5;
+	if (!cheap) {
+		fibre = fibre * 0.6 + value_noise(FRAGCOORD.xy * vec2(0.08, 0.3)) * 0.4;
+		blotch = value_noise(uv * vec2(5.0, 3.0));
+	}
 	shade *= 1.0 - (fibre - 0.5) * 2.0 * grain;
 	shade *= mix(vec3(1.0), paper_shadow, blotch * 0.5);
 	float rim = smoothstep(0.55, 1.05, length((uv - 0.5) * vec2(1.25, 1.0)) * 1.3);

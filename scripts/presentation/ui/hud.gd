@@ -25,6 +25,9 @@ var _message_time: float = 0.0
 var _atlas: Texture2D
 var _crosshair: Control
 var _prayer_keys: Array = []
+## Hotbar slot styles, built once per contrast setting rather than every refresh.
+var _slot_style: Array = []
+var _slot_style_contrast: bool = false
 
 
 func _ready() -> void:
@@ -162,25 +165,26 @@ func _icon(block: int) -> Texture2D:
 ## state: clock, stock (resource -> int), hotbar (Array[int]), selected,
 ## shrine (String), prayers (Array[String]), hint (String), crosshair (bool)
 func refresh(state: Dictionary) -> void:
-	_clock.text = state.get("clock", "")
+	_set_text(_clock, state.get("clock", ""))
 	var stock: Dictionary = state.get("stock", {})
 	var parts: Array = []
 	for resource in ["wood", "stone", "thatch", "berries", "ore", "soil"]:
 		if int(stock.get(resource, 0)) > 0:
 			parts.append("%s %d" % [Text.label("resource_" + resource), int(stock[resource])])
-	_stock.text = Text.label("hud_stock") + "  " + ("   ".join(parts) if not parts.is_empty() else Text.label("hud_stock_empty"))
-	_shrine.text = state.get("shrine", "")
+	_set_text(_stock, Text.label("hud_stock") + "  " + ("   ".join(parts) if not parts.is_empty() else Text.label("hud_stock_empty")))
+	_set_text(_shrine, state.get("shrine", ""))
 	get_node("ShrinePanel").visible = not _shrine.text.is_empty()
 	_crosshair.visible = state.get("crosshair", true)
-	_hint.text = state.get("hint", "")
-	_prompt.text = state.get("prompt", "")
-	_guide.text = state.get("guide", "")
+	_set_text(_hint, state.get("hint", ""))
+	_set_text(_prompt, state.get("prompt", ""))
+	_set_text(_guide, state.get("guide", ""))
 	_guide.visible = not _guide.text.is_empty()
 	_guide_hint.visible = _guide.visible
 	if _guide_hint.visible:
-		_guide_hint.text = Text.format("prompt_dismiss", {"key": _key_name("dismiss_prompt")})
+		_set_text(_guide_hint, Text.format("prompt_dismiss", {"key": _key_name("dismiss_prompt")}))
 	var hotbar: Array = state.get("hotbar", [])
 	var selected: int = int(state.get("selected", 0))
+	_ensure_slot_styles()
 	for slot in range(_slots.size()):
 		var box: PanelContainer = _slots[slot]
 		var block: int = int(hotbar[slot]) if slot < hotbar.size() else 0
@@ -188,20 +192,42 @@ func refresh(state: Dictionary) -> void:
 		if icon.get_meta("block", -1) != block:
 			icon.texture = _icon(block) if block != 0 else null
 			icon.set_meta("block", block)
-		_slot_counts[slot].text = str(int(stock.get(Registry.resource(block), 0))) if block != 0 else ""
-		var style: StyleBoxFlat = Style.panel_box(0.7 if block != 0 else 0.4, 8, 6)
-		if slot == selected:
-			style.border_color = Style.GOLD
-			style.set_border_width_all(3)
-		box.add_theme_stylebox_override("panel", style)
+		_set_text(_slot_counts[slot], str(int(stock.get(Registry.resource(block), 0))) if block != 0 else "")
+		var variant: int = (2 if slot == selected else 0) + (1 if block != 0 else 0)
+		if box.get_meta("style", -1) != variant:
+			box.add_theme_stylebox_override("panel", _slot_style[variant])
+			box.set_meta("style", variant)
 	var chosen: int = int(hotbar[selected]) if selected < hotbar.size() else 0
 	if chosen != 0:
-		_selected_name.text = "%s  ·  %s" % [Text.label("block_" + Registry.block_name(chosen)), Text.label("resource_" + Registry.resource(chosen))]
+		_set_text(_selected_name, "%s  ·  %s" % [Text.label("block_" + Registry.block_name(chosen)), Text.label("resource_" + Registry.resource(chosen))])
 	else:
-		_selected_name.text = Text.label("hotbar_slot_empty")
+		_set_text(_selected_name, Text.label("hotbar_slot_empty"))
 	_set_prayers(state.get("prayers", []))
 	_hotbar.visible = state.get("hotbar_visible", true)
 	_selected_name.visible = _hotbar.visible
+
+
+## Assigning a label's text re-lays it out even when the text is the same.
+static func _set_text(label: Label, text: String) -> void:
+	if label.text != text:
+		label.text = text
+
+
+## Four slot looks: empty or filled, plain or selected. Rebuilt only when the
+## high-contrast setting changes, since the panel colours depend on it.
+func _ensure_slot_styles() -> void:
+	if not _slot_style.is_empty() and _slot_style_contrast == Style.high_contrast:
+		return
+	_slot_style_contrast = Style.high_contrast
+	_slot_style.clear()
+	for variant in range(4):
+		var style: StyleBoxFlat = Style.panel_box(0.7 if variant % 2 == 1 else 0.4, 8, 6)
+		if variant >= 2:
+			style.border_color = Style.GOLD
+			style.set_border_width_all(3)
+		_slot_style.append(style)
+	for box in _slots:
+		box.set_meta("style", -1)
 
 
 func _set_prayers(lines: Array) -> void:

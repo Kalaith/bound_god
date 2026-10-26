@@ -18,6 +18,8 @@ uniform vec2 glow_tile_b = vec2(-1.0);
 uniform float glow_strength = 0.1;
 // Snow lying on upward faces through a snowy winter (0 none, 1 deep).
 uniform float snow_cover = 0.0;
+// Weak GPUs: one noise layer for the colour wash instead of three.
+uniform bool cheap_wash = false;
 
 float hash3(vec3 p) {
 	p = fract(p * vec3(443.897, 441.423, 437.195));
@@ -51,10 +53,15 @@ vec2 atlas_tile(vec2 uv) {
 // Broad drifting patches of warmer and cooler, lighter and darker paint.
 vec3 painted(vec3 albedo, vec3 world_pos, vec3 world_normal) {
 	float broad = value_noise(world_pos * 0.07);
-	float fine = value_noise(world_pos * 0.31 + 7.3);
-	albedo *= 1.0 + ((broad * 0.65 + fine * 0.35) - 0.5) * 2.0 * wash_strength;
-	float warm = smoothstep(0.35, 0.85, value_noise(world_pos * 0.03 + 11.0));
-	albedo = mix(albedo, albedo * vec3(1.05, 1.01, 0.9), warm * 0.6);
+	if (cheap_wash) {
+		albedo *= 1.0 + (broad - 0.5) * 2.0 * wash_strength;
+		albedo = mix(albedo, albedo * vec3(1.05, 1.01, 0.9), broad * 0.3);
+	} else {
+		float fine = value_noise(world_pos * 0.31 + 7.3);
+		albedo *= 1.0 + ((broad * 0.65 + fine * 0.35) - 0.5) * 2.0 * wash_strength;
+		float warm = smoothstep(0.35, 0.85, value_noise(world_pos * 0.03 + 11.0));
+		albedo = mix(albedo, albedo * vec3(1.05, 1.01, 0.9), warm * 0.6);
+	}
 	vec3 block = floor(world_pos - world_normal * 0.01);
 	albedo *= 1.0 + (hash3(block) - 0.5) * 2.0 * block_variation;
 	return albedo;
@@ -63,6 +70,11 @@ vec3 painted(vec3 albedo, vec3 world_pos, vec3 world_normal) {
 // Thin, slightly broken ink along the rim of a cube face, fading with distance.
 float edge_ink(float cube, float view_distance, vec3 world_pos, vec3 world_normal) {
 	if (cube < 0.5) {
+		return 0.0;
+	}
+	float fade = 1.0 - smoothstep(edge_fade * 0.45, edge_fade, view_distance);
+	// Most of the screen is past the fade: skip the noise and edge maths there.
+	if (fade <= 0.0) {
 		return 0.0;
 	}
 	vec3 n = abs(world_normal);
@@ -74,7 +86,6 @@ float edge_ink(float cube, float view_distance, vec3 world_pos, vec3 world_norma
 	float aa = max(fwidth(d), 0.0001) * 1.2;
 	float line = 1.0 - smoothstep(width, width + aa, d);
 	float brush = mix(0.45, 1.0, smoothstep(0.3, 0.7, value_noise(world_pos * 2.7)));
-	float fade = 1.0 - smoothstep(edge_fade * 0.45, edge_fade, view_distance);
 	// Open ground keeps only a whisper of its grid; walls and steps read clearer.
 	float facing = n.y > 0.5 ? 0.55 : 1.0;
 	return line * brush * fade * facing * edge_strength;

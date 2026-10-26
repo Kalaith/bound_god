@@ -5,6 +5,7 @@ extends Node3D
 ## snowy winter and melts away after it. Reads the sim; changes nothing.
 
 const Style = preload("res://scripts/presentation/ui/style.gd")
+const Quality = preload("res://scripts/presentation/quality.gd")
 const RAIN_COLOUR := Color(0.78, 0.82, 0.88, 0.45)
 const SNOW_COLOUR := Color(0.97, 0.97, 1.0, 0.9)
 ## Greying of the sky by kind of weather.
@@ -104,9 +105,10 @@ func _process(delta: float) -> void:
 		_rain.global_position = at
 		_snow.global_position = at
 	_rain.emitting = rain > 0.05
-	_rain.amount_ratio = clampf(rain, 0.0, 1.0)
+	var share: float = float(Quality.preset().particles)
+	_rain.amount_ratio = clampf(rain, 0.0, 1.0) * share
 	_snow.emitting = snow > 0.05
-	_snow.amount_ratio = clampf(snow, 0.0, 1.0)
+	_snow.amount_ratio = clampf(snow, 0.0, 1.0) * share
 	_lightning(kind, delta)
 	if rig != null:
 		rig.set_weather(dim, 0.0 if Style.reduce_motion else _flash)

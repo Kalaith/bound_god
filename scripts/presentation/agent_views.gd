@@ -42,6 +42,7 @@ func _process(delta: float) -> void:
 		return
 	_time += delta
 	var alpha: float = driver.alpha if driver != null else 1.0
+	var camera: Camera3D = get_viewport().get_camera_3d()
 	for agent in sim.agents:
 		var view: Node3D = views.get(agent.id)
 		if not agent.is_present():
@@ -54,7 +55,7 @@ func _process(delta: float) -> void:
 			add_child(view)
 			view.setup(agent)
 			views[agent.id] = view
-		view.refresh(agent, alpha, delta, agent.id == selected, _bed_of(agent))
+		view.refresh(agent, alpha, delta, agent.id == selected, _bed_of(agent), camera)
 	_draw_selection()
 
 

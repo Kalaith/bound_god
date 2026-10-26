@@ -3,6 +3,7 @@ extends Node3D
 ## lights moved to whichever lanterns are closest, brighter after dusk.
 ## Reads the sim's lantern list; never changes it.
 
+const Quality = preload("res://scripts/presentation/quality.gd")
 const POOL: int = 12
 const RANGE: float = 7.0
 
@@ -49,11 +50,14 @@ func _process(delta: float) -> void:
 		ranked.append([at.distance_squared_to(eye), cell.y, cell.z, cell.x, at])
 	ranked.sort()
 	var night: bool = not sim.calendar.is_daylight()
+	var usable: int = mini(POOL, int(Quality.preset().lanterns))
 	for i in range(POOL):
 		var light: OmniLight3D = _lights[i]
-		light.visible = i < ranked.size()
-		_lamps[i].visible = light.visible
-		if light.visible:
+		# The lamp always shines; the light behind it is the costly part.
+		light.visible = i < mini(ranked.size(), usable)
+		_lamps[i].visible = i < ranked.size()
+		if _lamps[i].visible:
 			_lamps[i].position = ranked[i][4]
+		if light.visible:
 			light.position = ranked[i][4] + Vector3(0.0, 0.6, 0.0)
 			light.light_energy = 1.6 if night else 0.35

@@ -1,7 +1,7 @@
 extends Node3D
 ## Chunk meshes and collision for the voxel grid. The first build meshes every
 ## chunk on WorkerThreadPool tasks; afterwards dirty chunks re-mesh on the main
-## thread, at most `per_frame` a frame, so block edits show within a frame.
+## thread, within a small time budget a frame, so block edits show within a frame.
 const Mesher = preload("res://scripts/world/chunk_mesher.gd")
 const Registry = preload("res://scripts/world/block_registry.gd")
 const OPAQUE_SHADER = preload("res://assets/shaders/voxel_opaque.gdshader")
@@ -11,7 +11,9 @@ const WATER_SHADER = preload("res://assets/shaders/voxel_water.gdshader")
 const WORLD_LAYER: int = 2
 
 var world: RefCounted
-var per_frame: int = 4
+## Dirty chunks re-mesh on the main thread (web builds may have no worker
+## threads), so each frame spends at most this long on it, always at least one.
+var budget_usec: int = 3000
 var chunk_nodes: Dictionary = {}
 var _queue: Array = []
 var _queued: Dictionary = {}
@@ -37,6 +39,12 @@ func _ready() -> void:
 		_materials.append(material)
 	# Foliage varies more from block to block, like dabs of a loaded brush.
 	_materials[1].set_shader_parameter("block_variation", 0.08)
+
+
+## Quality tiers swap the paint wash for a cheaper one-layer version.
+func set_cheap_wash(cheap: bool) -> void:
+	for material in _materials:
+		material.set_shader_parameter("cheap_wash", cheap)
 
 
 ## Snow lying on the ground and roofs (0 to 1), for the weather view.
@@ -74,12 +82,13 @@ func _process(_delta: float) -> void:
 		if not _queued.has(chunk):
 			_queued[chunk] = true
 			_queue.append(chunk)
-	var count: int = 0
-	while not _queue.is_empty() and count < per_frame:
+	var started: int = Time.get_ticks_usec()
+	while not _queue.is_empty():
 		var chunk: Vector3i = _queue.pop_front()
 		_queued.erase(chunk)
 		_apply(chunk, Mesher.build(world, chunk))
-		count += 1
+		if Time.get_ticks_usec() - started > budget_usec:
+			break
 
 
 ## Re-mesh right now (used after the player's own edits so they feel instant).

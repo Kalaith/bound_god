@@ -42,6 +42,18 @@ var _phase: float = 0.0
 var _facing: float = 0.0
 var _speed: float = 0.0
 var _motes: CPUParticles3D
+## What was last written to the nodes, so unchanged values are not rewritten
+## (every write to a material or label costs even when nothing differs).
+var _carried: Variant = null
+var _ring_key: Vector2 = Vector2(-1.0, -1.0)
+var _glyph_text: String = ""
+var _cultivating: bool = false
+## Time owed to the pose while the figure is far away or out of sight.
+var _pose_delta: float = 0.0
+var _pose_skip: int = 0
+## Beyond this distance a figure poses every few frames; behind the camera, not at all.
+const FAR_POSE: float = 35.0
+const POSE_EVERY: int = 4
 
 
 func setup(agent: RefCounted) -> void:
@@ -105,7 +117,7 @@ func setup(agent: RefCounted) -> void:
 
 
 ## `bed` is [top centre, head direction] while asleep in a bed, else [].
-func refresh(agent: RefCounted, alpha: float, delta: float, selected: bool, bed: Array = []) -> void:
+func refresh(agent: RefCounted, alpha: float, delta: float, selected: bool, bed: Array = [], camera: Camera3D = null) -> void:
 	var target: Vector3 = agent.previous_position.lerp(agent.position, alpha)
 	if not bed.is_empty():
 		target = bed[0]
@@ -128,19 +140,53 @@ func refresh(agent: RefCounted, alpha: float, delta: float, selected: bool, bed:
 	var carried: Variant = null
 	if not agent.carrying.is_empty():
 		carried = RESOURCE_COLORS.get(agent.carrying.resource, Color.WHITE)
-	figure.set_cargo(carried)
-	figure.pose(agent.activity, _phase, _speed, delta)
+	if carried != _carried:
+		_carried = carried
+		figure.set_cargo(carried)
+	if _pose_due(delta, camera, selected):
+		figure.pose(agent.activity, _phase, _speed, _pose_delta)
+		_pose_delta = 0.0
 	var faded: float = 0.4 if agent.inside >= 0 else 1.0
 	figure.set_fade(faded)
-	_ring_material.albedo_color = Style.level_color(agent.mood)
-	_ring_material.albedo_color.a = 0.85 * faded
+	var ring_key := Vector2(agent.mood, faded)
+	if ring_key != _ring_key:
+		_ring_key = ring_key
+		_ring_material.albedo_color = Style.level_color(agent.mood)
+		_ring_material.albedo_color.a = 0.85 * faded
 	var text: String = GLYPHS.get(agent.activity, "")
 	if agent.activity == "talking":
 		text = ".".repeat(1 + int(_phase * 3.0) % 3)
-	glyph.text = text
-	glyph.visible = not text.is_empty()
-	_motes.emitting = agent.activity == "cultivating" and _speed < 0.2
-	name_tag.visible = selected
+	if text != _glyph_text:
+		_glyph_text = text
+		glyph.text = text
+		glyph.visible = not text.is_empty()
+	var cultivating: bool = agent.activity == "cultivating" and _speed < 0.2
+	if cultivating != _cultivating:
+		_cultivating = cultivating
+		_motes.emitting = cultivating
+	if name_tag.visible != selected:
+		name_tag.visible = selected
+
+
+## Whether the pose should be advanced this frame, banking the time skipped.
+## The selected person always animates; a far figure updates every few frames
+## and one behind the camera not at all.
+func _pose_due(delta: float, camera: Camera3D, selected: bool) -> bool:
+	_pose_delta += delta
+	if camera == null or selected:
+		return true
+	var offset: Vector3 = global_position - camera.global_position
+	var distance: float = offset.length()
+	if distance < 6.0:
+		return true
+	if offset.dot(-camera.global_transform.basis.z) < 0.0:
+		_pose_delta = minf(_pose_delta, 0.25)
+		return false
+	if distance > FAR_POSE:
+		_pose_skip += 1
+		if _pose_skip % POSE_EVERY != 0:
+			return false
+	return true
 
 
 ## A few soft jade motes drifting up and in round a seated cultivator, as if

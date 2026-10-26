@@ -12,6 +12,7 @@ const Text = preload("res://scripts/core/text.gd")
 const SettingsStore = preload("res://scripts/core/settings_store.gd")
 const Keys = preload("res://addons/hatchery/input/key_bindings.gd")
 const Pad = preload("res://addons/hatchery/input/pad_bindings.gd")
+const Quality = preload("res://scripts/presentation/quality.gd")
 
 ## Sliders (settings key), toggles by section heading (settings key).
 const SLIDERS: Array[String] = ["master", "music", "effects", "look_sensitivity"]
@@ -34,6 +35,7 @@ var capture_action: String = ""
 var capture_slot: int = 0
 var capture_pad: bool = false
 var close_button: Button
+var quality_choice: OptionButton
 
 
 func _ready() -> void:
@@ -97,6 +99,8 @@ func _build_general() -> void:
 		rows.add_child(Style.heading(Text.label(str(section[0])), 20, Style.LEAF))
 		if str(section[0]) == "settings_access":
 			_slider(rows, "ui_scale")
+		if str(section[0]) == "settings_graphics":
+			_quality_row(rows)
 		for key in section[1]:
 			var toggle := CheckButton.new()
 			toggle.text = Text.label("setting_" + str(key))
@@ -105,6 +109,24 @@ func _build_general() -> void:
 			toggle.toggled.connect(func(value: bool) -> void: _set_value(str(key), value))
 			rows.add_child(toggle)
 			toggles[key] = toggle
+
+
+## The graphics quality tier: low, medium or high.
+func _quality_row(rows: VBoxContainer) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	var name_label: Label = Style.label(Text.label("setting_quality"), 18)
+	name_label.custom_minimum_size.x = 200
+	row.add_child(name_label)
+	quality_choice = OptionButton.new()
+	quality_choice.custom_minimum_size = Vector2(240, 40)
+	quality_choice.add_theme_font_size_override("font_size", 18)
+	for tier in Quality.TIERS:
+		quality_choice.add_item(Text.label("quality_" + tier))
+	quality_choice.item_selected.connect(func(index: int) -> void: _set_value("quality", Quality.TIERS[index]))
+	row.add_child(quality_choice)
+	rows.add_child(row)
+	rows.add_child(Style.wrapped(Text.label("setting_quality_help"), 15, Style.MUTED))
 
 
 func _slider(rows: VBoxContainer, key: String) -> void:
@@ -188,6 +210,8 @@ func refresh() -> void:
 		sliders[key].set_value_no_signal(float(store.values[key]) * 100.0)
 	for key in toggles:
 		toggles[key].set_pressed_no_signal(bool(store.values[key]))
+	if quality_choice != null:
+		quality_choice.select(maxi(Quality.TIERS.find(str(store.values.quality)), 0))
 	for action in key_buttons:
 		for slot in range(2):
 			var waiting: bool = capture_action == action and capture_slot == slot and not capture_pad
