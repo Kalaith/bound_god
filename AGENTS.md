@@ -70,66 +70,53 @@ Publishing requires separate authorisation.
 
 ## Shared WebHatchery Godot standards
 
-This section is identical in the AGENTS.md of every WebHatchery Godot project. Change it in all of them together; project-specific rules go in the sections above.
+Identical in every WebHatchery Godot project's AGENTS.md; change all together. Project-specific rules go above.
 
 ### Working
 
-- Work only inside this project unless the user explicitly broadens the task. Preserve any user changes.
-- Do not install or upgrade Godot, export templates, tools, plugins or GDExtensions without approval. Prefer built-in engine features.
-- Do not overwrite original art.
+- Stay inside this project unless the user broadens the task; preserve user changes; never overwrite original art.
+- No installing/upgrading Godot, export templates, tools, plugins or GDExtensions without approval; prefer built-in features.
 
 ### Code
 
-- Godot **4.7.2** GDScript. The renderer is set per project (see above).
-- Static typing everywhere: variables, parameters and return types.
-- Load dependencies with `const X = preload("res://...")`.
-- Tabs, LF, UTF-8, final newline (`.editorconfig`).
-- Split scripts by responsibility before they grow. Size limits are below.
-- Simulation and rules code never touches the scene tree, `Time`, `OS` or the global `randi()`/`randf()`. All randomness comes from an owned `RandomNumberGenerator`, so the same seed gives the same result. Presentation reads that state and sends commands; it never changes it any other way.
-- Balance numbers and catalogs live in JSON under `data/` with stable ids (and `schema_version` where a catalog has one), validated at startup. Missing or mistyped data fails fast: report it, never silently default in code.
-- Keep every catalog (upgrades, parts, miracles, blocks and so on) bounded to implemented effects. Do not add entries the code does not support.
-- Persistent state lives under `user://` with schema validation, staged writes and backup recovery. A failed save must never lose progress or spend anything.
+- Godot **4.7.2** GDScript, statically typed everywhere (variables, parameters, returns). `const X = preload("res://...")`. Tabs, LF, UTF-8, final newline.
+- Simulation/rules code never touches the scene tree, `Time`, `OS` or global `randi()`/`randf()`; randomness comes from an owned `RandomNumberGenerator` (same seed, same result). Presentation reads state and sends commands, nothing else.
+- Balance and catalogs (upgrades, parts, miracles, blocks, ...) live in JSON under `data/` with stable ids (and `schema_version` where present), validated at startup, holding only implemented effects. Missing or mistyped data fails fast and is reported; never default silently in code.
+- Persistent state lives under `user://` with schema validation, staged writes and backup recovery. A failed save never loses progress or spends anything.
 
 ### Verification
 
-- Do not create a `tests/` directory, test frameworks or test addons. Automated checks, where a project has them, are headless scripts in `tools/`, kept out of the exported game.
-- Checks do not gate commits. Run the full set (the project's checks, if any, and a parse/import check with `--headless --editor --quit`) when a major feature or milestone is finished, and fix what they find before calling it done.
-- Headless checks do not verify visuals, audio, input or feel. Verify anything visual by running the game (`Run.ps1`) and looking at it.
-- Say plainly what was and was not checked.
+- No `tests/` directory, frameworks or addons. Any automated checks are headless scripts in `tools/`, kept out of the export.
+- Checks don't gate commits. At a major feature or milestone, run all checks (plus `--headless --editor --quit`) and fix findings.
+- Headless checks can't verify visuals, audio, input or feel: run the game and look. State plainly what was and wasn't checked.
 
 ### Verification images
 
-- There is one folder for verification images: `docs/verification/`, flat. It holds a `.gdignore` (so does `docs/`); keep both. Reference art goes in `docs/reference/` or `docs/art/`, never here.
-- Take screenshots through the toolkit's capture runner (`testing/capture_runner.gd`) or `testing/capture_paths.gd` (`CapturePaths.file(label)`). Do not pass an output directory or write captures anywhere else (`builds/`, `exports/`, OS temp, `user://`).
-- Names are stable `<label>.png`: no subfolders, timestamps, run or revision suffixes, size suffixes, `-final`/`-fix` variants or backup copies. A new capture of the same screen or state overwrites its file; add a label only for a genuinely new screen or state.
-- Capture at one window size and one UI scale per game, and look at the image before saying a visual change works.
+- Only `docs/verification/` (flat; keep its `.gdignore` and `docs/`'s). Reference art: `docs/reference/` or `docs/art/`.
+- Capture via the toolkit's `testing/capture_runner.gd` or `testing/capture_paths.gd` (`CapturePaths.file(label)`); never pass an output directory or write elsewhere (`builds/`, `exports/`, OS temp, `user://`).
+- Stable names `<label>.png`: no subfolders, timestamps, run/revision/size suffixes, `-final`/`-fix` variants or backups. Recapturing a screen or state overwrites; new labels only for genuinely new ones.
+- One window size and UI scale per game. Look at the image before saying a visual change works.
 
 ### Size limits (hard rule)
 
-- **No function may exceed 400 lines.**
-- **No file may exceed 800 lines**: scripts, scenes, data, docs and text catalogs. Check with `git ls-files -co --exclude-standard | grep -E '\.(gd|tscn|json|md)$' | xargs wc -l | sort -n | tail`.
-- When a change would push a function or file past its limit, or one is already over, **bring it below the limit in the same change**. Split a long function into well-named helpers; shrink a file by moving a cohesive responsibility (HUD, settings wiring, area building, save validation, layout, a catalog section and so on) into its own file and having the original delegate to or load it.
-- **Never shrink a function or file by deleting blank lines, joining statements, removing comments, minifying or packing several entries onto one line.** Blank lines between functions and the existing comment density stay as they are. Line count comes down by moving content, not by squeezing it.
-- Keep public members that other scripts use working, either in place or through a delegating function.
+- **Functions ≤ 400 lines; files ≤ 800 lines** (scripts, scenes, data, docs, catalogs). Check: `git ls-files -co --exclude-standard | grep -E '\.(gd|tscn|json|md)$' | xargs wc -l | sort -n | tail`.
+- Split scripts by responsibility before they grow. A change that would cross a limit, or touches something already over, brings it under in the same change: split functions into named helpers; move a cohesive responsibility (HUD, settings wiring, area building, save validation, layout, a catalog section, ...) into its own file the original delegates to or loads. Keep public members other scripts use working.
+- **Never shrink by deleting blank lines, joining statements, removing comments, minifying or packing entries onto one line.** Move content; don't squeeze it.
 
 ### Commits
 
-- Commit early and often: after every complete, working step (a system, a fix, a data pass), not at the end of a milestone. Commits do not wait on checks (see Verification).
-- Commit **all pending project changes**, including modified, added and deleted files you did not make yourself. Do not leave user changes or another agent's changes uncommitted because you did not touch them: review and preserve their contents, include them in the validation, and finish with a clean working tree.
-- Existing ignore rules still apply to generated files, local tooling and credentials. Never force-add ignored files or commit secrets.
-- Do not push or publish unless the user asks.
+- **ALWAYS commit each feature slice and bug fix the moment it works. Mandatory.** One slice per commit; never batch, never leave finished work uncommitted, never end a turn with an uncommitted feature or fix. Don't wait to be asked or offer instead of doing it; a later request ("also tweak X") is a new slice.
+- Commit **all pending changes**, including modified, added and deleted files you didn't make: review and preserve them, include them in validation, finish with a clean tree.
+- **Before the final reply of any turn that touched files:** run `git status --short`; if it prints anything, commit and rerun until empty. A dirty tree means unfinished; the closing summary says the tree is clean.
+- Ignore rules still apply; never force-add ignored files or commit secrets. Don't push or publish unless asked.
 
-Message style: one line describing what changed **as it is felt by the player** (for the toolkit, by the games that use it), then a short plain tag in parentheses saying what it is technically.
+Message: one present-tense line, no trailing period, under ~100 characters before the tag, saying what changed **as the player feels it** (for the toolkit, as the games using it feel it), then a plain lowercase tag in parentheses for what it technically is (the system touched, `docs`, `refactor` for structural changes, or a milestone id such as `M25`). Fixes and refactors are still described by effect. Add a body only when the reason isn't obvious.
 
 ```
-Neris raises a ward whenever she is struck (spirit trait)
-A prayer at the tree now feeds the god's Favour (shrine favour)
 The Lantern Fair opens: be more interesting than the fair (third map)
+A prayer at the tree now feeds the god's Favour (shrine favour)
+Builders no longer wall themselves into the cottage they are raising (site reservation fix)
+No script over 800 lines: split main and the ritual screen (refactor)
 Every game's saves now survive a torn write (json save)
 Scribes set down the covenant: design and building plan (docs)
 ```
-
-- Present tense, no trailing period, under ~100 characters before the tag where possible.
-- Fixes and refactors are still described by their effect: `Builders no longer wall themselves into the cottage they are raising (site reservation fix)`, `No script over 800 lines: split main and the ritual screen (refactor)`.
-- Tags are lowercase and plain: the system touched, `docs`, `refactor`, or a milestone id such as `M25`.
-- Add a body only when the reason is not obvious from the line.
